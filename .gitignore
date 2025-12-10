@@ -1,0 +1,14 @@
+# Ignore the virtual environment
+venv/
+env/
+.env
+
+# Ignore database files
+db.sqlite3
+
+# Ignore compiled python files
+__pycache__/
+*.pyc
+
+# Ignore static collection folder
+staticfiles/
