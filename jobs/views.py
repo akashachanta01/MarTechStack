@@ -13,12 +13,12 @@ def job_list(request):
     category_slug = request.GET.get('category')
 
     if query:
-        # Search title, company, description, or tags
+        # Search title, company, description, OR Tools (instead of tags)
         jobs = jobs.filter(
             Q(title__icontains=query) | 
             Q(company__icontains=query) | 
             Q(description__icontains=query) |
-            Q(tags__icontains=query)
+            Q(tools__name__icontains=query)
         ).distinct()
 
     if location:
