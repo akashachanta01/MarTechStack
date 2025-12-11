@@ -23,16 +23,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# We check if we are running on a server (Railway/Render sets this).
-# If 'RAILWAY_ENVIRONMENT' is found, DEBUG becomes False.
-DEBUG = True
+# If 'RENDER' is set in the environment, turn off DEBUG.
+if 'RENDER' in os.environ:
+    DEBUG = False
+else:
+    DEBUG = True
 
-# Allow all hosts for MVP (simplifies deployment).
-# In a strict corporate app, you would list specific domains here.
+# Allow all hosts for MVP
 ALLOWED_HOSTS = ['*']
 
-# Trusted origins for CSRF (needed for some hosted forms)
-CSRF_TRUSTED_ORIGINS = ['https://*.railway.app', 'https://martechstack.io']
+# Trusted origins for CSRF (Add the Render domain here)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com', 
+    'https://martechstack.io'
+]
 
 
 # ==============================================
