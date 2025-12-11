@@ -13,11 +13,12 @@ def job_list(request):
     category_slug = request.GET.get('category')
 
     if query:
-        # Search title, company, description, OR Tools (instead of tags)
+        # Search everywhere safely
         jobs = jobs.filter(
             Q(title__icontains=query) | 
             Q(company__icontains=query) | 
             Q(description__icontains=query) |
+            Q(tags__icontains=query) |
             Q(tools__name__icontains=query)
         ).distinct()
 
@@ -25,22 +26,21 @@ def job_list(request):
         jobs = jobs.filter(location__icontains=location)
 
     if is_remote:
-        # Simple check for "Remote" in the location field
         jobs = jobs.filter(location__icontains='Remote')
 
     if category_slug:
         jobs = jobs.filter(tools__category__slug=category_slug).distinct()
 
-    # 3. Get all categories for the sidebar
+    # 3. Sidebar data
     categories = Category.objects.all()
 
     context = {
         'jobs': jobs,
         'categories': categories,
         'current_category': category_slug,
-        'search_query': query,     # Pass back to template to keep input filled
-        'search_loc': location,    # Pass back to template
-        'is_remote': is_remote,    # Pass back to template
+        'search_query': query,
+        'search_loc': location,
+        'is_remote': is_remote,
     }
     return render(request, 'jobs/job_list.html', context)
 
