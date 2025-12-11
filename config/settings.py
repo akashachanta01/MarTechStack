@@ -98,14 +98,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # ==============================================
 # Uses SQLite locally, but switches to PostgreSQL on Railway automatically.
 
+# This automatically detects if we are on Render (using DATABASE_URL)
+# or on your laptop (using sqlite)
 DATABASES = {
     'default': dj_database_url.config(
-        # This is the fallback for your laptop:
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
         conn_max_age=600
     )
 }
-
 
 # ==============================================
 # PASSWORD VALIDATION
