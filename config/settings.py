@@ -29,7 +29,7 @@ else:
     DEBUG = True
 
 # Allow all hosts for MVP
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['martechstack.onrender.com', 'martechstack.io', 'www.martechstack.io', 'localhost', '127.0.0.1']
 
 # Trusted origins for CSRF (Add the Render domain here)
 CSRF_TRUSTED_ORIGINS = [
