@@ -1,16 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import Job, Category
 
 def job_list(request):
-    # 1. Start with all active jobs
     jobs = Job.objects.filter(is_active=True).order_by('-created_at')
     
-    # 2. Check for filters in the URL (e.g., ?category=marketing-automation)
+    # Filter by Category (Tech Stack)
     category_slug = request.GET.get('category')
     if category_slug:
         jobs = jobs.filter(tools__category__slug=category_slug).distinct()
 
-    # 3. Get all categories for the sidebar
     categories = Category.objects.all()
 
     context = {
@@ -19,3 +17,7 @@ def job_list(request):
         'current_category': category_slug,
     }
     return render(request, 'jobs/job_list.html', context)
+
+def job_detail(request, pk):
+    job = get_object_or_404(Job, pk=pk)
+    return render(request, 'jobs/job_detail.html', {'job': job})
