@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 # SECURITY WARNING: don't run with debug turned on in production!
 # We check if we are running on a server (Railway/Render sets this).
 # If 'RAILWAY_ENVIRONMENT' is found, DEBUG becomes False.
-DEBUG = 'RAILWAY_ENVIRONMENT' not in os.environ
+DEBUG = True
 
 # Allow all hosts for MVP (simplifies deployment).
 # In a strict corporate app, you would list specific domains here.
