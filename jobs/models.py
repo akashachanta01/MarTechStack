@@ -21,13 +21,23 @@ class Tool(models.Model):
 class Job(models.Model):
     title = models.CharField(max_length=200)
     company = models.CharField(max_length=200)
-    company_logo = models.URLField(blank=True, null=True)
+    company_logo = models.URLField(blank=True, null=True, help_text="URL to the company logo image")
     location = models.CharField(max_length=100, default="Remote")
     description = models.TextField()
     apply_url = models.URLField()
+    
+    # New Fields for the "4DayWeek" look
+    salary_range = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. $120k - $160k")
+    tags = models.CharField(max_length=200, blank=True, null=True, help_text="Comma-separated tags (e.g. Senior, Contract, Urgent)")
+    
     tools = models.ManyToManyField(Tool, related_name='jobs')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"
+    
+    def get_tag_list(self):
+        if self.tags:
+            return [tag.strip() for tag in self.tags.split(',')]
+        return []
