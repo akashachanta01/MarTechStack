@@ -6,9 +6,7 @@
     <title>MarTechStack.io - Find your next MarTech Role</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-white text-slate-900">
 
@@ -36,7 +34,6 @@
 
     <div class="py-12 bg-slate-50 border-b border-slate-200">
         <div class="max-w-5xl mx-auto px-6">
-            
             <div class="text-center mb-8">
                 <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
                     Find your next <span class="text-teal-600">MarTech</span> Role.
@@ -48,26 +45,21 @@
 
             <form method="GET" action="." class="max-w-4xl mx-auto">
                 <div class="flex flex-col md:flex-row gap-2 md:gap-0 p-2 bg-white rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-100">
-                    
                     <div class="flex-1 relative flex items-center">
                         <svg class="w-5 h-5 absolute left-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by job title or skill..." 
                                class="w-full pl-12 pr-4 py-3 bg-transparent outline-none text-sm font-medium text-slate-700 placeholder-slate-400 rounded-lg focus:bg-slate-50">
                     </div>
-                    
                     <div class="hidden md:block w-px bg-slate-200 my-2"></div>
-
                     <div class="flex-1 relative flex items-center">
                         <svg class="w-5 h-5 absolute left-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <input type="text" name="loc" value="{{ search_loc|default:'' }}" placeholder="Location..." 
                                class="w-full pl-12 pr-4 py-3 bg-transparent outline-none text-sm font-medium text-slate-700 placeholder-slate-400 rounded-lg focus:bg-slate-50">
                     </div>
-
                     <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg transition-colors whitespace-nowrap shadow-sm">
                         Search...
                     </button>
                 </div>
-
                 <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500 px-1">
                     <label class="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-300 transition-colors shadow-sm select-none">
                         <input type="checkbox" name="remote" value="true" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-gray-300" {% if is_remote %}checked{% endif %}>
