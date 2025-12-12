@@ -107,7 +107,6 @@
             
             <aside class="w-full lg:w-64 flex-shrink-0">
                 <form method="GET" action="." id="filterForm">
-                    
                     <input type="hidden" name="q" value="{{ search_query }}">
                     <input type="hidden" name="loc" value="{{ search_loc }}">
                     {% if is_remote %}<input type="hidden" name="remote" value="true">{% endif %}
@@ -230,17 +229,19 @@
                     {% if forloop.counter == 1 %}
                     <div class="bg-white border border-teal-100 rounded-xl p-8 shadow-sm relative overflow-hidden my-6">
                         <div class="absolute -top-12 -right-12 w-32 h-32 bg-teal-50 rounded-full opacity-50 blur-2xl"></div>
-                        <div class="relative z-10">
+                        <div class="relative z-10 text-center">
                             <span class="inline-block bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide mb-3">Job Alerts</span>
                             <h3 class="text-2xl font-bold text-slate-900 mb-2">Get high-paying MarTech jobs delivered.</h3>
                             <p class="text-slate-500 mb-6">Weekly alerts for <span class="text-teal-700 font-bold">Adobe, Salesforce & Segment</span>. 0% spam.</p>
-                            <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-lg">
+                            
+                            <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
                                 {% csrf_token %}
                                 <input type="email" name="email" required placeholder="Enter your email..." 
                                        class="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
                                 <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-colors whitespace-nowrap shadow-sm">Sign up</button>
                             </form>
-                            <div class="flex items-center gap-3 mt-6">
+                            
+                            <div class="flex items-center justify-center gap-3 mt-6">
                                 <div class="flex -space-x-2">
                                     <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="">
                                     <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="">
