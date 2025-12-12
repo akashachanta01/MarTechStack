@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>MarTechStack.io - Find your next MarTech Role</title>
-    <meta name="description" content="The #1 Job Board for Marketing Operations, Analytics, and Tech professionals. Find jobs in Marketo, Salesforce, Adobe, and more.">
-    <meta property="og:title" content="MarTechStack.io - The Home of Marketing Ops Jobs">
-    <meta property="og:description" content="Find niche roles in Marketing Technology. Curated daily.">
+    <meta name="description" content="The #1 Job Board for Marketing Operations, Analytics, and Tech professionals.">
+    <meta property="og:title" content="MarTechStack.io">
     <meta property="og:image" content="https://martechstack.io/static/og-image.png">
-    <meta property="og:url" content="https://martechstack.io/">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-5DL9PF78WG"></script>
     <script>
@@ -51,6 +49,17 @@
 
     <div class="py-12 bg-slate-50 border-b border-slate-200">
         <div class="max-w-5xl mx-auto px-6">
+            
+            {% if messages %}
+                <div class="max-w-md mx-auto mb-6">
+                    {% for message in messages %}
+                    <div class="p-4 rounded-lg text-sm font-bold text-center {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <div class="text-center mb-8">
                 <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
                     Find your next <span class="text-teal-600">MarTech</span> Role.
@@ -76,18 +85,6 @@
                     <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg transition-colors whitespace-nowrap shadow-sm">
                         Search...
                     </button>
-                </div>
-                <div class="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500 px-1">
-                    <label class="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-300 transition-colors shadow-sm select-none">
-                        <input type="checkbox" name="remote" value="true" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-gray-300" {% if is_remote %}checked{% endif %}>
-                        <span class="font-medium">Remote Only</span>
-                    </label>
-                    <div class="hidden sm:block">
-                        <span class="mr-2">People also search:</span>
-                        <a href="/?q=Architect" class="text-teal-600 hover:underline hover:text-teal-700">Architect</a>, 
-                        <a href="/?q=Adobe" class="text-teal-600 hover:underline hover:text-teal-700">Adobe</a>, 
-                        <a href="/?q=Salesforce" class="text-teal-600 hover:underline hover:text-teal-700">Salesforce</a>
-                    </div>
                 </div>
             </form>
         </div>
@@ -129,6 +126,7 @@
 
                 <div class="space-y-4">
                     {% for job in jobs %}
+                    
                     <div class="bg-white border border-slate-200 rounded-xl p-6 hover:border-teal-300 hover:shadow-sm transition-all duration-200">
                         <div class="flex items-start gap-5">
                             <div class="shrink-0">
@@ -186,6 +184,39 @@
                             </div>
                         </div>
                     </div>
+
+                    {% if forloop.counter == 1 %}
+                    <div class="bg-white border border-teal-100 rounded-xl p-8 shadow-sm relative overflow-hidden my-6">
+                        <div class="absolute -top-12 -right-12 w-32 h-32 bg-teal-50 rounded-full opacity-50 blur-2xl"></div>
+                        
+                        <div class="relative z-10">
+                            <span class="inline-block bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide mb-3">
+                                Job Alerts
+                            </span>
+                            <h3 class="text-2xl font-bold text-slate-900 mb-2">Get high-paying MarTech jobs delivered.</h3>
+                            <p class="text-slate-500 mb-6">Weekly alerts for <span class="text-teal-700 font-bold">Adobe, Salesforce & Segment</span>. 0% spam.</p>
+                            
+                            <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-lg">
+                                {% csrf_token %}
+                                <input type="email" name="email" required placeholder="Enter your email..." 
+                                       class="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
+                                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-colors whitespace-nowrap shadow-sm">
+                                    Sign up
+                                </button>
+                            </form>
+
+                            <div class="flex items-center gap-3 mt-6">
+                                <div class="flex -space-x-2">
+                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="">
+                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="">
+                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark" alt="">
+                                </div>
+                                <span class="text-xs text-slate-400 font-medium">Join 2,000+ pros</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% empty %}
                     <div class="text-center py-24 bg-white rounded-xl border border-dashed border-slate-300">
                         <p class="text-slate-500">No jobs found.</p>
