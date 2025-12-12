@@ -3,7 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ job.title }} - MarTechStack.io</title>
+    
+    <title>{{ job.title }} at {{ job.company }} - MarTechStack.io</title>
+    <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today on MarTechStack.io.">
+    
+    <meta property="og:title" content="{{ job.title }} at {{ job.company }}">
+    <meta property="og:description" content="{{ job.description|striptags|truncatewords:25 }}">
+    <meta property="og:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechstack.io/static/og-image.png{% endif %}">
+    <meta property="og:url" content="https://martechstack.io/job/{{ job.pk }}/">
+    <meta property="og:type" content="article">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style> body { font-family: 'Inter', sans-serif; } </style>
