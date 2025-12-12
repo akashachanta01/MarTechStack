@@ -1,26 +1,29 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.core.mail import send_mail  # <--- Added
-from django.conf import settings        # <--- Added
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Job, Category
 from .forms import JobSubmissionForm, SubscriberForm
 
 def job_list(request):
     jobs = Job.objects.filter(is_active=True).order_by('-created_at')
     
-    query = request.GET.get('q')
-    location = request.GET.get('loc')
+    # 1. Capture Inputs
+    query = request.GET.get('q', '')
+    location = request.GET.get('loc', '')
     is_remote = request.GET.get('remote')
-    category_slug = request.GET.get('category')
+    
+    # 2. Capture Multiple Checkboxes (This is the new part!)
+    selected_categories = request.GET.getlist('category')
 
+    # 3. Filter Logic
     if query:
         jobs = jobs.filter(
             Q(title__icontains=query) | 
             Q(company__icontains=query) | 
-            Q(description__icontains=query) |
-            Q(tags__icontains=query) |
+            Q(description__icontains=query) | 
+            Q(tags__icontains=query) | 
             Q(tools__name__icontains=query)
         ).distinct()
 
@@ -30,15 +33,16 @@ def job_list(request):
     if is_remote:
         jobs = jobs.filter(location__icontains='Remote')
 
-    if category_slug:
-        jobs = jobs.filter(tools__category__slug=category_slug).distinct()
+    # Filter by multiple categories if selected
+    if selected_categories:
+        jobs = jobs.filter(tools__category__slug__in=selected_categories).distinct()
 
     categories = Category.objects.all()
 
     context = {
         'jobs': jobs,
         'categories': categories,
-        'current_category': category_slug,
+        'selected_categories': selected_categories, # Pass back to keep boxes checked
         'search_query': query,
         'search_loc': location,
         'is_remote': is_remote,
@@ -78,7 +82,6 @@ def subscribe(request):
                     recipient_list=[subscriber.email],
                     fail_silently=True,
                 )
-                print(f"📧 Email sent to {subscriber.email}")
             except Exception as e:
                 print(f"❌ Error sending email: {e}")
 
