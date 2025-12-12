@@ -2,8 +2,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.mail import send_mail  # <--- Added
+from django.conf import settings        # <--- Added
 from .models import Job, Category
-from .forms import JobSubmissionForm, SubscriberForm # <--- Added SubscriberForm
+from .forms import JobSubmissionForm, SubscriberForm
 
 def job_list(request):
     jobs = Job.objects.filter(is_active=True).order_by('-created_at')
@@ -61,12 +63,25 @@ def post_job(request):
     
     return render(request, 'jobs/post_job.html', {'form': form})
 
-# --- NEW VIEW FOR SUBSCRIPTION ---
 def subscribe(request):
     if request.method == 'POST':
         form = SubscriberForm(request.POST)
         if form.is_valid():
-            form.save()
+            subscriber = form.save()
+            
+            # --- SEND WELCOME EMAIL ---
+            try:
+                send_mail(
+                    subject="Welcome to MarTechStack!",
+                    message="Thanks for subscribing! You'll get the best MarTech jobs every week.",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[subscriber.email],
+                    fail_silently=True,
+                )
+                print(f"📧 Email sent to {subscriber.email}")
+            except Exception as e:
+                print(f"❌ Error sending email: {e}")
+
             messages.success(request, "✅ You're on the list! Watch your inbox.")
         else:
             messages.error(request, "This email is already subscribed or invalid.")
