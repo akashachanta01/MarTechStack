@@ -29,15 +29,38 @@ class Command(BaseCommand):
 
         # 3. EXPANDED HUNT TARGETS 🎯
         # We search Google for these keywords specifically on ATS domains
+        # 3. EXPANDED HUNT TARGETS 🎯
+        # Focused on Enterprise Adobe/Salesforce + Data Infrastructure
         hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'SFMC',
+            # --- Adobe Stack ---
             'Adobe Experience Platform', 'AEP',
-            'Adobe Target', 'Adobe Journey Optimizer', 'AJO',
-            'Adobe Analytics', 'Customer Journey Analytics', 'CJA',
-            'RT-CDP',
-            'Segment.io', 'Tealium', 'mParticle', 
-            'HubSpot Operations', 'Google Tag Manager',
-            'MarTech', 'Marketing Technology', 'Marketing Technologist', 'MarTech developer'
+            'Adobe Analytics', 
+            'Adobe Target', 
+            'Adobe Journey Optimizer', 'AJO',
+            'Customer Journey Analytics', 'CJA',
+            'Real-Time CDP', 'RT-CDP', 
+            'Adobe Campaign', # Added: Classic enterprise tool often paired with these
+
+            # --- Salesforce Stack ---
+            'Salesforce Marketing Cloud', 'SFMC',
+            'Marketo', 
+
+            # --- Data Infrastructure ---
+            'Segment.io', 
+            'Tealium', 
+            'mParticle', 
+            'Google Tag Manager', 
+
+            # --- Operations ---
+            'HubSpot', # Broadened to match your loosened Screener
+
+            # --- General Roles ---
+            'MarTech', 
+            'MarTech Architect',
+            'Marketing Technology', 
+            'Marketing Technologist', 
+            'MarTech Developer',
+            'Marketing Operations' # Added: High signal for these tools
         ]
 
         # 4. ATS Domains to Scan
