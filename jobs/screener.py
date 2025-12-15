@@ -3,32 +3,38 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Filters jobs based on HARD SKILLS (Stack) vs. Generic Titles.
+    Balanced Version: Catches more MOPs roles, still blocks Engineering.
     """
     
-    # GROUP A: Adobe Heavyweights (Score: 30)
+    # GROUP A: Adobe Heavyweights & Enterprise CDPs (Score: 30)
     GROUP_A = [
         'adobe experience platform', 'aep', 'adobe analytics', 'adobe launch', 
         'customer journey analytics', 'cja', 'adobe journey optimizer', 'ajo',
-        'adobe gen studio', 'adobe experience manager', 'aem', 'real-time cdp', 
-        'adobe target', 'adobe campaign', 'marketo', 'adobe marketo','rt-cdp'
+        'adobe gen studio', 'adobe experience manager', 'aem', 'real-time cdp', 'rt-cdp',
+        'adobe target', 'adobe campaign', 'marketo', 'adobe marketo'
     ]
     
-    # GROUP B: Enterprise Automation & CRM (Score: 20)
+    # GROUP B: CRM & Automation (Score: 20)
+    # LOOSENED: Added generic 'hubspot' and 'salesforce' to catch more MOPs roles
     GROUP_B = [
         'salesforce marketing cloud', 'sfmc', 'exacttarget', 'ampscript',
         'eloqua', 'pardot', 'braze', 'customer.io', 'iterable', 'moengage',
-        'hubspot operations', 'hubspot workflows', 'hubspot custom objects'
+        'hubspot', 'hubspot operations', 'hubspot workflows', 'hubspot custom objects',
+        'salesforce', 'salesforce crm', 'sfdc',
+        'marketing technologist', 'martech developer', 'marketing technology' 
     ]
     
-    # GROUP C: Data, Code & Infrastructure (Score: 15)
-    # STRICTLY LIMITED to avoid generic Data Engineering roles
+    # GROUP C: Data & Technical Skills (Score: 15)
+    # LOOSENED: Added SQL/Python/APIs back (Vital for MOPs)
     GROUP_C = [
-        'javascript', 'gtm', 'google tag manager', 'server-side tracking'
+        'javascript', 'gtm', 'google tag manager', 'server-side tracking',
+        'tealium', 'mparticle', 'segment', 'segment.io',
+        'sql', 'python', 'api', 'api integration', 'webhooks', 'json', 'html', 'css',
+        'snowflake', 'bigquery', 'dbt', 'reverse etl', 'hightouch', 'census'
     ]
     
     # JOB KILLERS: Immediate Rejects (Wrong Role)
-    # These override any matches.
+    # KEEPS NOISE OUT: Blocks pure Dev/Sales/Recruiting roles
     JOB_KILLERS = [
         r'writing.*blog.*posts',
         r'content.*creation',
@@ -39,15 +45,13 @@ class MarTechScreener:
         r'hr.*manager',
         r'recruiter',
         
-        # 🚫 ENGINEERING & DATA BLOCKERS (New)
+        # Engineering Blockers (Kept strict to avoid "Staff Software Engineer")
         r'software.*engineer', 
-        r'data.*engineer',
-        r'front.*end',
-        r'back.*end',
+        r'frontend.*engineer',
+        r'backend.*engineer',
         r'full.*stack',
-        r'database.*admin',
         r'systems.*admin',
-        r'consultant' # Blocks "Associate Data & CRM Consultant"
+        r'network.*engineer'
     ]
     
     def __init__(self):
@@ -76,17 +80,17 @@ class MarTechScreener:
         self.matches_b = [kw for kw in self.GROUP_B if kw in full_text]
         self.matches_c = [kw for kw in self.GROUP_C if kw in full_text]
         
-        # 3. Score It
-        score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
-        
-        # 4. Decision Logic
-        # Must have at least ONE strong tool match
+        # 3. Decision Logic
+        # LOOSENED: Only requires 1 match from ANY group to pass
         total_keywords = len(self.matches_a) + len(self.matches_b) + len(self.matches_c)
         is_match = total_keywords >= 1
 
-        # 5. Compile Stack for Auto-Tagging
+        # 4. Compile Stack
         stack = list(set(self.matches_a + self.matches_b + self.matches_c))
         
+        # 5. Score It
+        score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
+
         return {
             "is_match": is_match,
             "score": score,
@@ -95,8 +99,8 @@ class MarTechScreener:
         }
 
     def infer_role_type(self):
-        if self.matches_c:
-            return "Technical/Developer"
+        if self.matches_c and not self.matches_a and not self.matches_b:
+            return "Technical/Data"
         if self.matches_a:
             return "Implementation/Architect"
         return "Marketing Operations"
