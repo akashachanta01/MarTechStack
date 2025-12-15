@@ -29,11 +29,11 @@ class Command(BaseCommand):
 
         # --- HUNT TARGETS ---
         hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 'Braze',
-            'Klaviyo', 'Iterable', 'Customer.io', 
+            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot',
+            'Klaviyo', 'Iterable', 'Customer.io', "Adobe Campaign", 'Adobe Target',
             'Adobe Experience Platform', 'Tealium', 'mParticle', 'Real-Time CDP',
-            'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude',
-            'MarTech', 'Marketing Operations', 'Marketing Technologist'
+            'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude', 'Martech architect',
+            'MarTech', 'Marketing Operations', 'Marketing Technologist', 'AEP', 'AJO', 'CJA','Adobe Analytics'
         ]
 
         # --- SMART QUERIES ---
