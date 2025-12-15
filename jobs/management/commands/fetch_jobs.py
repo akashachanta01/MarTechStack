@@ -1,160 +1,145 @@
 from django.core.management.base import BaseCommand
 import requests
 import time
-import os
+from datetime import datetime, timedelta
+from django.utils import timezone
+import dateutil.parser  # Required for parsing diverse date formats
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'ATS Hunter: Finds unknown companies via Google Search'
+    help = 'Direct-to-Source Job Fetcher (Greenhouse + Lever) with Date Filter'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting ATS Hunter (Global Discovery)...")
+        self.stdout.write("🚀 Starting Job Sync (Last 28 Days Only)...")
         
-        # 1. Setup
         self.screener = MarTechScreener()
+        self.total_scanned = 0
         self.total_added = 0
-        self.serpapi_key = os.environ.get('SERPAPI_KEY') # Get this from serpapi.com
         
-        if not self.serpapi_key:
-            self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY environment variable."))
-            return
+        # Calculate the cutoff date (28 days ago)
+        self.cutoff_date = timezone.now() - timedelta(days=28)
+        self.stdout.write(f"📅 Skipping jobs posted before: {self.cutoff_date.date()}")
 
-        # 2. Define the "High Signal" Keywords to hunt for
-        # We only search for the most important tools to save API credits
-        hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'Adobe Experience Platform',
-            'Braze', 'Segment.io', 'Tealium', 'mParticle', 'HubSpot Operations'
+        self.tool_cache = {t.name.lower(): t for t in Tool.objects.all()}
+        self.stdout.write(f"ℹ️  Loaded {len(self.tool_cache)} tools from database.")
+
+        # --- TARGET COMPANIES ---
+        greenhouse_targets = [
+            'segment', 'twilio', 'braze', 'mparticle', 'tealium', 
+            'amplitude', 'mixpanel', 'hubspot', 'klaviyo', 'activecampaign',
+            'hashicorp', 'airtable', 'figma', 'notion', 'stripe', 'plaid', 
+            'gusto', 'zapier', 'webflow', 'dbt', 'fivetran', 'snowflake',
+            'databricks', 'confluent', 'redis', 'mongodb', 'gitlab'
         ]
 
-        # 3. Define ATS Domains to scan
-        ats_domains = [
-            'boards.greenhouse.io',
-            'jobs.lever.co',
-            'jobs.ashbyhq.com'
+        lever_targets = [
+            'atlassian', 'netflix', 'lyft', 'twitch', 'shopify', 
+            'palantir', 'box', 'eventbrite', 'udemy', 'coursera',
+            'affirm', 'benchling', 'instacart', 'kp', 'scale'
         ]
 
-        # --- THE HUNT LOOP ---
-        for tool in hunt_targets:
-            for domain in ats_domains:
-                query = f'site:{domain} "{tool}"'
-                self.stdout.write(f"\n🔎 Hunting for: {query}...")
-                
-                links = self.search_google(query)
-                
-                self.stdout.write(f"   found {len(links)} potential jobs...")
-                
-                for link in links:
-                    if "greenhouse.io" in link:
-                        self.fetch_greenhouse_job(link)
-                    elif "lever.co" in link:
-                        self.fetch_lever_job(link)
-                    
-                    # Be nice to rate limits
-                    time.sleep(1)
+        # 1. Run Greenhouse
+        for company in greenhouse_targets:
+            self.fetch_greenhouse(company)
+            time.sleep(0.5) 
 
-        self.stdout.write(self.style.SUCCESS(f"\n✨ Hunt Complete! Added {self.total_added} new jobs."))
+        # 2. Run Lever
+        for company in lever_targets:
+            self.fetch_lever(company)
+            time.sleep(0.5)
+
+        self.stdout.write(self.style.SUCCESS(f"\n✨ Sync Complete!"))
+        self.stdout.write(f"   - Scanned: {self.total_scanned} jobs")
+        self.stdout.write(f"   - Saved:   {self.total_added} fresh MarTech matches")
 
     # ---------------------------------------------------------
-    # SEARCH ENGINE (SerpApi)
+    # WORKER: Greenhouse
     # ---------------------------------------------------------
-    def search_google(self, query):
-        """Uses SerpApi to find direct ATS links"""
-        params = {
-            "engine": "google",
-            "q": query,
-            "api_key": self.serpapi_key,
-            "num": 20,  # Number of results per search
-            "gl": "us", # Country: US
-            "hl": "en"  # Language: English
-        }
-        
+    def fetch_greenhouse(self, board_token):
+        url = f"https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs?content=true"
         try:
-            results = requests.get("https://serpapi.com/search", params=params, timeout=10).json()
-            links = []
-            if "organic_results" in results:
-                for item in results["organic_results"]:
-                    links.append(item.get("link"))
-            return links
+            response = requests.get(url, timeout=10)
+            if response.status_code != 200: return
+
+            jobs = response.json().get('jobs', [])
+            self.stdout.write(f"   🔎 [Greenhouse] {board_token}: Checking {len(jobs)} roles...")
+
+            for item in jobs:
+                self.total_scanned += 1
+                
+                # DATE CHECK
+                if not self.is_fresh(item.get('updated_at')):
+                    continue
+
+                title = item.get('title')
+                location_obj = item.get('location', {})
+                location = location_obj.get('name') if location_obj else "Remote"
+                description = item.get('content', '')
+                apply_url = item.get('absolute_url')
+
+                self.process_job(title, board_token.capitalize(), location, description, apply_url, "Greenhouse")
+
         except Exception as e:
-            self.stdout.write(f"   ❌ Search Error: {e}")
-            return []
+            self.stdout.write(f"   ❌ Error fetching {board_token}: {e}")
 
     # ---------------------------------------------------------
-    # PARSERS (Fetch content from the direct link)
+    # WORKER: Lever
     # ---------------------------------------------------------
-    def fetch_greenhouse_job(self, url):
-        # We need to hack the URL to get the JSON version
-        # URL: https://boards.greenhouse.io/segment/jobs/12345
-        # API: https://boards-api.greenhouse.io/v1/boards/segment/jobs/12345
+    def fetch_lever(self, board_token):
+        url = f"https://api.lever.co/v0/postings/{board_token}?mode=json"
         try:
-            # Simple heuristic to extract token and ID
-            parts = url.split('/')
-            if 'jobs' not in parts: return
-            
-            token_index = parts.index('boards.greenhouse.io') + 1
-            token = parts[token_index]
-            job_id = parts[parts.index('jobs') + 1]
+            response = requests.get(url, timeout=10)
+            if response.status_code != 200: return
 
-            api_url = f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{job_id}"
-            
-            resp = requests.get(api_url, timeout=5)
-            if resp.status_code != 200: return
-            
-            data = resp.json()
-            
-            # Map Fields
-            title = data.get('title')
-            company = token.capitalize() # Greenhouse API doesn't always give company name, we infer from URL
-            location = data.get('location', {}).get('name', 'Remote')
-            description = data.get('content', '')
-            
-            self.process_job(title, company, location, description, url, "Greenhouse")
-            
-        except:
-            pass # Skip if URL parsing fails
+            jobs = response.json()
+            self.stdout.write(f"   🔎 [Lever] {board_token}: Checking {len(jobs)} roles...")
 
-    def fetch_lever_job(self, url):
-        # URL: https://jobs.lever.co/atlassian/123-456-789
-        # API: https://api.lever.co/v0/postings/atlassian/123-456-789
+            for item in jobs:
+                self.total_scanned += 1
+                
+                # DATE CHECK (Lever uses 'createdAt')
+                # Leverage normally returns a timestamp in milliseconds
+                created_at = item.get('createdAt')
+                if created_at:
+                    # Convert ms timestamp to datetime
+                    job_date = datetime.fromtimestamp(created_at / 1000.0, tz=timezone.utc)
+                    if job_date < self.cutoff_date:
+                        continue
+                
+                title = item.get('text')
+                location = item.get('categories', {}).get('location', 'Remote')
+                description = item.get('description', '')
+                apply_url = item.get('hostedUrl')
+
+                self.process_job(title, board_token.capitalize(), location, description, apply_url, "Lever")
+
+        except Exception as e:
+            self.stdout.write(f"   ❌ Error fetching {board_token}: {e}")
+
+    # ---------------------------------------------------------
+    # HELPERS
+    # ---------------------------------------------------------
+    def is_fresh(self, date_str):
+        """Returns True if the job is newer than the cutoff date"""
+        if not date_str: return True # If no date, assume fresh to be safe
         try:
-            parts = url.split('/')
-            if len(parts) < 5: return
-            
-            company = parts[3]
-            job_id = parts[4]
-            
-            api_url = f"https://api.lever.co/v0/postings/{company}/{job_id}"
-            
-            resp = requests.get(api_url, timeout=5)
-            if resp.status_code != 200: return
-            
-            data = resp.json()
-            
-            title = data.get('text')
-            location = data.get('categories', {}).get('location', 'Remote')
-            description = data.get('description', '')
-            
-            self.process_job(title, company.capitalize(), location, description, url, "Lever")
-
+            job_date = dateutil.parser.parse(date_str)
+            if job_date.tzinfo is None:
+                job_date = timezone.make_aware(job_date)
+            return job_date >= self.cutoff_date
         except:
-            pass
+            return True # Fallback if parse fails
 
-    # ---------------------------------------------------------
-    # PROCESSOR (Shared Logic)
-    # ---------------------------------------------------------
     def process_job(self, title, company, location, description, apply_url, source):
-        # 1. Deduplicate
         if Job.objects.filter(apply_url=apply_url).exists():
             return
 
-        # 2. Screen (Your Brain Logic)
         analysis = self.screener.screen_job(title, description)
         
         if not analysis['is_match']:
             return
 
-        # 3. Save
         job = Job.objects.create(
             title=title,
             company=company,
@@ -165,12 +150,12 @@ class Command(BaseCommand):
             is_active=True
         )
 
-        # 4. Link Tools
-        tool_cache = {t.name.lower(): t for t in Tool.objects.all()}
+        linked_count = 0
         for tool_name in analysis['stack']:
-            db_tool = tool_cache.get(tool_name.lower())
+            db_tool = self.tool_cache.get(tool_name.lower())
             if db_tool:
                 job.tools.add(db_tool)
+                linked_count += 1
         
         self.total_added += 1
-        self.stdout.write(f"      ✅ MATCH: {title} at {company}")
+        self.stdout.write(f"      ✅ MATCH: {title} ({linked_count} tools)")
