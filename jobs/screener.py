@@ -84,8 +84,14 @@ class MarTechScreener:
         # 1. Check Killers
         for pattern in self.JOB_KILLERS:
             if re.search(pattern, full_text):
-                # IMPORTANT: Return empty categories list to prevent crash
-                return {"is_match": False, "reason": f"Killer: {pattern}", "stack": [], "categories": []}
+                # FIXED: Added "score": 0 to prevent crashes
+                return {
+                    "is_match": False, 
+                    "score": 0, 
+                    "reason": f"Killer: {pattern}", 
+                    "stack": [], 
+                    "categories": []
+                }
 
         # 2. Scan Categories
         total_score = 0
@@ -108,7 +114,7 @@ class MarTechScreener:
             "is_match": is_match,
             "score": total_score,
             "stack": list(set(self.found_stack)), 
-            "categories": self.found_categories,  # <--- REQUIRED BY FETCH_JOBS.PY
+            "categories": self.found_categories,  
             "role_type": self.infer_role_type()
         }
 
