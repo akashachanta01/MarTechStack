@@ -3,7 +3,7 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Balanced Version: Catches more MOPs roles, still blocks Engineering.
+    PM-Friendly Version: Allows MarTech Product Managers, blocks generic Engineers.
     """
     
     # GROUP A: Adobe Heavyweights & Enterprise CDPs (Score: 30)
@@ -15,7 +15,6 @@ class MarTechScreener:
     ]
     
     # GROUP B: CRM & Automation (Score: 20)
-    # LOOSENED: Added generic 'hubspot' and 'salesforce' to catch more MOPs roles
     GROUP_B = [
         'salesforce marketing cloud', 'sfmc', 'exacttarget', 'ampscript',
         'eloqua', 'pardot', 'braze', 'customer.io', 'iterable', 'moengage',
@@ -25,7 +24,6 @@ class MarTechScreener:
     ]
     
     # GROUP C: Data & Technical Skills (Score: 15)
-    # LOOSENED: Added SQL/Python/APIs back (Vital for MOPs)
     GROUP_C = [
         'javascript', 'gtm', 'google tag manager', 'server-side tracking',
         'tealium', 'mparticle', 'segment', 'segment.io',
@@ -34,24 +32,40 @@ class MarTechScreener:
     ]
     
     # JOB KILLERS: Immediate Rejects (Wrong Role)
-    # KEEPS NOISE OUT: Blocks pure Dev/Sales/Recruiting roles
+    # UPDATED: Removed Product Manager blockers. 
+    # Still blocks Software Engineers and Sales.
     JOB_KILLERS = [
+        # --- Content/Social/Generic Marketing ---
         r'writing.*blog.*posts',
         r'content.*creation',
         r'social.*media.*management',
+        r'brand.*manager',
+        r'copywriter',
+        
+        # --- Sales & HR ---
         r'cold.*calling',
         r'sales.*representative',
         r'account.*executive',
+        r'account.*director',
+        r'business.*development',
         r'hr.*manager',
         r'recruiter',
+        r'talent.*acquisition',
+        r'customer.*success', # CSMs usually don't build stacks
         
-        # Engineering Blockers (Kept strict to avoid "Staff Software Engineer")
+        # --- "Vendor Engineering" Firewall ---
         r'software.*engineer', 
         r'frontend.*engineer',
         r'backend.*engineer',
         r'full.*stack',
-        r'systems.*admin',
-        r'network.*engineer'
+        r'platform.*engineer',
+        r'site.*reliability',
+        r'devops',
+        r'engineering.*manager',
+        r'director.*engineering',
+        # REMOVED: product manager/owner are now ALLOWED ✅
+        r'solutions.*engineer', # Still blocked (usually pre-sales)
+        r'technical.*support'
     ]
     
     def __init__(self):
@@ -80,17 +94,22 @@ class MarTechScreener:
         self.matches_b = [kw for kw in self.GROUP_B if kw in full_text]
         self.matches_c = [kw for kw in self.GROUP_C if kw in full_text]
         
-        # 3. Decision Logic
-        # LOOSENED: Only requires 1 match from ANY group to pass
-        total_keywords = len(self.matches_a) + len(self.matches_b) + len(self.matches_c)
-        is_match = total_keywords >= 1
-
-        # 4. Compile Stack
+        # 3. Score It
+        score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
+        
+        # 4. Smart Decision Logic 🧠
+        # High Bar: Must have Score >= 30 OR be a strong technical match
+        # This prevents "Generic PM" (0 pts) from passing, but allows "MarTech PM" (30+ pts).
+        is_match = False
+        
+        if score >= 30:
+            is_match = True
+        elif self.matches_c and score >= 25: 
+            is_match = True
+            
+        # 5. Compile Stack
         stack = list(set(self.matches_a + self.matches_b + self.matches_c))
         
-        # 5. Score It
-        score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
-
         return {
             "is_match": is_match,
             "score": score,
