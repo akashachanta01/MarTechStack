@@ -11,7 +11,7 @@ class MarTechScreener:
         'adobe experience platform', 'aep', 'adobe analytics', 'adobe launch', 
         'customer journey analytics', 'cja', 'adobe journey optimizer', 'ajo',
         'adobe gen studio', 'adobe experience manager', 'aem', 'real-time cdp', 
-        'adobe target', 'adobe campaign', 'marketo', 'adobe marketo'
+        'adobe target', 'adobe campaign', 'marketo', 'adobe marketo','rt-cdp'
     ]
     
     # GROUP B: Enterprise Automation & CRM (Score: 20)
