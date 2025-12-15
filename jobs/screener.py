@@ -3,80 +3,77 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    PM-Friendly Version: Allows MarTech Product Managers, blocks generic Engineers.
+    Category-Based Version: Filters using specific functional buckets.
+    Returns 'categories' list which fetch_jobs.py now requires.
     """
     
-    # GROUP A: Adobe Heavyweights & Enterprise CDPs (Score: 30)
-    GROUP_A = [
-        'adobe experience platform', 'aep', 'adobe analytics', 'adobe launch', 
-        'customer journey analytics', 'cja', 'adobe journey optimizer', 'ajo',
-        'adobe gen studio', 'adobe experience manager', 'aem', 'real-time cdp', 'rt-cdp',
-        'adobe target', 'adobe campaign', 'marketo', 'adobe marketo'
-    ]
-    
-    # GROUP B: CRM & Automation (Score: 20)
-    GROUP_B = [
-        'salesforce marketing cloud', 'sfmc', 'exacttarget', 'ampscript',
-        'eloqua', 'pardot', 'braze', 'customer.io', 'iterable', 'moengage',
-        'hubspot', 'hubspot operations', 'hubspot workflows', 'hubspot custom objects',
-        'salesforce', 'salesforce crm', 'sfdc',
-        'marketing technologist', 'martech developer', 'marketing technology' 
-    ]
-    
-    # GROUP C: Data & Technical Skills (Score: 15)
-    GROUP_C = [
-        'javascript', 'gtm', 'google tag manager', 'server-side tracking',
-        'tealium', 'mparticle', 'segment', 'segment.io',
-        'sql', 'python', 'api', 'api integration', 'webhooks', 'json', 'html', 'css',
-        'snowflake', 'bigquery', 'dbt', 'reverse etl', 'hightouch', 'census'
-    ]
-    
-    # JOB KILLERS: Immediate Rejects (Wrong Role)
-    # UPDATED: Removed Product Manager blockers. 
-    # Still blocks Software Engineers and Sales.
+    # 1. Define Categories & Keywords (Your Custom List)
+    CATEGORIES = {
+        "Automation & Email Platforms": [
+            "hubspot", "hubspot marketing hub", "marketo", "adobe marketo",
+            "salesforce marketing cloud", "pardot", "sfmc", "exacttarget",
+            "activecampaign", "mailchimp", "klaviyo", "sendinblue", "brevo",
+            "iterable", "oracle eloqua", "eloqua", "omnisend", "autopilot",
+            "marketo engage"
+        ],
+        "Lead Nurturing & Campaign": [
+            "braze", "customer.io", "customer io", "iterable", "drip",
+            "sharpspring", "ontraport", "constant contact",
+            "acoustic campaign", "eloqua"
+        ],
+        "Web & Product Analytics": [
+            "ga4", "google analytics", "google analytics 4", "looker studio",
+            "data studio", "hotjar", "mixpanel", "amplitude", "piwik",
+            "piwik pro", "fathom analytics", "woopra",
+            "microsoft clarity", "bigquery", "heap",
+            "tableau", "power bi", "looker"
+        ],
+        "Customer Data Platforms": [
+            "segment", "twilio segment", "adobe experience platform", "aep",
+            "salesforce cdp", "customer 360 audiences", "actioniq",
+            "bloomreach engagement", "mparticle", "tealium audiencestream",
+            "treasure data", "rudderstack", "blueconic", "lotame",
+            "real-time cdp", "rt-cdp"
+        ],
+        "Tag Management & Tracking": [
+            "google tag manager", "gtm", "tealium iq",
+            "adobe launch", "dtm", "ensighten",
+            "server-side tagging", "stape",
+            "segment source", "segment tag manager",
+            "server-side tracking"
+        ],
+    }
+
+    # 2. Assign Weights (High Tech = High Score)
+    CATEGORY_WEIGHTS = {
+        "Customer Data Platforms": 30,
+        "Automation & Email Platforms": 25,
+        "Lead Nurturing & Campaign": 20,
+        "Tag Management & Tracking": 15,
+        "Web & Product Analytics": 10
+    }
+
+    # 3. Job Killers (The Firewall)
     JOB_KILLERS = [
-        # --- Content/Social/Generic Marketing ---
-        r'writing.*blog.*posts',
-        r'content.*creation',
-        r'social.*media.*management',
-        r'brand.*manager',
-        r'copywriter',
+        r'writing.*blog.*posts', r'content.*creation', r'social.*media.*management',
+        r'brand.*manager', r'copywriter', r'cold.*calling', r'sales.*representative',
+        r'account.*executive', r'account.*director', r'business.*development',
+        r'hr.*manager', r'recruiter', r'talent.*acquisition', r'customer.*success',
         
-        # --- Sales & HR ---
-        r'cold.*calling',
-        r'sales.*representative',
-        r'account.*executive',
-        r'account.*director',
-        r'business.*development',
-        r'hr.*manager',
-        r'recruiter',
-        r'talent.*acquisition',
-        r'customer.*success', # CSMs usually don't build stacks
-        
-        # --- "Vendor Engineering" Firewall ---
-        r'software.*engineer', 
-        r'frontend.*engineer',
-        r'backend.*engineer',
-        r'full.*stack',
-        r'platform.*engineer',
-        r'site.*reliability',
-        r'devops',
-        r'engineering.*manager',
-        r'director.*engineering',
-        # REMOVED: product manager/owner are now ALLOWED ✅
-        r'solutions.*engineer', # Still blocked (usually pre-sales)
-        r'technical.*support'
+        # Engineering Firewall (Blocks builders, allows users)
+        r'software.*engineer', r'frontend.*engineer', r'backend.*engineer',
+        r'full.*stack', r'platform.*engineer', r'site.*reliability',
+        r'devops', r'engineering.*manager', r'director.*engineering',
+        r'solutions.*engineer', r'technical.*support'
     ]
     
     def __init__(self):
         self.reset()
     
     def reset(self):
-        self.matches_a = []
-        self.matches_b = []
-        self.matches_c = []
-        self.has_killer = False
-
+        self.found_categories = []
+        self.found_stack = []
+    
     def clean_text(self, text):
         return str(text).lower().strip()
     
@@ -84,42 +81,43 @@ class MarTechScreener:
         self.reset()
         full_text = self.clean_text(f"{title} {description}")
         
-        # 1. Check for Killers first
+        # 1. Check Killers
         for pattern in self.JOB_KILLERS:
             if re.search(pattern, full_text):
-                return {"is_match": False, "reason": f"Job Killer: {pattern}", "stack": [], "role_type": "None"}
+                # IMPORTANT: Return empty categories list to prevent crash
+                return {"is_match": False, "reason": f"Killer: {pattern}", "stack": [], "categories": []}
 
-        # 2. Find Matches
-        self.matches_a = [kw for kw in self.GROUP_A if kw in full_text]
-        self.matches_b = [kw for kw in self.GROUP_B if kw in full_text]
-        self.matches_c = [kw for kw in self.GROUP_C if kw in full_text]
+        # 2. Scan Categories
+        total_score = 0
         
-        # 3. Score It
-        score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
-        
-        # 4. Smart Decision Logic 🧠
-        # High Bar: Must have Score >= 30 OR be a strong technical match
-        # This prevents "Generic PM" (0 pts) from passing, but allows "MarTech PM" (30+ pts).
-        is_match = False
-        
-        if score >= 30:
-            is_match = True
-        elif self.matches_c and score >= 25: 
-            is_match = True
+        for category, keywords in self.CATEGORIES.items():
+            # Check if ANY keyword from this category exists in text
+            matches = [kw for kw in keywords if kw in full_text]
             
-        # 5. Compile Stack
-        stack = list(set(self.matches_a + self.matches_b + self.matches_c))
-        
+            if matches:
+                self.found_categories.append(category)
+                self.found_stack.extend(matches)
+                total_score += self.CATEGORY_WEIGHTS.get(category, 10)
+
+        # 3. Decision Logic (Threshold = 20)
+        # Allows: "HubSpot" (25pts), "Braze" (20pts)
+        # Blocks: "Google Analytics" alone (10pts)
+        is_match = total_score >= 20
+
         return {
             "is_match": is_match,
-            "score": score,
-            "stack": stack,
+            "score": total_score,
+            "stack": list(set(self.found_stack)), 
+            "categories": self.found_categories,  # <--- REQUIRED BY FETCH_JOBS.PY
             "role_type": self.infer_role_type()
         }
 
     def infer_role_type(self):
-        if self.matches_c and not self.matches_a and not self.matches_b:
-            return "Technical/Data"
-        if self.matches_a:
-            return "Implementation/Architect"
-        return "Marketing Operations"
+        cats = self.found_categories
+        if "Customer Data Platforms" in cats or "Tag Management & Tracking" in cats:
+            return "MarTech Engineer/Architect"
+        if "Automation & Email Platforms" in cats:
+            return "Marketing Operations"
+        if "Web & Product Analytics" in cats:
+            return "Marketing Analyst"
+        return "Marketing Technologist"
