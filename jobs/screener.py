@@ -14,7 +14,7 @@ class MarTechScreener:
             "salesforce marketing cloud", "pardot", "sfmc", "exacttarget",
             "activecampaign", "mailchimp", "klaviyo", "sendinblue", "brevo",
             "iterable", "oracle eloqua", "eloqua", "omnisend", "autopilot",
-            "marketo engage"
+            "marketo engage", "adobe journey optimizer", "ajo", "adobe workfront", "workfront"
         ],
         "Lead Nurturing & Campaign": [
             "braze", "customer.io", "customer io", "iterable", "drip",
@@ -25,8 +25,7 @@ class MarTechScreener:
             "ga4", "google analytics", "google analytics 4", "looker studio",
             "data studio", "hotjar", "mixpanel", "amplitude", "piwik",
             "piwik pro", "fathom analytics", "woopra",
-            "microsoft clarity", "bigquery", "heap",
-            "tableau", "power bi", "looker"
+            "microsoft clarity", "bigquery", "heap", "customer journey analytics", "cja", "adobe analytics" 
         ],
         "Customer Data Platforms": [
             "segment", "twilio segment", "adobe experience platform", "aep",
