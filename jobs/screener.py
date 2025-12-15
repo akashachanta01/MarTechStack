@@ -22,12 +22,13 @@ class MarTechScreener:
     ]
     
     # GROUP C: Data, Code & Infrastructure (Score: 15)
-    # UPDATED: Restricted to your specific list
+    # STRICTLY LIMITED to avoid generic Data Engineering roles
     GROUP_C = [
         'javascript', 'gtm', 'google tag manager', 'server-side tracking'
     ]
     
     # JOB KILLERS: Immediate Rejects (Wrong Role)
+    # These override any matches.
     JOB_KILLERS = [
         r'writing.*blog.*posts',
         r'content.*creation',
@@ -36,7 +37,17 @@ class MarTechScreener:
         r'sales.*representative',
         r'account.*executive',
         r'hr.*manager',
-        r'recruiter'
+        r'recruiter',
+        
+        # 🚫 ENGINEERING & DATA BLOCKERS (New)
+        r'software.*engineer', 
+        r'data.*engineer',
+        r'front.*end',
+        r'back.*end',
+        r'full.*stack',
+        r'database.*admin',
+        r'systems.*admin',
+        r'consultant' # Blocks "Associate Data & CRM Consultant"
     ]
     
     def __init__(self):
