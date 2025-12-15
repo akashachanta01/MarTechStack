@@ -22,15 +22,12 @@ class MarTechScreener:
     ]
     
     # GROUP C: Data, Code & Infrastructure (Score: 15)
+    # UPDATED: Restricted to your specific list
     GROUP_C = [
-        'sql', 'python', 'r language', 'snowflake', 'bigquery', 'redshift',
-        'dbt', 'reverse etl', 'hightouch', 'census', 'segment', 'tealium',
-        'mparticle', 'api integration', 'webhooks', 'json',
         'javascript', 'gtm', 'google tag manager', 'server-side tracking'
     ]
     
     # JOB KILLERS: Immediate Rejects (Wrong Role)
-    # These override any matches.
     JOB_KILLERS = [
         r'writing.*blog.*posts',
         r'content.*creation',
@@ -52,7 +49,7 @@ class MarTechScreener:
         self.has_killer = False
 
     def clean_text(self, text):
-        return text.lower().strip()
+        return str(text).lower().strip()
     
     def screen_job(self, title, description):
         self.reset()
@@ -72,9 +69,9 @@ class MarTechScreener:
         score = (len(self.matches_a) * 30) + (len(self.matches_b) * 20) + (len(self.matches_c) * 15)
         
         # 4. Decision Logic
-        # Must have at least ONE strong tool match and a decent score
+        # Must have at least ONE strong tool match
         total_keywords = len(self.matches_a) + len(self.matches_b) + len(self.matches_c)
-        is_match = total_keywords >= 1 and score >= 20
+        is_match = total_keywords >= 1
 
         # 5. Compile Stack for Auto-Tagging
         stack = list(set(self.matches_a + self.matches_b + self.matches_c))
@@ -88,9 +85,7 @@ class MarTechScreener:
 
     def infer_role_type(self):
         if self.matches_c:
-            if any(x in self.matches_c for x in ['sql', 'python', 'snowflake']):
-                return "Data"
-            return "Engineering"
+            return "Technical/Developer"
         if self.matches_a:
-            return "Implementation"
-        return "Operations"
+            return "Implementation/Architect"
+        return "Marketing Operations"
