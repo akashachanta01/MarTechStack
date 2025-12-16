@@ -19,6 +19,32 @@ class Tool(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def color_class(self):
+        """
+        Returns a consistent Tailwind CSS class string based on the tool name.
+        This ensures 'Marketo' is always the same color, on every card.
+        """
+        # "Saturated Pastel" Palette (200 bg, 900 text, 300 border)
+        colors = [
+            'bg-emerald-200 text-emerald-900 border-emerald-300',
+            'bg-amber-200 text-amber-900 border-amber-300',
+            'bg-rose-200 text-rose-900 border-rose-300',
+            'bg-sky-200 text-sky-900 border-sky-300',
+            'bg-violet-200 text-violet-900 border-violet-300',
+            'bg-teal-200 text-teal-900 border-teal-300',
+            'bg-indigo-200 text-indigo-900 border-indigo-300',
+            'bg-fuchsia-200 text-fuchsia-900 border-fuchsia-300',
+            'bg-orange-200 text-orange-900 border-orange-300',
+            'bg-cyan-200 text-cyan-900 border-cyan-300',
+            'bg-lime-200 text-lime-900 border-lime-300',
+            'bg-pink-200 text-pink-900 border-pink-300',
+        ]
+        # Sum the ASCII values of the characters to get a consistent number
+        char_sum = sum(ord(c) for c in self.name)
+        # Use modulo to pick a color from the list
+        return colors[char_sum % len(colors)]
+
 class Job(models.Model):
     ROLE_TYPE_CHOICES = [
         ('full_time', 'Full-time'),
@@ -53,12 +79,12 @@ class Job(models.Model):
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
-    # New fields for rule blocking details if you added them previously
+    # AI/Scraper Fields
     screening_score = models.FloatField(blank=True, null=True)
     screening_reason = models.TextField(blank=True, default="")
     screening_details = models.JSONField(blank=True, default=dict)
     
-    # Simple tagging for easy management
+    # Simple tagging
     tags = models.CharField(max_length=200, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,7 +95,6 @@ class Job(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        # ⚡️ INDEXES: This speeds up filtering by active/approved jobs significantly
         indexes = [
             models.Index(fields=['is_active', 'screening_status']),
             models.Index(fields=['created_at']),
