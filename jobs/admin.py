@@ -20,11 +20,12 @@ class JobAdmin(admin.ModelAdmin):
     list_display = (
         "logo_preview",
         "job_card_header",
-        "score_badge", # This is where the error was
+        "score_badge",
         "tech_stack_preview",
         "status_badge",
         "action_buttons",
     )
+    # Removing 'screening_score' from list_filter can sometimes help if sorting is stuck
     list_filter = ("screening_status", "is_active", "remote", "role_type", "created_at")
     search_fields = ("title", "company", "description")
     readonly_fields = ("created_at", "screened_at", "screening_details")
@@ -61,23 +62,27 @@ class JobAdmin(admin.ModelAdmin):
     job_card_header.short_description = "Role & Company"
 
     def score_badge(self, obj):
-        # --- THE FIX IS HERE ---
-        # We explicitly convert to float. If it fails, we default to 0.0
+        # NUCLEAR FIX: Format as string FIRST, then pass to HTML.
+        # This bypasses the format_html error completely.
         try:
-            score_val = float(obj.screening_score) if obj.screening_score is not None else 0.0
+            val = float(obj.screening_score) if obj.screening_score is not None else 0.0
         except (ValueError, TypeError):
-            score_val = 0.0
+            val = 0.0
 
-        if score_val >= 80:
+        # Colors
+        if val >= 80:
             bg, text = "#d1fae5", "#065f46" # Green
-        elif score_val >= 50:
+        elif val >= 50:
             bg, text = "#fef3c7", "#92400e" # Amber
         else:
             bg, text = "#fee2e2", "#b91c1c" # Red
         
+        # Pre-format the number as a simple string "85"
+        score_str = "{:.0f}".format(val)
+
         return format_html(
-            '<span style="background: {}; color: {}; padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 11px;">{:.0f}</span>',
-            bg, text, score_val
+            '<span style="background: {}; color: {}; padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 11px;">{}</span>',
+            bg, text, score_str
         )
     score_badge.short_description = "Score"
 
@@ -142,10 +147,8 @@ class JobAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
 
 
-# --- SEPARATE ADMIN FOR USER SUBMISSIONS ---
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(JobAdmin):
-    # Only show jobs tagged "User Submission"
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tags__icontains="User Submission")
 
@@ -154,7 +157,6 @@ class SubscriberAdmin(admin.ModelAdmin):
     list_display = ("email", "created_at")
     search_fields = ("email",)
     ordering = ("-created_at",)
-
 
 @admin.register(BlockRule)
 class BlockRuleAdmin(admin.ModelAdmin):
