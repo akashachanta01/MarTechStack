@@ -175,8 +175,7 @@
 
                 <div class="flex flex-wrap gap-2 mt-2">
                     {% for tool in job.tools.all|slice:":5" %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border transition-all duration-200 hover:scale-110 hover:shadow-md cursor-default
-                        {% cycle 'bg-emerald-200 text-emerald-900 border-emerald-300' 'bg-amber-200 text-amber-900 border-amber-300' 'bg-rose-200 text-rose-900 border-rose-300' 'bg-sky-200 text-sky-900 border-sky-300' 'bg-violet-200 text-violet-900 border-violet-300' 'bg-teal-200 text-teal-900 border-teal-300' %}">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold border transition-all duration-200 hover:scale-110 hover:shadow-md cursor-default {{ tool.color_class }}">
                         {{ tool.name }}
                     </span>
                     {% endfor %}
