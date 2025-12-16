@@ -21,17 +21,24 @@ class JobAdmin(admin.ModelAdmin):
         "logo_preview",
         "job_card_header",
         "score_badge",
+        "remote",         # <-- NOW IN LIST
+        "salary_range",   # <-- NOW IN LIST
         "tech_stack_preview",
         "status_badge",
-        "action_buttons",
+        "action_buttons", # <-- Includes quick Edit link
     )
     list_filter = ("screening_status", "is_active", "remote", "role_type", "created_at")
     search_fields = ("title", "company", "description")
+    
+    # ⚡️ ENHANCEMENT: Make these fields directly editable in the list view
+    list_editable = ("remote", "salary_range")
+
+    # Readonly fields (prevent accidental changes to system-managed data)
     readonly_fields = ("created_at", "screened_at", "screening_details")
+    
     filter_horizontal = ("tools",)
     list_per_page = 25
     
-    # Default sorting: Newest first
     ordering = ("-created_at",)
 
     def get_queryset(self, request):
@@ -62,7 +69,7 @@ class JobAdmin(admin.ModelAdmin):
             obj.location or "Remote"
         )
     job_card_header.short_description = "Role & Company"
-    job_card_header.admin_order_field = "title"  # <--- MAKES IT SORTABLE
+    job_card_header.admin_order_field = "title"
 
     def score_badge(self, obj):
         try:
@@ -84,7 +91,7 @@ class JobAdmin(admin.ModelAdmin):
             bg, text, score_str
         )
     score_badge.short_description = "Score"
-    score_badge.admin_order_field = "screening_score"  # <--- MAKES IT SORTABLE
+    score_badge.admin_order_field = "screening_score"
 
     def status_badge(self, obj):
         colors = {
@@ -98,7 +105,7 @@ class JobAdmin(admin.ModelAdmin):
             bg, text, obj.screening_status
         )
     status_badge.short_description = "Status"
-    status_badge.admin_order_field = "screening_status"  # <--- MAKES IT SORTABLE
+    status_badge.admin_order_field = "screening_status"
 
     def tech_stack_preview(self, obj):
         tools = obj.tools.all()[:4]
@@ -113,18 +120,20 @@ class JobAdmin(admin.ModelAdmin):
         html += '</div>'
         return format_html(html)
     tech_stack_preview.short_description = "Tech Stack"
+    # Tech stack is complex (M2M) and cannot be list_editable, so we link to the edit page
 
     def action_buttons(self, obj):
         return format_html(
             '<div style="display: flex; align-items: center; gap: 8px;">'
-            '<a href="/staff/review/?q={}" target="_blank" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Review</a>'
+            '<a href="{}" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Edit Details</a>'
             '<a href="{}" target="_blank" style="opacity: 0.7; font-size: 12px; text-decoration: none;">↗ Apply</a>'
             '</div>',
-            obj.title, 
+            obj.get_absolute_url(), # <-- Direct link to the change page for easy tool editing
             obj.apply_url
         )
     action_buttons.short_description = "Actions"
 
+    # --- 2. BULK ACTIONS ---
     actions = ("mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs")
 
     @admin.action(description="✅ Approve selected")
@@ -160,8 +169,15 @@ class SubscriberAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 @admin.register(BlockRule)
-class BlockRuleAdmin(admin.ModelAdmin):
+class BlockRuleAdmin(models.Model):
     list_display = ("rule_type", "value", "enabled", "created_at")
     list_filter = ("rule_type", "enabled")
     search_fields = ("value", "notes")
     ordering = ("-created_at",)
+
+# We must update the Job model to include get_absolute_url for the Edit Details link to work
+try:
+    from django.urls import reverse
+    Job.add_to_class('get_absolute_url', lambda self: reverse('admin:jobs_job_change', args=[self.id]))
+except Exception:
+    pass
