@@ -30,16 +30,31 @@ class Command(BaseCommand):
 
         self.stdout.write(f"📅 Freshness Filter: {self.cutoff_date.date()}")
 
-        # --- HUNT TARGETS ---
+        # --- HUNT TARGETS (UPDATED) ---
         hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 'Braze',
+            # Adobe Stack (The Missing Piece)
+            'Adobe Analytics', 'Adobe Target', 'Adobe Campaign', 
+            'Adobe Journey Optimizer', 'AJO', 
+            'Adobe Experience Platform', 'Adobe Experience Cloud',
+            'Adobe Customer Journey Analytics',
+            'Marketo', 
+
+            # Marketing Automation
+            'Salesforce Marketing Cloud', 'HubSpot', 'Braze',
             'Klaviyo', 'Iterable', 'Customer.io', 
-            'Adobe Experience Platform', 'Tealium', 'mParticle', 'Real-Time CDP',
+            
+            # CDP & Data
+            'Tealium', 'mParticle', 'Real-Time CDP', 'Segment',
+            'Customer Data Platform', 'CDP',
+            
+            # Analytics
             'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude',
-            'MarTech', 'Marketing Operations', 'Marketing Technologist'
+            
+            # General Roles (High Priority)
+            'MarTech', 'MarTech Architect', 'Marketing Operations', 'Marketing Technologist'
         ]
 
-        # --- SMART QUERIES (Expanded for new ATS platforms) ---
+        # --- SMART QUERIES ---
         search_patterns = [
             'site:boards.greenhouse.io',
             'site:jobs.lever.co',
@@ -103,28 +118,28 @@ class Command(BaseCommand):
                 self.fetch_lever_api(match.group(1))
                 return
 
-        # 3. Ashby (NEW)
+        # 3. Ashby
         elif "ashbyhq.com" in url:
             match = re.search(r'jobs\.ashbyhq\.com/([^/]+)', url)
             if match:
                 self.fetch_ashby_api(match.group(1))
                 return
 
-        # 4. Workable (NEW)
+        # 4. Workable
         elif "workable.com" in url:
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match:
                 self.fetch_workable_api(match.group(1))
                 return
 
-        # 5. SmartRecruiters (NEW)
+        # 5. SmartRecruiters
         elif "smartrecruiters.com" in url:
             match = re.search(r'smartrecruiters\.com/([^/]+)', url)
             if match:
                 self.fetch_smartrecruiters_api(match.group(1))
                 return
 
-        # 6. Recruitee (NEW)
+        # 6. Recruitee
         elif "recruitee.com" in url:
             match = re.search(r'([^.]+)\.recruitee\.com', url)
             if match:
