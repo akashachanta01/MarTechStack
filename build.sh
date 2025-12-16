@@ -8,15 +8,15 @@ pip install -r requirements.txt
 # 2. Convert static files
 python manage.py collectstatic --no-input
 
-# 3. 🚑 EMERGENCY FIX: Manually sync DB columns
-#python emergency_db_sync.py
+# 3. 🚑 REPAIR DATABASE: Add missing columns manually
+python fix_updated_at.py
 
-# 4. Create migrations for the changes
+# 4. Generate migrations on the server (Since you edit in GitHub)
 python manage.py makemigrations
 
-# 5. ⚠️ FAKE MIGRATION: Mark changes as done without running SQL
-# This fixes the "relation already exists" error because we manually fixed it above.
-#python manage.py migrate --fake jobs
+# 5. Fake the migration for 'jobs' so Django doesn't try to add the column again
+# We do this because we just added it manually above!
+python manage.py migrate --fake jobs
 
 # 6. Run any other standard migrations
 python manage.py migrate
