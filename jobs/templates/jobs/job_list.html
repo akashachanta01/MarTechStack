@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="bg-gradient-to-b from-indigo-50 to-white border-b border-gray-200 pt-16 pb-10">
+<div class="bg-gradient-to-b from-indigo-50/60 via-white to-white border-b border-slate-200 pt-16 pb-12">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     
     <div class="text-center max-w-2xl mx-auto mb-10">
@@ -54,13 +54,11 @@
             <button type="submit" class="flex-1 md:flex-none bg-indigo-600 text-white rounded-xl md:rounded-full px-8 py-3 font-bold hover:bg-indigo-700 transition shadow-sm whitespace-nowrap">
               Search
             </button>
-            
             <a href="/" class="flex-none flex items-center justify-center bg-gray-100 text-gray-600 rounded-xl md:rounded-full w-12 h-12 md:w-auto md:h-auto md:px-4 md:py-3 font-bold hover:bg-gray-200 hover:text-gray-900 transition" title="Clear all filters">
                 <svg class="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 <span class="hidden md:inline">Clear</span>
             </a>
         </div>
-
       </div>
 
       <div class="mt-6 flex flex-wrap justify-center gap-2">
@@ -75,6 +73,31 @@
         </a>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="bg-white border-b border-gray-100 py-10">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-gray-900">Browse by Tech Stack</h2>
+      <p class="text-sm text-gray-500 mt-1">Explore open roles for the most popular marketing technologies.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {% for tool in tools|slice:":8" %}
+      <a href="/?tool={{ tool.name|urlencode }}" class="group block bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+            {{ tool.name|slice:":1" }}
+          </div>
+          <div>
+            <div class="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{{ tool.name }}</div>
+            <div class="text-xs text-gray-500 truncate max-w-[120px]">{{ tool.category.name }}</div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
   </div>
 </div>
 
@@ -183,7 +206,9 @@
           <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-600 opacity-20 rounded-full blur-3xl"></div>
         </div>
 
-    </div> </div>
+    </div> 
+
+  </div>
 </div>
 
 <script>
@@ -193,7 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsContainer = document.getElementById('search-results-container');
     const form = document.getElementById('search-form');
 
-    // 3. Skeleton HTML (To show while fetching)
     const skeletonHTML = `
       <div class="space-y-4">
         ${Array(4).fill(0).map(() => `
@@ -226,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams(new FormData(form)).toString();
         const url = `${window.location.pathname}?${params}`;
 
-        // Show Skeleton immediately
         resultsContainer.innerHTML = skeletonHTML;
         resultsContainer.style.opacity = '1';
 
@@ -237,12 +260,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const doc = parser.parseFromString(html, 'text/html');
                 const newResults = doc.getElementById('search-results-container').innerHTML;
                 
-                // Fade in real results
                 resultsContainer.style.opacity = '0';
                 setTimeout(() => {
                     resultsContainer.innerHTML = newResults;
                     resultsContainer.style.opacity = '1';
-                }, 50); // Short delay for smooth transition
+                }, 50);
                 
                 window.history.pushState({}, '', url);
             })
