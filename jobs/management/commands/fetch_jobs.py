@@ -9,17 +9,20 @@ import dateutil.parser
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
+# 🚫 BLACKLIST (Ignore these generic tokens)
+BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board'}
+
 class Command(BaseCommand):
-    help = 'Auto-Discovery Job Hunter: Finds Vanity URLs and extracts hidden ATS tokens'
+    help = 'The Gold Standard Hunter: Stealth, Guessing, and Auto-Discovery'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Auto-Discovery Job Hunt...")
+        self.stdout.write("🚀 Starting Gold Standard Job Hunt...")
         
         self.screener = MarTechScreener()
         self.total_added = 0
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.cutoff_date = timezone.now() - timedelta(days=28)
-        self.processed_tokens = set() # Keep track to avoid re-scanning same company
+        self.processed_tokens = set()
         
         if not self.serpapi_key:
             self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY."))
@@ -29,44 +32,48 @@ class Command(BaseCommand):
 
         # --- HUNT TARGETS ---
         hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot',
-            'Klaviyo', 'Iterable', 'Customer.io', "Adobe Campaign", 'Adobe Target',
+            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 'Braze',
+            'Klaviyo', 'Iterable', 'Customer.io', 
             'Adobe Experience Platform', 'Tealium', 'mParticle', 'Real-Time CDP',
-            'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude', 'Martech architect',
-            'MarTech', 'Marketing Operations', 'Marketing Technologist', 'AEP', 'AJO', 'CJA','Adobe Analytics'
+            'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude',
+            'MarTech', 'Marketing Operations', 'Marketing Technologist'
         ]
 
         # --- SMART QUERIES ---
-        # 1. Standard: Look for boards directly
-        # 2. Vanity: Look for the "footprints" left by ATS on custom domains
         search_patterns = [
             'site:boards.greenhouse.io',
             'site:jobs.lever.co',
-            'site:job-boards.greenhouse.io', # Added for Pitchbook/Vultr
-            'inurl:gh_jid',       # Greenhouse Job ID param (common on vanity URLs)
-            'inurl:gh_src',       # Greenhouse Source param
-            '"powered by greenhouse"', # Footer text footprint
-            '"powered by lever"'       # Footer text footprint
+            'site:job-boards.greenhouse.io', 
+            'inurl:gh_jid',       
+            'inurl:gh_src',      
+            '"powered by greenhouse"',
+            '"powered by lever"' 
         ]
 
         for tool in hunt_targets:
-            # We combine the tool + patterns to find relevant pages
             combined_patterns = " OR ".join(search_patterns)
             query = f'"{tool}" ({combined_patterns})'
             
             self.stdout.write(f"\n🔎 Hunting: {query[:50]}...")
-            
             links = self.search_google(query)
             self.stdout.write(f"   Found {len(links)} links. Analyzing...")
 
             for link in links:
                 try:
                     self.analyze_and_fetch(link)
-                    time.sleep(0.5) # Be gentle
+                    time.sleep(0.5) 
                 except Exception as e:
                     pass
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
+
+    # --- STEALTH HEADERS ---
+    def get_headers(self):
+        return {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
 
     def search_google(self, query):
         params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 25, "gl": "us", "hl": "en", "tbs": "qdr:m" }
@@ -75,87 +82,99 @@ class Command(BaseCommand):
             return [r.get("link") for r in resp.json().get("organic_results", [])]
         except: return []
 
-    # ==========================================
-    # 🧠 THE SNIFFER: AUTO-DISCOVERY LOGIC
-    # ==========================================
+    # --- THE BRAIN: ANALYZE URL ---
     def analyze_and_fetch(self, url):
-        # Case 1: It's already a clean Greenhouse URL (US/EU/Job-Boards)
-        if "greenhouse.io" in url:
-            self.extract_and_fetch_greenhouse(url)
-            return
-
-        # Case 2: It's already a clean Lever URL
-        if "jobs.lever.co" in url:
-            self.extract_and_fetch_lever(url)
-            return
-
-        # Case 3: It's a Vanity URL (e.g. akqa.com) -> SNIFF IT! 🐕
+        # 1. Direct Detection (Greenhouse/Lever)
+        if "greenhouse.io" in url and "embed" not in url:
+            match = re.search(r'greenhouse\.io/([^/]+)', url)
+            if match and match.group(1) not in BLACKLIST_TOKENS:
+                self.fetch_greenhouse_api(match.group(1))
+                return
+        elif "lever.co" in url:
+            match = re.search(r'lever\.co/([^/]+)', url)
+            if match:
+                self.fetch_lever_api(match.group(1))
+                return
+        
+        # 2. Sniffing & Guessing (Vanity URLs)
         self.sniff_vanity_page(url)
 
     def sniff_vanity_page(self, url):
-        """
-        Visits a custom career page and looks for hidden tokens in the HTML.
-        """
         try:
-            # 1. Visit the page
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            resp = requests.get(url, headers=headers, timeout=5)
-            if resp.status_code != 200: return
-            html = resp.text
+            session = requests.Session()
+            session.headers.update(self.get_headers())
+            resp = session.get(url, timeout=10)
+            
+            # If 403 or empty, we skip straight to guessing
+            if resp.status_code == 200:
+                html = resp.text
+                
+                # Sniff Greenhouse
+                gh_match = re.search(r'greenhouse\.io/([^/"\'?]+)', html)
+                if gh_match:
+                    token = gh_match.group(1)
+                    if token not in BLACKLIST_TOKENS:
+                        self.fetch_greenhouse_api(token)
+                        return
+                
+                # Sniff Lever
+                lever_match = re.search(r'jobs\.lever\.co/([^/"\'?]+)', html)
+                if lever_match:
+                    self.fetch_lever_api(lever_match.group(1))
+                    return
 
-            # 2. Look for Greenhouse Token Patterns
-            # Pattern A: boards.greenhouse.io/TOKEN
-            gh_match = re.search(r'greenhouse\.io/([^/"\'?]+)', html)
-            if gh_match:
-                token = gh_match.group(1)
-                self.fetch_direct_greenhouse_api(token)
-                return
+            # 3. THE GUESSER (If sniffing failed) 🧠
+            self.guess_token(url)
 
-            # Pattern B: grnhse.load_demo('TOKEN')
-            gh_js_match = re.search(r'grnhse\.load_demo\([\'"]([^\'"]+)[\'"]\)', html)
-            if gh_js_match:
-                token = gh_js_match.group(1)
-                self.fetch_direct_greenhouse_api(token)
-                return
+        except Exception:
+            self.guess_token(url)
 
-            # 3. Look for Lever Token Patterns
-            lever_match = re.search(r'jobs\.lever\.co/([^/"\'?]+)', html)
-            if lever_match:
-                token = lever_match.group(1)
-                self.fetch_direct_lever_api(token)
-                return
+    def guess_token(self, url):
+        domain_match = re.search(r'https?://(www\.)?([^/.]+)', url)
+        if not domain_match: return
 
-        except Exception as e:
-            pass
+        base_guess = domain_match.group(2)
+        # Prioritize likely variations
+        guesses = [base_guess, base_guess + "metrics", base_guess + "io", base_guess + "inc", base_guess + "data"]
+        
+        for guess in guesses:
+            if guess in self.processed_tokens: continue
+            # Try fetching; if it returns jobs, we found it!
+            success = self.fetch_greenhouse_api(guess, silent_fail=True)
+            if success: return # Stop guessing once we find one
 
-    # ==========================================
-    # 🏭 WORKERS (API FETCHERS)
-    # ==========================================
-    
-    def fetch_direct_greenhouse_api(self, token):
-        if token in self.processed_tokens: return
-        self.processed_tokens.add(token)
+    # --- API WORKERS ---
+    def fetch_greenhouse_api(self, token, silent_fail=False):
+        if token in self.processed_tokens or token in BLACKLIST_TOKENS: return False
         
         # Try US then EU
+        found_jobs = False
         for domain in ["boards-api.greenhouse.io", "job-boards.eu.greenhouse.io"]:
             try:
                 api_url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
-                resp = requests.get(api_url, timeout=5)
+                resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
                 if resp.status_code == 200:
                     jobs = resp.json().get('jobs', [])
-                    self.stdout.write(f"      ⬇️  Fetching {len(jobs)} jobs from {token}...")
-                    for item in jobs:
-                        if self.is_fresh(item.get('updated_at')):
-                            self.process_job(item.get('title'), token.capitalize(), item.get('location', {}).get('name'), item.get('content'), item.get('absolute_url'), "Greenhouse")
-                    return # Stop if successful
+                    if jobs:
+                        self.processed_tokens.add(token) # Mark done
+                        found_jobs = True
+                        if not silent_fail:
+                            self.stdout.write(f"      ⬇️  Fetching {len(jobs)} jobs from {token}...")
+                        
+                        for item in jobs:
+                            if self.is_fresh(item.get('updated_at')):
+                                self.process_job(item.get('title'), token.capitalize(), item.get('location', {}).get('name'), item.get('content'), item.get('absolute_url'), "Greenhouse")
+                        return True
             except: pass
+        
+        return found_jobs
 
-    def fetch_direct_lever_api(self, token):
+    def fetch_lever_api(self, token):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
         try:
             api_url = f"https://api.lever.co/v0/postings/{token}?mode=json"
-            resp = requests.get(api_url, timeout=5)
+            resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 jobs = resp.json()
                 self.stdout.write(f"      ⬇️  Fetching {len(jobs)} jobs from {token}...")
@@ -168,19 +187,7 @@ class Command(BaseCommand):
                     self.process_job(item.get('text'), token.capitalize(), item.get('categories', {}).get('location'), item.get('description'), item.get('hostedUrl'), "Lever")
         except: pass
 
-    # Wrappers for direct URL processing
-    def extract_and_fetch_greenhouse(self, url):
-        # Handles boards.greenhouse.io, job-boards.greenhouse.io, etc.
-        match = re.search(r'greenhouse\.io/([^/]+)', url)
-        if match: self.fetch_direct_greenhouse_api(match.group(1))
-
-    def extract_and_fetch_lever(self, url):
-        match = re.search(r'lever\.co/([^/]+)', url)
-        if match: self.fetch_direct_lever_api(match.group(1))
-
-    # ==========================================
-    # 🛠 UTILS
-    # ==========================================
+    # --- UTILS ---
     def is_fresh(self, date_str):
         if not date_str: return True
         try:
