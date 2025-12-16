@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Job, Tool, Category, Subscriber, BlockRule # Corrected ToolCategory to Category
+from .models import Job, Tool, Category, Subscriber, BlockRule # FIXED: Imported Category instead of ToolCategory
 
 
-@admin.register(Category)
+@admin.register(Category) # FIXED: Registered Category
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name",)
