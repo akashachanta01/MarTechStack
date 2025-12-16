@@ -30,9 +30,9 @@ class Command(BaseCommand):
 
         self.stdout.write(f"📅 Freshness Filter: {self.cutoff_date.date()}")
 
-        # --- HUNT TARGETS (UPDATED) ---
+        # --- HUNT TARGETS (Expanded & Prioritized) ---
         hunt_targets = [
-            # Adobe Stack (The Missing Piece)
+            # Adobe Stack (High Priority)
             'Adobe Analytics', 'Adobe Target', 'Adobe Campaign', 
             'Adobe Journey Optimizer', 'AJO', 
             'Adobe Experience Platform', 'Adobe Experience Cloud',
@@ -55,24 +55,26 @@ class Command(BaseCommand):
         ]
 
         # --- SMART QUERIES ---
-        search_patterns = [
+        # We construct the query dynamically below
+        base_sites = [
             'site:boards.greenhouse.io',
             'site:jobs.lever.co',
-            'site:jobs.ashbyhq.com',         # Ashby
-            'site:apply.workable.com',       # Workable
-            'site:jobs.smartrecruiters.com', # SmartRecruiters
-            'site:recruitee.com',            # Recruitee
-            'inurl:gh_jid',       
-            'inurl:gh_src',      
-            '"powered by greenhouse"',
-            '"powered by lever"',
-            '"powered by ashby"',
-            '"powered by workable"'
+            'site:jobs.ashbyhq.com',         
+            'site:apply.workable.com',       
+            'site:jobs.smartrecruiters.com', 
+            'site:recruitee.com'            
         ]
+        
+        base_sites_str = " OR ".join(base_sites)
 
         for tool in hunt_targets:
-            combined_patterns = " OR ".join(search_patterns)
-            query = f'"{tool}" ({combined_patterns})'
+            # OPTIMIZATION: For Adobe, we use broader queries to catch more hits
+            if "Adobe" in tool or "MarTech" in tool:
+                # E.g. "Adobe Analytics" (site:greenhouse.io OR site:lever.co ...)
+                query = f'"{tool}" ({base_sites_str})'
+            else:
+                # Standard query
+                query = f'"{tool}" ({base_sites_str})'
             
             self.stdout.write(f"\n🔎 Hunting: {query[:50]}...")
             links = self.search_google(query)
@@ -96,7 +98,7 @@ class Command(BaseCommand):
         }
 
     def search_google(self, query):
-        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 25, "gl": "us", "hl": "en", "tbs": "qdr:m" }
+        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 30, "gl": "us", "hl": "en", "tbs": "qdr:m" }
         try:
             resp = requests.get("https://serpapi.com/search", params=params, timeout=10)
             return [r.get("link") for r in resp.json().get("organic_results", [])]
