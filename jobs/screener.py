@@ -3,8 +3,8 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Regex Version: Uses word boundaries (\b) to prevent false positives.
-    Updated: Removed generic BI tools, added Adobe Enterprise stack.
+    Regex Version: Refined Killers to allow "Partner with Talent Acquisition" 
+    and "MarTech Full Stack" roles.
     """
     
     # 1. Define Categories & Keywords
@@ -15,7 +15,7 @@ class MarTechScreener:
             "activecampaign", "mailchimp", "klaviyo", "sendinblue", "brevo",
             "iterable", "oracle eloqua", "eloqua", "omnisend", "autopilot",
             "marketo engage", "ajo", "adobe journey optimizer",
-            "adobe campaign" # Added ✅
+            "adobe campaign"
         ],
         "Lead Nurturing & Campaign": [
             "braze", "customer.io", "customer io", "iterable", "drip",
@@ -27,11 +27,10 @@ class MarTechScreener:
             "data studio", "hotjar", "mixpanel", "amplitude", "piwik",
             "piwik pro", "fathom analytics", "woopra",
             "microsoft clarity", "bigquery", "heap",
-            # Removed: tableau, power bi, looker ❌
-            "adobe analytics", "customer journey analytics", "cja" # Added ✅
+            "adobe analytics", "customer journey analytics", "cja"
         ],
         "Customer Data Platforms": [
-            "Adobe experience cloud","segment", "twilio segment", "adobe experience platform", "aep",
+            "segment", "twilio segment", "adobe experience platform", "aep",
             "salesforce cdp", "customer 360 audiences", "actioniq",
             "bloomreach engagement", "mparticle", "tealium audiencestream",
             "treasure data", "rudderstack", "blueconic", "lotame",
@@ -55,14 +54,26 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers
+    # 3. Job Killers (Refined)
     JOB_KILLERS = [
+        # Content / Social
         r'writing.*blog.*posts', r'content.*creation', r'social.*media.*management',
-        r'brand.*manager', r'copywriter', r'cold.*calling', r'sales.*representative',
-        r'account.*executive', r'account.*director', r'business.*development',
-        r'hr.*manager', r'recruiter', r'talent.*acquisition', r'customer.*success',
+        r'brand.*manager', r'copywriter', 
+        
+        # Sales
+        r'cold.*calling', r'sales.*representative', r'account.*executive', 
+        r'account.*director', r'business.*development', r'customer.*success',
+
+        # HR / Recruiting (Specific Roles Only)
+        r'hr.*manager', r'recruiter', 
+        r'talent.*acquisition.*manager',     # 🟢 CHANGED: Only blocks Managers
+        r'talent.*acquisition.*specialist',  # 🟢 CHANGED: Only blocks Specialists
+        r'head.*of.*talent',
+        
+        # Engineering (Removed Full Stack to allow MarTech Engineers)
         r'software.*engineer', r'frontend.*engineer', r'backend.*engineer',
-        r'full.*stack', r'platform.*engineer', r'site.*reliability',
+        # REMOVED: r'full.*stack',  <-- TRUST THE SCORE SYSTEM INSTEAD
+        r'platform.*engineer', r'site.*reliability',
         r'devops', r'engineering.*manager', r'director.*engineering',
         r'solutions.*engineer', r'technical.*support'
     ]
@@ -77,12 +88,7 @@ class MarTechScreener:
     def clean_text(self, text):
         return str(text).lower().strip()
     
-    # --- Regex Matcher Helper ---
     def is_present(self, text, keyword):
-        """
-        Uses Regex Word Boundaries (\b) to ensure 'ajo' doesn't match 'major'.
-        re.escape(keyword) handles dots like 'segment.io' correctly.
-        """
         pattern = r'\b' + re.escape(keyword) + r'\b'
         return re.search(pattern, text) is not None
 
@@ -105,7 +111,6 @@ class MarTechScreener:
         total_score = 0
         
         for category, keywords in self.CATEGORIES.items():
-            # Check matches with Word Boundaries
             matches = [kw for kw in keywords if self.is_present(full_text, kw)]
             
             if matches:
