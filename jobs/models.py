@@ -52,6 +52,14 @@ class Job(models.Model):
     screening_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
+    
+    # New fields for rule blocking details if you added them previously
+    screening_score = models.FloatField(blank=True, null=True)
+    screening_reason = models.TextField(blank=True, default="")
+    screening_details = models.JSONField(blank=True, default=dict)
+    
+    # Simple tagging for easy management
+    tags = models.CharField(max_length=200, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -61,7 +69,7 @@ class Job(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        # ⚡️ PERFORMANCE UPGRADE: Database Indexes
+        # ⚡️ INDEXES: This speeds up filtering by active/approved jobs significantly
         indexes = [
             models.Index(fields=['is_active', 'screening_status']),
             models.Index(fields=['created_at']),
@@ -73,3 +81,19 @@ class Subscriber(models.Model):
 
     def __str__(self):
         return self.email
+
+class BlockRule(models.Model):
+    RULE_TYPES = [
+        ("domain", "Domain"),
+        ("company", "Company"),
+        ("keyword", "Keyword"),
+        ("regex", "Regex (title/description)"),
+    ]
+    rule_type = models.CharField(max_length=20, choices=RULE_TYPES, db_index=True)
+    value = models.CharField(max_length=500, help_text="Value for the rule (domain/company/keyword/regex).")
+    enabled = models.BooleanField(default=True)
+    notes = models.CharField(max_length=500, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.rule_type}: {self.value}"
