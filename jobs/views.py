@@ -1,10 +1,11 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Count # <--- Added Count
+from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .models import Job, Tool, Category, Subscriber 
+from .forms import JobPostForm  # <--- NEW IMPORT
 
 def job_list(request):
     query = request.GET.get("q", "").strip()
@@ -54,8 +55,7 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # TOOLS LOGIC: Annotate with job counts to find "Popular" ones
-    # Only count active/approved jobs
+    # TOOLS LOGIC: Annotate with job counts
     tools = Tool.objects.annotate(
         job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
     ).filter(job_count__gt=0).order_by('-job_count', 'name')
@@ -81,8 +81,29 @@ def job_detail(request, job_id):
     return render(request, "jobs/job_detail.html", {"job": job})
 
 
+# --- NEW POST JOB VIEWS ---
 def post_job(request):
-    return render(request, "jobs/post_job.html")
+    if request.method == 'POST':
+        form = JobPostForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Save job but keep it pending/inactive for safety
+            job = form.save(commit=False)
+            job.screening_status = 'pending'
+            job.is_active = False 
+            job.save()
+            
+            # Save Many-to-Many data (Tools)
+            form.save_m2m()
+            
+            return redirect('post_job_success')
+    else:
+        form = JobPostForm()
+
+    return render(request, 'jobs/post_job.html', {'form': form})
+
+def post_job_success(request):
+    return render(request, 'jobs/post_job_success.html')
+# --------------------------
 
 
 def subscribe(request):
