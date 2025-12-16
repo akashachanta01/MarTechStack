@@ -10,93 +10,96 @@ from .models import Job, Tool, Category, Subscriber
 from .forms import JobPostForm
 
 # --- CONFIGURATION: VENDOR & CATEGORY GROUPING ---
-# We map specific tools to either a VENDOR (Adobe) or a FUNCTION (AdTech).
-# KEYS should be Title Case for consistency, but we will normalize in the loop.
+# KEYS must be LOWERCASE for reliable matching.
+# VALUES are the Display Name (e.g. 'Adobe').
 TOOL_MAPPING = {
     # Salesforce
-    'Salesforce Marketing Cloud': 'Salesforce',
-    'Sfmc': 'Salesforce',
-    'Salesforce Mc': 'Salesforce',
-    'Marketing Cloud': 'Salesforce',
-    'Pardot': 'Salesforce',
-    'Salesforce Cdp': 'Salesforce',
-    'Data Cloud': 'Salesforce',
-    'Salesforce Crm': 'Salesforce',
-    'Salesforce': 'Salesforce',
+    'salesforce marketing cloud': 'Salesforce',
+    'sfmc': 'Salesforce',
+    'salesforce mc': 'Salesforce',
+    'marketing cloud': 'Salesforce',
+    'pardot': 'Salesforce',
+    'marketing cloud account engagement': 'Salesforce',
+    'salesforce cdp': 'Salesforce',
+    'data cloud': 'Salesforce',
+    'salesforce crm': 'Salesforce',
+    'salesforce': 'Salesforce',
 
     # Adobe
-    'Marketo': 'Adobe',
-    'Marketo Engage': 'Adobe',
-    'Adobe Experience Cloud': 'Adobe',
-    'Adobe Experience Platform': 'Adobe',
-    'Aep': 'Adobe',
-    'Adobe Target': 'Adobe',
-    'Adobe Analytics': 'Adobe',
-    'Adobe Campaign': 'Adobe',
-    'Adobe Journey Optimizer': 'Adobe',
-    'Ajo': 'Adobe',
-    'Magento': 'Adobe',
-    'Workfront': 'Adobe',
-    'Adobe': 'Adobe',
+    'marketo': 'Adobe',
+    'marketo engage': 'Adobe',
+    'adobe experience cloud': 'Adobe',
+    'adobe experience platform': 'Adobe',
+    'aep': 'Adobe',
+    'adobe target': 'Adobe',
+    'adobe analytics': 'Adobe',
+    'adobe campaign': 'Adobe',
+    'adobe journey optimizer': 'Adobe',
+    'ajo': 'Adobe',
+    'magento': 'Adobe',
+    'workfront': 'Adobe',
+    'adobe': 'Adobe',
 
     # HubSpot
-    'Hubspot Crm': 'HubSpot',
-    'Hubspot Marketing Hub': 'HubSpot',
-    'Hubspot Operations Hub': 'HubSpot',
-    'Hubspot': 'HubSpot',
+    'hubspot crm': 'HubSpot',
+    'hubspot marketing hub': 'HubSpot',
+    'hubspot operations hub': 'HubSpot',
+    'hubspot': 'HubSpot',
 
     # Google
-    'Google Analytics': 'Google',
-    'Ga4': 'Google',
-    'Google Tag Manager': 'Google',
-    'Gtm': 'Google',
-    'Google Ads': 'Google',
-    'Dv360': 'Google',
-    'Looker': 'Google',
-    'Bigquery': 'Google',
+    'google analytics': 'Google',
+    'ga4': 'Google',
+    'google tag manager': 'Google',
+    'gtm': 'Google',
+    'google ads': 'Google',
+    'dv360': 'Google',
+    'looker': 'Google',
+    'bigquery': 'Google',
 
     # Functional Categories
-    'Twilio Segment': 'Data Stack',
-    'Segment': 'Data Stack',
-    'Segment.io': 'Data Stack',
-    'Tealium': 'Data Stack',
-    'Tealium Iq': 'Data Stack',
-    'Mparticle': 'Data Stack',
-    'Hightouch': 'Data Stack',
-    'Census': 'Data Stack',
-    'Snowflake': 'Data Stack',
-    'Sql': 'Data Stack',
-    'Dbt': 'Data Stack',
-    'Fivetran': 'Data Stack',
+    'twilio segment': 'Data Stack',
+    'segment': 'Data Stack',
+    'segment.io': 'Data Stack',
+    'tealium': 'Data Stack',
+    'tealium iq': 'Data Stack',
+    'mparticle': 'Data Stack',
+    'hightouch': 'Data Stack',
+    'census': 'Data Stack',
+    'snowflake': 'Data Stack',
+    'sql': 'Data Stack',
+    'dbt': 'Data Stack',
+    'fivetran': 'Data Stack',
 
-    'Outreach': 'Sales Tech',
-    'Salesloft': 'Sales Tech',
-    'Gong': 'Sales Tech',
-    'Apollo': 'Sales Tech',
-    'Zoominfo': 'Sales Tech',
+    'outreach': 'Sales Tech',
+    'salesloft': 'Sales Tech',
+    'gong': 'Sales Tech',
+    'apollo': 'Sales Tech',
+    'zoominfo': 'Sales Tech',
 
-    'Braze': 'Automation',
-    'Iterable': 'Automation',
-    'Klaviyo': 'Automation',
-    'Customer.io': 'Automation',
-    'Eloqua': 'Automation',
-    'Activecampaign': 'Automation',
-    'Mailchimp': 'Automation',
+    'braze': 'Automation',
+    'iterable': 'Automation',
+    'klaviyo': 'Automation',
+    'customer.io': 'Automation',
+    'eloqua': 'Automation',
+    'activecampaign': 'Automation',
+    'mailchimp': 'Automation',
 
-    'Shopify': 'Commerce',
-    'Shopify Plus': 'Commerce',
-    'Bigcommerce': 'Commerce',
-    'Woocommerce': 'Commerce',
+    'shopify': 'Commerce',
+    'shopify plus': 'Commerce',
+    'bigcommerce': 'Commerce',
+    'woocommerce': 'Commerce',
 
-    'The Trade Desk': 'AdTech',
-    'Stackadapt': 'AdTech',
-    'Facebook Ads': 'AdTech',
-    'Linkedin Ads': 'AdTech',
+    'the trade desk': 'AdTech',
+    'stackadapt': 'AdTech',
+    'facebook ads': 'AdTech',
+    'linkedin ads': 'AdTech',
 }
 
 def job_list(request):
     # --- GET Parameters ---
     query = request.GET.get("q", "").strip()
+    vendor_query = request.GET.get("vendor", "").strip()  # <--- New Strict Filter
+    
     location_query = request.GET.get("l", "").strip()
     tool_filter = request.GET.get("tool", "").strip()
     category_filter = request.GET.get("category", "").strip()
@@ -110,36 +113,44 @@ def job_list(request):
         .order_by("-created_at")
     )
 
-    # --- SMART SEARCH LOGIC ---
-    if query:
-        # Special handling for "General / Strategy" search
-        if query.lower() == "general / strategy":
-            # Find jobs with NO tools
+    # --- 1. STRICT VENDOR FILTER (Clicking the Card) ---
+    if vendor_query:
+        # Handling "General / Strategy" (No Tools)
+        if vendor_query == "General / Strategy":
             jobs = jobs.filter(tools__isnull=True)
         else:
-            # 1. Standard text search
-            search_q = (
-                Q(title__icontains=query)
-                | Q(company__icontains=query)
-                | Q(description__icontains=query)
-            )
-
-            # 2. Vendor/Category Expansion
-            # Normalize query to Title Case for mapping lookup
-            query_norm = query.title()
+            # Find all Tool IDs that map to this Vendor
+            # We check every tool in the DB to see if it belongs to the requested Vendor
+            relevant_tool_ids = []
+            all_tools = Tool.objects.all()
             
-            # Find all tools that map to this Vendor Group
-            child_tools = [child for child, parent in TOOL_MAPPING.items() if parent == query_norm]
+            for tool in all_tools:
+                # Normalize DB name to lowercase
+                clean_name = tool.name.lower()
+                
+                # Check Mapping
+                # 1. Direct match in mapping
+                # 2. Fallback: If not in mapping, does the name itself match the vendor?
+                group = TOOL_MAPPING.get(clean_name, tool.name) 
+                
+                # Case-insensitive comparison of group vs requested vendor
+                if group.lower() == vendor_query.lower():
+                    relevant_tool_ids.append(tool.id)
             
-            # Also include the query itself
-            child_tools.append(query)
+            # Filter jobs that have ANY of these tools
+            jobs = jobs.filter(tools__id__in=relevant_tool_ids).distinct()
 
-            # Add OR condition
-            search_q |= Q(tools__name__in=child_tools)
-            search_q |= Q(tools__name__icontains=query)
+    # --- 2. TEXT SEARCH (User typing in bar) ---
+    elif query:
+        search_q = (
+            Q(title__icontains=query)
+            | Q(company__icontains=query)
+            | Q(description__icontains=query)
+            | Q(tools__name__icontains=query)
+        )
+        jobs = jobs.filter(search_q).distinct()
 
-            jobs = jobs.filter(search_q).distinct()
-
+    # --- 3. OTHER FILTERS ---
     if location_query:
         if "remote" in location_query.lower():
             jobs = jobs.filter(Q(remote=True) | Q(location__icontains=location_query))
@@ -173,18 +184,18 @@ def job_list(request):
             jobs__screening_status='approved'
         ).values_list('name', 'jobs__id')
 
-        # 2. Aggregation with Normalization
+        # 2. Aggregation with Strict Lowercase Normalization
         vendor_jobs = defaultdict(set)
         
         for tool_name, job_id in pairs:
-            # NORMALIZE: "salesforce" -> "Salesforce"
-            clean_name = tool_name.title()
+            # Normalize to lowercase for lookup
+            clean_name = tool_name.lower()
             
-            # Check Mapping (using Title Case key)
             if clean_name in TOOL_MAPPING:
                 group_name = TOOL_MAPPING[clean_name]
             else:
-                group_name = clean_name
+                # Fallback: Capitalize properly if it's a standalone tool
+                group_name = tool_name # Keep original casing if not mapped
             
             vendor_jobs[group_name].add(job_id)
 
@@ -202,10 +213,9 @@ def job_list(request):
                 stats_list.append({
                     'name': group,
                     'count': len(job_ids),
-                    'icon_char': group[0].upper()
+                    'icon_char': group[0].upper() if group else '?'
                 })
         
-        # Add the General card if valid
         if general_jobs_count > 0:
             stats_list.append({
                 'name': 'General / Strategy',
@@ -213,7 +223,7 @@ def job_list(request):
                 'icon_char': 'G'
             })
 
-        # 5. Sort by Count Descending
+        # 5. Sort
         popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:8]
 
         # 6. Save to Cache
@@ -222,6 +232,7 @@ def job_list(request):
     context = {
         "jobs": jobs_page,
         "query": query,
+        "vendor_filter": vendor_query, # Pass to template for UI state
         "location_filter": location_query,
         "tool_filter": tool_filter,
         "category_filter": category_filter,
