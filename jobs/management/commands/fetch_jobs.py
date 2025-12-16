@@ -16,6 +16,7 @@ from jobs.screener import MarTechScreener
 
 # 🚫 BLACKLIST
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
+REMOTE_KEYWORDS = {'remote', 'anywhere', 'global', 'home office', 'work from home', 'wfh'}
 
 class Command(BaseCommand):
     help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support + External Config'
@@ -62,7 +63,6 @@ class Command(BaseCommand):
         )
 
         for tool in hunt_targets:
-            # Skip comments in the text file
             if tool.startswith('#'): continue
 
             query = f'"{tool}" ({base_sites})'
@@ -81,7 +81,36 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
 
-    # --- SERPAPI ENGINE ---
+    # --- LOCATION CLEANUP HELPER (Globally Aware) ---
+    def _clean_location(self, location_str, is_remote_flag):
+        if not location_str:
+            return "Remote", True if is_remote_flag else False
+        
+        # Normalize: replace common separators and remove parentheses
+        clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
+        
+        # Check for remote keywords in the location string
+        is_remote = is_remote_flag
+        if not is_remote:
+            for keyword in REMOTE_KEYWORDS:
+                if keyword in clean_loc.lower():
+                    is_remote = True
+                    break
+        
+        # Safely remove REMOTE keywords from the location string without breaking the structure
+        location_parts = [
+            part.strip() for part in clean_loc.split(',') 
+            if part.strip() and not any(k in part.strip().lower() for k in REMOTE_KEYWORDS)
+        ]
+        
+        final_location = ", ".join(location_parts)
+        
+        if not final_location and is_remote:
+            return "Remote", True
+        
+        return final_location if final_location else "Various Locations", is_remote
+
+    # --- SERPAPI ENGINE (Unchanged) ---
     def search_google(self, query):
         params = { 
             "engine": "google", 
@@ -103,14 +132,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"   ⚠️ Connection Error: {e}"))
         return []
 
-    # --- HEADERS ---
+    # --- HEADERS (Unchanged) ---
     def get_headers(self):
         return {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/json'
         }
 
-    # --- THE BRAIN: ANALYZE URL ---
+    # --- THE BRAIN: ANALYZE URL (Unchanged) ---
     def analyze_and_fetch(self, url):
         # 1. Greenhouse
         if "greenhouse.io" in url and "embed" not in url:
@@ -132,7 +161,7 @@ class Command(BaseCommand):
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1))
 
-    # --- API WORKERS ---
+    # --- API WORKERS (UPDATED to use _clean_location) ---
 
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
@@ -146,13 +175,17 @@ class Command(BaseCommand):
                     jobs = resp.json().get('jobs', [])
                     for item in jobs:
                         if self.is_fresh(item.get('updated_at')):
+                            raw_loc = item.get('location', {}).get('name')
+                            is_remote_check = "remote" in (raw_loc or "").lower()
+                            clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+
                             self.screen_and_upsert({
                                 "title": item.get('title'), 
                                 "company": token.capitalize(), 
-                                "location": item.get('location', {}).get('name'), 
+                                "location": clean_loc, 
                                 "description": item.get('content'), 
                                 "apply_url": item.get('absolute_url'),
-                                "remote": "remote" in item.get('location', {}).get('name', '').lower(),
+                                "remote": is_remote,
                                 "source": "Greenhouse"
                             })
                     return
@@ -167,14 +200,17 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json():
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
-                        loc = item.get('categories', {}).get('location')
+                        raw_loc = item.get('categories', {}).get('location')
+                        is_remote_check = "remote" in (raw_loc or "").lower()
+                        clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+
                         self.screen_and_upsert({
                             "title": item.get('text'), 
                             "company": token.capitalize(), 
-                            "location": loc, 
+                            "location": clean_loc, 
                             "description": item.get('description'), 
                             "apply_url": item.get('hostedUrl'), 
-                            "remote": "remote" in (loc or "").lower(),
+                            "remote": is_remote,
                             "source": "Lever"
                         })
         except: pass
@@ -188,14 +224,17 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 jobs = resp.json().get('jobs', [])
                 for item in jobs:
-                    loc = item.get('location')
+                    raw_loc = item.get('location')
+                    is_remote_check = item.get('isRemote', False)
+                    clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+                    
                     self.screen_and_upsert({
                         "title": item.get('title'),
                         "company": company_name.capitalize(),
-                        "location": loc,
+                        "location": clean_loc,
                         "description": f"See {item.get('jobUrl')} for details.",
                         "apply_url": item.get('jobUrl'),
-                        "remote": item.get('isRemote', False) or "remote" in (loc or "").lower(),
+                        "remote": is_remote,
                         "source": "Ashby"
                     })
         except: pass
@@ -209,19 +248,22 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('published_on')):
-                        loc = f"{item.get('city', '')}, {item.get('country', '')}"
+                        raw_loc = f"{item.get('city', '')}, {item.get('country', '')}"
+                        is_remote_check = item.get('telecommuting', False)
+                        clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+
                         self.screen_and_upsert({
                             "title": item.get('title'),
                             "company": subdomain.capitalize(),
-                            "location": loc,
+                            "location": clean_loc,
                             "description": item.get('description'),
                             "apply_url": item.get('url'),
-                            "remote": item.get('telecommuting', False),
+                            "remote": is_remote,
                             "source": "Workable"
                         })
         except: pass
 
-    # --- LOGO RESOLVER ---
+    # --- LOGO RESOLVER (Unchanged) ---
     def resolve_logo(self, company_name):
         if not company_name: return None
         clean = company_name.lower()
@@ -231,7 +273,7 @@ class Command(BaseCommand):
         domain = f"{clean}.com"
         return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
 
-    # --- SCREENING AND UPSERT ---
+    # --- SCREENING AND UPSERT (Unchanged) ---
     def is_fresh(self, date_str):
         if not date_str: return True
         try:
