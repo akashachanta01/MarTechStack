@@ -1,13 +1,73 @@
+# --- MARKETING AUTOMATION & EMAIL ---
 Marketo
+Adobe Marketo Engage
 Salesforce Marketing Cloud
-HubSpot
+SFMC
+Pardot
+Adobe Experience cloud
+HubSpot Marketing Hub
+HubSpot Operations
 Braze
-Klaviyo
 Iterable
-Adobe Analytics
-Adobe Experience Platform
-Tealium
+Customer.io
+Eloqua
+Oracle Eloqua
+Klaviyo
+ActiveCampaign
+Omnisend
+Leanplum
+Drip
+Acoustic Campaign
+
+# --- CDPs & DATA ---
 Segment
+Twilio Segment
 mParticle
+Tealium
+Tealium AudienceStream
+RudderStack
+ActionIQ
+Bloomreach
+Adobe Experience Platform
+AEP
+Real-Time CDP
+Salesforce CDP
+Data Cloud
+BlueConic
+Treasure Data
+Hightouch
+Census
+Reverse ETL
+
+# --- ANALYTICS & TAGS ---
+Google Analytics 4
+GA4
+Adobe Analytics
+Mixpanel
+Amplitude
+Heap
+Google Tag Manager
+Tealium iQ
+Adobe Launch
+Server-side tracking
+
+# --- PERSONALIZATION & TESTING ---
+Adobe Target
+Optimizely
+VWO
+Dynamic Yield
+LaunchDarkly
+Adobe Journey Optimizer
+AJO
+Mutiny
+Monetate
+
+# --- ROLES & DISCIPLINES ---
 MarTech
+Marketing Technology
 Marketing Operations
+MOPs
+Marketing Technologist
+MarTech Architect
+Growth Engineer
+Marketing Engineer
