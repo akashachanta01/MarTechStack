@@ -3,8 +3,8 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Regex Version: "False-Positive Proof" Edition.
-    Killers are now strictly role-specific to allow cross-functional collaboration.
+    Final "Title-Only" Version.
+    Replaces "Activity Blockers" (risky) with "Title Blockers" (safe).
     """
     
     # 1. Define Categories & Keywords
@@ -54,56 +54,44 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers (The "False-Positive Proof" List)
+    # 3. Job Killers (Title-Based Only)
     JOB_KILLERS = [
-        # --- Pure Content / Social Roles ---
-        # (We keep these strict because MarTech rarely does pure blogging)
-        r'writing.*blog.*posts', 
-        r'social.*media.*manager', # Changed from 'management' to 'manager'
-        r'social.*media.*specialist',
-        r'brand.*manager', 
-        r'copywriter', 
-        
-        # --- Sales Roles (Specific Titles Only) ---
-        # Allows: "Support Sales Team", "Sales Operations"
-        # Kills: "Sales Representative", "Account Executive"
-        r'sales.*representative', 
-        r'account.*executive', 
+        # --- CREATIVE & CONTENT TITLES ---
+        # (Removed 'content creation' activity blocker)
+        r'content.*writer', r'copywriter', r'editor', r'journalist',
+        r'graphic.*designer', r'art.*director', r'creative.*director',
+        r'video.*editor', r'videographer',
+        r'social.*media.*manager', r'community.*manager',
+        r'brand.*manager', r'pr.*manager', r'public.*relations',
+
+        # --- SALES TITLES ---
+        # (Removed generic 'sales' or 'business development' activity blockers)
+        r'sales.*representative', r'sales.*rep', 
+        r'account.*executive', r'ae\b', # Be careful with short acronyms
         r'account.*director', 
-        r'sales.*development.*rep',
-        r'business.*development.*rep',
-        r'outside.*sales',
-        r'inside.*sales',
+        r'business.*development.*rep', r'bdr',
+        r'sales.*development.*rep', r'sdr',
+        r'outside.*sales', r'inside.*sales',
         
-        # --- Customer Success (Specific Titles Only) ---
-        # Allows: "Work with Customer Success", "CS Operations"
-        # Kills: "Customer Success Manager"
-        r'customer.*success.*manager',
+        # --- CUSTOMER SUCCESS TITLES ---
+        # (Allows 'Work with Customer Success')
+        r'customer.*success.*manager', r'csm',
         r'client.*success.*manager',
-        r'customer.*success.*representative',
-        
-        # --- HR / Recruiting (Specific Titles Only) ---
-        # Allows: "Partner with Talent Acquisition"
-        # Kills: "Recruiter", "Talent Acquisition Manager"
-        r'hr.*manager', 
-        r'human.*resources',
-        r'recruiter', 
-        r'talent.*acquisition.*manager',     
-        r'talent.*acquisition.*specialist',  
-        r'talent.*scout',
-        
-        # --- Engineering (Specific Titles Only) ---
-        # Allows: "MarTech Engineer", "Full Stack (if high score)"
-        # Kills: "Software Engineer", "Frontend Dev"
+        r'customer.*support.*rep',
+        r'customer.*service',
+
+        # --- HR & ADMIN TITLES ---
+        r'recruiter', r'sourcer', r'talent.*acquisition.*manager',
+        r'hr.*manager', r'human.*resources',
+        r'executive.*assistant', r'admin.*assistant', r'office.*manager',
+
+        # --- PURE ENGINEERING TITLES ---
+        # (Allows MarTech Engineers / Architects)
         r'software.*engineer', 
-        r'frontend.*developer', 
-        r'frontend.*engineer',
-        r'backend.*developer', 
-        r'backend.*engineer',
-        r'site.*reliability.*engineer',
-        r'devops.*engineer',
-        # Removed 'full stack', 'solutions engineer', 'product manager' 
-        # to trust the Score System.
+        r'frontend.*developer', r'frontend.*engineer',
+        r'backend.*developer', r'backend.*engineer',
+        r'mobile.*developer', r'ios.*developer', r'android.*developer',
+        r'site.*reliability', r'devops.*engineer'
     ]
     
     def __init__(self):
