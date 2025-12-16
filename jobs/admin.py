@@ -25,13 +25,15 @@ class JobAdmin(admin.ModelAdmin):
         "status_badge",
         "action_buttons",
     )
-    # Removing 'screening_score' from list_filter can sometimes help if sorting is stuck
     list_filter = ("screening_status", "is_active", "remote", "role_type", "created_at")
     search_fields = ("title", "company", "description")
     readonly_fields = ("created_at", "screened_at", "screening_details")
     filter_horizontal = ("tools",)
     list_per_page = 25
     
+    # Default sorting: Newest first
+    ordering = ("-created_at",)
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.prefetch_related('tools')
@@ -52,24 +54,22 @@ class JobAdmin(admin.ModelAdmin):
     def job_card_header(self, obj):
         return format_html(
             '<div style="line-height: 1.2;">'
-            '<div style="font-weight: 700; font-size: 14px; color: #111827;">{}</div>'
-            '<div style="font-size: 12px; color: #6b7280;">{} • {}</div>'
+            '<div style="font-weight: 700; font-size: 14px;">{}</div>'
+            '<div style="font-size: 12px; opacity: 0.8;">{} • {}</div>'
             '</div>',
             obj.title,
             obj.company,
             obj.location or "Remote"
         )
     job_card_header.short_description = "Role & Company"
+    job_card_header.admin_order_field = "title"  # <--- MAKES IT SORTABLE
 
     def score_badge(self, obj):
-        # NUCLEAR FIX: Format as string FIRST, then pass to HTML.
-        # This bypasses the format_html error completely.
         try:
             val = float(obj.screening_score) if obj.screening_score is not None else 0.0
         except (ValueError, TypeError):
             val = 0.0
 
-        # Colors
         if val >= 80:
             bg, text = "#d1fae5", "#065f46" # Green
         elif val >= 50:
@@ -77,7 +77,6 @@ class JobAdmin(admin.ModelAdmin):
         else:
             bg, text = "#fee2e2", "#b91c1c" # Red
         
-        # Pre-format the number as a simple string "85"
         score_str = "{:.0f}".format(val)
 
         return format_html(
@@ -85,6 +84,7 @@ class JobAdmin(admin.ModelAdmin):
             bg, text, score_str
         )
     score_badge.short_description = "Score"
+    score_badge.admin_order_field = "screening_score"  # <--- MAKES IT SORTABLE
 
     def status_badge(self, obj):
         colors = {
@@ -98,17 +98,18 @@ class JobAdmin(admin.ModelAdmin):
             bg, text, obj.screening_status
         )
     status_badge.short_description = "Status"
+    status_badge.admin_order_field = "screening_status"  # <--- MAKES IT SORTABLE
 
     def tech_stack_preview(self, obj):
         tools = obj.tools.all()[:4]
         if not tools:
-            return format_html('<span style="color: #d1d5db;">-</span>')
+            return format_html('<span style="color: #9ca3af;">-</span>')
         
         html = '<div style="display: flex; gap: 4px; flex-wrap: wrap;">'
         for tool in tools:
-            html += f'<span style="background: #f3f4f6; border: 1px solid #e5e7eb; color: #374151; padding: 1px 6px; border-radius: 4px; font-size: 10px; white-space: nowrap;">{tool.name}</span>'
+            html += f'<span style="background: rgba(128,128,128,0.2); border: 1px solid rgba(128,128,128,0.3); padding: 1px 6px; border-radius: 4px; font-size: 10px; white-space: nowrap;">{tool.name}</span>'
         if obj.tools.count() > 4:
-            html += '<span style="font-size: 10px; color: #6b7280;">...</span>'
+            html += '<span style="font-size: 10px; opacity: 0.7;">...</span>'
         html += '</div>'
         return format_html(html)
     tech_stack_preview.short_description = "Tech Stack"
@@ -117,7 +118,7 @@ class JobAdmin(admin.ModelAdmin):
         return format_html(
             '<div style="display: flex; align-items: center; gap: 8px;">'
             '<a href="/staff/review/?q={}" target="_blank" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Review</a>'
-            '<a href="{}" target="_blank" style="color: #6b7280; font-size: 12px; text-decoration: none;">↗ Apply</a>'
+            '<a href="{}" target="_blank" style="opacity: 0.7; font-size: 12px; text-decoration: none;">↗ Apply</a>'
             '</div>',
             obj.title, 
             obj.apply_url
