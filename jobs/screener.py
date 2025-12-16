@@ -103,4 +103,27 @@ class MarTechScreener:
         completion = self.client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are
+                {"role": "system", "content": "You are a JSON-only job screener."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+
+        result = json.loads(completion.choices[0].message.content)
+        
+        # AUDIT LOGGING: Record the decision
+        log_msg = f"[{'✅ MATCH' if result['is_match'] else '❌ REJECT'}] {title} @ {company} | Reason: {result['reason']}"
+        logger.info(log_msg)
+        
+        # If running in a script with stdout, print it too
+        print(f"      🤖 AI Decision: {log_msg}")
+
+        return {
+            "is_match": result.get("is_match", False),
+            "score": 90 if result.get("is_match") else 0,
+            "reason": result.get("reason", "AI Rejection"),
+            "stack": result.get("stack", []),
+            "categories": result.get("categories", []),
+            "role_type": result.get("role_type", "Marketing Technologist")
+        }
