@@ -61,7 +61,10 @@ class Job(models.Model):
 
     title = models.CharField(max_length=200)
     company = models.CharField(max_length=200)
-    company_logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    
+    # CHANGED: ImageField -> URLField to allow automated external links
+    company_logo = models.URLField(max_length=500, blank=True, null=True)
+    
     location = models.CharField(max_length=200, blank=True, null=True)
     
     description = models.TextField()
