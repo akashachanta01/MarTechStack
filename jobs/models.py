@@ -2,16 +2,20 @@ from django.db import models
 from django.utils import timezone
 
 
-class ToolCategory(models.Model):
+class Category(models.Model): 
     name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=50, unique=True, default='')
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = 'Categories'
+
 
 class Tool(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    category = models.ForeignKey(ToolCategory, on_delete=models.CASCADE, related_name="tools")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="tools")
 
     def __str__(self):
         return self.name
@@ -43,11 +47,11 @@ class Job(models.Model):
     role_type = models.CharField(max_length=50, choices=ROLE_TYPE_CHOICES, default="full_time")
 
     tools = models.ManyToManyField(Tool, blank=True, related_name="jobs")
-    tags = models.JSONField(default=list, blank=True)
+    tags = models.CharField(max_length=500, blank=True, default="") 
+    company_logo = models.URLField(max_length=200, blank=True, null=True)
 
     salary_range = models.CharField(max_length=255, blank=True, default="")
 
-    # visibility in public listings
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
