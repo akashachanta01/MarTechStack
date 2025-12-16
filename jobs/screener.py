@@ -54,10 +54,9 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers (Title-Based Only)
+    # 3. Job Killers (Title-Based Only - SAFE LIST)
     JOB_KILLERS = [
         # --- CREATIVE & CONTENT TITLES ---
-        # (Removed 'content creation' activity blocker)
         r'content.*writer', r'copywriter', r'editor', r'journalist',
         r'graphic.*designer', r'art.*director', r'creative.*director',
         r'video.*editor', r'videographer',
@@ -65,16 +64,14 @@ class MarTechScreener:
         r'brand.*manager', r'pr.*manager', r'public.*relations',
 
         # --- SALES TITLES ---
-        # (Removed generic 'sales' or 'business development' activity blockers)
         r'sales.*representative', r'sales.*rep', 
-        r'account.*executive', r'ae\b', # Be careful with short acronyms
+        r'account.*executive', r'ae\b', 
         r'account.*director', 
         r'business.*development.*rep', r'bdr',
         r'sales.*development.*rep', r'sdr',
         r'outside.*sales', r'inside.*sales',
         
         # --- CUSTOMER SUCCESS TITLES ---
-        # (Allows 'Work with Customer Success')
         r'customer.*success.*manager', r'csm',
         r'client.*success.*manager',
         r'customer.*support.*rep',
@@ -86,7 +83,6 @@ class MarTechScreener:
         r'executive.*assistant', r'admin.*assistant', r'office.*manager',
 
         # --- PURE ENGINEERING TITLES ---
-        # (Allows MarTech Engineers / Architects)
         r'software.*engineer', 
         r'frontend.*developer', r'frontend.*engineer',
         r'backend.*developer', r'backend.*engineer',
@@ -105,7 +101,6 @@ class MarTechScreener:
         return str(text).lower().strip()
     
     def is_present(self, text, keyword):
-        # Enforce Word Boundaries to prevent partial matches
         pattern = r'\b' + re.escape(keyword) + r'\b'
         return re.search(pattern, text) is not None
 
