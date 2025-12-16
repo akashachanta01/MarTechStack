@@ -9,20 +9,21 @@ from collections import defaultdict
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
 
-# --- CONFIGURATION: VENDOR GROUPING RULES ---
-# Maps specific tool names (Child) to a unified Vendor Group (Parent).
+# --- CONFIGURATION: VENDOR & CATEGORY GROUPING ---
+# We map specific tools to either a VENDOR (Adobe) or a FUNCTION (AdTech).
 TOOL_MAPPING = {
+    # --- MAJOR VENDORS ---
     # Salesforce
     'Salesforce Marketing Cloud': 'Salesforce',
     'SFMC': 'Salesforce',
-    'Salesforce MC': 'Salesforce', # <--- Fixed your specific issue
+    'Salesforce MC': 'Salesforce',
     'Marketing Cloud': 'Salesforce',
     'Pardot': 'Salesforce',
     'Marketing Cloud Account Engagement': 'Salesforce',
     'Salesforce CDP': 'Salesforce',
     'Data Cloud': 'Salesforce',
     'Salesforce CRM': 'Salesforce',
-    'Salesforce': 'Salesforce', # Self-reference ensures consistent icons/grouping
+    'Salesforce': 'Salesforce',
 
     # Adobe
     'Marketo': 'Adobe',
@@ -53,12 +54,54 @@ TOOL_MAPPING = {
     'Google Ads': 'Google',
     'DV360': 'Google',
     'Looker': 'Google',
+    'BigQuery': 'Google',
 
-    # Data & CDP
-    'Twilio Segment': 'Segment',
-    'Segment.io': 'Segment',
-    'Tealium iQ': 'Tealium',
-    'Tealium AudienceStream': 'Tealium',
+    # --- FUNCTIONAL CATEGORIES (Catch-Alls) ---
+    
+    # 1. Data & CDP (The "Modern Data Stack")
+    'Twilio Segment': 'Data Stack',
+    'Segment': 'Data Stack',
+    'Segment.io': 'Data Stack',
+    'Tealium': 'Data Stack',
+    'Tealium iQ': 'Data Stack',
+    'mParticle': 'Data Stack',
+    'Hightouch': 'Data Stack',
+    'Census': 'Data Stack',
+    'Snowflake': 'Data Stack',
+    'SQL': 'Data Stack',
+    'dbt': 'Data Stack',
+    'Fivetran': 'Data Stack',
+
+    # 2. Sales Tech / Engagement
+    'Outreach': 'Sales Tech',
+    'Salesloft': 'Sales Tech',
+    'Gong': 'Sales Tech',
+    'Apollo': 'Sales Tech',
+    'ZoomInfo': 'Sales Tech',
+    'Clari': 'Sales Tech',
+
+    # 3. Marketing Automation (The "Others")
+    'Braze': 'Automation',
+    'Iterable': 'Automation',
+    'Klaviyo': 'Automation',
+    'Customer.io': 'Automation',
+    'Eloqua': 'Automation',
+    'ActiveCampaign': 'Automation',
+    'Mailchimp': 'Automation',
+
+    # 4. Commerce
+    'Shopify': 'Commerce',
+    'Shopify Plus': 'Commerce',
+    'BigCommerce': 'Commerce',
+    'WooCommerce': 'Commerce',
+    'Stripe': 'Commerce',
+
+    # 5. AdTech
+    'The Trade Desk': 'AdTech',
+    'StackAdapt': 'AdTech',
+    'Facebook Ads': 'AdTech',
+    'LinkedIn Ads': 'AdTech',
+    'TikTok Ads': 'AdTech',
 }
 
 def job_list(request):
@@ -79,21 +122,21 @@ def job_list(request):
 
     # --- SMART SEARCH LOGIC ---
     if query:
-        # 1. Standard text search (Title, Company, Description)
+        # 1. Standard text search
         search_q = (
             Q(title__icontains=query)
             | Q(company__icontains=query)
             | Q(description__icontains=query)
         )
 
-        # 2. Vendor Expansion: If searching "Adobe", find jobs with "Marketo" OR "Adobe"
-        # Find all tools that map to this query
+        # 2. Vendor/Category Expansion
+        # If searching "Data Stack", find jobs with "Segment", "Snowflake", "SQL"...
         child_tools = [child for child, parent in TOOL_MAPPING.items() if parent.lower() == query.lower()]
         
-        # Also include the query itself as a tool name (e.g. searching "Marketo" directly)
+        # Add the query itself (in case they search "Marketo" directly)
         child_tools.append(query)
 
-        # Add OR condition: match text OR match any of the related tools
+        # Add OR condition
         search_q |= Q(tools__name__in=child_tools)
         search_q |= Q(tools__name__icontains=query)
 
@@ -122,33 +165,38 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- ⚡️ CACHED TECH STACK AGGREGATION (Fixed Logic) ---
+    # --- ⚡️ CACHED TECH STACK AGGREGATION ---
     popular_tech_stacks = cache.get('popular_tech_stacks')
 
     if not popular_tech_stacks:
-        # 1. Fetch raw pairs: (Tool Name, Job ID) for all active jobs
-        # This is efficient: 1 query to get all relationships
+        # 1. Fetch raw pairs: (Tool Name, Job ID)
         pairs = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__screening_status='approved'
         ).values_list('name', 'jobs__id')
 
-        # 2. Python Aggregation with Sets (Removes Duplicates)
-        vendor_jobs = defaultdict(set) # {'Adobe': {101, 102, 105}, 'Salesforce': {101, 109}}
+        # 2. Aggregation with Fallback
+        vendor_jobs = defaultdict(set)
         
         for tool_name, job_id in pairs:
-            # Map child tool to parent (e.g. "Marketo" -> "Adobe")
-            # If not in mapping, use the tool name itself
-            group_name = TOOL_MAPPING.get(tool_name, tool_name)
+            # Check Mapping first
+            if tool_name in TOOL_MAPPING:
+                group_name = TOOL_MAPPING[tool_name]
+            else:
+                # Fallback: If it's not mapped, we can group it into "Other"
+                # OR just leave it as its own group.
+                # Let's leave it as is, so if "Asana" becomes huge, it shows up.
+                group_name = tool_name
+            
             vendor_jobs[group_name].add(job_id)
 
-        # 3. Convert to List for Template
+        # 3. Convert to List
         stats_list = []
         for group, job_ids in vendor_jobs.items():
             if len(job_ids) > 0:
                 stats_list.append({
                     'name': group,
-                    'count': len(job_ids), # Count of UNIQUE jobs
+                    'count': len(job_ids),
                     'icon_char': group[0].upper()
                 })
 
@@ -186,10 +234,7 @@ def post_job(request):
             job.is_active = False 
             job.save()
             form.save_m2m()
-            
-            # Invalidate cache so new job counts appear eventually
             cache.delete('popular_tech_stacks') 
-            
             return redirect('post_job_success')
     else:
         form = JobPostForm()
@@ -233,7 +278,7 @@ def review_action(request, job_id, action):
         job.is_active = True
         job.screened_at = job.screened_at or timezone.now()
         job.save(update_fields=["screening_status", "is_active", "screened_at"])
-        cache.delete('popular_tech_stacks') # Refresh stats
+        cache.delete('popular_tech_stacks') 
     elif action == "reject":
         job.screening_status = "rejected"
         job.is_active = False
