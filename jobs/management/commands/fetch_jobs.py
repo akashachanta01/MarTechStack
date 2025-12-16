@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 import requests
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from urllib.parse import urlparse
 
 from jobs.models import Job, Tool, Category
 from jobs.screener import MarTechScreener
@@ -119,93 +120,117 @@ class Command(BaseCommand):
             return [r.get("link") for r in resp.json().get("organic_results", [])]
         except: return []
 
+    def get_company_domain(self, company_name):
+        """
+        Uses SerpApi to find the official website of the company.
+        """
+        if not company_name: return None
+        
+        # Fast exit for knowns
+        if company_name.lower() == "unknown": return None
+        
+        self.stdout.write(f"      🌍 Resolving domain for: {company_name}...")
+        try:
+            # Search for "CompanyName official site"
+            query = f"{company_name} official site"
+            params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 1 }
+            resp = requests.get("https://serpapi.com/search", params=params, timeout=5)
+            results = resp.json().get("organic_results", [])
+            if results:
+                link = results[0].get("link")
+                # Extract domain (e.g., https://www.adobe.com/careers -> adobe.com)
+                parsed = urlparse(link)
+                domain = parsed.netloc.replace("www.", "")
+                return domain
+        except Exception as e:
+            pass
+        return None
+
+    def resolve_logo(self, company_name):
+        """
+        Returns a Clearbit logo URL for the company.
+        """
+        if not company_name: return None
+        
+        # 1. Try to guess domain from name (Fast)
+        domain = f"{company_name.lower().replace(' ', '').replace(',', '')}.com"
+        
+        # 2. Or verify with Google (Slow but accurate - enable if needed)
+        # For now, let's use the fast guess to save API calls, 
+        # but if we really need accuracy, uncomment below:
+        # real_domain = self.get_company_domain(company_name)
+        # if real_domain: domain = real_domain
+
+        return f"https://logo.clearbit.com/{domain}"
+
     # --- THE BRAIN: ANALYZE URL (FIXED FOR ALL GREENHOUSE DOMAINS) ---
     def analyze_and_fetch(self, url):
-        # 1. Greenhouse (ROBUST REGEX FIX)
+        # 1. Greenhouse
         if "greenhouse.io" in url and "embed" not in url:
-            # This regex looks for the token immediately after the last component of the domain.
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
-            
             if match and match.group(1) not in BLACKLIST_TOKENS:
                 self.fetch_greenhouse_api(match.group(1))
-                return
 
         # 2. Lever
         elif "lever.co" in url:
             match = re.search(r'lever\.co/([^/]+)', url)
             if match:
                 self.fetch_lever_api(match.group(1))
-                return
 
         # 3. Ashby
         elif "ashbyhq.com" in url:
             match = re.search(r'jobs\.ashbyhq\.com/([^/]+)', url)
             if match:
                 self.fetch_ashby_api(match.group(1))
-                return
 
         # 4. Workable
         elif "workable.com" in url:
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match:
                 self.fetch_workable_api(match.group(1))
-                return
 
         # 5. SmartRecruiters
         elif "smartrecruiters.com" in url:
             match = re.search(r'smartrecruiters\.com/([^/]+)', url)
             if match:
                 self.fetch_smartrecruiters_api(match.group(1))
-                return
 
         # 6. Recruitee
         elif "recruitee.com" in url:
             match = re.search(r'([^.]+)\.recruitee\.com', url)
             if match:
                 self.fetch_recruitee_api(match.group(1))
-                return
         
-        # 7. Fallback (Skipping deep sniffing as direct ATS links are better)
         pass 
 
-    # --- API WORKERS (Implemented core workers, others are placeholders for conciseness) ---
+    # --- API WORKERS ---
 
-    def fetch_greenhouse_api(self, token, silent_fail=False):
-        if token in self.processed_tokens or token in BLACKLIST_TOKENS: return False
+    def fetch_greenhouse_api(self, token):
+        if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
         
         domains = ["boards-api.greenhouse.io", "job-boards.greenhouse.io", "boards-api.eu.greenhouse.io"]
-        found_jobs = False
-        
         for domain in domains:
             try:
                 api_url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
                 resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
-                
                 if resp.status_code == 200:
                     jobs = resp.json().get('jobs', [])
                     if jobs:
                         self.processed_tokens.add(token)
-                        found_jobs = True
-                        if not silent_fail:
-                            self.stdout.write(f"      ⬇️  Greenhouse ({domain}): Found {len(jobs)} jobs for {token}...")
-                        
+                        self.stdout.write(f"      ⬇️  Greenhouse: Found {len(jobs)} jobs for {token}...")
                         for item in jobs:
                             if self.is_fresh(item.get('updated_at')):
-                                job_data = {
+                                self.screen_and_upsert({
                                     "title": item.get('title'), 
                                     "company": token.capitalize(), 
                                     "location": item.get('location', {}).get('name'), 
                                     "description": item.get('content'), 
                                     "apply_url": item.get('absolute_url'),
                                     "remote": "remote" in item.get('location', {}).get('name', '').lower(),
-                                    "role_type": "full_time", # Default; AI will refine
                                     "source": "Greenhouse"
-                                }
-                                self.screen_and_upsert(job_data)
-                        return True
+                                })
+                        return
             except: pass
-        
-        return found_jobs
 
     def fetch_lever_api(self, token):
         if token in self.processed_tokens: return
@@ -217,37 +242,83 @@ class Command(BaseCommand):
                 resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
                 if resp.status_code == 200:
                     jobs = resp.json()
-                    self.stdout.write(f"      ⬇️  Lever ({'EU' if 'eu' in base_url else 'US'}): Found {len(jobs)} jobs for {token}...")
-                    
+                    self.stdout.write(f"      ⬇️  Lever: Found {len(jobs)} jobs for {token}...")
                     for item in jobs:
                         ts = item.get('createdAt')
-                        if ts:
-                            dt = datetime.fromtimestamp(ts/1000.0, tz=timezone.utc)
-                            if dt < self.cutoff_date: continue
-                        
-                        location_str = item.get('categories', {}).get('location')
-                        job_data = {
-                            "title": item.get('text'), 
-                            "company": token.capitalize(), 
-                            "location": location_str, 
-                            "description": item.get('description'), 
-                            "apply_url": item.get('hostedUrl'), 
-                            "remote": "remote" in location_str.lower() if location_str else False,
-                            "role_type": "full_time", 
-                            "source": "Lever"
-                        }
-                        self.screen_and_upsert(job_data)
+                        if ts and datetime.fromtimestamp(ts/1000.0, tz=timezone.utc) >= self.cutoff_date:
+                            loc = item.get('categories', {}).get('location')
+                            self.screen_and_upsert({
+                                "title": item.get('text'), 
+                                "company": token.capitalize(), 
+                                "location": loc, 
+                                "description": item.get('description'), 
+                                "apply_url": item.get('hostedUrl'), 
+                                "remote": "remote" in (loc or "").lower(),
+                                "source": "Lever"
+                            })
                     return 
             except: pass
 
-    # --- Other API Workers (Placeholders - MUST be implemented to use full potential) ---
-    # These functions must be fully implemented to get jobs from these sources.
-    # I am providing the skeleton so the code compiles and runs without crashes.
-    def fetch_ashby_api(self, company_name): pass 
-    def fetch_workable_api(self, subdomain): pass
-    def fetch_smartrecruiters_api(self, company_id): pass
-    def fetch_recruitee_api(self, company_name): pass
-    
+    def fetch_ashby_api(self, company_name):
+        if company_name in self.processed_tokens: return
+        self.processed_tokens.add(company_name)
+        
+        try:
+            # Ashby Public API
+            url = "https://api.ashbyhq.com/posting-api/job-board/" + company_name
+            resp = requests.get(url, headers=self.get_headers(), timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                jobs = data.get('jobs', [])
+                self.stdout.write(f"      ⬇️  Ashby: Found {len(jobs)} jobs for {company_name}...")
+                
+                for item in jobs:
+                    # Ashby doesn't always give date in list view, so we assume fresh if found on board
+                    loc = item.get('location')
+                    self.screen_and_upsert({
+                        "title": item.get('title'),
+                        "company": company_name.capitalize(),
+                        "location": loc,
+                        "description": f"See {item.get('jobUrl')} for details.", # Ashby descriptions often require full scrape
+                        "apply_url": item.get('jobUrl'),
+                        "remote": item.get('isRemote', False) or "remote" in (loc or "").lower(),
+                        "source": "Ashby"
+                    })
+        except: pass
+
+    def fetch_workable_api(self, subdomain):
+        if subdomain in self.processed_tokens: return
+        self.processed_tokens.add(subdomain)
+        
+        try:
+            url = f"https://apply.workable.com/api/v1/widget/accounts/{subdomain}"
+            resp = requests.get(url, headers=self.get_headers(), timeout=5)
+            if resp.status_code == 200:
+                jobs = resp.json().get('jobs', [])
+                self.stdout.write(f"      ⬇️  Workable: Found {len(jobs)} jobs for {subdomain}...")
+                
+                for item in jobs:
+                    # Workable gives 'published_on'
+                    pub = item.get('published_on')
+                    if self.is_fresh(pub):
+                        loc = f"{item.get('city', '')}, {item.get('country', '')}"
+                        self.screen_and_upsert({
+                            "title": item.get('title'),
+                            "company": subdomain.capitalize(),
+                            "location": loc,
+                            "description": item.get('description', 'See application link.'),
+                            "apply_url": item.get('url'),
+                            "remote": item.get('telecommuting', False),
+                            "source": "Workable"
+                        })
+        except: pass
+
+    def fetch_smartrecruiters_api(self, company_id):
+        pass # Placeholder for future
+
+    def fetch_recruitee_api(self, company_name):
+        pass # Placeholder for future
+
     # --- SCREENING AND UPSERT LOGIC (Consolidated and Finalized) ---
 
     def is_fresh(self, date_str):
@@ -266,7 +337,22 @@ class Command(BaseCommand):
         apply_url = job_data.get("apply_url", "")
         source = job_data.get("source", "API")
 
-        if Job.objects.filter(apply_url=apply_url).exists(): 
+        # 1. Check existence
+        existing_job = Job.objects.filter(apply_url=apply_url).first()
+        
+        # 2. Logic to Resolve Logo (New or Existing)
+        logo_url = None
+        if existing_job and existing_job.company_logo:
+            logo_url = existing_job.company_logo
+        else:
+            # Try to fetch logo if missing
+            logo_url = self.resolve_logo(company)
+
+        if existing_job:
+            # Update logo if we found one and didn't have one before
+            if logo_url and not existing_job.company_logo:
+                existing_job.company_logo = logo_url
+                existing_job.save(update_fields=['company_logo'])
             return
 
         # --- STAGE 2: SCREENING (The Brain) ---
@@ -289,11 +375,12 @@ class Command(BaseCommand):
             defaults={
                 "title": title,
                 "company": company,
+                "company_logo": logo_url, # Save Logo Here
                 "location": location,
                 "remote": job_data.get("remote", False),
                 "description": description,
                 "role_type": signals.get("role_type", job_data.get("role_type", "full_time")),
-                "is_active": (status == "approved"), # Only activate if approved
+                "is_active": (status == "approved"), 
             },
         )
         
