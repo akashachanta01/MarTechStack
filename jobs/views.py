@@ -4,11 +4,11 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Job, Tool, Category, Subscriber # FIXED: Imported Category instead of ToolCategory
-
+from .models import Job, Tool, Category, Subscriber 
 
 def job_list(request):
     query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
     tool_filter = request.GET.get("tool", "").strip()
     category_filter = request.GET.get("category", "").strip()
     role_type_filter = request.GET.get("role_type", "").strip()
@@ -20,13 +20,21 @@ def job_list(request):
         .order_by("-created_at")
     )
 
+    # 1. Keyword Search
     if query:
         jobs = jobs.filter(
             Q(title__icontains=query)
             | Q(company__icontains=query)
-            | Q(location__icontains=query)
             | Q(description__icontains=query)
-        )
+            | Q(tools__name__icontains=query)
+        ).distinct()
+
+    # 2. Location Search
+    if location_query:
+        if "remote" in location_query.lower():
+            jobs = jobs.filter(Q(remote=True) | Q(location__icontains=location_query))
+        else:
+            jobs = jobs.filter(location__icontains=location_query)
 
     if tool_filter:
         jobs = jobs.filter(tools__name__iexact=tool_filter)
@@ -45,11 +53,12 @@ def job_list(request):
     jobs_page = paginator.get_page(page_number)
 
     tools = Tool.objects.all().select_related("category").order_by("category__name", "name")
-    categories = Category.objects.all().order_by("name") # FIXED: Used Category
+    categories = Category.objects.all().order_by("name") 
 
     context = {
         "jobs": jobs_page,
         "query": query,
+        "location_filter": location_query,
         "tool_filter": tool_filter,
         "category_filter": category_filter,
         "role_type_filter": role_type_filter,
@@ -59,16 +68,13 @@ def job_list(request):
     }
     return render(request, "jobs/job_list.html", context)
 
-
+# ... (rest of your views: job_detail, post_job, etc. remain unchanged) ...
 def job_detail(request, job_id):
     job = get_object_or_404(Job, id=job_id, is_active=True, screening_status="approved")
     return render(request, "jobs/job_detail.html", {"job": job})
 
-
 def post_job(request):
-    # Keep your existing implementation (if present in your repo).
     return render(request, "jobs/post_job.html")
-
 
 def subscribe(request):
     if request.method == "POST":
@@ -77,12 +83,8 @@ def subscribe(request):
             Subscriber.objects.get_or_create(email=email)
     return redirect("job_list")
 
-
 @staff_member_required
 def review_queue(request):
-    """
-    Staff-only review queue for Zero-Noise jobs.
-    """
     status = request.GET.get("status", "pending").strip().lower()
     q = request.GET.get("q", "").strip()
 
@@ -114,7 +116,6 @@ def review_queue(request):
         },
     )
 
-
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
@@ -133,5 +134,4 @@ def review_action(request, job_id, action):
         job.screening_status = "pending"
         job.save(update_fields=["screening_status"])
 
-    # redirect back to queue, preserving filters
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
