@@ -35,7 +35,6 @@ def sniff_token(url):
         if resp.status_code != 200: return None, None
         html = resp.text
         
-        # 1. Try Greenhouse Patterns
         gh_match = re.search(r'greenhouse\.io/([^/"\'?]+)', html)
         if gh_match:
             token = gh_match.group(1)
@@ -46,7 +45,6 @@ def sniff_token(url):
             token = gh_js_match.group(1)
             if token not in BLACKLIST_TOKENS: return "greenhouse", token
 
-        # 2. Try Lever Pattern
         lever_match = re.search(r'jobs\.lever\.co/([^/"\'?]+)', html)
         if lever_match: return "lever", lever_match.group(1)
 
@@ -61,7 +59,6 @@ def test_url(url):
     token = None
     source = None
     
-    # 1. Direct Detection
     if "greenhouse.io" in url and "embed" not in url:
         match = re.search(r'greenhouse\.io/([^/]+)', url)
         if match and match.group(1) not in BLACKLIST_TOKENS:
@@ -73,11 +70,9 @@ def test_url(url):
             source = "lever"
             token = match.group(1)
     
-    # 2. Sniffing (if not found yet)
     if not token:
         source, token = sniff_token(url)
     
-    # 3. Fallback: The "Guesser" 🧠
     jobs = []
     
     if token:
@@ -86,7 +81,7 @@ def test_url(url):
             jobs = try_fetch_greenhouse(token)
             if not jobs:
                 print("   ❌ Token found but API failed. Retrying with Guesser...")
-                token = None # Force Guesser
+                token = None
         elif source == "lever":
             try:
                 r = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=get_headers())
@@ -115,7 +110,6 @@ def test_url(url):
 
     print(f"✅ API Success: Found {len(jobs)} active jobs.")
 
-    # 4. Find Specific Job ID
     job_id_match = re.search(r'gh_jid=(\d+)', url)
     if not job_id_match: job_id_match = re.search(r'jobs/(\d+)', url)
     
@@ -135,21 +129,21 @@ def test_url(url):
         title = target_job.get('title', target_job.get('text'))
         content = target_job.get('content', target_job.get('description'))
         
-        # SIMULATE COMPANY NAME (In real fetcher this comes from the token)
+        # Infer company name from token for accurate testing
         company_guess = token.capitalize() if token else "Unknown"
         print(f"\n📝 Analyzing Job: {title}")
-        print(f"🏢 Company: {company_guess}")
+        print(f"🏢 Company Guess: {company_guess}")
         
         screener = MarTechScreener()
         analysis = screener.screen_job(title, content, company_name=company_guess)
         
         print(f"--------------------------------------------------")
         print(f"Match Status:  {'✅ PASS' if analysis['is_match'] else '❌ REJECT'}")
-        print(f"Total Score:   {analysis['score']} (Needs 20)")
+        print(f"Total Score:   {analysis['score']}")
         print(f"Categories:    {analysis['categories']}")
         print(f"Keywords:      {analysis['stack']}")
         if not analysis['is_match']:
-             print(f"Reason:        {analysis.get('reason', 'Score too low')}")
+             print(f"Reason:        {analysis.get('reason', 'AI Rejection')}")
         print(f"--------------------------------------------------")
     else:
         print("❌ Job ID not found in API list.")
