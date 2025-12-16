@@ -2,7 +2,7 @@ import os
 import re
 import json
 import logging
-from typing import Optional, Dict, List, Any # <--- ADDED THIS LINE
+from typing import Optional, Dict, List, Any 
 from openai import OpenAI
 from urllib.parse import urlparse
 from jobs.models import BlockRule 
@@ -135,4 +135,56 @@ class MarTechScreener:
         - Snippet: {description[:1500]}...
 
         YOUR MISSION:
-        Determine if this role is explicitly for **building
+        Determine if this role is explicitly for **building, administering, or managing Marketing Systems** (e.g. Marketo, Segment, Salesforce, Adobe).
+
+        🚨 "MARTECH" IMMUNITY RULE (Highest Priority):
+        If the Job Title explicitly contains "MarTech", "MOPs", or "Marketing Operations" (e.g. "MarTech Product Manager", "MOPs Manager"), it is AUTOMATICALLY A MATCH. Mark as APPROVE.
+
+        🚨 STRICT REJECTION RULES (Kill these jobs if Immunity does not apply):
+        1. **REJECT "Data Analyst" / "BI" Roles:** If the title is "Data Analyst", "Business Intelligence", or "Finance Analyst" focused on SQL/Tableau/Reporting, REJECT IT.
+        2. **REJECT "GTM" (Go-To-Market):** If the title or description says "GTM Analyst" or "GTM Strategy", REJECT IT. This usually means Sales Strategy, not Tag Management.
+        3. **REJECT "Vendor Product" Roles:** If the company is an AdTech/MarTech vendor (e.g. StackAdapt, The Trade Desk) and the role is "Technical Analyst", "Support", or "Client Services" for *their own* product.
+        4. **REJECT Sales & Growth:** Reject "Account Executive", "Solutions Engineer", "Growth Manager", "Paid Media Manager".
+
+        ✅ FINAL DECISION:
+        - If high confidence technical/operational role: APPROVE.
+        - If unsure/borderline: PENDING.
+        - If clearly violates rules: REJECT.
+
+        Output valid JSON:
+        {{
+            "decision": "APPROVE" | "REJECT" | "PENDING",
+            "score": "0-100 score (reflecting niche fit)",
+            "reason": "Short reason for decision (e.g., 'Rejected by GTM rule.')",
+            "signals": {{
+                "stack": ["Tool1", "Tool2"],
+                "role_type": "Marketing Operations" | "MarTech Engineer" | "Other",
+                "red_flags": ["list of negative signals/keywords if any"]
+            }}
+        }}
+        """
+
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are a JSON extractor. Output only valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+
+        content = completion.choices[0].message.content
+        result = json.loads(content)
+        signals = result.get("signals", {})
+
+        return {
+            "status": str(result.get("decision", "PENDING")).lower(),
+            "score": float(result.get("score", 50.0)),
+            "reason": str(result.get("reason", "AI analysis complete.")),
+            "details": {
+                "stage": "gpt_analysis",
+                "signals": signals,
+                "raw_response": content
+            }
+        }
