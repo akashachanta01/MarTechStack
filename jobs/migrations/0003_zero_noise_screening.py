@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("jobs", "0002_job_salary_range_job_tags_subscriber"),
+        ("jobs", "0002_job_company_logo"), # FIXED: Dependency updated to existing file
     ]
 
     operations = [
