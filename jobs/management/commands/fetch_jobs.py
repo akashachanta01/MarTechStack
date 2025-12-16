@@ -1,4 +1,5 @@
 import time
+import random
 import re
 import dateutil.parser 
 import requests
@@ -8,19 +9,19 @@ from urllib.parse import urlparse
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from duckduckgo_search import DDGS  # <--- The Free Search Engine
+from duckduckgo_search import DDGS
 
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
-# 🚫 BLACKLIST (Ignore these generic tokens)
+# 🚫 BLACKLIST
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
 
 class Command(BaseCommand):
-    help = 'The Free Mode Hunter: Powered by DuckDuckGo & Smart Logic'
+    help = 'The Stealth Hunter: DuckDuckGo HTML Backend + Random Delays'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Job Hunt (Free Mode)...")
+        self.stdout.write("🥷 Starting Job Hunt (Stealth Mode)...")
         
         self.screener = MarTechScreener()
         self.total_added = 0
@@ -36,39 +37,45 @@ class Command(BaseCommand):
             'MarTech', 'Marketing Operations'
         ]
 
-        # --- SMART QUERIES (Maximum Coverage) ---
+        # --- SITES ---
         base_sites = [
             'site:boards.greenhouse.io', 'site:jobs.lever.co',
             'site:jobs.ashbyhq.com', 'site:apply.workable.com',
             'site:jobs.smartrecruiters.com'
         ]
         
-        # We search site-by-site to avoid complex OR queries that DDG might dislike
-        ddgs = DDGS()
-
         for tool in hunt_targets:
             self.stdout.write(f"\n🔎 Hunting target: {tool}...")
             
-            for site in base_sites:
-                query = f'{site} "{tool}"'
-                
-                try:
-                    # DuckDuckGo Search
-                    # region="wt-wt" (Global), time="m" (Past Month), max_results=25
-                    results = ddgs.text(query, region='wt-wt', timelimit='m', max_results=25)
+            # Re-initialize session for every keyword (Session Rotation)
+            with DDGS() as ddgs:
+                for site in base_sites:
+                    query = f'{site} "{tool}"'
                     
-                    if not results: continue
+                    # Human Delay (5 to 12 seconds)
+                    sleep_time = random.uniform(5, 12)
+                    self.stdout.write(f"   ...sleeping {sleep_time:.1f}s...")
+                    time.sleep(sleep_time)
 
-                    self.stdout.write(f"   found {len(results)} links on {site}...")
+                    try:
+                        # USE HTML BACKEND (More robust against rate limits)
+                        results = ddgs.text(query, region='wt-wt', timelimit='m', max_results=20, backend='html')
+                        
+                        if not results: continue
 
-                    for res in results:
-                        link = res.get('href')
-                        if link:
-                            self.analyze_and_fetch(link)
-                            time.sleep(0.5) # Polite delay
-                except Exception as e:
-                    self.stdout.write(f"   ⚠️ Search Error: {e}")
-                    time.sleep(2) # Backoff on error
+                        self.stdout.write(f"   found {len(results)} links on {site}...")
+
+                        for res in results:
+                            link = res.get('href')
+                            if link:
+                                self.analyze_and_fetch(link)
+                                # Micro-delay between processing links
+                                time.sleep(random.uniform(0.5, 1.5))
+                                
+                    except Exception as e:
+                        self.stdout.write(f"   ⚠️ Search Error: {e}")
+                        # If blocked, take a long nap
+                        time.sleep(30)
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
 
