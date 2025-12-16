@@ -198,7 +198,10 @@ class Command(BaseCommand):
 
     def process_job(self, title, company, location, description, apply_url, source):
         if Job.objects.filter(apply_url=apply_url).exists(): return
-        analysis = self.screener.screen_job(title, description)
+        
+        # PASS COMPANY NAME TO SCREENER
+        analysis = self.screener.screen_job(title, description, company_name=company)
+        
         if not analysis['is_match']: return
 
         categories_str = ", ".join(analysis['categories'])
