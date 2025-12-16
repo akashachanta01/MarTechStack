@@ -3,8 +3,8 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Regex Version: Refined Killers to allow "Partner with Talent Acquisition" 
-    and "MarTech Full Stack" roles.
+    Regex Version: "False-Positive Proof" Edition.
+    Killers are now strictly role-specific to allow cross-functional collaboration.
     """
     
     # 1. Define Categories & Keywords
@@ -54,28 +54,56 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers (Refined)
+    # 3. Job Killers (The "False-Positive Proof" List)
     JOB_KILLERS = [
-        # Content / Social
-        r'writing.*blog.*posts', r'content.*creation', r'social.*media.*management',
-        r'brand.*manager', r'copywriter', 
+        # --- Pure Content / Social Roles ---
+        # (We keep these strict because MarTech rarely does pure blogging)
+        r'writing.*blog.*posts', 
+        r'social.*media.*manager', # Changed from 'management' to 'manager'
+        r'social.*media.*specialist',
+        r'brand.*manager', 
+        r'copywriter', 
         
-        # Sales
-        r'cold.*calling', r'sales.*representative', r'account.*executive', 
-        r'account.*director', r'business.*development', r'customer.*success',
-
-        # HR / Recruiting (Specific Roles Only)
-        r'hr.*manager', r'recruiter', 
-        r'talent.*acquisition.*manager',     # 🟢 CHANGED: Only blocks Managers
-        r'talent.*acquisition.*specialist',  # 🟢 CHANGED: Only blocks Specialists
-        r'head.*of.*talent',
+        # --- Sales Roles (Specific Titles Only) ---
+        # Allows: "Support Sales Team", "Sales Operations"
+        # Kills: "Sales Representative", "Account Executive"
+        r'sales.*representative', 
+        r'account.*executive', 
+        r'account.*director', 
+        r'sales.*development.*rep',
+        r'business.*development.*rep',
+        r'outside.*sales',
+        r'inside.*sales',
         
-        # Engineering (Removed Full Stack to allow MarTech Engineers)
-        r'software.*engineer', r'frontend.*engineer', r'backend.*engineer',
-        # REMOVED: r'full.*stack',  <-- TRUST THE SCORE SYSTEM INSTEAD
-        r'platform.*engineer', r'site.*reliability',
-        r'devops', r'engineering.*manager', r'director.*engineering',
-        r'solutions.*engineer', r'technical.*support'
+        # --- Customer Success (Specific Titles Only) ---
+        # Allows: "Work with Customer Success", "CS Operations"
+        # Kills: "Customer Success Manager"
+        r'customer.*success.*manager',
+        r'client.*success.*manager',
+        r'customer.*success.*representative',
+        
+        # --- HR / Recruiting (Specific Titles Only) ---
+        # Allows: "Partner with Talent Acquisition"
+        # Kills: "Recruiter", "Talent Acquisition Manager"
+        r'hr.*manager', 
+        r'human.*resources',
+        r'recruiter', 
+        r'talent.*acquisition.*manager',     
+        r'talent.*acquisition.*specialist',  
+        r'talent.*scout',
+        
+        # --- Engineering (Specific Titles Only) ---
+        # Allows: "MarTech Engineer", "Full Stack (if high score)"
+        # Kills: "Software Engineer", "Frontend Dev"
+        r'software.*engineer', 
+        r'frontend.*developer', 
+        r'frontend.*engineer',
+        r'backend.*developer', 
+        r'backend.*engineer',
+        r'site.*reliability.*engineer',
+        r'devops.*engineer',
+        # Removed 'full stack', 'solutions engineer', 'product manager' 
+        # to trust the Score System.
     ]
     
     def __init__(self):
@@ -89,6 +117,7 @@ class MarTechScreener:
         return str(text).lower().strip()
     
     def is_present(self, text, keyword):
+        # Enforce Word Boundaries to prevent partial matches
         pattern = r'\b' + re.escape(keyword) + r'\b'
         return re.search(pattern, text) is not None
 
