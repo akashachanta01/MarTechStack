@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"📅 Freshness Filter: {self.cutoff_date.date()}")
 
-        # --- HUNT TARGETS (Expanded & Prioritized) ---
+        # --- HUNT TARGETS (Full Adobe + MarTech Stack) ---
         hunt_targets = [
             # Adobe Stack (High Priority)
             'Adobe Analytics', 'Adobe Target', 'Adobe Campaign', 
@@ -54,29 +54,40 @@ class Command(BaseCommand):
             'MarTech', 'MarTech Architect', 'Marketing Operations', 'Marketing Technologist'
         ]
 
-        # --- SMART QUERIES ---
-        # We construct the query dynamically below
+        # --- SMART QUERIES (Maximum Coverage) ---
         base_sites = [
+            # Greenhouse (US & EU)
             'site:boards.greenhouse.io',
+            'site:boards.eu.greenhouse.io',
+            'site:job-boards.greenhouse.io',
+            
+            # Lever (US & EU)
             'site:jobs.lever.co',
+            'site:jobs.eu.lever.co',
+            
+            # SmartRecruiters (Jobs & Careers subdomains)
+            'site:jobs.smartrecruiters.com',
+            'site:careers.smartrecruiters.com',
+            
+            # Modern Tech ATS
             'site:jobs.ashbyhq.com',         
             'site:apply.workable.com',       
-            'site:jobs.smartrecruiters.com', 
-            'site:recruitee.com'            
+            'site:recruitee.com',
+            
+            # "Powered By" Footprints (Catch custom domains)
+            '"powered by greenhouse"',
+            '"powered by lever"',
+            '"powered by ashby"',
+            '"powered by workable"'
         ]
         
         base_sites_str = " OR ".join(base_sites)
 
         for tool in hunt_targets:
-            # OPTIMIZATION: For Adobe, we use broader queries to catch more hits
-            if "Adobe" in tool or "MarTech" in tool:
-                # E.g. "Adobe Analytics" (site:greenhouse.io OR site:lever.co ...)
-                query = f'"{tool}" ({base_sites_str})'
-            else:
-                # Standard query
-                query = f'"{tool}" ({base_sites_str})'
+            # Query Construction
+            query = f'"{tool}" ({base_sites_str})'
             
-            self.stdout.write(f"\n🔎 Hunting: {query[:50]}...")
+            self.stdout.write(f"\n🔎 Hunting: {query[:60]}...")
             links = self.search_google(query)
             self.stdout.write(f"   Found {len(links)} links. Analyzing...")
 
@@ -196,18 +207,28 @@ class Command(BaseCommand):
     def fetch_greenhouse_api(self, token, silent_fail=False):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return False
         
+        # Expanded Domain List for Greenhouse
+        domains = [
+            "boards-api.greenhouse.io", 
+            "job-boards.greenhouse.io", 
+            "job-boards.eu.greenhouse.io",
+            "boards-api.eu.greenhouse.io" # EU API Endpoint
+        ]
+        
         found_jobs = False
-        for domain in ["boards-api.greenhouse.io", "job-boards.eu.greenhouse.io"]:
+        for domain in domains:
             try:
+                # Try fetching from this domain
                 api_url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
                 resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
+                
                 if resp.status_code == 200:
                     jobs = resp.json().get('jobs', [])
                     if jobs:
                         self.processed_tokens.add(token)
                         found_jobs = True
                         if not silent_fail:
-                            self.stdout.write(f"      ⬇️  Greenhouse: Found {len(jobs)} jobs for {token}...")
+                            self.stdout.write(f"      ⬇️  Greenhouse ({domain}): Found {len(jobs)} jobs for {token}...")
                         
                         for item in jobs:
                             if self.is_fresh(item.get('updated_at')):
@@ -228,6 +249,7 @@ class Command(BaseCommand):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
         try:
+            # Try Standard Lever
             api_url = f"https://api.lever.co/v0/postings/{token}?mode=json"
             resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
@@ -247,6 +269,28 @@ class Command(BaseCommand):
                         apply_url=item.get('hostedUrl'), 
                         source="Lever"
                     )
+                return
+
+            # Try EU Lever (Fallback)
+            api_url_eu = f"https://api.eu.lever.co/v0/postings/{token}?mode=json"
+            resp = requests.get(api_url_eu, headers=self.get_headers(), timeout=5)
+            if resp.status_code == 200:
+                jobs = resp.json()
+                self.stdout.write(f"      ⬇️  Lever (EU): Found {len(jobs)} jobs for {token}...")
+                for item in jobs:
+                    ts = item.get('createdAt')
+                    if ts:
+                        dt = datetime.fromtimestamp(ts/1000.0, tz=timezone.utc)
+                        if dt < self.cutoff_date: continue
+                    self.process_job(
+                        title=item.get('text'), 
+                        company=token.capitalize(), 
+                        location=item.get('categories', {}).get('location'), 
+                        description=item.get('description'), 
+                        apply_url=item.get('hostedUrl'), 
+                        source="Lever"
+                    )
+
         except: pass
 
     def fetch_ashby_api(self, company_name):
