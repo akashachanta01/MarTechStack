@@ -41,7 +41,7 @@ class Command(BaseCommand):
         self.stdout.write("Starting population...")
 
         for cat_name, tools_list in taxonomy.items():
-            # 1. Create or Get the Category
+            # 1. Create or Get the Category (Lookup by slug is fine here)
             category, created = Category.objects.get_or_create(
                 slug=slugify(cat_name),
                 defaults={'name': cat_name}
@@ -50,16 +50,17 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Created Category: {cat_name}")
 
-            # 2. Create the Tools for this Category
+            # 2. Create the Tools for this Category (FIXED: Lookup by name)
             for tool_name in tools_list:
                 tool, t_created = Tool.objects.get_or_create(
-                    slug=slugify(tool_name),
+                    name=tool_name, # FIXED: Tool model uses 'name' as unique field
                     defaults={
-                        'name': tool_name,
                         'category': category
                     }
                 )
                 if t_created:
                     self.stdout.write(f" - Added Tool: {tool_name}")
+                else:
+                    self.stdout.write(f" - Found existing Tool: {tool_name}")
 
         self.stdout.write(self.style.SUCCESS('Successfully populated MarTech taxonomy!'))
