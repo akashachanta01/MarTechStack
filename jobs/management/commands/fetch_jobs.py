@@ -1,107 +1,74 @@
-import json
-import os
 import time
 import re
 import dateutil.parser 
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 import requests
-from django.core.management.base import BaseCommand
-from django.utils import timezone
+from datetime import datetime, timedelta
+from typing import Any, Dict
 from urllib.parse import urlparse
 
-from jobs.models import Job, Tool, Category
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from duckduckgo_search import DDGS  # <--- The Free Search Engine
+
+from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 # 🚫 BLACKLIST (Ignore these generic tokens)
-BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board'}
+BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
 
 class Command(BaseCommand):
-    help = 'The Gold Standard Hunter: AI-Powered Edition with Multi-ATS Support'
+    help = 'The Free Mode Hunter: Powered by DuckDuckGo & Smart Logic'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting AI Job Hunt...")
+        self.stdout.write("🚀 Starting Job Hunt (Free Mode)...")
         
         self.screener = MarTechScreener()
         self.total_added = 0
-        self.serpapi_key = os.environ.get('SERPAPI_KEY')
-        
-        if not self.serpapi_key:
-            self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY."))
-            return
-
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         self.cutoff_date = timezone.now() - timedelta(days=28)
         self.processed_tokens = set()
         
-        self.stdout.write(f"📅 Freshness Filter: {self.cutoff_date.date()}")
-
-        # --- HUNT TARGETS (Full Adobe + MarTech Stack) ---
+        # --- HUNT TARGETS ---
         hunt_targets = [
-            # Adobe Stack (High Priority)
-            'Adobe Analytics', 'Adobe Target', 'Adobe Campaign', 
-            'Adobe Journey Optimizer', 'AJO', 
-            'Adobe Experience Platform', 'Adobe Experience Cloud',
-            'Adobe Customer Journey Analytics',
-            'Marketo', 
-
-            # Marketing Automation
-            'Salesforce Marketing Cloud', 'HubSpot', 'Braze',
-            'Klaviyo', 'Iterable', 'Customer.io', 
-            
-            # CDP & Data
-            'Tealium', 'mParticle', 'Real-Time CDP', 'Segment',
-            'Customer Data Platform', 'CDP',
-            
-            # Analytics
-            'Google Analytics 4', 'GA4', 'Mixpanel', 'Amplitude',
-            
-            # General Roles (High Priority)
-            'MarTech', 'MarTech Architect', 'Marketing Operations', 'Marketing Technologist'
+            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 
+            'Braze', 'Klaviyo', 'Iterable', 'Adobe Analytics',
+            'Adobe Experience Platform', 'Tealium', 'Segment', 'mParticle',
+            'MarTech', 'Marketing Operations'
         ]
 
         # --- SMART QUERIES (Maximum Coverage) ---
         base_sites = [
-            # Greenhouse (US & EU)
-            'site:boards.greenhouse.io',
-            'site:boards.eu.greenhouse.io',
-            'site:job-boards.greenhouse.io',
-            
-            # Lever (US & EU)
-            'site:jobs.lever.co',
-            'site:jobs.eu.lever.co',
-            
-            # SmartRecruiters (Jobs & Careers subdomains)
-            'site:jobs.smartrecruiters.com',
-            'site:careers.smartrecruiters.com',
-            
-            # Modern Tech ATS
-            'site:jobs.ashbyhq.com',         
-            'site:apply.workable.com',       
-            'site:recruitee.com',
-            
-            # "Powered By" Footprints (Catch custom domains)
-            '"powered by greenhouse"',
-            '"powered by lever"',
-            '"powered by ashby"',
-            '"powered by workable"'
+            'site:boards.greenhouse.io', 'site:jobs.lever.co',
+            'site:jobs.ashbyhq.com', 'site:apply.workable.com',
+            'site:jobs.smartrecruiters.com'
         ]
         
-        base_sites_str = " OR ".join(base_sites)
+        # We search site-by-site to avoid complex OR queries that DDG might dislike
+        ddgs = DDGS()
 
         for tool in hunt_targets:
-            query = f'"{tool}" ({base_sites_str})'
+            self.stdout.write(f"\n🔎 Hunting target: {tool}...")
             
-            self.stdout.write(f"\n🔎 Hunting: {query[:60]}...")
-            links = self.search_google(query)
-            self.stdout.write(f"   Found {len(links)} links. Analyzing...")
-
-            for link in links:
+            for site in base_sites:
+                query = f'{site} "{tool}"'
+                
                 try:
-                    self.analyze_and_fetch(link)
-                    time.sleep(0.5) 
+                    # DuckDuckGo Search
+                    # region="wt-wt" (Global), time="m" (Past Month), max_results=25
+                    results = ddgs.text(query, region='wt-wt', timelimit='m', max_results=25)
+                    
+                    if not results: continue
+
+                    self.stdout.write(f"   found {len(results)} links on {site}...")
+
+                    for res in results:
+                        link = res.get('href')
+                        if link:
+                            self.analyze_and_fetch(link)
+                            time.sleep(0.5) # Polite delay
                 except Exception as e:
-                    pass
+                    self.stdout.write(f"   ⚠️ Search Error: {e}")
+                    time.sleep(2) # Backoff on error
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
 
@@ -109,177 +76,93 @@ class Command(BaseCommand):
     def get_headers(self):
         return {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/json'
         }
 
-    def search_google(self, query):
-        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 30, "gl": "us", "hl": "en", "tbs": "qdr:m" }
-        try:
-            resp = requests.get("https://serpapi.com/search", params=params, timeout=10)
-            return [r.get("link") for r in resp.json().get("organic_results", [])]
-        except: return []
-
-    def get_company_domain(self, company_name):
-        """
-        Uses SerpApi to find the official website of the company.
-        """
-        if not company_name: return None
-        
-        # Fast exit for knowns
-        if company_name.lower() == "unknown": return None
-        
-        self.stdout.write(f"      🌍 Resolving domain for: {company_name}...")
-        try:
-            # Search for "CompanyName official site"
-            query = f"{company_name} official site"
-            params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": 1 }
-            resp = requests.get("https://serpapi.com/search", params=params, timeout=5)
-            results = resp.json().get("organic_results", [])
-            if results:
-                link = results[0].get("link")
-                # Extract domain (e.g., https://www.adobe.com/careers -> adobe.com)
-                parsed = urlparse(link)
-                domain = parsed.netloc.replace("www.", "")
-                return domain
-        except Exception as e:
-            pass
-        return None
-
-    def resolve_logo(self, company_name):
-        """
-        Returns a Clearbit logo URL for the company.
-        """
-        if not company_name: return None
-        
-        # 1. Try to guess domain from name (Fast)
-        domain = f"{company_name.lower().replace(' ', '').replace(',', '')}.com"
-        
-        # 2. Or verify with Google (Slow but accurate - enable if needed)
-        # For now, let's use the fast guess to save API calls, 
-        # but if we really need accuracy, uncomment below:
-        # real_domain = self.get_company_domain(company_name)
-        # if real_domain: domain = real_domain
-
-        return f"https://logo.clearbit.com/{domain}"
-
-    # --- THE BRAIN: ANALYZE URL (FIXED FOR ALL GREENHOUSE DOMAINS) ---
+    # --- THE BRAIN: ANALYZE URL ---
     def analyze_and_fetch(self, url):
         # 1. Greenhouse
         if "greenhouse.io" in url and "embed" not in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
-            if match and match.group(1) not in BLACKLIST_TOKENS:
-                self.fetch_greenhouse_api(match.group(1))
+            if match: self.fetch_greenhouse_api(match.group(1))
 
         # 2. Lever
         elif "lever.co" in url:
             match = re.search(r'lever\.co/([^/]+)', url)
-            if match:
-                self.fetch_lever_api(match.group(1))
+            if match: self.fetch_lever_api(match.group(1))
 
         # 3. Ashby
         elif "ashbyhq.com" in url:
             match = re.search(r'jobs\.ashbyhq\.com/([^/]+)', url)
-            if match:
-                self.fetch_ashby_api(match.group(1))
+            if match: self.fetch_ashby_api(match.group(1))
 
         # 4. Workable
         elif "workable.com" in url:
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
-            if match:
-                self.fetch_workable_api(match.group(1))
-
-        # 5. SmartRecruiters
-        elif "smartrecruiters.com" in url:
-            match = re.search(r'smartrecruiters\.com/([^/]+)', url)
-            if match:
-                self.fetch_smartrecruiters_api(match.group(1))
-
-        # 6. Recruitee
-        elif "recruitee.com" in url:
-            match = re.search(r'([^.]+)\.recruitee\.com', url)
-            if match:
-                self.fetch_recruitee_api(match.group(1))
-        
-        pass 
+            if match: self.fetch_workable_api(match.group(1))
 
     # --- API WORKERS ---
 
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
+        self.processed_tokens.add(token)
         
-        domains = ["boards-api.greenhouse.io", "job-boards.greenhouse.io", "boards-api.eu.greenhouse.io"]
+        domains = ["boards-api.greenhouse.io", "job-boards.greenhouse.io"]
         for domain in domains:
             try:
-                api_url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
-                resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
+                resp = requests.get(f"https://{domain}/v1/boards/{token}/jobs?content=true", headers=self.get_headers(), timeout=5)
                 if resp.status_code == 200:
                     jobs = resp.json().get('jobs', [])
-                    if jobs:
-                        self.processed_tokens.add(token)
-                        self.stdout.write(f"      ⬇️  Greenhouse: Found {len(jobs)} jobs for {token}...")
-                        for item in jobs:
-                            if self.is_fresh(item.get('updated_at')):
-                                self.screen_and_upsert({
-                                    "title": item.get('title'), 
-                                    "company": token.capitalize(), 
-                                    "location": item.get('location', {}).get('name'), 
-                                    "description": item.get('content'), 
-                                    "apply_url": item.get('absolute_url'),
-                                    "remote": "remote" in item.get('location', {}).get('name', '').lower(),
-                                    "source": "Greenhouse"
-                                })
-                        return
+                    for item in jobs:
+                        if self.is_fresh(item.get('updated_at')):
+                            self.screen_and_upsert({
+                                "title": item.get('title'), 
+                                "company": token.capitalize(), 
+                                "location": item.get('location', {}).get('name'), 
+                                "description": item.get('content'), 
+                                "apply_url": item.get('absolute_url'),
+                                "remote": "remote" in item.get('location', {}).get('name', '').lower(),
+                                "source": "Greenhouse"
+                            })
+                    return
             except: pass
 
     def fetch_lever_api(self, token):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
         
-        for base_url in ["https://api.lever.co/v0/postings/", "https://api.eu.lever.co/v0/postings/"]:
-            try:
-                api_url = f"{base_url}{token}?mode=json"
-                resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
-                if resp.status_code == 200:
-                    jobs = resp.json()
-                    self.stdout.write(f"      ⬇️  Lever: Found {len(jobs)} jobs for {token}...")
-                    for item in jobs:
-                        ts = item.get('createdAt')
-                        if ts and datetime.fromtimestamp(ts/1000.0, tz=timezone.utc) >= self.cutoff_date:
-                            loc = item.get('categories', {}).get('location')
-                            self.screen_and_upsert({
-                                "title": item.get('text'), 
-                                "company": token.capitalize(), 
-                                "location": loc, 
-                                "description": item.get('description'), 
-                                "apply_url": item.get('hostedUrl'), 
-                                "remote": "remote" in (loc or "").lower(),
-                                "source": "Lever"
-                            })
-                    return 
-            except: pass
+        try:
+            resp = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=self.get_headers(), timeout=5)
+            if resp.status_code == 200:
+                for item in resp.json():
+                    if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
+                        loc = item.get('categories', {}).get('location')
+                        self.screen_and_upsert({
+                            "title": item.get('text'), 
+                            "company": token.capitalize(), 
+                            "location": loc, 
+                            "description": item.get('description'), 
+                            "apply_url": item.get('hostedUrl'), 
+                            "remote": "remote" in (loc or "").lower(),
+                            "source": "Lever"
+                        })
+        except: pass
 
     def fetch_ashby_api(self, company_name):
         if company_name in self.processed_tokens: return
         self.processed_tokens.add(company_name)
         
         try:
-            # Ashby Public API
-            url = "https://api.ashbyhq.com/posting-api/job-board/" + company_name
-            resp = requests.get(url, headers=self.get_headers(), timeout=5)
+            resp = requests.post("https://api.ashbyhq.com/posting-api/job-board/" + company_name, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
-                data = resp.json()
-                jobs = data.get('jobs', [])
-                self.stdout.write(f"      ⬇️  Ashby: Found {len(jobs)} jobs for {company_name}...")
-                
+                jobs = resp.json().get('jobs', [])
                 for item in jobs:
-                    # Ashby doesn't always give date in list view, so we assume fresh if found on board
                     loc = item.get('location')
                     self.screen_and_upsert({
                         "title": item.get('title'),
                         "company": company_name.capitalize(),
                         "location": loc,
-                        "description": f"See {item.get('jobUrl')} for details.", # Ashby descriptions often require full scrape
+                        "description": f"See {item.get('jobUrl')} for details.",
                         "apply_url": item.get('jobUrl'),
                         "remote": item.get('isRemote', False) or "remote" in (loc or "").lower(),
                         "source": "Ashby"
@@ -291,36 +174,34 @@ class Command(BaseCommand):
         self.processed_tokens.add(subdomain)
         
         try:
-            url = f"https://apply.workable.com/api/v1/widget/accounts/{subdomain}"
-            resp = requests.get(url, headers=self.get_headers(), timeout=5)
+            resp = requests.get(f"https://apply.workable.com/api/v1/widget/accounts/{subdomain}", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
-                jobs = resp.json().get('jobs', [])
-                self.stdout.write(f"      ⬇️  Workable: Found {len(jobs)} jobs for {subdomain}...")
-                
-                for item in jobs:
-                    # Workable gives 'published_on'
-                    pub = item.get('published_on')
-                    if self.is_fresh(pub):
+                for item in resp.json().get('jobs', []):
+                    if self.is_fresh(item.get('published_on')):
                         loc = f"{item.get('city', '')}, {item.get('country', '')}"
                         self.screen_and_upsert({
                             "title": item.get('title'),
                             "company": subdomain.capitalize(),
                             "location": loc,
-                            "description": item.get('description', 'See application link.'),
+                            "description": item.get('description'),
                             "apply_url": item.get('url'),
                             "remote": item.get('telecommuting', False),
                             "source": "Workable"
                         })
         except: pass
 
-    def fetch_smartrecruiters_api(self, company_id):
-        pass # Placeholder for future
+    # --- LOGO RESOLVER (THE FREE GOOGLE TRICK) ---
+    def resolve_logo(self, company_name):
+        if not company_name: return None
+        # Heuristic: Clean name -> Google Favicon
+        clean = company_name.lower()
+        for x in [',', '.', ' inc', ' llc', ' ltd', ' corp', ' technologies', ' systems', ' group']:
+            clean = clean.replace(x, '')
+        clean = "".join(clean.split())
+        domain = f"{clean}.com"
+        return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
 
-    def fetch_recruitee_api(self, company_name):
-        pass # Placeholder for future
-
-    # --- SCREENING AND UPSERT LOGIC (Consolidated and Finalized) ---
-
+    # --- SCREENING AND UPSERT ---
     def is_fresh(self, date_str):
         if not date_str: return True
         try:
@@ -332,87 +213,50 @@ class Command(BaseCommand):
     def screen_and_upsert(self, job_data: Dict[str, Any]):
         title = job_data.get("title", "")
         company = job_data.get("company", "")
-        location = job_data.get("location", "")
-        description = job_data.get("description", "")
         apply_url = job_data.get("apply_url", "")
-        source = job_data.get("source", "API")
-
-        # 1. Check existence
-        existing_job = Job.objects.filter(apply_url=apply_url).first()
         
-        # 2. Logic to Resolve Logo (New or Existing)
-        logo_url = None
-        if existing_job and existing_job.company_logo:
-            logo_url = existing_job.company_logo
-        else:
-            # Try to fetch logo if missing
-            logo_url = self.resolve_logo(company)
+        # Check Existence
+        if Job.objects.filter(apply_url=apply_url).exists(): return
 
-        if existing_job:
-            # Update logo if we found one and didn't have one before
-            if logo_url and not existing_job.company_logo:
-                existing_job.company_logo = logo_url
-                existing_job.save(update_fields=['company_logo'])
-            return
+        # Resolve Logo (Free Mode)
+        logo_url = self.resolve_logo(company)
 
-        # --- STAGE 2: SCREENING (The Brain) ---
+        # AI Screen
         analysis = self.screener.screen(
-            title=title,
-            company=company,
-            location=location,
-            description=description,
-            apply_url=apply_url,
+            title=title, company=company, location=job_data.get("location", ""),
+            description=job_data.get("description", ""), apply_url=apply_url
         )
         
         status = analysis.get("status", "pending")
-        score = analysis.get("score", 50.0)
-        reason = analysis.get("reason", "No reason provided.")
         signals = analysis.get("details", {}).get("signals", {})
 
-        # --- STAGE 3: UPSERT (The Database) ---
-        job, created = Job.objects.get_or_create(
+        # Save
+        job = Job.objects.create(
+            title=title,
+            company=company,
+            company_logo=logo_url,
+            location=job_data.get("location", ""),
+            remote=job_data.get("remote", False),
+            description=job_data.get("description", ""),
             apply_url=apply_url,
-            defaults={
-                "title": title,
-                "company": company,
-                "company_logo": logo_url, # Save Logo Here
-                "location": location,
-                "remote": job_data.get("remote", False),
-                "description": description,
-                "role_type": signals.get("role_type", job_data.get("role_type", "full_time")),
-                "is_active": (status == "approved"), 
-            },
+            role_type=signals.get("role_type", "full_time"),
+            screening_status=status,
+            screening_score=analysis.get("score", 50.0),
+            screening_reason=analysis.get("reason", ""),
+            screening_details=analysis.get("details", {}),
+            is_active=(status == "approved"),
+            screened_at=timezone.now(),
+            tags=f"{job_data.get('source')}, {signals.get('role_type', '')}"
         )
         
-        # Update screening status/details
-        job.screening_status = status
-        job.screening_score = score
-        job.screening_reason = reason
-        job.screening_details = analysis.get("details", {})
-        job.screened_at = timezone.now()
+        # Link Tools
+        for tool_name in signals.get("stack", []):
+            t_obj = self.tool_cache.get(self.screener._normalize(tool_name))
+            if t_obj: job.tools.add(t_obj)
 
-        # Update tags and tool Many-to-Many field
-        tools_list = signals.get("stack", [])
-        job.tags = f"{source}, {signals.get('role_type', 'Operations')}, {', '.join(tools_list)}"
-        
-        job.save()
-
-        # Update ManyToMany field after save
-        if tools_list:
-            job.tools.clear() 
-            for tool_name in tools_list:
-                normalized_name = self.screener._normalize(tool_name)
-                tool_obj = self.tool_cache.get(normalized_name)
-                if tool_obj:
-                    job.tools.add(tool_obj)
-
-
-        # --- VERBOSE LOGGING ---
-        clean_title = (title[:35] + '..') if len(title) > 35 else title
+        # Log
         if status == "approved":
             self.total_added += 1
-            self.stdout.write(self.style.SUCCESS(f"         ✅ {clean_title} [APPROVED, Score: {score:.1f}]"))
+            self.stdout.write(self.style.SUCCESS(f"   ✅ {title[:40]}.. [APPROVED]"))
         elif status == "pending":
-            self.stdout.write(self.style.WARNING(f"         ⚠️ {clean_title} [PENDING, Score: {score:.1f}, Reason: {reason}]"))
-        else: # Rejected
-            self.stdout.write(self.style.NOTICE(f"         ❌ {clean_title} [{reason}]"))
+            self.stdout.write(self.style.WARNING(f"   ⚠️ {title[:40]}.. [PENDING]"))
