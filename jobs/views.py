@@ -1,9 +1,10 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
+from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
@@ -11,8 +12,21 @@ from .forms import JobPostForm
 # --- CONFIGURATION: VENDOR GROUPING RULES ---
 # Maps specific tool names (Child) to a unified Vendor Group (Parent).
 TOOL_MAPPING = {
-    # Adobe Ecosystem
+    # Salesforce
+    'Salesforce Marketing Cloud': 'Salesforce',
+    'SFMC': 'Salesforce',
+    'Salesforce MC': 'Salesforce', # <--- Fixed your specific issue
+    'Marketing Cloud': 'Salesforce',
+    'Pardot': 'Salesforce',
+    'Marketing Cloud Account Engagement': 'Salesforce',
+    'Salesforce CDP': 'Salesforce',
+    'Data Cloud': 'Salesforce',
+    'Salesforce CRM': 'Salesforce',
+    'Salesforce': 'Salesforce', # Self-reference ensures consistent icons/grouping
+
+    # Adobe
     'Marketo': 'Adobe',
+    'Marketo Engage': 'Adobe',
     'Adobe Experience Cloud': 'Adobe',
     'Adobe Experience Platform': 'Adobe',
     'AEP': 'Adobe',
@@ -23,31 +37,26 @@ TOOL_MAPPING = {
     'AJO': 'Adobe',
     'Magento': 'Adobe',
     'Workfront': 'Adobe',
+    'Adobe': 'Adobe',
 
-    # Salesforce Ecosystem
-    'Salesforce Marketing Cloud': 'Salesforce',
-    'SFMC': 'Salesforce',
-    'Pardot': 'Salesforce',
-    'Marketing Cloud Account Engagement': 'Salesforce',
-    'Salesforce CDP': 'Salesforce',
-    'Data Cloud': 'Salesforce',
-    'Salesforce CRM': 'Salesforce',
-
-    # HubSpot Ecosystem
+    # HubSpot
     'HubSpot CRM': 'HubSpot',
     'HubSpot Marketing Hub': 'HubSpot',
     'HubSpot Operations Hub': 'HubSpot',
+    'HubSpot': 'HubSpot',
 
-    # Google Ecosystem
+    # Google
     'Google Analytics': 'Google',
     'GA4': 'Google',
     'Google Tag Manager': 'Google',
     'GTM': 'Google',
     'Google Ads': 'Google',
     'DV360': 'Google',
+    'Looker': 'Google',
 
     # Data & CDP
     'Twilio Segment': 'Segment',
+    'Segment.io': 'Segment',
     'Tealium iQ': 'Tealium',
     'Tealium AudienceStream': 'Tealium',
 }
@@ -68,23 +77,25 @@ def job_list(request):
         .order_by("-created_at")
     )
 
-    # --- SMART SEARCH LOGIC (The "Fix") ---
+    # --- SMART SEARCH LOGIC ---
     if query:
-        # 1. Standard text search
+        # 1. Standard text search (Title, Company, Description)
         search_q = (
             Q(title__icontains=query)
             | Q(company__icontains=query)
             | Q(description__icontains=query)
-            | Q(tools__name__icontains=query)
         )
 
-        # 2. Vendor Expansion: If searching "Adobe", also find "Marketo"
-        # Find all tools that map to this query (e.g. if query="Adobe", get ['Marketo', 'AEP', ...])
+        # 2. Vendor Expansion: If searching "Adobe", find jobs with "Marketo" OR "Adobe"
+        # Find all tools that map to this query
         child_tools = [child for child, parent in TOOL_MAPPING.items() if parent.lower() == query.lower()]
         
-        if child_tools:
-            # Add OR condition: tools__name IN [Marketo, AEP...]
-            search_q |= Q(tools__name__in=child_tools)
+        # Also include the query itself as a tool name (e.g. searching "Marketo" directly)
+        child_tools.append(query)
+
+        # Add OR condition: match text OR match any of the related tools
+        search_q |= Q(tools__name__in=child_tools)
+        search_q |= Q(tools__name__icontains=query)
 
         jobs = jobs.filter(search_q).distinct()
 
@@ -111,38 +122,40 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- ⚡️ CACHED TECH STACK AGGREGATION ---
+    # --- ⚡️ CACHED TECH STACK AGGREGATION (Fixed Logic) ---
     popular_tech_stacks = cache.get('popular_tech_stacks')
 
     if not popular_tech_stacks:
-        # 1. Fetch all active tools with counts
-        raw_tools = Tool.objects.annotate(
-            job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
-        ).filter(job_count__gt=0)
+        # 1. Fetch raw pairs: (Tool Name, Job ID) for all active jobs
+        # This is efficient: 1 query to get all relationships
+        pairs = Tool.objects.filter(
+            jobs__is_active=True, 
+            jobs__screening_status='approved'
+        ).values_list('name', 'jobs__id')
 
-        # 2. Aggregate Data by Vendor
-        grouped_stats = {}
-        for tool in raw_tools:
-            # Map child tool to parent (e.g. Marketo -> Adobe) or use own name
-            group_name = TOOL_MAPPING.get(tool.name, tool.name)
-            
-            if group_name not in grouped_stats:
-                grouped_stats[group_name] = {
-                    'name': group_name,
-                    'count': 0,
-                    'icon_char': group_name[0].upper()
-                }
-            
-            grouped_stats[group_name]['count'] += tool.job_count
+        # 2. Python Aggregation with Sets (Removes Duplicates)
+        vendor_jobs = defaultdict(set) # {'Adobe': {101, 102, 105}, 'Salesforce': {101, 109}}
+        
+        for tool_name, job_id in pairs:
+            # Map child tool to parent (e.g. "Marketo" -> "Adobe")
+            # If not in mapping, use the tool name itself
+            group_name = TOOL_MAPPING.get(tool_name, tool_name)
+            vendor_jobs[group_name].add(job_id)
 
-        # 3. Sort by total count and take top 8
-        popular_tech_stacks = sorted(
-            grouped_stats.values(), 
-            key=lambda x: x['count'], 
-            reverse=True
-        )[:8]
+        # 3. Convert to List for Template
+        stats_list = []
+        for group, job_ids in vendor_jobs.items():
+            if len(job_ids) > 0:
+                stats_list.append({
+                    'name': group,
+                    'count': len(job_ids), # Count of UNIQUE jobs
+                    'icon_char': group[0].upper()
+                })
 
-        # 4. Save to Cache for 1 Hour
+        # 4. Sort by Count Descending
+        popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:8]
+
+        # 5. Save to Cache
         cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
     context = {
