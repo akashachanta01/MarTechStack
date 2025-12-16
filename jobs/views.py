@@ -1,6 +1,6 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count # <--- Added Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -14,6 +14,7 @@ def job_list(request):
     role_type_filter = request.GET.get("role_type", "").strip()
     remote_filter = request.GET.get("remote", "").strip()
 
+    # Base Query: Active & Approved Jobs
     jobs = (
         Job.objects.filter(is_active=True, screening_status="approved")
         .prefetch_related("tools", "tools__category")
@@ -48,11 +49,17 @@ def job_list(request):
     if remote_filter.lower() in ("true", "1", "yes", "on"):
         jobs = jobs.filter(remote=True)
 
+    # Pagination
     paginator = Paginator(jobs.distinct(), 25)
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    tools = Tool.objects.all().select_related("category").order_by("category__name", "name")
+    # TOOLS LOGIC: Annotate with job counts to find "Popular" ones
+    # Only count active/approved jobs
+    tools = Tool.objects.annotate(
+        job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
+    ).filter(job_count__gt=0).order_by('-job_count', 'name')
+
     categories = Category.objects.all().order_by("name") 
 
     context = {
@@ -68,13 +75,15 @@ def job_list(request):
     }
     return render(request, "jobs/job_list.html", context)
 
-# ... (rest of your views: job_detail, post_job, etc. remain unchanged) ...
+
 def job_detail(request, job_id):
     job = get_object_or_404(Job, id=job_id, is_active=True, screening_status="approved")
     return render(request, "jobs/job_detail.html", {"job": job})
 
+
 def post_job(request):
     return render(request, "jobs/post_job.html")
+
 
 def subscribe(request):
     if request.method == "POST":
@@ -82,6 +91,7 @@ def subscribe(request):
         if email:
             Subscriber.objects.get_or_create(email=email)
     return redirect("job_list")
+
 
 @staff_member_required
 def review_queue(request):
@@ -115,6 +125,7 @@ def review_queue(request):
             "q": q,
         },
     )
+
 
 @staff_member_required
 def review_action(request, job_id, action):
