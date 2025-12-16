@@ -31,7 +31,7 @@ class MarTechScreener:
             "adobe analytics", "customer journey analytics", "cja" # Added ✅
         ],
         "Customer Data Platforms": [
-            "segment", "twilio segment", "adobe experience platform", "aep",
+            "Adobe experience cloud","segment", "twilio segment", "adobe experience platform", "aep",
             "salesforce cdp", "customer 360 audiences", "actioniq",
             "bloomreach engagement", "mparticle", "tealium audiencestream",
             "treasure data", "rudderstack", "blueconic", "lotame",
