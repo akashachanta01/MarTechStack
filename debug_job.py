@@ -3,23 +3,28 @@ import re
 import requests
 from jobs.screener import MarTechScreener
 
-# 🕵️‍♂️ STEALTH HEADERS
+# 🚫 IGNORE THESE GENERIC TOKENS
+BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board'}
+
 def get_headers():
     return {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
         'Accept-Language': 'en-US,en;q=0.9',
     }
 
 def try_fetch_greenhouse(token):
-    """Helper to check if a guessed token works on the API"""
-    url = f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
-    try:
-        r = requests.get(url, headers=get_headers(), timeout=5)
-        if r.status_code == 200:
-            return r.json().get('jobs', [])
-    except:
-        pass
+    if token in BLACKLIST_TOKENS: return []
+    
+    # Try US then EU
+    for domain in ["boards-api.greenhouse.io", "job-boards.eu.greenhouse.io"]:
+        url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
+        try:
+            r = requests.get(url, headers=get_headers(), timeout=5)
+            if r.status_code == 200:
+                jobs = r.json().get('jobs', [])
+                if jobs: return jobs
+        except: pass
     return []
 
 def sniff_token(url):
@@ -29,18 +34,19 @@ def sniff_token(url):
         session.headers.update(get_headers())
         resp = session.get(url, timeout=10)
         
-        # If blocked or empty, return None to trigger the Guesser
-        if resp.status_code != 200:
-            return None, None
-            
+        if resp.status_code != 200: return None, None
         html = resp.text
         
         # 1. Try Greenhouse Patterns
         gh_match = re.search(r'greenhouse\.io/([^/"\'?]+)', html)
-        if gh_match: return "greenhouse", gh_match.group(1)
+        if gh_match:
+            token = gh_match.group(1)
+            if token not in BLACKLIST_TOKENS: return "greenhouse", token
         
         gh_js_match = re.search(r'grnhse\.load_demo\([\'"]([^\'"]+)[\'"]\)', html)
-        if gh_js_match: return "greenhouse", gh_js_match.group(1)
+        if gh_js_match:
+            token = gh_js_match.group(1)
+            if token not in BLACKLIST_TOKENS: return "greenhouse", token
 
         # 2. Try Lever Pattern
         lever_match = re.search(r'jobs\.lever\.co/([^/"\'?]+)', html)
@@ -58,16 +64,19 @@ def test_url(url):
     source = None
     
     # 1. Direct Detection
-    if "greenhouse.io" in url:
-        source = "greenhouse"
+    if "greenhouse.io" in url and "embed" not in url:
         match = re.search(r'greenhouse\.io/([^/]+)', url)
-        if match: token = match.group(1)
+        if match and match.group(1) not in BLACKLIST_TOKENS:
+            source = "greenhouse"
+            token = match.group(1)
     elif "lever.co" in url:
-        source = "lever"
         match = re.search(r'lever\.co/([^/]+)', url)
-        if match: token = match.group(1)
-    else:
-        # 2. Sniffing
+        if match:
+            source = "lever"
+            token = match.group(1)
+    
+    # 2. Sniffing (if not found yet)
+    if not token:
         source, token = sniff_token(url)
     
     # 3. Fallback: The "Guesser" 🧠
@@ -77,14 +86,17 @@ def test_url(url):
         print(f"✅ Token Found: {token} ({source})")
         if source == "greenhouse":
             jobs = try_fetch_greenhouse(token)
+            if not jobs:
+                print("   ❌ Token found but API failed. Retrying with Guesser...")
+                token = None # Force Guesser
         elif source == "lever":
-            # Simple lever fetch
             try:
                 r = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=get_headers())
                 if r.status_code == 200: jobs = r.json()
             except: pass
-    else:
-        print("❌ Sniffing failed. Switching to 'Brute Force Guessing'...")
+            
+    if not token or not jobs:
+        print("🤔 Switching to 'Brute Force Guessing'...")
         # Extract domain word: 'branch' from 'branch.io'
         domain_match = re.search(r'https?://(www\.)?([^/.]+)', url)
         if domain_match:
@@ -92,7 +104,7 @@ def test_url(url):
             guesses = [base_guess, base_guess + "metrics", base_guess + "io", base_guess + "inc", base_guess + "data"]
             
             for guess in guesses:
-                print(f"   🤔 Guessing token: '{guess}'...")
+                print(f"   Trying token: '{guess}'...")
                 jobs = try_fetch_greenhouse(guess)
                 if jobs:
                     print(f"   🎉 SUCCESS! The correct token is: '{guess}'")
