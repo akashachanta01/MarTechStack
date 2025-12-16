@@ -15,8 +15,6 @@ def get_headers():
 
 def try_fetch_greenhouse(token):
     if token in BLACKLIST_TOKENS: return []
-    
-    # Try US then EU
     for domain in ["boards-api.greenhouse.io", "job-boards.eu.greenhouse.io"]:
         url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
         try:
@@ -97,7 +95,6 @@ def test_url(url):
             
     if not token or not jobs:
         print("🤔 Switching to 'Brute Force Guessing'...")
-        # Extract domain word: 'branch' from 'branch.io'
         domain_match = re.search(r'https?://(www\.)?([^/.]+)', url)
         if domain_match:
             base_guess = domain_match.group(2)
@@ -138,10 +135,13 @@ def test_url(url):
         title = target_job.get('title', target_job.get('text'))
         content = target_job.get('content', target_job.get('description'))
         
+        # SIMULATE COMPANY NAME (In real fetcher this comes from the token)
+        company_guess = token.capitalize() if token else "Unknown"
         print(f"\n📝 Analyzing Job: {title}")
+        print(f"🏢 Company: {company_guess}")
         
         screener = MarTechScreener()
-        analysis = screener.screen_job(title, content)
+        analysis = screener.screen_job(title, content, company_name=company_guess)
         
         print(f"--------------------------------------------------")
         print(f"Match Status:  {'✅ PASS' if analysis['is_match'] else '❌ REJECT'}")
