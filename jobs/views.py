@@ -1,6 +1,6 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField # <--- Added Ranking Tools
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
@@ -11,7 +11,6 @@ from .forms import JobPostForm
 
 # --- CONFIGURATION: VENDOR & CATEGORY GROUPING ---
 # KEYS must be LOWERCASE for reliable matching.
-# VALUES are the Display Name.
 TOOL_MAPPING = {
     # Salesforce
     'salesforce marketing cloud': 'Salesforce',
@@ -110,13 +109,12 @@ def job_list(request):
     jobs = (
         Job.objects.filter(is_active=True, screening_status="approved")
         .prefetch_related("tools", "tools__category")
-        .order_by("-created_at")
     )
 
     # --- 1. STRICT VENDOR FILTER ---
     if vendor_query:
         if vendor_query == "General":
-            jobs = jobs.filter(tools__isnull=True)
+            jobs = jobs.filter(tools__isnull=True).order_by("-created_at")
         else:
             relevant_tool_ids = []
             all_tools = Tool.objects.all()
@@ -125,17 +123,53 @@ def job_list(request):
                 group = TOOL_MAPPING.get(clean_name, tool.name) 
                 if group.lower() == vendor_query.lower():
                     relevant_tool_ids.append(tool.id)
-            jobs = jobs.filter(tools__id__in=relevant_tool_ids).distinct()
+            jobs = jobs.filter(tools__id__in=relevant_tool_ids).distinct().order_by("-created_at")
 
-    # --- 2. TEXT SEARCH ---
+    # --- 2. ENHANCED TEXT SEARCH ---
     elif query:
+        # A. Basic Text Search
         search_q = (
             Q(title__icontains=query)
             | Q(company__icontains=query)
             | Q(description__icontains=query)
             | Q(tools__name__icontains=query)
         )
+
+        # B. Smart Vendor Expansion (The Enhancement)
+        # If user types "Adobe", we want to find jobs tagged "Marketo" too.
+        query_lower = query.lower()
+        matching_tool_ids = []
+        
+        # Iterate all tools to find which ones map to this query (if query is a vendor)
+        all_tools = Tool.objects.all()
+        for tool in all_tools:
+            t_name_lower = tool.name.lower()
+            vendor = TOOL_MAPPING.get(t_name_lower, tool.name).lower()
+            if vendor == query_lower:
+                matching_tool_ids.append(tool.id)
+        
+        if matching_tool_ids:
+            search_q |= Q(tools__id__in=matching_tool_ids)
+
         jobs = jobs.filter(search_q).distinct()
+
+        # C. Relevance Ranking (The Score)
+        # Title Matches = 10pts
+        # Tool/Company Matches = 5pts
+        # Description Matches = 1pt
+        jobs = jobs.annotate(
+            relevance=Case(
+                When(title__icontains=query, then=Value(10)),
+                When(tools__name__icontains=query, then=Value(5)),
+                When(company__icontains=query, then=Value(5)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('-relevance', '-created_at') # Sort by Score, then Date
+
+    # Default sort if no search
+    else:
+        jobs = jobs.order_by("-created_at")
 
     # --- 3. OTHER FILTERS ---
     if location_query:
@@ -181,7 +215,6 @@ def job_list(request):
             
             vendor_jobs[group_name].add(job_id)
 
-        # Handle "General" (Jobs with NO tools)
         general_jobs_count = Job.objects.filter(
             is_active=True, 
             screening_status='approved',
@@ -198,7 +231,7 @@ def job_list(request):
         
         if general_jobs_count > 0:
             stats_list.append({
-                'name': 'General', # <--- RENAMED
+                'name': 'General',
                 'count': general_jobs_count
             })
 
