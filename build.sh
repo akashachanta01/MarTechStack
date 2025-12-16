@@ -2,15 +2,21 @@
 # Exit on error
 set -o errexit
 
-# Install dependencies
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# Convert static files
+# 2. Convert static files
 python manage.py collectstatic --no-input
 
-# ⚠️ GITHUB-EDIT HACK: Create migrations on the server since we don't do it locally
-# Only keep this while you are actively changing DB models.
+# 3. 🚑 EMERGENCY FIX: Manually sync DB columns
+python emergency_db_sync.py
+
+# 4. Create migrations for the changes
 python manage.py makemigrations
 
-# Run database migrations
+# 5. ⚠️ FAKE MIGRATION: Mark changes as done without running SQL
+# This fixes the "relation already exists" error because we manually fixed it above.
+python manage.py migrate --fake jobs
+
+# 6. Run any other standard migrations
 python manage.py migrate
