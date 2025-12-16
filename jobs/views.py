@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Job, Tool, ToolCategory, Subscriber
+from .models import Job, Tool, Category, Subscriber # FIXED: Imported Category instead of ToolCategory
 
 
 def job_list(request):
@@ -45,7 +45,7 @@ def job_list(request):
     jobs_page = paginator.get_page(page_number)
 
     tools = Tool.objects.all().select_related("category").order_by("category__name", "name")
-    categories = ToolCategory.objects.all().order_by("name")
+    categories = Category.objects.all().order_by("name") # FIXED: Used Category
 
     context = {
         "jobs": jobs_page,
