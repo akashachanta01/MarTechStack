@@ -20,7 +20,7 @@ class JobAdmin(admin.ModelAdmin):
     list_display = (
         "logo_preview",
         "job_card_header",
-        "score_badge",
+        "score_badge", # This is where the error was
         "tech_stack_preview",
         "status_badge",
         "action_buttons",
@@ -61,22 +61,23 @@ class JobAdmin(admin.ModelAdmin):
     job_card_header.short_description = "Role & Company"
 
     def score_badge(self, obj):
-        # FIX: Force convert to float to prevent "Unknown format code" error
+        # --- THE FIX IS HERE ---
+        # We explicitly convert to float. If it fails, we default to 0.0
         try:
-            score = float(obj.screening_score or 0)
+            score_val = float(obj.screening_score) if obj.screening_score is not None else 0.0
         except (ValueError, TypeError):
-            score = 0.0
+            score_val = 0.0
 
-        if score >= 80:
+        if score_val >= 80:
             bg, text = "#d1fae5", "#065f46" # Green
-        elif score >= 50:
+        elif score_val >= 50:
             bg, text = "#fef3c7", "#92400e" # Amber
         else:
             bg, text = "#fee2e2", "#b91c1c" # Red
         
         return format_html(
             '<span style="background: {}; color: {}; padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 11px;">{:.0f}</span>',
-            bg, text, score
+            bg, text, score_val
         )
     score_badge.short_description = "Score"
 
