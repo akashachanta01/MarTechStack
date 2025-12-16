@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.conf import settings
 
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
@@ -17,7 +18,7 @@ from jobs.screener import MarTechScreener
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
 
 class Command(BaseCommand):
-    help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support'
+    help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support + External Config'
 
     def handle(self, *args, **options):
         self.stdout.write("🚀 Starting Job Hunt (Enterprise Mode)...")
@@ -34,16 +35,26 @@ class Command(BaseCommand):
         self.cutoff_date = timezone.now() - timedelta(days=28)
         self.processed_tokens = set()
         
-        # --- HUNT TARGETS ---
-        hunt_targets = [
-            'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 
-            'Braze', 'Klaviyo', 'Iterable', 'Adobe Analytics',
-            'Adobe Experience Platform', 'Tealium', 'Segment', 'mParticle',
-            'MarTech', 'Marketing Operations'
-        ]
+        # --- LOAD TARGETS FROM FILE ---
+        hunt_targets = []
+        target_file_path = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
+        
+        if os.path.exists(target_file_path):
+            self.stdout.write(f"📂 Loading targets from: {target_file_path}")
+            with open(target_file_path, 'r') as f:
+                hunt_targets = [line.strip() for line in f if line.strip()]
+        
+        # Fallback if file is missing or empty
+        if not hunt_targets:
+            self.stdout.write(self.style.WARNING("⚠️ No targets found in file. Using hardcoded defaults."))
+            hunt_targets = [
+                'Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 
+                'Braze', 'Klaviyo', 'Iterable', 'Adobe Analytics',
+                'Adobe Experience Platform', 'Tealium', 'Segment', 'mParticle',
+                'MarTech', 'Marketing Operations'
+            ]
 
         # --- SMART QUERIES ---
-        # We group these to save API credits (1 credit = 1 search)
         base_sites = (
             'site:boards.greenhouse.io OR site:jobs.lever.co OR '
             'site:jobs.ashbyhq.com OR site:apply.workable.com OR '
@@ -51,17 +62,19 @@ class Command(BaseCommand):
         )
 
         for tool in hunt_targets:
+            # Skip comments in the text file
+            if tool.startswith('#'): continue
+
             query = f'"{tool}" ({base_sites})'
             self.stdout.write(f"\n🔎 Hunting: {tool}...")
             
-            # SERPAPI SEARCH (Reliable & Block-Free)
+            # SERPAPI SEARCH
             links = self.search_google(query)
             self.stdout.write(f"   Found {len(links)} links. Analyzing...")
 
             for link in links:
                 try:
                     self.analyze_and_fetch(link)
-                    # Tiny delay just to be polite to the ATS APIs
                     time.sleep(0.2)
                 except Exception as e:
                     pass
@@ -74,13 +87,12 @@ class Command(BaseCommand):
             "engine": "google", 
             "q": query, 
             "api_key": self.serpapi_key, 
-            "num": 30,  # Grab 30 results per credit
+            "num": 30,  
             "gl": "us", 
             "hl": "en", 
-            "tbs": "qdr:m" # Past month only
+            "tbs": "qdr:m"
         }
         try:
-            # Direct HTTP request (No extra library needed)
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
             if resp.status_code == 200:
                 results = resp.json().get("organic_results", [])
@@ -120,7 +132,7 @@ class Command(BaseCommand):
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1))
 
-    # --- API WORKERS (Free Direct Access) ---
+    # --- API WORKERS ---
 
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
@@ -212,7 +224,6 @@ class Command(BaseCommand):
     # --- LOGO RESOLVER ---
     def resolve_logo(self, company_name):
         if not company_name: return None
-        # Heuristic: Clean name -> Google Favicon (Free & Unlimited)
         clean = company_name.lower()
         for x in [',', '.', ' inc', ' llc', ' ltd', ' corp', ' technologies', ' systems', ' group']:
             clean = clean.replace(x, '')
@@ -234,13 +245,10 @@ class Command(BaseCommand):
         company = job_data.get("company", "")
         apply_url = job_data.get("apply_url", "")
         
-        # Check Existence
         if Job.objects.filter(apply_url=apply_url).exists(): return
 
-        # Resolve Logo
         logo_url = self.resolve_logo(company)
 
-        # AI Screen
         analysis = self.screener.screen(
             title=title, company=company, location=job_data.get("location", ""),
             description=job_data.get("description", ""), apply_url=apply_url
@@ -249,7 +257,6 @@ class Command(BaseCommand):
         status = analysis.get("status", "pending")
         signals = analysis.get("details", {}).get("signals", {})
 
-        # Save
         job = Job.objects.create(
             title=title,
             company=company,
@@ -268,12 +275,10 @@ class Command(BaseCommand):
             tags=f"{job_data.get('source')}, {signals.get('role_type', '')}"
         )
         
-        # Link Tools
         for tool_name in signals.get("stack", []):
             t_obj = self.tool_cache.get(self.screener._normalize(tool_name))
             if t_obj: job.tools.add(t_obj)
 
-        # Log
         if status == "approved":
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {title[:40]}.. [APPROVED]"))
