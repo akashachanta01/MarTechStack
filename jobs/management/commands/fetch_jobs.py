@@ -207,18 +207,16 @@ class Command(BaseCommand):
     def fetch_greenhouse_api(self, token, silent_fail=False):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return False
         
-        # Expanded Domain List for Greenhouse
         domains = [
             "boards-api.greenhouse.io", 
             "job-boards.greenhouse.io", 
             "job-boards.eu.greenhouse.io",
-            "boards-api.eu.greenhouse.io" # EU API Endpoint
+            "boards-api.eu.greenhouse.io" 
         ]
         
         found_jobs = False
         for domain in domains:
             try:
-                # Try fetching from this domain
                 api_url = f"https://{domain}/v1/boards/{token}/jobs?content=true"
                 resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
                 
@@ -249,7 +247,6 @@ class Command(BaseCommand):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
         try:
-            # Try Standard Lever
             api_url = f"https://api.lever.co/v0/postings/{token}?mode=json"
             resp = requests.get(api_url, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
@@ -271,7 +268,6 @@ class Command(BaseCommand):
                     )
                 return
 
-            # Try EU Lever (Fallback)
             api_url_eu = f"https://api.eu.lever.co/v0/postings/{token}?mode=json"
             resp = requests.get(api_url_eu, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
@@ -395,12 +391,18 @@ class Command(BaseCommand):
         except: return True
 
     def process_job(self, title, company, location, description, apply_url, source):
-        if Job.objects.filter(apply_url=apply_url).exists(): return
+        if Job.objects.filter(apply_url=apply_url).exists(): 
+            return
         
         # PASS COMPANY NAME TO SCREENER
         analysis = self.screener.screen_job(title, description, company_name=company)
         
-        if not analysis['is_match']: return
+        if not analysis['is_match']: 
+            # VERBOSE LOGGING: Show why it failed!
+            # Truncate title for cleaner output
+            clean_title = (title[:35] + '..') if len(title) > 35 else title
+            self.stdout.write(self.style.ERROR(f"         ❌ {clean_title} [{analysis['reason']}]"))
+            return
 
         categories_str = ", ".join(analysis['categories'])
         job = Job.objects.create(
@@ -414,4 +416,4 @@ class Command(BaseCommand):
             if tool_name.lower() in tool_cache:
                 job.tools.add(tool_cache[tool_name.lower()])
         self.total_added += 1
-        self.stdout.write(f"         ✅ {title}")
+        self.stdout.write(self.style.SUCCESS(f"         ✅ {title}"))
