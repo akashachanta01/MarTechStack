@@ -3,9 +3,10 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Final Architecture: "Corporate-Shield" Edition.
-    1. Blocks "Vendor Self-Scoring" by killing internal Corporate/Back-Office titles.
-    2. Protects legitimate MarTech roles via the Rescue List.
+    Final Architecture: "Narcissism-Penalty" Edition.
+    1. Blocks "Vendor Self-Scoring" (If Company == Keyword, Score = 0).
+    2. Blocks "Solutions Engineering" (Pre-Sales) and "Internal IT".
+    3. Blocks "Creative" and "Programmatic" roles.
     """
     
     # 1. Define Categories & Keywords
@@ -16,10 +17,10 @@ class MarTechScreener:
             "activecampaign", "mailchimp", "klaviyo", "sendinblue", "brevo",
             "iterable", "oracle eloqua", "eloqua", "omnisend", "autopilot",
             "marketo engage", "ajo", "adobe journey optimizer",
-            "adobe campaign"
+            "adobe campaign", "customer.io" # Added customer.io explicitly
         ],
         "Lead Nurturing & Campaign": [
-            "braze", "customer.io", "customer io", "iterable", "drip",
+            "braze", "customer.io", "iterable", "drip",
             "sharpspring", "ontraport", "constant contact",
             "acoustic campaign", "eloqua"
         ],
@@ -57,67 +58,48 @@ class MarTechScreener:
 
     # 3. Job Killers (Applied to TITLE ONLY)
     TITLE_KILLERS = [
-        # --- CORPORATE BACK-OFFICE (The "Braze" Fix) ---
-        # Finance & Legal
-        r'finance', r'financial', r'accounting', r'controller', r'treasury', r'tax',
-        r'audit', r'payroll', r'billing', r'procurement', r'purchasing', r'buyer',
-        r'legal', r'lawyer', r'counsel', r'compliance', r'privacy', r'regulatory',
+        # --- VENDOR & PRE-SALES (The Cloudflare/Samsara Fix) ---
+        r'solutions.*engineer', # Pre-sales technical role
+        r'solutions.*consultant',
+        r'sales.*engineer',
+        r'presales', r'pre-sales',
+        r'solutions.*architect', # Often pre-sales unless rescued
+        r'value.*engineer',
+        r'developer.*advocate', r'developer.*relations',
+        r'banking.*specialist', # Brex Fix
+        
+        # --- INTERNAL IT & OPS (The Customer.io Fix) ---
+        r'internal.*it', 
+        r'director.*it', r'head.*of.*it', r'vp.*it',
+        r'system.*admin', r'sysadmin',
+        r'network.*engineer', r'security.*engineer',
+        r'help.*desk', r'desktop.*support',
+        
+        # --- ADTECH & PROGRAMMATIC (The StackAdapt Fix) ---
+        r'programmatic', 
+        r'ad.*ops', r'ad.*operations',
+        r'campaign.*manager', # Usually manual ad execution
+        r'media.*buyer', r'trafficker',
+        
+        # --- CREATIVE & STRATEGY (The Flo Health Fix) ---
+        r'creative.*strategist', 
+        r'brand.*strategist',
+        r'social.*media', r'paid.*social',
+        r'copywriter', r'content',
+        
+        # --- CORPORATE BACK-OFFICE ---
+        r'finance', r'accounting', r'controller', r'treasury', r'tax',
+        r'legal', r'counsel', r'compliance', r'privacy',
         r'deal.*desk', r'order.*management',
-        r'investor.*relations', r'corporate.*development', r'm&a',
+        r'hr\b', r'human.*resources', r'recruiting', r'talent',
+        r'people.*ops', r'workplace', r'facilities',
         
-        # HR, People, Workplace
-        r'hr\b', r'human.*resources', r'people', r'employee', r'culture', 
-        r'talent', r'recruiting', r'recruiter', r'sourcer',
-        r'learning', r'training', r'instructor',
-        r'workplace', r'facilities', r'real.*estate', r'office',
-        r'executive.*assistant', r'admin', r'receptionist', r'coordinator',
-        r'chief.*of.*staff',
-
-        # Generic IT (Not MarTech)
-        r'help.*desk', r'service.*desk', r'it.*support', r'desktop', 
-        r'system.*admin', r'network', r'security', r'ciso',
-
-        # --- CLIENT SERVICES & SUPPORT ---
-        r'consultant', r'consulting', r'implementation', r'onboarding',
-        r'technical.*account.*manager', r'tam\b',
-        r'customer.*support', r'technical.*support', r'support.*engineer',
-        r'enablement', r'solution.*architect', r'professional.*services',
-        
-        # --- PRODUCT & PROGRAM ---
-        r'product.*manager', r'product.*owner', r'product.*lead',
-        r'head.*of.*product', r'vp.*product',
-        r'program.*manager', r'project.*manager',
-        
-        # --- COMMERCIAL & REVENUE ---
-        r'monetization', r'revenue', r'pricing', r'commercial',
-        
-        # --- PAID MEDIA & PERFORMANCE ---
-        r'acquisition', r'performance.*marketing',
-        r'paid.*media', r'paid.*social', r'paid.*search',
-        r'sem\b', r'ppc\b', r'seo\b',
-        r'media.*buyer', r'ad.*ops', r'trafficker',
-        r'demand.*generation', r'lead.*generation',
-        r'growth',
-
-        # --- BUSINESS & STRATEGY ---
-        r'^data.*analyst', r'senior.*data.*analyst',
-        r'business.*intelligence', r'bi.*developer',
-        r'data.*scientist', r'data.*engineer',
-        r'strategy', r'strategic', r'go-to-market',
-        r'loyalty', r'ecommerce', r'e-commerce', r'merchandis',
-        r'partnership', r'affiliate', r'influencer',
-        
-        # --- NON-TECH MARKETING ---
-        r'brand', r'content', r'copywriter', r'writer', r'editor',
-        r'social.*media', r'community', r'pr\b', r'public.*relations',
-        r'communications', r'product.*marketing', 
-        r'field.*marketing', r'event', r'digital.*marketing', r'email.*marketing',
-
-        # --- SALES & CS ---
-        r'sales', r'account.*executive', r'account.*manager', r'account.*director',
-        r'business.*development', r'bdr', r'sdr',
-        r'client.*partner', r'client.*success',
-        r'customer.*success', r'csm', r'customer.*experience', r'support.*specialist',
+        # --- COMMERCIAL & SALES ---
+        r'account.*executive', r'ae\b', 
+        r'account.*manager', # StackAdapt Fix
+        r'customer.*success', r'csm', 
+        r'sales', r'business.*development', r'bdr', r'sdr',
+        r'growth', r'acquisition',
         
         # --- PURE ENGINEERING ---
         r'software.*engineer', r'frontend', r'backend', r'full.*stack',
@@ -152,9 +134,10 @@ class MarTechScreener:
         pattern = r'\b' + re.escape(keyword) + r'\b'
         return re.search(pattern, text) is not None
 
-    def screen_job(self, title, description):
+    def screen_job(self, title, description, company_name=""):
         self.reset()
         clean_title = self.clean_text(title)
+        clean_company = self.clean_text(company_name)
         full_text = self.clean_text(f"{title} {description}")
         
         # 1. Check Killers (AGAINST TITLE ONLY) 🛡️
@@ -184,11 +167,19 @@ class MarTechScreener:
                     "categories": []
                 }
 
-        # 3. Scan Categories (Against Full Text)
+        # 3. Scan Categories (With Narcissism Penalty)
         total_score = 0
         
         for category, keywords in self.CATEGORIES.items():
-            matches = [kw for kw in keywords if self.is_present(full_text, kw)]
+            matches = []
+            for kw in keywords:
+                # NARCISSISM CHECK: 
+                # If the keyword (e.g. "hubspot") is in the company name (e.g. "HubSpot"), ignore it.
+                if clean_company and kw in clean_company:
+                    continue
+                    
+                if self.is_present(full_text, kw):
+                    matches.append(kw)
             
             if matches:
                 self.found_categories.append(category)
