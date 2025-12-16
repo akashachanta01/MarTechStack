@@ -76,36 +76,37 @@
   </div>
 </div>
 
-<div class="bg-white border-b border-gray-100 py-8">
+<div class="bg-white border-b border-gray-100 py-10">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-5 flex items-center justify-between">
-      <h2 class="text-lg font-bold text-gray-900">Browse by Tech Stack</h2>
-      <a href="#" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View all tools &rarr;</a>
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-gray-900">Browse by Tech Stack</h2>
+      <p class="text-sm text-gray-500 mt-1">Explore open roles for the most popular marketing technologies.</p>
     </div>
     
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-      {% for tool in tools|slice:":10" %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {% for tool in tools|slice:":8" %}
         {% if tool_filter == tool.name %}
-          <a href="/" class="group block bg-indigo-50 border border-indigo-500 rounded-lg p-3 shadow-sm hover:bg-indigo-100 transition-all duration-200">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+          <a href="/" class="group block bg-indigo-50 border border-indigo-500 rounded-xl p-4 shadow-sm transition-all duration-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg">
                 {{ tool.name|slice:":1" }}
               </div>
               <div class="min-w-0">
                 <div class="text-sm font-bold text-indigo-900 truncate">{{ tool.name }}</div>
-                <div class="text-[10px] text-indigo-700 truncate">Click to clear</div>
+                <div class="text-xs text-indigo-700 font-medium">Click to clear</div>
               </div>
             </div>
           </a>
         {% else %}
-          <a href="/?tool={{ tool.name|urlencode }}" class="group block bg-white border border-gray-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-sm hover:bg-indigo-50/30 transition-all duration-200 hover:-translate-y-0.5">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+          <a href="/?tool={{ tool.name|urlencode }}" class="group block bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md hover:-translate-y-1 transition-all duration-200">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-colors
+                {% cycle 'bg-indigo-50 text-indigo-600' 'bg-emerald-50 text-emerald-600' 'bg-rose-50 text-rose-600' 'bg-amber-50 text-amber-600' 'bg-blue-50 text-blue-600' 'bg-purple-50 text-purple-600' %}">
                 {{ tool.name|slice:":1" }}
               </div>
               <div class="min-w-0">
-                <div class="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-700 transition-colors">{{ tool.name }}</div>
-                <div class="text-[10px] text-gray-500 truncate">{{ tool.job_count }} open role{{ tool.job_count|pluralize }}</div>
+                <div class="text-base font-bold text-gray-900 group-hover:text-indigo-700 transition-colors truncate">{{ tool.name }}</div>
+                <div class="text-xs text-gray-500 font-medium mt-0.5">{{ tool.job_count }} open role{{ tool.job_count|pluralize }}</div>
               </div>
             </div>
           </a>
@@ -115,34 +116,27 @@
   </div>
 </div>
 
-<div class="bg-slate-50 min-h-screen py-10">
+<div class="bg-slate-50 min-h-screen py-12">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     
     {% if tool_filter or query or location_filter %}
     <div class="mb-6 flex items-center gap-2 flex-wrap">
-      <span class="text-xs font-bold text-gray-400 uppercase tracking-wide mr-2">Filtering by:</span>
-      
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-wide mr-2">Active:</span>
       {% if tool_filter %}
-      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 hover:border-indigo-300 transition group">
-        Stack: {{ tool_filter }}
-        <svg class="w-3.5 h-3.5 text-indigo-500 group-hover:text-indigo-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition">
+        Stack: {{ tool_filter }} <span class="text-indigo-400">×</span>
       </a>
       {% endif %}
-
       {% if query %}
-      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition group">
-        Search: "{{ query }}"
-        <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition">
+        Search: "{{ query }}" <span class="text-gray-400">×</span>
       </a>
       {% endif %}
-
       {% if location_filter %}
-      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition group">
-        Loc: {{ location_filter }}
-        <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <a href="/" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition">
+        Loc: {{ location_filter }} <span class="text-gray-400">×</span>
       </a>
       {% endif %}
-
       <a href="/" class="text-xs font-semibold text-gray-500 hover:text-indigo-600 ml-auto hover:underline">Clear All</a>
     </div>
     {% endif %}
@@ -151,70 +145,76 @@
         
         <div class="space-y-4" id="job-list">
           {% for job in jobs %}
-          <div class="group relative bg-white border border-gray-200 rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 hover:scale-[1.005] flex items-start sm:items-center gap-5 transform">
-            
-            <div class="flex-shrink-0 pt-1 sm:pt-0">
-              {% if job.company_logo %}
-                <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-14 h-14 rounded-xl object-contain border border-gray-100 bg-white p-1">
-              {% else %}
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-inner">
-                  {{ job.company|slice:":1" }}
-                </div>
-              {% endif %}
-            </div>
-
-            <div class="flex-grow min-w-0">
-              <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition leading-snug">
-                <a href="{% url 'job_detail' job.id %}" class="focus:outline-none">
-                  <span class="absolute inset-0 sm:inset-auto"></span>
-                  {{ job.title }}
-                </a>
-              </h3>
+          
+          <div class="group relative bg-white border border-gray-200 rounded-2xl p-6 transition-all duration-200 hover:shadow-lg hover:border-indigo-300 hover:-translate-y-1 hover:scale-[1.005] transform">
+            <div class="flex items-start gap-5">
               
-              <div class="text-sm text-gray-500 font-medium mt-1 mb-3">
-                {{ job.company }} 
-                <span class="text-gray-300 mx-1">•</span> 
-                {{ job.location|default:"Remote" }}
-              </div>
-              
-              <div class="flex flex-wrap gap-2">
-                {% if job.remote %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  🌍 Remote
-                </span>
+              <div class="flex-shrink-0 pt-1">
+                {% if job.company_logo %}
+                  <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-14 h-14 rounded-xl object-contain border border-gray-100 bg-white p-1">
+                {% else %}
+                  <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-inner">
+                    {{ job.company|slice:":1" }}
+                  </div>
                 {% endif %}
+              </div>
+
+              <div class="flex-grow min-w-0">
                 
-                {% if job.salary_range %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                  💰 {{ job.salary_range }}
-                </span>
-                {% endif %}
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 leading-snug group-hover:text-indigo-600 transition">
+                            <a href="{% url 'job_detail' job.id %}" class="focus:outline-none">
+                                <span class="absolute inset-0 sm:inset-auto"></span>
+                                {{ job.title }}
+                            </a>
+                        </h3>
+                        <div class="text-sm font-medium text-gray-500 mt-1">
+                            {{ job.company }} <span class="text-gray-300 mx-1">•</span> Posted {{ job.created_at|date:"M j" }}
+                        </div>
+                    </div>
+                    
+                    <div class="hidden sm:block z-10">
+                        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" 
+                           class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm whitespace-nowrap">
+                            Apply now
+                        </a>
+                    </div>
+                </div>
 
-                {% for tool in job.tools.all|slice:":4" %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  {{ tool.name }}
-                </span>
-                {% endfor %}
+                <div class="flex flex-wrap items-center gap-y-2 gap-x-4 mt-3 text-sm text-gray-600">
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ job.location|default:"Location not specified" }}
+                    </div>
+
+                    {% if job.salary_range %}
+                    <div class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ job.salary_range }}
+                    </div>
+                    {% endif %}
+
+                    {% if job.remote %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                        ● Remote
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-4">
+                    {% for tool in job.tools.all|slice:":5" %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
+                        {{ tool.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+
               </div>
             </div>
-
-            <div class="hidden sm:block z-10 flex-shrink-0">
-              <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" 
-                class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm hover:shadow-md whitespace-nowrap">
-                Apply now &rarr;
-              </a>
-            </div>
-
-            <div class="sm:hidden absolute top-5 right-5 text-gray-300 group-hover:text-indigo-600 transition">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-            </div>
-
           </div>
           {% empty %}
           <div class="text-center py-16 bg-white rounded-xl border border-gray-200 border-dashed">
-            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">No jobs found</h3>
             <p class="mt-1 text-sm text-gray-500">Try adjusting your search terms or filters.</p>
             <div class="mt-6">
