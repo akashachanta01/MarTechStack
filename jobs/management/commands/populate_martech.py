@@ -41,7 +41,7 @@ class Command(BaseCommand):
         self.stdout.write("Starting population...")
 
         for cat_name, tools_list in taxonomy.items():
-            # 1. Create or Get the Category
+            # 1. Create or Get the Category (Slug is used here as the Category model has it)
             category, created = Category.objects.get_or_create(
                 slug=slugify(cat_name),
                 defaults={'name': cat_name}
@@ -52,13 +52,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"Found existing Category: {cat_name}")
 
-            # 2. Create the Tools for this Category (FIXED: Added 'slug')
+            # 2. Create the Tools for this Category (FIXED: Slug reference removed)
             for tool_name in tools_list:
                 tool, t_created = Tool.objects.get_or_create(
                     name=tool_name, 
                     defaults={
                         'category': category,
-                        'slug': slugify(tool_name) # <--- THIS IS THE FIX
                     }
                 )
                 if t_created:
