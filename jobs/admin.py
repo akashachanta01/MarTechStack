@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Job, Tool, Category, Subscriber, BlockRule
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission # Added UserSubmission
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -31,7 +31,6 @@ class JobAdmin(admin.ModelAdmin):
     filter_horizontal = ("tools",)
     list_per_page = 25
     
-    # ⚡️ Performance Optimization: Prefetch tools to avoid N+1 queries
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.prefetch_related('tools')
@@ -109,12 +108,11 @@ class JobAdmin(admin.ModelAdmin):
             '<a href="/staff/review/?q={}" target="_blank" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Review</a>'
             '<a href="{}" target="_blank" style="color: #6b7280; font-size: 12px; text-decoration: none;">↗ Apply</a>'
             '</div>',
-            obj.title, # Searches the review queue by title
+            obj.title, 
             obj.apply_url
         )
     action_buttons.short_description = "Actions"
 
-    # --- 2. BULK ACTIONS ---
     actions = ("mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs")
 
     @admin.action(description="✅ Approve selected")
@@ -137,6 +135,13 @@ class JobAdmin(admin.ModelAdmin):
     def deactivate_jobs(self, request, queryset):
         queryset.update(is_active=False)
 
+
+# --- SEPARATE ADMIN FOR USER SUBMISSIONS ---
+@admin.register(UserSubmission)
+class UserSubmissionAdmin(JobAdmin):
+    # Only show jobs tagged "User Submission"
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(tags__icontains="User Submission")
 
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
