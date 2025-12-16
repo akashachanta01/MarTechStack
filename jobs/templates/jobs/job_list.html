@@ -8,8 +8,7 @@
       Find your next <span class="text-indigo-600">MarTech</span> role.
     </h1>
     <p class="text-lg text-gray-600 mb-8">
-      Curated jobs for Marketing Ops, Architects, and Developers. <br class="hidden sm:block">
-      No sales fluff. Just the stack.
+      Curated jobs for Marketing Ops, Architects, and Developers.
     </p>
 
     <form method="get" class="relative max-w-lg mx-auto">
@@ -21,7 +20,7 @@
           type="text" 
           name="q" 
           value="{{ query }}" 
-          placeholder="Search by title, tool, or stack..." 
+          placeholder="Search title, tool, or stack..." 
           class="flex-1 w-full border-none focus:ring-0 text-gray-900 placeholder-gray-500 text-base py-2 px-3 bg-transparent outline-none"
         >
         <button type="submit" class="bg-indigo-600 text-white rounded-full px-6 py-2 font-semibold hover:bg-indigo-700 transition">
@@ -40,69 +39,64 @@
       <a href="/?category=Analytics%20%26%20Data%20Platforms" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition">
         📊 Analytics
       </a>
-      <a href="/?role_type=contract" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition">
-        ⚡ Contract
-      </a>
     </div>
   </div>
 
-  <div class="space-y-4">
+  <div class="space-y-3">
     {% for job in jobs %}
-    <a href="{% url 'job_detail' job.id %}" class="group block bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all duration-200">
-      <div class="flex items-start sm:items-center gap-5">
-        
-        <div class="flex-shrink-0">
-          {% if job.company_logo %}
-            <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-14 h-14 rounded-lg object-contain border border-gray-100 bg-white p-1">
-          {% else %}
-            <div class="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-200">
-              {{ job.company|slice:":1" }}
-            </div>
-          {% endif %}
-        </div>
-
-        <div class="flex-grow min-w-0">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition truncate pr-4">
-                {{ job.title }}
-              </h2>
-              <p class="text-sm text-gray-500 font-medium">
-                {{ job.company }} 
-                {% if job.location %}
-                  <span class="mx-1.5 text-gray-300">•</span> {{ job.location }}
-                {% endif %}
-              </p>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
-              {% if job.remote %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                  Remote
-                </span>
-              {% endif %}
-              
-              {% if job.salary_range %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                  {{ job.salary_range }}
-                </span>
-              {% endif %}
-
-              {% for tool in job.tools.all|slice:":3" %}
-                <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  {{ tool.name }}
-                </span>
-              {% endfor %}
-            </div>
+    <div class="group relative bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 flex items-center gap-4">
+      
+      <div class="flex-shrink-0">
+        {% if job.company_logo %}
+          <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-12 h-12 rounded-lg object-contain border border-gray-100 bg-white p-1">
+        {% else %}
+          <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-400 border border-gray-200">
+            {{ job.company|slice:":1" }}
           </div>
-        </div>
-
-        <div class="hidden sm:block text-gray-300 group-hover:text-indigo-600 transition pl-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-        </div>
-
+        {% endif %}
       </div>
-    </a>
+
+      <div class="flex-grow min-w-0">
+        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition truncate">
+          {{ job.title }}
+        </h3>
+        <div class="text-sm text-gray-500 font-medium mb-2">
+          {{ job.company }} <span class="text-gray-300 mx-1">•</span> {{ job.location }}
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+          {% if job.remote %}
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            🌍 Remote
+          </span>
+          {% endif %}
+          
+          {% if job.salary_range %}
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            💰 {{ job.salary_range }}
+          </span>
+          {% endif %}
+
+          {% for tool in job.tools.all|slice:":4" %}
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            {{ tool.name }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hidden sm:block">
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" 
+           class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-sm whitespace-nowrap">
+          Apply now &rarr;
+        </a>
+      </div>
+
+      <div class="sm:hidden text-gray-300 group-hover:text-indigo-600 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </div>
+
+    </div>
     {% empty %}
     <div class="text-center py-12 bg-white rounded-xl border border-gray-200 border-dashed">
       <p class="text-gray-500">No jobs found matching your criteria.</p>
