@@ -1,267 +1,234 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>MarTechStack.io - Find your next MarTech Role</title>
-    <meta name="description" content="The #1 Job Board for Marketing Operations, Analytics, and Tech professionals.">
-    <meta property="og:title" content="MarTechStack.io">
-    <meta property="og:image" content="https://martechstack.io/static/og-image.png">
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+{% extends "jobs/base.html" %}
+{% block title %}MarTechStack.io — Zero-Noise MarTech Jobs{% endblock %}
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX');
-    </script>
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
-</head>
-<body class="bg-white text-slate-900">
+  <!-- HERO -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div class="grid lg:grid-cols-2 gap-8 items-center">
+      <div>
+        <h1 class="text-4xl font-bold tracking-tight text-gray-900">
+          The <span class="text-indigo-600">Zero-Noise</span> job board for MarTech & Marketing Ops
+        </h1>
+        <p class="mt-3 text-gray-600 text-lg">
+          No sales spam. No generic marketing roles. Only technical & operational jobs — screened by our Brain 🧠
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#jobs" class="inline-flex items-center rounded-xl bg-indigo-600 px-5 py-3 text-white font-semibold hover:bg-indigo-700">
+            Browse Jobs
+          </a>
+          <a href="#alerts" class="inline-flex items-center rounded-xl bg-gray-900 px-5 py-3 text-white font-semibold hover:bg-black">
+            Get Weekly Alerts
+          </a>
+        </div>
+      </div>
 
-    <nav class="bg-white border-b border-slate-100 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            
-            <a href="/" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 bg-teal-600 rounded-lg flex items-center justify-center shadow-sm group-hover:bg-teal-700 transition-colors">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-xl font-bold tracking-tight text-slate-900 leading-none">
-                        MarTech<span class="text-teal-600">Stack</span>
-                    </span>
-                    <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">
-                        The Tech-First Job Board
-                    </span>
-                </div>
+      <!-- SEARCH PANEL -->
+      <div class="bg-gray-50 rounded-2xl border border-gray-200 p-6">
+        <form method="get" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">Search</label>
+            <input
+              type="text"
+              name="q"
+              value="{{ query }}"
+              placeholder="Adobe AEP, Marketing Ops, CDP Engineer…"
+              class="mt-1 w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700">Tech Stack</label>
+              <select name="tool" class="mt-1 w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All tools</option>
+                {% for tool in tools %}
+                  <option value="{{ tool.name }}" {% if tool_filter == tool.name %}selected{% endif %}>
+                    {{ tool.category.name }} — {{ tool.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700">Category</label>
+              <select name="category" class="mt-1 w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All categories</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.name }}" {% if category_filter == cat.name %}selected{% endif %}>
+                    {{ cat.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700">Role Type</label>
+              <select name="role_type" class="mt-1 w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="">All</option>
+                <option value="full_time" {% if role_type_filter == "full_time" %}selected{% endif %}>Full-time</option>
+                <option value="part_time" {% if role_type_filter == "part_time" %}selected{% endif %}>Part-time</option>
+                <option value="contract" {% if role_type_filter == "contract" %}selected{% endif %}>Contract</option>
+                <option value="temporary" {% if role_type_filter == "temporary" %}selected{% endif %}>Temporary</option>
+                <option value="internship" {% if role_type_filter == "internship" %}selected{% endif %}>Internship</option>
+              </select>
+            </div>
+
+            <div class="flex items-end">
+              <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <input type="checkbox" name="remote" value="true"
+                  {% if remote_filter|lower in "true,1,yes,on" %}checked{% endif %}
+                  class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                Remote only
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button type="submit" class="inline-flex items-center rounded-xl bg-indigo-600 px-5 py-3 text-white font-semibold hover:bg-indigo-700">
+              Search
+            </button>
+            <a href="/" class="text-gray-600 hover:text-gray-900 font-semibold">Clear</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSE BY STACK -->
+  <div class="mt-10">
+    <h2 class="text-xl font-bold text-gray-900">Browse by stack</h2>
+    <p class="text-gray-600 mt-1">Quick jumps — add more over time.</p>
+
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      {% for cat in categories|slice:":6" %}
+      <a href="/?category={{ cat.name|urlencode }}"
+         class="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-indigo-300 hover:shadow-sm">
+        <div class="text-sm font-semibold text-gray-900">{{ cat.name }}</div>
+        <div class="text-xs text-gray-500">Explore roles</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- JOBS -->
+  <div id="jobs" class="mt-10">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900">Jobs</h2>
+      <div class="text-sm text-gray-600">
+        {% if jobs.paginator %}
+          {{ jobs.paginator.count }} results
+        {% else %}
+          {{ jobs|length }} results
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Active filter chips -->
+    <div class="mt-3 flex flex-wrap gap-2">
+      {% if query %}
+        <a href="/?tool={{ tool_filter|urlencode }}&category={{ category_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}{% if remote_filter %}&remote=true{% endif %}"
+           class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm">
+          Search: “{{ query }}” <span class="text-gray-500">×</span>
+        </a>
+      {% endif %}
+      {% if tool_filter %}
+        <a href="/?q={{ query|urlencode }}&category={{ category_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}{% if remote_filter %}&remote=true{% endif %}"
+           class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm">
+          Tool: {{ tool_filter }} <span class="text-gray-500">×</span>
+        </a>
+      {% endif %}
+      {% if category_filter %}
+        <a href="/?q={{ query|urlencode }}&tool={{ tool_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}{% if remote_filter %}&remote=true{% endif %}"
+           class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm">
+          Category: {{ category_filter }} <span class="text-gray-500">×</span>
+        </a>
+      {% endif %}
+      {% if role_type_filter %}
+        <a href="/?q={{ query|urlencode }}&tool={{ tool_filter|urlencode }}&category={{ category_filter|urlencode }}{% if remote_filter %}&remote=true{% endif %}"
+           class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm">
+          Role: {{ role_type_filter }} <span class="text-gray-500">×</span>
+        </a>
+      {% endif %}
+      {% if remote_filter|lower in "true,1,yes,on" %}
+        <a href="/?q={{ query|urlencode }}&tool={{ tool_filter|urlencode }}&category={{ category_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}"
+           class="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm">
+          Remote <span class="text-gray-500">×</span>
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="mt-6 grid gap-4">
+      {% for job in jobs %}
+        <a href="{% url 'job_detail' job.id %}" class="block bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-sm hover:border-indigo-300">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="text-lg font-bold text-gray-900">{{ job.title }}</div>
+              <div class="mt-1 text-sm text-gray-600">{{ job.company }}{% if job.location %} • {{ job.location }}{% endif %}</div>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                {% if job.remote %}
+                  <span class="rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-semibold">Remote</span>
+                {% endif %}
+                <span class="rounded-full bg-indigo-50 text-indigo-700 px-3 py-1 text-xs font-semibold">{{ job.get_role_type_display }}</span>
+                {% for tool in job.tools.all|slice:":4" %}
+                  <span class="rounded-full bg-gray-100 text-gray-700 px-3 py-1 text-xs font-semibold">{{ tool.name }}</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="text-right">
+              <div class="text-xs text-gray-500">Posted</div>
+              <div class="text-sm font-semibold text-gray-900">{{ job.created_at|date:"M j, Y" }}</div>
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 text-gray-700">
+          No jobs found. Try removing filters.
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if jobs.paginator.num_pages > 1 %}
+      <div class="mt-8 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+          Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+        </div>
+        <div class="flex gap-2">
+          {% if jobs.has_previous %}
+            <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
+               href="?page={{ jobs.previous_page_number }}&q={{ query|urlencode }}&tool={{ tool_filter|urlencode }}&category={{ category_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}{% if remote_filter|lower in "true,1,yes,on" %}&remote=true{% endif %}">
+              Prev
             </a>
-
-            <div class="flex items-center gap-4 sm:gap-6">
-                <a href="/" class="hidden sm:inline-block px-4 py-2 bg-teal-50 text-teal-700 text-sm font-semibold rounded-full hover:bg-teal-100 transition-colors">
-                    Find Jobs
-                </a>
-                <a href="#" class="hidden sm:inline-block text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-                    Blueprint
-                </a>
-                <div class="hidden sm:block w-px h-6 bg-slate-200"></div>
-                <a href="#" class="hidden sm:inline-block text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-                    Sign In
-                </a>
-                <a href="{% url 'post_job' %}" class="bg-[#2B7A78] hover:bg-[#236664] text-white text-sm font-bold px-6 py-2.5 rounded-full transition-colors shadow-sm whitespace-nowrap">
-                    Post a Job
-                </a>
-            </div>
+          {% endif %}
+          {% if jobs.has_next %}
+            <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
+               href="?page={{ jobs.next_page_number }}&q={{ query|urlencode }}&tool={{ tool_filter|urlencode }}&category={{ category_filter|urlencode }}&role_type={{ role_type_filter|urlencode }}{% if remote_filter|lower in "true,1,yes,on" %}&remote=true{% endif %}">
+              Next
+            </a>
+          {% endif %}
         </div>
-    </nav>
+      </div>
+    {% endif %}
+  </div>
 
-    <div class="py-12 bg-slate-50 border-b border-slate-200">
-        <div class="max-w-5xl mx-auto px-6">
-            {% if messages %}
-                <div class="max-w-md mx-auto mb-6">
-                    {% for message in messages %}
-                    <div class="p-4 rounded-lg text-sm font-bold text-center {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-800{% endif %}">
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+  <!-- ALERTS -->
+  <div id="alerts" class="mt-12 bg-gray-900 rounded-2xl p-8 text-white">
+    <h3 class="text-2xl font-bold">Get weekly MarTechStack alerts</h3>
+    <p class="mt-1 text-gray-200">We’ll send the best Zero-Noise roles once a week.</p>
+    <form method="post" action="{% url 'subscribe' %}" class="mt-5 flex flex-col sm:flex-row gap-3">
+      {% csrf_token %}
+      <input type="email" name="email" required placeholder="you@email.com"
+             class="w-full rounded-xl px-4 py-3 text-gray-900" />
+      <button type="submit" class="rounded-xl bg-indigo-600 px-6 py-3 font-semibold hover:bg-indigo-700">
+        Subscribe
+      </button>
+    </form>
+  </div>
 
-            <div class="text-center mb-8">
-                <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-                    Find your next <span class="text-teal-600">MarTech</span> Role.
-                </h1>
-                <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-                    We list niche Marketing Technology jobs with granular filtering for specific stacks like Salesforce, Adobe, and Segment.
-                </p>
-            </div>
-
-            <form method="GET" action="." class="max-w-4xl mx-auto">
-                <div class="flex flex-col md:flex-row gap-2 md:gap-0 p-2 bg-white rounded-xl border border-slate-200 shadow-sm ring-1 ring-slate-100">
-                    <div class="flex-1 relative flex items-center">
-                        <svg class="w-5 h-5 absolute left-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by job title or skill..." 
-                               class="w-full pl-12 pr-4 py-3 bg-transparent outline-none text-sm font-medium text-slate-700 placeholder-slate-400 rounded-lg focus:bg-slate-50">
-                    </div>
-                    <div class="hidden md:block w-px bg-slate-200 my-2"></div>
-                    <div class="flex-1 relative flex items-center">
-                        <svg class="w-5 h-5 absolute left-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <input type="text" name="loc" value="{{ search_loc|default:'' }}" placeholder="Location..." 
-                               class="w-full pl-12 pr-4 py-3 bg-transparent outline-none text-sm font-medium text-slate-700 placeholder-slate-400 rounded-lg focus:bg-slate-50">
-                    </div>
-                    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg transition-colors whitespace-nowrap shadow-sm">
-                        Search...
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-6 py-12">
-        <div class="flex flex-col lg:flex-row gap-12">
-            
-            <aside class="w-full lg:w-64 flex-shrink-0">
-                <form method="GET" action="." id="filterForm">
-                    <input type="hidden" name="q" value="{{ search_query }}">
-                    <input type="hidden" name="loc" value="{{ search_loc }}">
-                    {% if is_remote %}<input type="hidden" name="remote" value="true">{% endif %}
-
-                    <div class="mb-8">
-                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            Tech Stack
-                        </h3>
-                        <div class="space-y-3">
-                            {% for cat in categories %}
-                            <label class="flex items-center gap-3 cursor-pointer group select-none">
-                                <div class="relative flex items-center">
-                                    <input type="checkbox" name="category" value="{{ cat.slug }}"
-                                           class="peer h-5 w-5 cursor-pointer appearance-none rounded border border-slate-300 bg-white transition-all checked:border-teal-600 checked:bg-teal-600 hover:border-teal-400 focus:ring-2 focus:ring-teal-200 focus:outline-none"
-                                           {% if cat.slug in selected_categories %}checked{% endif %}
-                                           onchange="document.getElementById('filterForm').submit()">
-                                    <svg class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <span class="text-sm text-slate-600 group-hover:text-teal-700 transition-colors font-medium">
-                                    {{ cat.name }}
-                                </span>
-                            </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            Role Type
-                        </h3>
-                        <div class="space-y-3">
-                            <label class="flex items-center gap-3 cursor-pointer group select-none opacity-60">
-                                <div class="h-5 w-5 rounded border border-slate-200 bg-slate-50"></div>
-                                <span class="text-sm text-slate-400">Architect</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer group select-none opacity-60">
-                                <div class="h-5 w-5 rounded border border-slate-200 bg-slate-50"></div>
-                                <span class="text-sm text-slate-400">Developer</span>
-                            </label>
-                            <label class="flex items-center gap-3 cursor-pointer group select-none opacity-60">
-                                <div class="h-5 w-5 rounded border border-slate-200 bg-slate-50"></div>
-                                <span class="text-sm text-slate-400">Marketing Ops Manager</span>
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </aside>
-
-            <main class="flex-1">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="font-bold text-slate-900">{{ jobs.count }} Jobs Found</h2>
-                    <span class="text-xs font-medium text-slate-500">Sorted by Newest</span>
-                </div>
-
-                <div class="space-y-4">
-                    {% for job in jobs %}
-                    
-                    <div class="bg-white border border-slate-200 rounded-xl p-6 hover:border-teal-300 hover:shadow-sm transition-all duration-200">
-                        <div class="flex items-start gap-5">
-                            <div class="shrink-0">
-                                {% if job.company_logo %}
-                                    <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-12 h-12 rounded-lg object-contain border border-slate-100 bg-white">
-                                {% else %}
-                                    <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-lg">
-                                        {{ job.company|slice:":1" }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-slate-900 leading-tight">
-                                            <a href="{% url 'job_detail' job.pk %}" class="hover:text-teal-600 transition-colors">{{ job.title }}</a>
-                                        </h3>
-                                        <p class="text-sm font-medium text-slate-500 mt-1">{{ job.company }}</p>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        {% if forloop.first %}
-                                            <span class="hidden sm:inline-block bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Featured</span>
-                                        {% endif %}
-                                        <a href="{{ job.apply_url }}" target="_blank" class="hidden sm:inline-block bg-teal-600 text-white text-xs font-bold px-5 py-2.5 rounded-lg hover:bg-teal-700 transition-colors shadow-sm whitespace-nowrap">
-                                            Apply Now
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap gap-2 mt-4 mb-4">
-                                    {% for tool in job.tools.all|slice:":3" %}
-                                        <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-xs font-semibold">{{ tool.name }}</span>
-                                    {% endfor %}
-                                    {% if job.get_tag_list %}
-                                        {% for tag in job.get_tag_list|slice:":2" %}
-                                            <span class="px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-xs font-semibold">{{ tag }}</span>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                                <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-500">
-                                    <span class="flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                        {{ job.location }}
-                                    </span>
-                                    <span class="flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        {{ job.created_at|timesince }} ago
-                                    </span>
-                                    {% if job.salary_range %}
-                                    <span class="flex items-center gap-1.5 text-slate-700 font-bold">
-                                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        {{ job.salary_range }}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if forloop.counter == 1 %}
-                    <div class="bg-white border border-teal-100 rounded-xl p-8 shadow-sm relative overflow-hidden my-6">
-                        <div class="absolute -top-12 -right-12 w-32 h-32 bg-teal-50 rounded-full opacity-50 blur-2xl"></div>
-                        <div class="relative z-10 text-center">
-                            <span class="inline-block bg-teal-100 text-teal-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide mb-3">Job Alerts</span>
-                            <h3 class="text-2xl font-bold text-slate-900 mb-2">Get high-paying MarTech jobs delivered.</h3>
-                            <p class="text-slate-500 mb-6">Weekly alerts for <span class="text-teal-700 font-bold">Adobe, Salesforce & Segment</span>. 0% spam.</p>
-                            
-                            <form action="{% url 'subscribe' %}" method="POST" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-                                {% csrf_token %}
-                                <input type="email" name="email" required placeholder="Enter your email..." 
-                                       class="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
-                                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-lg transition-colors whitespace-nowrap shadow-sm">Sign up</button>
-                            </form>
-                            
-                            <div class="flex items-center justify-center gap-3 mt-6">
-                                <div class="flex -space-x-2">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="">
-                                    <img class="w-8 h-8 rounded-full border-2 border-white" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark" alt="">
-                                </div>
-                                <span class="text-xs text-slate-400 font-medium">Join 2,000+ pros</span>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% empty %}
-                    <div class="text-center py-24 bg-white rounded-xl border border-dashed border-slate-300">
-                        <p class="text-slate-500">No jobs found.</p>
-                        <a href="/" class="text-teal-600 font-bold text-sm mt-2 inline-block">Clear Filters</a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </main>
-        </div>
-    </div>
-</body>
-</html>
+</div>
+{% endblock %}
