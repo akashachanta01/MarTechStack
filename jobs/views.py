@@ -263,8 +263,10 @@ def post_job(request):
         form = JobPostForm(request.POST, request.FILES)
         if form.is_valid():
             job = form.save(commit=False)
-            job.screening_status = 'pending'
-            job.is_active = False 
+            # CTO UPDATE: Immediate Approval + Tagging
+            job.screening_status = 'approved' 
+            job.is_active = True 
+            job.tags = "User Submission" 
             job.save()
             form.save_m2m()
             cache.delete('popular_tech_stacks') 
