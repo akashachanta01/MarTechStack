@@ -3,10 +3,54 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.core.cache import cache  # <--- IMPORT CACHE
+from django.core.cache import cache
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
+
+# --- CONFIGURATION: VENDOR GROUPING RULES ---
+# Maps specific tool names (Child) to a unified Vendor Group (Parent).
+TOOL_MAPPING = {
+    # Adobe Ecosystem
+    'Marketo': 'Adobe',
+    'Adobe Experience Cloud': 'Adobe',
+    'Adobe Experience Platform': 'Adobe',
+    'AEP': 'Adobe',
+    'Adobe Target': 'Adobe',
+    'Adobe Analytics': 'Adobe',
+    'Adobe Campaign': 'Adobe',
+    'Adobe Journey Optimizer': 'Adobe',
+    'AJO': 'Adobe',
+    'Magento': 'Adobe',
+    'Workfront': 'Adobe',
+
+    # Salesforce Ecosystem
+    'Salesforce Marketing Cloud': 'Salesforce',
+    'SFMC': 'Salesforce',
+    'Pardot': 'Salesforce',
+    'Marketing Cloud Account Engagement': 'Salesforce',
+    'Salesforce CDP': 'Salesforce',
+    'Data Cloud': 'Salesforce',
+    'Salesforce CRM': 'Salesforce',
+
+    # HubSpot Ecosystem
+    'HubSpot CRM': 'HubSpot',
+    'HubSpot Marketing Hub': 'HubSpot',
+    'HubSpot Operations Hub': 'HubSpot',
+
+    # Google Ecosystem
+    'Google Analytics': 'Google',
+    'GA4': 'Google',
+    'Google Tag Manager': 'Google',
+    'GTM': 'Google',
+    'Google Ads': 'Google',
+    'DV360': 'Google',
+
+    # Data & CDP
+    'Twilio Segment': 'Segment',
+    'Tealium iQ': 'Tealium',
+    'Tealium AudienceStream': 'Tealium',
+}
 
 def job_list(request):
     # --- GET Parameters ---
@@ -24,14 +68,25 @@ def job_list(request):
         .order_by("-created_at")
     )
 
-    # --- Search Logic ---
+    # --- SMART SEARCH LOGIC (The "Fix") ---
     if query:
-        jobs = jobs.filter(
+        # 1. Standard text search
+        search_q = (
             Q(title__icontains=query)
             | Q(company__icontains=query)
             | Q(description__icontains=query)
             | Q(tools__name__icontains=query)
-        ).distinct()
+        )
+
+        # 2. Vendor Expansion: If searching "Adobe", also find "Marketo"
+        # Find all tools that map to this query (e.g. if query="Adobe", get ['Marketo', 'AEP', ...])
+        child_tools = [child for child, parent in TOOL_MAPPING.items() if parent.lower() == query.lower()]
+        
+        if child_tools:
+            # Add OR condition: tools__name IN [Marketo, AEP...]
+            search_q |= Q(tools__name__in=child_tools)
+
+        jobs = jobs.filter(search_q).distinct()
 
     if location_query:
         if "remote" in location_query.lower():
@@ -56,33 +111,19 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- ⚡️ CACHED TECH STACK LOGIC ---
-    # Try to get the calculated list from cache first
+    # --- ⚡️ CACHED TECH STACK AGGREGATION ---
     popular_tech_stacks = cache.get('popular_tech_stacks')
 
     if not popular_tech_stacks:
-        # If not in cache, calculate it (The "Heavy" Lift)
-        
         # 1. Fetch all active tools with counts
         raw_tools = Tool.objects.annotate(
             job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
         ).filter(job_count__gt=0)
 
-        # 2. Consolidation Rules
-        TOOL_MAPPING = {
-            'Salesforce Marketing Cloud': 'Salesforce',
-            'SFMC': 'Salesforce',
-            'Pardot': 'Salesforce',
-            'Marketo': 'Adobe',
-            'Adobe Experience Cloud': 'Adobe',
-            'HubSpot CRM': 'HubSpot',
-            'Google Analytics': 'Google',
-            'GA4': 'Google',
-        }
-
-        # 3. Aggregate Data
+        # 2. Aggregate Data by Vendor
         grouped_stats = {}
         for tool in raw_tools:
+            # Map child tool to parent (e.g. Marketo -> Adobe) or use own name
             group_name = TOOL_MAPPING.get(tool.name, tool.name)
             
             if group_name not in grouped_stats:
@@ -94,14 +135,14 @@ def job_list(request):
             
             grouped_stats[group_name]['count'] += tool.job_count
 
-        # 4. Sort and Slice
+        # 3. Sort by total count and take top 8
         popular_tech_stacks = sorted(
             grouped_stats.values(), 
             key=lambda x: x['count'], 
             reverse=True
         )[:8]
 
-        # 5. Save to Cache for 1 Hour (3600 seconds)
+        # 4. Save to Cache for 1 Hour
         cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
     context = {
@@ -133,10 +174,8 @@ def post_job(request):
             job.save()
             form.save_m2m()
             
-            # ⚡️ Clear cache so new stats appear (eventually)
-            # We don't necessarily need to clear it immediately for pending jobs,
-            # but good practice to know how.
-            # cache.delete('popular_tech_stacks') 
+            # Invalidate cache so new job counts appear eventually
+            cache.delete('popular_tech_stacks') 
             
             return redirect('post_job_success')
     else:
@@ -181,10 +220,7 @@ def review_action(request, job_id, action):
         job.is_active = True
         job.screened_at = job.screened_at or timezone.now()
         job.save(update_fields=["screening_status", "is_active", "screened_at"])
-        
-        # ⚡️ Important: Force refresh the stats when you approve a job
-        cache.delete('popular_tech_stacks')
-        
+        cache.delete('popular_tech_stacks') # Refresh stats
     elif action == "reject":
         job.screening_status = "rejected"
         job.is_active = False
