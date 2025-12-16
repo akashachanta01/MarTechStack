@@ -13,10 +13,10 @@ from jobs.screener import MarTechScreener
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board'}
 
 class Command(BaseCommand):
-    help = 'The Gold Standard Hunter: Stealth, Guessing, and Auto-Discovery'
+    help = 'The Gold Standard Hunter: AI-Powered Edition'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Gold Standard Job Hunt...")
+        self.stdout.write("🚀 Starting AI Job Hunt...")
         
         self.screener = MarTechScreener()
         self.total_added = 0
