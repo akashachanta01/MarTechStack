@@ -16,7 +16,8 @@ logger.setLevel(logging.INFO)
 class MarTechScreener:
     """
     The Brain 🧠 (AI Agent + Auditing)
-    Uses GPT-4o-mini to screen jobs and logs the 'Why' for every rejection.
+    Diamond-Grade Edition: Tuned to reject "Data Analyst", "GTM Strategy", and "Vendor Support" roles.
+    Includes "MarTech Immunity" for high-priority titles.
     """
 
     def __init__(self):
@@ -27,7 +28,6 @@ class MarTechScreener:
         self.client = OpenAI(api_key=api_key)
 
         # 2. "Fast Fail" Keywords (Stage 1)
-        # We only spend money on AI if these exist.
         self.REQUIRED_KEYWORDS = [
             "marketo", "hubspot", "salesforce marketing cloud", "sfmc", "pardot",
             "braze", "customer.io", "iterable", "klaviyo", "eloqua",
@@ -35,7 +35,8 @@ class MarTechScreener:
             "segment", "mparticle", "tealium", "cdp",
             "google tag manager", "gtm",
             "marketing operations", "marketing technology", "martech", "mops",
-            "marketing automation", "growth engineer", "marketing engineer"
+            "marketing automation", "growth engineer", "marketing engineer",
+            "adobe target", "adobe campaign", "journey optimizer", "ajo"
         ]
 
     def clean_text(self, text):
@@ -45,7 +46,6 @@ class MarTechScreener:
         full_text = self.clean_text(f"{title} {description}")
 
         # --- STAGE 1: FAST FAIL (Regex) ---
-        # Cost: $0. Filters out obvious garbage.
         has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
         if not has_keyword:
             return {
@@ -57,7 +57,6 @@ class MarTechScreener:
             }
 
         # --- STAGE 2: THE AI JUDGE (GPT-4o-mini) ---
-        # Cost: ~$0.001 per job. High intelligence.
         try:
             return self.ask_ai(title, company_name, description)
         except Exception as e:
@@ -72,23 +71,30 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description):
         prompt = f"""
-        Act as a strict MarTech Recruiter. Analyze this job to see if it fits our niche board.
+        Act as a strict MarTech Recruiter. Screen this job for a specialized "Marketing Technology & Operations" job board.
 
-        JOB:
+        JOB DETAILS:
         - Title: {title}
         - Company: {company}
         - Snippet: {description[:1500]}...
 
-        RULES FOR "MATCH":
-        1. Role MUST be "Marketing Operations", "MarTech", "Marketing Analytics", or "Marketing Engineering".
-        2. Role MUST involve administering/managing systems (Marketo, Salesforce, Segment, GTM).
-        
-        RULES FOR "REJECT" (The Kill List):
-        1. REJECT Sales/Success roles (AE, CSM, Solutions Engineer, Presales) even if they know Marketo.
-        2. REJECT Internal IT (Helpdesk, Director of IT, SysAdmin) unless explicitly for Marketing Systems.
-        3. REJECT Digital Marketing/Growth (running ads/campaigns) if they don't own the tech stack.
-        4. REJECT Product Management (PM) unless it is specifically "PM of MarTech Platform".
-        5. REJECT if the company IS the vendor (e.g. HubSpot) and the role is Sales/Consulting/Support.
+        YOUR MISSION:
+        Determine if this role is explicitly for **building, administering, or managing Marketing Systems**.
+
+        🚨 "MARTECH" IMMUNITY RULE:
+        If the Job Title explicitly contains "MarTech" (e.g. "MarTech Product Manager", "MarTech Lead"), it is AUTOMATICALLY A MATCH.
+        Ignore other rejection rules (like Product Manager) in this specific case.
+
+        🚨 STRICT REJECTION RULES (Kill these jobs unless Immunity applies):
+        1. **REJECT "Data Analyst" / "BI" Roles:** If the title is "Data Analyst" or "Business Intelligence" and focuses on SQL/Tableau/Reporting, REJECT IT.
+        2. **REJECT "GTM" (Go-To-Market):** If the title says "GTM" (e.g. "GTM Analyst"), REJECT IT. This usually means Sales Strategy. Exception: If it explicitly says "Google Tag Manager" implementation.
+        3. **REJECT "Vendor Product" Roles:** If the company is an AdTech/MarTech vendor (e.g. StackAdapt, The Trade Desk) and the role is "Technical Analyst", "Support", or "Client Services" for *their own* product, REJECT IT.
+        4. **REJECT Sales & Growth:** Reject "Account Executive", "Solutions Engineer", "Growth Manager", "Paid Media Manager".
+        5. **REJECT Internal IT:** Reject "IT Director", "Systems Admin" unless specifically for Marketing.
+
+        ✅ ACCEPT ONLY IF:
+        - The role is "Marketing Operations Manager", "MarTech Architect", "Marketing Engineer".
+        - The role is "Marketing Analyst" BUT specifically focuses on **implementation/tracking** (GA4, GTM, Segment).
 
         Output valid JSON:
         {{
@@ -112,11 +118,9 @@ class MarTechScreener:
 
         result = json.loads(completion.choices[0].message.content)
         
-        # AUDIT LOGGING: Record the decision
+        # AUDIT LOGGING
         log_msg = f"[{'✅ MATCH' if result['is_match'] else '❌ REJECT'}] {title} @ {company} | Reason: {result['reason']}"
         logger.info(log_msg)
-        
-        # If running in a script with stdout, print it too
         print(f"      🤖 AI Decision: {log_msg}")
 
         return {
