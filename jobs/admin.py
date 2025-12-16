@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission
+from django.urls import reverse # Needed for the 'Edit Details' link
+
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission # All models imported
+
+# --- ADMIN REGISTRATIONS ---
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -21,11 +25,11 @@ class JobAdmin(admin.ModelAdmin):
         "logo_preview",
         "job_card_header",
         "score_badge",
-        "remote",         # <-- NOW IN LIST
-        "salary_range",   # <-- NOW IN LIST
+        "remote",         # <-- LIST EDITABLE
+        "salary_range",   # <-- LIST EDITABLE
         "tech_stack_preview",
         "status_badge",
-        "action_buttons", # <-- Includes quick Edit link
+        "action_buttons",
     )
     list_filter = ("screening_status", "is_active", "remote", "role_type", "created_at")
     search_fields = ("title", "company", "description")
@@ -39,13 +43,14 @@ class JobAdmin(admin.ModelAdmin):
     filter_horizontal = ("tools",)
     list_per_page = 25
     
+    # Default sorting: Newest first
     ordering = ("-created_at",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.prefetch_related('tools')
 
-    # --- 1. VISUAL COLUMNS ---
+    # --- 1. VISUAL COLUMNS (Sortable/Style) ---
 
     def logo_preview(self, obj):
         if obj.company_logo:
@@ -120,15 +125,17 @@ class JobAdmin(admin.ModelAdmin):
         html += '</div>'
         return format_html(html)
     tech_stack_preview.short_description = "Tech Stack"
-    # Tech stack is complex (M2M) and cannot be list_editable, so we link to the edit page
 
     def action_buttons(self, obj):
+        # Correctly generate the admin change URL
+        change_url = reverse('admin:jobs_job_change', args=[obj.id])
+        
         return format_html(
             '<div style="display: flex; align-items: center; gap: 8px;">'
             '<a href="{}" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Edit Details</a>'
             '<a href="{}" target="_blank" style="opacity: 0.7; font-size: 12px; text-decoration: none;">↗ Apply</a>'
             '</div>',
-            obj.get_absolute_url(), # <-- Direct link to the change page for easy tool editing
+            change_url,
             obj.apply_url
         )
     action_buttons.short_description = "Actions"
@@ -159,6 +166,7 @@ class JobAdmin(admin.ModelAdmin):
 
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(JobAdmin):
+    # Only show jobs tagged "User Submission"
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tags__icontains="User Submission")
 
@@ -169,15 +177,8 @@ class SubscriberAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 @admin.register(BlockRule)
-class BlockRuleAdmin(models.Model):
+class BlockRuleAdmin(admin.ModelAdmin): # <-- FIX: Changed base class from models.Model to admin.ModelAdmin
     list_display = ("rule_type", "value", "enabled", "created_at")
     list_filter = ("rule_type", "enabled")
     search_fields = ("value", "notes")
     ordering = ("-created_at",)
-
-# We must update the Job model to include get_absolute_url for the Edit Details link to work
-try:
-    from django.urls import reverse
-    Job.add_to_class('get_absolute_url', lambda self: reverse('admin:jobs_job_change', args=[self.id]))
-except Exception:
-    pass
