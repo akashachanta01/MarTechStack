@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.core.cache import cache  # <--- IMPORT CACHE
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
@@ -55,49 +56,53 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- TECH STACK GROUPING LOGIC ---
-    # 1. Fetch all active tools with counts
-    raw_tools = Tool.objects.annotate(
-        job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
-    ).filter(job_count__gt=0)
+    # --- ⚡️ CACHED TECH STACK LOGIC ---
+    # Try to get the calculated list from cache first
+    popular_tech_stacks = cache.get('popular_tech_stacks')
 
-    # 2. Define Consolidation Rules (Child -> Parent)
-    # Edit this dictionary to add more groupings
-    TOOL_MAPPING = {
-        'Salesforce Marketing Cloud': 'Salesforce',
-        'SFMC': 'Salesforce',
-        'Pardot': 'Salesforce',
-        'Marketo': 'Adobe',
-        'Adobe Experience Cloud': 'Adobe',
-        'HubSpot CRM': 'HubSpot',
-        'Google Analytics': 'Google',
-        'GA4': 'Google',
-    }
-
-    # 3. Aggregate Data
-    grouped_stats = {}
-    
-    for tool in raw_tools:
-        # Determine the display name (Parent or original)
-        group_name = TOOL_MAPPING.get(tool.name, tool.name)
+    if not popular_tech_stacks:
+        # If not in cache, calculate it (The "Heavy" Lift)
         
-        if group_name not in grouped_stats:
-            grouped_stats[group_name] = {
-                'name': group_name,
-                'count': 0,
-                'icon_char': group_name[0].upper()
-            }
-        
-        # Add the count
-        grouped_stats[group_name]['count'] += tool.job_count
+        # 1. Fetch all active tools with counts
+        raw_tools = Tool.objects.annotate(
+            job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
+        ).filter(job_count__gt=0)
 
-    # 4. Convert to list and sort by Popularity (Count)
-    # We slice [:8] here to only show top 8
-    popular_tech_stacks = sorted(
-        grouped_stats.values(), 
-        key=lambda x: x['count'], 
-        reverse=True
-    )[:8]
+        # 2. Consolidation Rules
+        TOOL_MAPPING = {
+            'Salesforce Marketing Cloud': 'Salesforce',
+            'SFMC': 'Salesforce',
+            'Pardot': 'Salesforce',
+            'Marketo': 'Adobe',
+            'Adobe Experience Cloud': 'Adobe',
+            'HubSpot CRM': 'HubSpot',
+            'Google Analytics': 'Google',
+            'GA4': 'Google',
+        }
+
+        # 3. Aggregate Data
+        grouped_stats = {}
+        for tool in raw_tools:
+            group_name = TOOL_MAPPING.get(tool.name, tool.name)
+            
+            if group_name not in grouped_stats:
+                grouped_stats[group_name] = {
+                    'name': group_name,
+                    'count': 0,
+                    'icon_char': group_name[0].upper()
+                }
+            
+            grouped_stats[group_name]['count'] += tool.job_count
+
+        # 4. Sort and Slice
+        popular_tech_stacks = sorted(
+            grouped_stats.values(), 
+            key=lambda x: x['count'], 
+            reverse=True
+        )[:8]
+
+        # 5. Save to Cache for 1 Hour (3600 seconds)
+        cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
     context = {
         "jobs": jobs_page,
@@ -107,7 +112,7 @@ def job_list(request):
         "category_filter": category_filter,
         "role_type_filter": role_type_filter,
         "remote_filter": remote_filter,
-        "popular_tech_stacks": popular_tech_stacks, # Pass the grouped list
+        "popular_tech_stacks": popular_tech_stacks,
         "categories": Category.objects.all().order_by("name"),
     }
     return render(request, "jobs/job_list.html", context)
@@ -127,6 +132,12 @@ def post_job(request):
             job.is_active = False 
             job.save()
             form.save_m2m()
+            
+            # ⚡️ Clear cache so new stats appear (eventually)
+            # We don't necessarily need to clear it immediately for pending jobs,
+            # but good practice to know how.
+            # cache.delete('popular_tech_stacks') 
+            
             return redirect('post_job_success')
     else:
         form = JobPostForm()
@@ -170,6 +181,10 @@ def review_action(request, job_id, action):
         job.is_active = True
         job.screened_at = job.screened_at or timezone.now()
         job.save(update_fields=["screening_status", "is_active", "screened_at"])
+        
+        # ⚡️ Important: Force refresh the stats when you approve a job
+        cache.delete('popular_tech_stacks')
+        
     elif action == "reject":
         job.screening_status = "rejected"
         job.is_active = False
