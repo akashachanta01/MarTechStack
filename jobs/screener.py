@@ -3,8 +3,9 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Final "Title-Only" Version.
-    Replaces "Activity Blockers" (risky) with "Title Blockers" (safe).
+    Final Architecture: "Title-Shield" Edition.
+    1. KILLERS are applied ONLY to the Job Title (Prevents "Reports to X" false positives).
+    2. SCORING is applied to the Full Text (Finds keywords anywhere).
     """
     
     # 1. Define Categories & Keywords
@@ -54,40 +55,31 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers (Title-Based Only - SAFE LIST)
-    JOB_KILLERS = [
-        # --- CREATIVE & CONTENT TITLES ---
-        r'content.*writer', r'copywriter', r'editor', r'journalist',
-        r'graphic.*designer', r'art.*director', r'creative.*director',
-        r'video.*editor', r'videographer',
-        r'social.*media.*manager', r'community.*manager',
-        r'brand.*manager', r'pr.*manager', r'public.*relations',
-
-        # --- SALES TITLES ---
-        r'sales.*representative', r'sales.*rep', 
-        r'account.*executive', r'ae\b', 
-        r'account.*director', 
-        r'business.*development.*rep', r'bdr',
-        r'sales.*development.*rep', r'sdr',
-        r'outside.*sales', r'inside.*sales',
+    # 3. Job Killers (Applied to TITLE ONLY)
+    # We can now be very strict here without fear.
+    TITLE_KILLERS = [
+        # Sales & Account Mgmt
+        r'sales', r'account.*executive', r'account.*manager', r'account.*director',
+        r'business.*development', r'bdr', r'sdr',
+        r'client.*partner', r'client.*success',
         
-        # --- CUSTOMER SUCCESS TITLES ---
-        r'customer.*success.*manager', r'csm',
-        r'client.*success.*manager',
-        r'customer.*support.*rep',
-        r'customer.*service',
-
-        # --- HR & ADMIN TITLES ---
-        r'recruiter', r'sourcer', r'talent.*acquisition.*manager',
-        r'hr.*manager', r'human.*resources',
-        r'executive.*assistant', r'admin.*assistant', r'office.*manager',
-
-        # --- PURE ENGINEERING TITLES ---
-        r'software.*engineer', 
-        r'frontend.*developer', r'frontend.*engineer',
-        r'backend.*developer', r'backend.*engineer',
-        r'mobile.*developer', r'ios.*developer', r'android.*developer',
-        r'site.*reliability', r'devops.*engineer'
+        # Customer Success (Blocks ALL CS titles)
+        r'customer.*success', r'csm', r'customer.*experience', r'support.*specialist',
+        
+        # General Marketing (Too broad)
+        r'marketing.*manager', r'brand.*manager', r'digital.*marketing.*manager',
+        r'content', r'social.*media', r'community', r'pr\b', r'public.*relations',
+        r'copywriter', r'writer', r'editor',
+        r'creative', r'graphic', r'designer', r'videographer',
+        
+        # HR & Admin
+        r'recruiter', r'talent', r'hr\b', r'human.*resources',
+        r'assistant', r'admin', r'office.*manager',
+        
+        # Pure Engineering (Unless they pass the specific keyword score)
+        r'software.*engineer', r'frontend', r'backend', r'full.*stack',
+        r'mobile.*developer', r'ios', r'android',
+        r'devops', r'site.*reliability'
     ]
     
     def __init__(self):
@@ -101,25 +93,27 @@ class MarTechScreener:
         return str(text).lower().strip()
     
     def is_present(self, text, keyword):
+        # Enforce Word Boundaries
         pattern = r'\b' + re.escape(keyword) + r'\b'
         return re.search(pattern, text) is not None
 
     def screen_job(self, title, description):
         self.reset()
+        clean_title = self.clean_text(title)
         full_text = self.clean_text(f"{title} {description}")
         
-        # 1. Check Killers
-        for pattern in self.JOB_KILLERS:
-            if re.search(pattern, full_text):
+        # 1. Check Killers (AGAINST TITLE ONLY) 🛡️
+        for pattern in self.TITLE_KILLERS:
+            if re.search(pattern, clean_title):
                 return {
                     "is_match": False, 
                     "score": 0, 
-                    "reason": f"Killer: {pattern}", 
+                    "reason": f"Title Killer: {pattern}", 
                     "stack": [], 
                     "categories": []
                 }
 
-        # 2. Scan Categories
+        # 2. Scan Categories (Against Full Text)
         total_score = 0
         
         for category, keywords in self.CATEGORIES.items():
