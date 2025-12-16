@@ -124,3 +124,10 @@ class BlockRule(models.Model):
 
     def __str__(self):
         return f"{self.rule_type}: {self.value}"
+
+# --- PROXY MODEL FOR ADMIN ---
+class UserSubmission(Job):
+    class Meta:
+        proxy = True
+        verbose_name = "User Submission"
+        verbose_name_plural = "User Submissions"
