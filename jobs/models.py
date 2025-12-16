@@ -23,22 +23,21 @@ class Tool(models.Model):
     def color_class(self):
         """
         Returns a consistent Tailwind CSS class string based on the tool name.
-        This ensures 'Marketo' is always the same color, on every card.
+        UPDATED: Using 'Level 100' backgrounds for a softer, professional look.
         """
-        # "Saturated Pastel" Palette (200 bg, 900 text, 300 border)
         colors = [
-            'bg-emerald-200 text-emerald-900 border-emerald-300',
-            'bg-amber-200 text-amber-900 border-amber-300',
-            'bg-rose-200 text-rose-900 border-rose-300',
-            'bg-sky-200 text-sky-900 border-sky-300',
-            'bg-violet-200 text-violet-900 border-violet-300',
-            'bg-teal-200 text-teal-900 border-teal-300',
-            'bg-indigo-200 text-indigo-900 border-indigo-300',
-            'bg-fuchsia-200 text-fuchsia-900 border-fuchsia-300',
-            'bg-orange-200 text-orange-900 border-orange-300',
-            'bg-cyan-200 text-cyan-900 border-cyan-300',
-            'bg-lime-200 text-lime-900 border-lime-300',
-            'bg-pink-200 text-pink-900 border-pink-300',
+            'bg-emerald-100 text-emerald-700 border-emerald-200',
+            'bg-amber-100 text-amber-800 border-amber-200',
+            'bg-rose-100 text-rose-700 border-rose-200',
+            'bg-sky-100 text-sky-700 border-sky-200',
+            'bg-violet-100 text-violet-700 border-violet-200',
+            'bg-teal-100 text-teal-700 border-teal-200',
+            'bg-indigo-100 text-indigo-700 border-indigo-200',
+            'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
+            'bg-orange-100 text-orange-800 border-orange-200',
+            'bg-cyan-100 text-cyan-700 border-cyan-200',
+            'bg-lime-100 text-lime-700 border-lime-200',
+            'bg-pink-100 text-pink-700 border-pink-200',
         ]
         # Sum the ASCII values of the characters to get a consistent number
         char_sum = sum(ord(c) for c in self.name)
