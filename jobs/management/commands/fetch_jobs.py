@@ -1,15 +1,14 @@
 import time
-import random
 import re
 import dateutil.parser 
 import requests
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict
 from urllib.parse import urlparse
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from duckduckgo_search import DDGS
 
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
@@ -18,11 +17,17 @@ from jobs.screener import MarTechScreener
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
 
 class Command(BaseCommand):
-    help = 'The Stealth Hunter: DuckDuckGo HTML Backend + Random Delays'
+    help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support'
 
     def handle(self, *args, **options):
-        self.stdout.write("🥷 Starting Job Hunt (Stealth Mode)...")
+        self.stdout.write("🚀 Starting Job Hunt (Enterprise Mode)...")
         
+        # 1. Load API Key
+        self.serpapi_key = os.environ.get('SERPAPI_KEY')
+        if not self.serpapi_key:
+            self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY environment variable."))
+            return
+
         self.screener = MarTechScreener()
         self.total_added = 0
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
@@ -37,49 +42,56 @@ class Command(BaseCommand):
             'MarTech', 'Marketing Operations'
         ]
 
-        # --- SITES ---
-        base_sites = [
-            'site:boards.greenhouse.io', 'site:jobs.lever.co',
-            'site:jobs.ashbyhq.com', 'site:apply.workable.com',
+        # --- SMART QUERIES ---
+        # We group these to save API credits (1 credit = 1 search)
+        base_sites = (
+            'site:boards.greenhouse.io OR site:jobs.lever.co OR '
+            'site:jobs.ashbyhq.com OR site:apply.workable.com OR '
             'site:jobs.smartrecruiters.com'
-        ]
-        
+        )
+
         for tool in hunt_targets:
-            self.stdout.write(f"\n🔎 Hunting target: {tool}...")
+            query = f'"{tool}" ({base_sites})'
+            self.stdout.write(f"\n🔎 Hunting: {tool}...")
             
-            # Re-initialize session for every keyword (Session Rotation)
-            with DDGS() as ddgs:
-                for site in base_sites:
-                    query = f'{site} "{tool}"'
-                    
-                    # Human Delay (5 to 12 seconds)
-                    sleep_time = random.uniform(5, 12)
-                    self.stdout.write(f"   ...sleeping {sleep_time:.1f}s...")
-                    time.sleep(sleep_time)
+            # SERPAPI SEARCH (Reliable & Block-Free)
+            links = self.search_google(query)
+            self.stdout.write(f"   Found {len(links)} links. Analyzing...")
 
-                    try:
-                        # USE HTML BACKEND (More robust against rate limits)
-                        results = ddgs.text(query, region='wt-wt', timelimit='m', max_results=20, backend='html')
-                        
-                        if not results: continue
-
-                        self.stdout.write(f"   found {len(results)} links on {site}...")
-
-                        for res in results:
-                            link = res.get('href')
-                            if link:
-                                self.analyze_and_fetch(link)
-                                # Micro-delay between processing links
-                                time.sleep(random.uniform(0.5, 1.5))
-                                
-                    except Exception as e:
-                        self.stdout.write(f"   ⚠️ Search Error: {e}")
-                        # If blocked, take a long nap
-                        time.sleep(30)
+            for link in links:
+                try:
+                    self.analyze_and_fetch(link)
+                    # Tiny delay just to be polite to the ATS APIs
+                    time.sleep(0.2)
+                except Exception as e:
+                    pass
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
 
-    # --- STEALTH HEADERS ---
+    # --- SERPAPI ENGINE ---
+    def search_google(self, query):
+        params = { 
+            "engine": "google", 
+            "q": query, 
+            "api_key": self.serpapi_key, 
+            "num": 30,  # Grab 30 results per credit
+            "gl": "us", 
+            "hl": "en", 
+            "tbs": "qdr:m" # Past month only
+        }
+        try:
+            # Direct HTTP request (No extra library needed)
+            resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
+            if resp.status_code == 200:
+                results = resp.json().get("organic_results", [])
+                return [r.get("link") for r in results]
+            else:
+                self.stdout.write(self.style.WARNING(f"   ⚠️ SerpApi Error: {resp.status_code}"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"   ⚠️ Connection Error: {e}"))
+        return []
+
+    # --- HEADERS ---
     def get_headers(self):
         return {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -108,7 +120,7 @@ class Command(BaseCommand):
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1))
 
-    # --- API WORKERS ---
+    # --- API WORKERS (Free Direct Access) ---
 
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
@@ -197,10 +209,10 @@ class Command(BaseCommand):
                         })
         except: pass
 
-    # --- LOGO RESOLVER (THE FREE GOOGLE TRICK) ---
+    # --- LOGO RESOLVER ---
     def resolve_logo(self, company_name):
         if not company_name: return None
-        # Heuristic: Clean name -> Google Favicon
+        # Heuristic: Clean name -> Google Favicon (Free & Unlimited)
         clean = company_name.lower()
         for x in [',', '.', ' inc', ' llc', ' ltd', ' corp', ' technologies', ' systems', ' group']:
             clean = clean.replace(x, '')
@@ -225,7 +237,7 @@ class Command(BaseCommand):
         # Check Existence
         if Job.objects.filter(apply_url=apply_url).exists(): return
 
-        # Resolve Logo (Free Mode)
+        # Resolve Logo
         logo_url = self.resolve_logo(company)
 
         # AI Screen
