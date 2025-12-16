@@ -3,18 +3,19 @@ import re
 class MarTechScreener:
     """
     The Brain 🧠
-    Category-Based Version: Filters using specific functional buckets.
-    Returns 'categories' list which fetch_jobs.py now requires.
+    Regex Version: Uses word boundaries (\b) to prevent false positives.
+    Updated: Removed generic BI tools, added Adobe Enterprise stack.
     """
     
-    # 1. Define Categories & Keywords (Your Custom List)
+    # 1. Define Categories & Keywords
     CATEGORIES = {
         "Automation & Email Platforms": [
             "hubspot", "hubspot marketing hub", "marketo", "adobe marketo",
             "salesforce marketing cloud", "pardot", "sfmc", "exacttarget",
             "activecampaign", "mailchimp", "klaviyo", "sendinblue", "brevo",
             "iterable", "oracle eloqua", "eloqua", "omnisend", "autopilot",
-            "marketo engage", "adobe journey optimizer", "ajo", "adobe workfront", "workfront"
+            "marketo engage", "ajo", "adobe journey optimizer",
+            "adobe campaign" # Added ✅
         ],
         "Lead Nurturing & Campaign": [
             "braze", "customer.io", "customer io", "iterable", "drip",
@@ -25,7 +26,9 @@ class MarTechScreener:
             "ga4", "google analytics", "google analytics 4", "looker studio",
             "data studio", "hotjar", "mixpanel", "amplitude", "piwik",
             "piwik pro", "fathom analytics", "woopra",
-            "microsoft clarity", "bigquery", "heap", "customer journey analytics", "cja", "adobe analytics" 
+            "microsoft clarity", "bigquery", "heap",
+            # Removed: tableau, power bi, looker ❌
+            "adobe analytics", "customer journey analytics", "cja" # Added ✅
         ],
         "Customer Data Platforms": [
             "segment", "twilio segment", "adobe experience platform", "aep",
@@ -43,7 +46,7 @@ class MarTechScreener:
         ],
     }
 
-    # 2. Assign Weights (High Tech = High Score)
+    # 2. Assign Weights
     CATEGORY_WEIGHTS = {
         "Customer Data Platforms": 30,
         "Automation & Email Platforms": 25,
@@ -52,14 +55,12 @@ class MarTechScreener:
         "Web & Product Analytics": 10
     }
 
-    # 3. Job Killers (The Firewall)
+    # 3. Job Killers
     JOB_KILLERS = [
         r'writing.*blog.*posts', r'content.*creation', r'social.*media.*management',
         r'brand.*manager', r'copywriter', r'cold.*calling', r'sales.*representative',
         r'account.*executive', r'account.*director', r'business.*development',
         r'hr.*manager', r'recruiter', r'talent.*acquisition', r'customer.*success',
-        
-        # Engineering Firewall (Blocks builders, allows users)
         r'software.*engineer', r'frontend.*engineer', r'backend.*engineer',
         r'full.*stack', r'platform.*engineer', r'site.*reliability',
         r'devops', r'engineering.*manager', r'director.*engineering',
@@ -76,6 +77,15 @@ class MarTechScreener:
     def clean_text(self, text):
         return str(text).lower().strip()
     
+    # --- Regex Matcher Helper ---
+    def is_present(self, text, keyword):
+        """
+        Uses Regex Word Boundaries (\b) to ensure 'ajo' doesn't match 'major'.
+        re.escape(keyword) handles dots like 'segment.io' correctly.
+        """
+        pattern = r'\b' + re.escape(keyword) + r'\b'
+        return re.search(pattern, text) is not None
+
     def screen_job(self, title, description):
         self.reset()
         full_text = self.clean_text(f"{title} {description}")
@@ -83,7 +93,6 @@ class MarTechScreener:
         # 1. Check Killers
         for pattern in self.JOB_KILLERS:
             if re.search(pattern, full_text):
-                # FIXED: Added "score": 0 to prevent crashes
                 return {
                     "is_match": False, 
                     "score": 0, 
@@ -96,8 +105,8 @@ class MarTechScreener:
         total_score = 0
         
         for category, keywords in self.CATEGORIES.items():
-            # Check if ANY keyword from this category exists in text
-            matches = [kw for kw in keywords if kw in full_text]
+            # Check matches with Word Boundaries
+            matches = [kw for kw in keywords if self.is_present(full_text, kw)]
             
             if matches:
                 self.found_categories.append(category)
@@ -105,8 +114,6 @@ class MarTechScreener:
                 total_score += self.CATEGORY_WEIGHTS.get(category, 10)
 
         # 3. Decision Logic (Threshold = 20)
-        # Allows: "HubSpot" (25pts), "Braze" (20pts)
-        # Blocks: "Google Analytics" alone (10pts)
         is_match = total_score >= 20
 
         return {
