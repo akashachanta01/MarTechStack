@@ -11,7 +11,7 @@ from .forms import JobPostForm
 
 # --- CONFIGURATION: VENDOR & CATEGORY GROUPING ---
 # KEYS must be LOWERCASE for reliable matching.
-# VALUES are the Display Name (e.g. 'Adobe').
+# VALUES are the Display Name.
 TOOL_MAPPING = {
     # Salesforce
     'salesforce marketing cloud': 'Salesforce',
@@ -98,7 +98,7 @@ TOOL_MAPPING = {
 def job_list(request):
     # --- GET Parameters ---
     query = request.GET.get("q", "").strip()
-    vendor_query = request.GET.get("vendor", "").strip()  # <--- New Strict Filter
+    vendor_query = request.GET.get("vendor", "").strip() 
     
     location_query = request.GET.get("l", "").strip()
     tool_filter = request.GET.get("tool", "").strip()
@@ -113,34 +113,21 @@ def job_list(request):
         .order_by("-created_at")
     )
 
-    # --- 1. STRICT VENDOR FILTER (Clicking the Card) ---
+    # --- 1. STRICT VENDOR FILTER ---
     if vendor_query:
-        # Handling "General / Strategy" (No Tools)
-        if vendor_query == "General / Strategy":
+        if vendor_query == "General":
             jobs = jobs.filter(tools__isnull=True)
         else:
-            # Find all Tool IDs that map to this Vendor
-            # We check every tool in the DB to see if it belongs to the requested Vendor
             relevant_tool_ids = []
             all_tools = Tool.objects.all()
-            
             for tool in all_tools:
-                # Normalize DB name to lowercase
                 clean_name = tool.name.lower()
-                
-                # Check Mapping
-                # 1. Direct match in mapping
-                # 2. Fallback: If not in mapping, does the name itself match the vendor?
                 group = TOOL_MAPPING.get(clean_name, tool.name) 
-                
-                # Case-insensitive comparison of group vs requested vendor
                 if group.lower() == vendor_query.lower():
                     relevant_tool_ids.append(tool.id)
-            
-            # Filter jobs that have ANY of these tools
             jobs = jobs.filter(tools__id__in=relevant_tool_ids).distinct()
 
-    # --- 2. TEXT SEARCH (User typing in bar) ---
+    # --- 2. TEXT SEARCH ---
     elif query:
         search_q = (
             Q(title__icontains=query)
@@ -178,61 +165,50 @@ def job_list(request):
     popular_tech_stacks = cache.get('popular_tech_stacks')
 
     if not popular_tech_stacks:
-        # 1. Fetch raw pairs: (Tool Name, Job ID)
         pairs = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__screening_status='approved'
         ).values_list('name', 'jobs__id')
 
-        # 2. Aggregation with Strict Lowercase Normalization
         vendor_jobs = defaultdict(set)
         
         for tool_name, job_id in pairs:
-            # Normalize to lowercase for lookup
             clean_name = tool_name.lower()
-            
             if clean_name in TOOL_MAPPING:
                 group_name = TOOL_MAPPING[clean_name]
             else:
-                # Fallback: Capitalize properly if it's a standalone tool
-                group_name = tool_name # Keep original casing if not mapped
+                group_name = tool_name 
             
             vendor_jobs[group_name].add(job_id)
 
-        # 3. Handle "General / Strategy" (Jobs with NO tools)
+        # Handle "General" (Jobs with NO tools)
         general_jobs_count = Job.objects.filter(
             is_active=True, 
             screening_status='approved',
             tools__isnull=True
         ).count()
 
-        # 4. Convert to List
         stats_list = []
         for group, job_ids in vendor_jobs.items():
             if len(job_ids) > 0:
                 stats_list.append({
                     'name': group,
-                    'count': len(job_ids),
-                    'icon_char': group[0].upper() if group else '?'
+                    'count': len(job_ids)
                 })
         
         if general_jobs_count > 0:
             stats_list.append({
-                'name': 'General / Strategy',
-                'count': general_jobs_count,
-                'icon_char': 'G'
+                'name': 'General', # <--- RENAMED
+                'count': general_jobs_count
             })
 
-        # 5. Sort
-        popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:8]
-
-        # 6. Save to Cache
+        popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:10]
         cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
     context = {
         "jobs": jobs_page,
         "query": query,
-        "vendor_filter": vendor_query, # Pass to template for UI state
+        "vendor_filter": vendor_query,
         "location_filter": location_query,
         "tool_filter": tool_filter,
         "category_filter": category_filter,
