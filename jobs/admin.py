@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission # Added UserSubmission
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -61,7 +61,12 @@ class JobAdmin(admin.ModelAdmin):
     job_card_header.short_description = "Role & Company"
 
     def score_badge(self, obj):
-        score = obj.screening_score or 0
+        # FIX: Force convert to float to prevent "Unknown format code" error
+        try:
+            score = float(obj.screening_score or 0)
+        except (ValueError, TypeError):
+            score = 0.0
+
         if score >= 80:
             bg, text = "#d1fae5", "#065f46" # Green
         elif score >= 50:
