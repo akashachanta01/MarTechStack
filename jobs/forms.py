@@ -2,7 +2,7 @@ from django import forms
 from .models import Job, Tool
 
 class JobPostForm(forms.ModelForm):
-    # Customizing the tools widget to be a multi-select checkbox or select list
+    # Customizing the tools widget to be a multi-select checkbox list
     tools = forms.ModelMultipleChoiceField(
         queryset=Tool.objects.all(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'grid grid-cols-2 gap-2'}),
