@@ -3,44 +3,34 @@ import re
 import requests
 from jobs.screener import MarTechScreener
 
-# 🕵️‍♂️ STEALTH HEADERS (The "Fake ID")
+# 🕵️‍♂️ STEALTH HEADERS
 def get_headers():
     return {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Cache-Control': 'max-age=0',
     }
+
+def try_fetch_greenhouse(token):
+    """Helper to check if a guessed token works on the API"""
+    url = f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
+    try:
+        r = requests.get(url, headers=get_headers(), timeout=5)
+        if r.status_code == 200:
+            return r.json().get('jobs', [])
+    except:
+        pass
+    return []
 
 def sniff_token(url):
     print(f"🐕 Sniffing for hidden ATS token in {url}...")
     try:
-        # Use a Session to handle cookies automatically (helps with 403s)
         session = requests.Session()
         session.headers.update(get_headers())
-        
         resp = session.get(url, timeout=10)
         
-        if resp.status_code == 403:
-            print("❌ Access Denied (403). Trying fallback strategy...")
-            # FALLBACK: Try to guess token from domain name
-            # e.g. branch.io -> try 'branch' and 'branchmetrics'
-            domain_match = re.search(r'https?://(www\.)?([^/.]+)', url)
-            if domain_match:
-                guess = domain_match.group(2)
-                print(f"🤔 Guessing token from domain: '{guess}'")
-                return "guess", guess
-            return None, None
-            
+        # If blocked or empty, return None to trigger the Guesser
         if resp.status_code != 200:
-            print(f"❌ Could not access page. Status: {resp.status_code}")
             return None, None
             
         html = resp.text
@@ -67,7 +57,7 @@ def test_url(url):
     token = None
     source = None
     
-    # Check if it's a direct ATS link
+    # 1. Direct Detection
     if "greenhouse.io" in url:
         source = "greenhouse"
         match = re.search(r'greenhouse\.io/([^/]+)', url)
@@ -77,50 +67,46 @@ def test_url(url):
         match = re.search(r'lever\.co/([^/]+)', url)
         if match: token = match.group(1)
     else:
-        # It's a Vanity URL -> Sniff it!
+        # 2. Sniffing
         source, token = sniff_token(url)
     
-    if not token:
-        print("❌ FAILED: Could not find company token.")
-        return
-
-    print(f"✅ Token Found: {token} ({source})")
-
-    # 2. Fetch API
-    print(f"⏳ Fetching API for {token}...")
+    # 3. Fallback: The "Guesser" 🧠
     jobs = []
     
-    # Helper to fetch with retries for "Guess" mode
-    def try_fetch_greenhouse(t):
-        url = f"https://boards-api.greenhouse.io/v1/boards/{t}/jobs?content=true"
-        r = requests.get(url, headers=get_headers())
-        if r.status_code == 200: return r.json().get('jobs', [])
-        return []
-
-    if source == "greenhouse":
-        jobs = try_fetch_greenhouse(token)
-    elif source == "lever":
-        api_url = f"https://api.lever.co/v0/postings/{token}?mode=json"
-        resp = requests.get(api_url, headers=get_headers())
-        if resp.status_code == 200: jobs = resp.json()
-    elif source == "guess":
-        # Try exact guess first
-        print(f"   Trying token: '{token}'...")
-        jobs = try_fetch_greenhouse(token)
-        if not jobs:
-            # Try typical variations (e.g. 'branchmetrics' instead of 'branch')
-            alt_token = token + "metrics" # Common pattern
-            print(f"   Trying alternate: '{alt_token}'...")
-            jobs = try_fetch_greenhouse(alt_token)
-            if jobs: token = alt_token # Update verified token
+    if token:
+        print(f"✅ Token Found: {token} ({source})")
+        if source == "greenhouse":
+            jobs = try_fetch_greenhouse(token)
+        elif source == "lever":
+            # Simple lever fetch
+            try:
+                r = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=get_headers())
+                if r.status_code == 200: jobs = r.json()
+            except: pass
+    else:
+        print("❌ Sniffing failed. Switching to 'Brute Force Guessing'...")
+        # Extract domain word: 'branch' from 'branch.io'
+        domain_match = re.search(r'https?://(www\.)?([^/.]+)', url)
+        if domain_match:
+            base_guess = domain_match.group(2)
+            guesses = [base_guess, base_guess + "metrics", base_guess + "io", base_guess + "inc", base_guess + "data"]
+            
+            for guess in guesses:
+                print(f"   🤔 Guessing token: '{guess}'...")
+                jobs = try_fetch_greenhouse(guess)
+                if jobs:
+                    print(f"   🎉 SUCCESS! The correct token is: '{guess}'")
+                    token = guess
+                    source = "greenhouse"
+                    break
 
     if not jobs:
-        print("❌ API Error: Could not fetch jobs. (Token might be wrong or board is private)")
+        print("❌ API Error: Could not fetch jobs. (Board is likely private or unguessable)")
         return
 
-    print(f"✅ API Success: Found {len(jobs)} active jobs for '{token}'.")
+    print(f"✅ API Success: Found {len(jobs)} active jobs.")
 
-    # 3. Find Specific Job ID
+    # 4. Find Specific Job ID
     job_id_match = re.search(r'gh_jid=(\d+)', url)
     if not job_id_match: job_id_match = re.search(r'jobs/(\d+)', url)
     
