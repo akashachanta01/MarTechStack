@@ -23,7 +23,6 @@ class Tool(models.Model):
     def color_class(self):
         """
         Returns a consistent Tailwind CSS class string based on the tool name.
-        UPDATED: Using 'Level 100' backgrounds for a softer, professional look.
         """
         colors = [
             'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -58,13 +57,17 @@ class Job(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     ]
+    
+    # 💥 NEW FIELD DEFINITION
+    WORK_ARRANGEMENT_CHOICES = [
+        ('remote', 'Remote'),
+        ('hybrid', 'Hybrid'),
+        ('onsite', 'On-site'),
+    ]
 
     title = models.CharField(max_length=200)
     company = models.CharField(max_length=200)
-    
-    # CHANGED: ImageField -> URLField to allow automated external links
     company_logo = models.URLField(max_length=500, blank=True, null=True)
-    
     location = models.CharField(max_length=200, blank=True, null=True)
     
     description = models.TextField()
@@ -72,7 +75,10 @@ class Job(models.Model):
     
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
-    remote = models.BooleanField(default=False)
+    
+    # 💥 REMOVED 'remote' BooleanField
+    # 💥 ADDED work_arrangement CharField
+    work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
     
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
     
@@ -90,7 +96,7 @@ class Job(models.Model):
     tags = models.CharField(max_length=200, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True) # You had this in another file, ensuring it's here
 
     def __str__(self):
         return f"{self.title} at {self.company}"
