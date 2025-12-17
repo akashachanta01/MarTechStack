@@ -16,7 +16,8 @@ from jobs.screener import MarTechScreener
 
 # 🚫 BLACKLIST
 BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job'}
-REMOTE_KEYWORDS = {'remote', 'anywhere', 'global', 'home office', 'work from home', 'wfh'}
+REMOTE_KEYWORDS = {'remote', 'anywhere', 'global', 'work from home', 'wfh'}
+HYBRID_KEYWORDS = {'hybrid', 'flexible', 'flex', 'part-time remote', 'in-office required', 'partial remote', 'blended'} # 💥 NEW
 
 class Command(BaseCommand):
     help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support + External Config'
@@ -81,34 +82,38 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
 
-    # --- LOCATION CLEANUP HELPER (Globally Aware) ---
+    # --- LOCATION CLEANUP HELPER (Globally Aware + Hybrid Detection) ---
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str:
-            return "Remote", True if is_remote_flag else False
+            return "On-site", 'onsite'
         
-        # Normalize: replace common separators and remove parentheses
+        # Normalize
         clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
-        
-        # Check for remote keywords in the location string
-        is_remote = is_remote_flag
-        if not is_remote:
-            for keyword in REMOTE_KEYWORDS:
-                if keyword in clean_loc.lower():
-                    is_remote = True
-                    break
-        
-        # Safely remove REMOTE keywords from the location string without breaking the structure
+        loc_lower = clean_loc.lower()
+        arrangement = 'onsite'
+
+        # 1. Determine base arrangement
+        if is_remote_flag or any(k in loc_lower for k in REMOTE_KEYWORDS):
+            arrangement = 'remote'
+
+        # 2. Check for HYBRID keywords (can override remote)
+        if any(k in loc_lower for k in HYBRID_KEYWORDS):
+            arrangement = 'hybrid'
+
+        # Safely remove work-style keywords from the actual location string
+        all_work_keywords = REMOTE_KEYWORDS.union(HYBRID_KEYWORDS).union({'onsite', 'remote'})
         location_parts = [
             part.strip() for part in clean_loc.split(',') 
-            if part.strip() and not any(k in part.strip().lower() for k in REMOTE_KEYWORDS)
+            if part.strip() and not any(k in part.strip().lower() for k in all_work_keywords)
         ]
         
         final_location = ", ".join(location_parts)
         
-        if not final_location and is_remote:
-            return "Remote", True
+        if not final_location:
+            # If all location parts were keywords, return the arrangement type as the location
+            return arrangement.capitalize(), arrangement
         
-        return final_location if final_location else "Various Locations", is_remote
+        return final_location, arrangement
 
     # --- SERPAPI ENGINE (Unchanged) ---
     def search_google(self, query):
@@ -161,7 +166,7 @@ class Command(BaseCommand):
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1))
 
-    # --- API WORKERS (UPDATED to use _clean_location) ---
+    # --- API WORKERS (UPDATED for work_arrangement) ---
 
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
@@ -177,7 +182,7 @@ class Command(BaseCommand):
                         if self.is_fresh(item.get('updated_at')):
                             raw_loc = item.get('location', {}).get('name')
                             is_remote_check = "remote" in (raw_loc or "").lower()
-                            clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+                            clean_loc, work_arrangement = self._clean_location(raw_loc, is_remote_check)
 
                             self.screen_and_upsert({
                                 "title": item.get('title'), 
@@ -185,7 +190,7 @@ class Command(BaseCommand):
                                 "location": clean_loc, 
                                 "description": item.get('content'), 
                                 "apply_url": item.get('absolute_url'),
-                                "remote": is_remote,
+                                "work_arrangement": work_arrangement, # 💥 Changed from "remote"
                                 "source": "Greenhouse"
                             })
                     return
@@ -202,7 +207,7 @@ class Command(BaseCommand):
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
                         is_remote_check = "remote" in (raw_loc or "").lower()
-                        clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+                        clean_loc, work_arrangement = self._clean_location(raw_loc, is_remote_check)
 
                         self.screen_and_upsert({
                             "title": item.get('text'), 
@@ -210,7 +215,7 @@ class Command(BaseCommand):
                             "location": clean_loc, 
                             "description": item.get('description'), 
                             "apply_url": item.get('hostedUrl'), 
-                            "remote": is_remote,
+                            "work_arrangement": work_arrangement, # 💥 Changed from "remote"
                             "source": "Lever"
                         })
         except: pass
@@ -226,7 +231,7 @@ class Command(BaseCommand):
                 for item in jobs:
                     raw_loc = item.get('location')
                     is_remote_check = item.get('isRemote', False)
-                    clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+                    clean_loc, work_arrangement = self._clean_location(raw_loc, is_remote_check)
                     
                     self.screen_and_upsert({
                         "title": item.get('title'),
@@ -234,7 +239,7 @@ class Command(BaseCommand):
                         "location": clean_loc,
                         "description": f"See {item.get('jobUrl')} for details.",
                         "apply_url": item.get('jobUrl'),
-                        "remote": is_remote,
+                        "work_arrangement": work_arrangement, # 💥 Changed from "remote"
                         "source": "Ashby"
                     })
         except: pass
@@ -250,7 +255,7 @@ class Command(BaseCommand):
                     if self.is_fresh(item.get('published_on')):
                         raw_loc = f"{item.get('city', '')}, {item.get('country', '')}"
                         is_remote_check = item.get('telecommuting', False)
-                        clean_loc, is_remote = self._clean_location(raw_loc, is_remote_check)
+                        clean_loc, work_arrangement = self._clean_location(raw_loc, is_remote_check)
 
                         self.screen_and_upsert({
                             "title": item.get('title'),
@@ -258,7 +263,7 @@ class Command(BaseCommand):
                             "location": clean_loc,
                             "description": item.get('description'),
                             "apply_url": item.get('url'),
-                            "remote": is_remote,
+                            "work_arrangement": work_arrangement, # 💥 Changed from "remote"
                             "source": "Workable"
                         })
         except: pass
@@ -273,7 +278,7 @@ class Command(BaseCommand):
         domain = f"{clean}.com"
         return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
 
-    # --- SCREENING AND UPSERT (Unchanged) ---
+    # --- SCREENING AND UPSERT (UPDATED for work_arrangement) ---
     def is_fresh(self, date_str):
         if not date_str: return True
         try:
@@ -304,7 +309,7 @@ class Command(BaseCommand):
             company=company,
             company_logo=logo_url,
             location=job_data.get("location", ""),
-            remote=job_data.get("remote", False),
+            work_arrangement=job_data.get("work_arrangement", "onsite"), # 💥 Changed from "remote"
             description=job_data.get("description", ""),
             apply_url=apply_url,
             role_type=signals.get("role_type", "full_time"),
