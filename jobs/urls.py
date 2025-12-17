@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.job_list, name='job_list'),
     
-    # New Post Job Routes
+    # Post Job Routes
     path('post-job/', views.post_job, name='post_job'),
     path('post-job/success/', views.post_job_success, name='post_job_success'),
     
