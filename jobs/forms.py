@@ -2,16 +2,16 @@ from django import forms
 from .models import Job, Tool
 
 class JobPostForm(forms.ModelForm):
+    # STRATEGY UPDATE: Simple 2-Tier Structure
     PLAN_CHOICES = [
-        ('standard', 'Standard Listing - $99'),
-        ('featured', 'Featured Listing - $149'),
-        ('premium', 'Premium Bundle - $199'),
+        ('free', 'Standard Listing - Free'),
+        ('featured', 'Featured Listing - $99'),
     ]
     
     plan = forms.ChoiceField(
         choices=PLAN_CHOICES, 
         widget=forms.HiddenInput(), 
-        initial='standard'
+        initial='free'
     )
 
     tools = forms.ModelMultipleChoiceField(
