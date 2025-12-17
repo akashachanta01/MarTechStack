@@ -152,7 +152,7 @@ def job_list(request):
 
         jobs = jobs.filter(search_q).distinct()
 
-        # C. Relevance Ranking (The Score) - NEW ENHANCEMENT
+        # C. Relevance Ranking (The Score)
         jobs = jobs.annotate(
             relevance=Case(
                 # Highest Score for Title Match
