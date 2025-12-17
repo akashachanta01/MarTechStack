@@ -1,310 +1,117 @@
 {% extends "jobs/base.html" %}
-{% block title %}Post a Job — MarTechStack{% endblock %}
+{% block title %}Post a Job — Reach the Best in MarTech{% endblock %}
 
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-12">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     
-    <div class="text-center mb-10">
-      <h1 class="text-3xl font-extrabold text-gray-900">Post a Role</h1>
-      <p class="mt-2 text-gray-600">Reach the best Marketing Ops professionals.</p>
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Hire your next <span class="text-indigo-600">MarTech expert</span>.</h1>
+      <p class="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">The #1 specialized board for Marketing Operations & Growth professionals.</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      
-      <div class="lg:col-span-2">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <form method="post" enctype="multipart/form-data" class="space-y-6" id="job-form">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-              <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6">
-                {{ form.non_field_errors }}
-              </div>
-            {% endif %}
-
-            <div>
-              <h3 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">The Basics</h3>
-              <div class="grid grid-cols-1 gap-6">
-                
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-1">Job Title</label>
-                  {{ form.title }}
-                  {{ form.title.errors }}
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-1">Company Name</label>
-                      {{ form.company }}
-                    </div>
-                    <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-1">Company Logo</label>
-                      {{ form.company_logo }}
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div>
-                     <label class="block text-sm font-semibold text-gray-700 mb-1">Location</label>
-                     {{ form.location }}
-                   </div>
-                   <div>
-                      <label class="block text-sm font-semibold text-gray-700 mb-1">Salary Range</label>
-                      {{ form.salary_range }}
-                   </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Job Type</label>
-                        {{ form.role_type }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Work Arrangement</label>
-                        <div class="mt-2 flex gap-6">
-                           {% for choice in form.work_arrangement %}
-                           <div class="flex items-center">
-                               {{ choice.tag }}
-                               <label for="{{ choice.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">{{ choice.choice_label }}</label>
-                           </div>
-                           {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mt-2">
-                    <input type="checkbox" id="feature-post" class="mt-1 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
-                    <div>
-                        <label for="feature-post" class="block text-sm font-bold text-gray-900 cursor-pointer">
-                            Highlight this post? (Example Feature)
-                        </label>
-                        <p class="text-xs text-gray-600">Adds a gold border and sticky status to your post.</p>
-                    </div>
-                </div>
-
-              </div>
-            </div>
-
-            <div class="pt-6">
-              <h3 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2 mb-4">The Details</h3>
-              
-              <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Application Link</label>
-                    {{ form.apply_url }}
-                    <p class="text-xs text-gray-500 mt-1">Link to Greenhouse, Lever, or your career page.</p>
-                </div>
-
-                <div>
-                   <label class="block text-sm font-semibold text-gray-700 mb-2">Tech Stack</label>
-                   <div class="h-48 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50 text-sm">
-                       {{ form.tools }}
-                   </div>
-                   <p class="text-xs text-gray-500 mt-1">Select the tools this role uses.</p>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 mb-1">Job Description</label>
-                  {{ form.description }}
-                </div>
-              </div>
-            </div>
-
-            <div class="pt-6">
-              <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-md transition-all text-lg">
-                Post Job for Review
-              </button>
-            </div>
-
-          </form>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="plan-card bg-white border-2 border-slate-200 rounded-2xl p-6 cursor-pointer transition-all hover:border-indigo-300 relative" data-plan="standard">
+            <h3 class="text-lg font-bold text-slate-900">Standard</h3>
+            <div class="text-3xl font-black mt-2 text-slate-900">$99</div>
+            <ul class="mt-4 space-y-2 text-sm text-slate-600">
+                <li>✅ 30 days live</li>
+                <li>✅ Distributed to RSS</li>
+            </ul>
+            <div class="mt-6 w-full py-2 text-center rounded-lg bg-slate-100 text-slate-600 font-bold text-sm select-btn">Select</div>
         </div>
-      </div>
 
-      <div class="hidden lg:block lg:col-span-1 sticky top-24">
-         <div class="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Live Preview</div>
-         
-         <div id="preview-card" class="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg transition-all duration-300">
-            <div class="flex items-start gap-4">
-              
-              <div class="flex-shrink-0 pt-1">
-                 <img id="preview-logo-img" src="" alt="Logo" class="hidden w-14 h-14 rounded-xl object-contain border border-gray-100 bg-white p-1">
-                 <div id="preview-logo-placeholder" class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-inner">
-                    <span id="preview-logo-text">?</span>
-                 </div>
-              </div>
+        <div class="plan-card bg-white border-2 border-indigo-500 rounded-2xl p-6 cursor-pointer transition-all shadow-lg scale-105 z-10 relative" data-plan="featured">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">Most Popular</span>
+            <h3 class="text-lg font-bold text-slate-900">Featured</h3>
+            <div class="text-3xl font-black mt-2 text-slate-900">$149</div>
+            <ul class="mt-4 space-y-2 text-sm text-slate-600">
+                <li>✅ Highlighted listing</li>
+                <li>✅ Shared on LinkedIn/Twitter</li>
+                <li>✅ Newsletter inclusion</li>
+            </ul>
+            <div class="mt-6 w-full py-2 text-center rounded-lg bg-indigo-600 text-white font-bold text-sm select-btn">Selected</div>
+        </div>
 
-              <div class="flex-grow min-w-0">
-                <h3 class="text-lg font-bold text-gray-900 leading-snug break-words" id="preview-title">
-                  Senior Marketing Ops Manager
-                </h3>
-                
-                <div class="text-sm font-medium text-gray-500 mt-1 mb-3">
-                  <span id="preview-company">Company Name</span> 
-                  <span class="text-gray-300 mx-1">•</span> 
-                  <span id="preview-location">Location</span>
+        <div class="plan-card bg-white border-2 border-slate-200 rounded-2xl p-6 cursor-pointer transition-all hover:border-indigo-300 relative" data-plan="premium">
+            <h3 class="text-lg font-bold text-slate-900">Premium</h3>
+            <div class="text-3xl font-black mt-2 text-slate-900">$199</div>
+            <ul class="mt-4 space-y-2 text-sm text-slate-600">
+                <li>✅ Pinned to top (7 days)</li>
+                <li>✅ Verified Badge</li>
+                <li>✅ All Featured benefits</li>
+            </ul>
+            <div class="mt-6 w-full py-2 text-center rounded-lg bg-slate-100 text-slate-600 font-bold text-sm select-btn">Select</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+      <form method="post" enctype="multipart/form-data" class="space-y-8" id="job-form">
+        {% csrf_token %}
+        {{ form.plan }} <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Job Title</label>{{ form.title }}</div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Company Name</label>{{ form.company }}</div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Company Logo URL</label>{{ form.company_logo }}</div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Location</label>{{ form.location }}</div>
+                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Salary Range</label>{{ form.salary_range }}</div>
                 </div>
-                
-                <div class="flex flex-wrap gap-2" id="preview-tags">
-                    <span id="preview-remote-tag" class="hidden inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        ● Remote
-                    </span>
-                    <span id="preview-salary-tag" class="hidden inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                        💰 <span id="preview-salary-text"></span>
-                    </span>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Work Arrangement</label>
+                    <div class="mt-3 flex gap-4">
+                        {% for choice in form.work_arrangement %}
+                            <label class="flex items-center px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500">
+                                {{ choice.tag }}
+                                <span class="ml-2 text-sm font-medium text-slate-700">{{ choice.choice_label }}</span>
+                            </label>
+                        {% endfor %}
                     </div>
-              </div>
+                </div>
             </div>
-
-            <div class="mt-6 pt-4 border-t border-gray-50 flex justify-end">
-                <button class="bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm opacity-50 cursor-not-allowed">
-                    Apply now
-                </button>
+            <div class="space-y-6">
+                <div><label class="block text-sm font-bold text-slate-700 mb-1">Application URL</label>{{ form.apply_url }}</div>
+                <div><label class="block text-sm font-bold text-slate-700 mb-2">Primary Tech Stack</label>
+                    <div class="h-44 overflow-y-auto border border-slate-200 rounded-xl p-4 bg-slate-50 text-sm grid grid-cols-2 gap-2">
+                        {{ form.tools }}
+                    </div>
+                </div>
             </div>
-         </div>
+        </div>
 
-         <div class="mt-6 bg-blue-50 text-blue-800 p-4 rounded-xl text-sm">
-            <strong>✨ Pro Tip:</strong> Detailed job descriptions with clear salary ranges get 2x more applicants.
-         </div>
+        <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1">Full Description</label>
+            {{ form.description }}
+        </div>
 
-      </div>
-
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-2xl shadow-xl transition-all text-xl">
+            Proceed to Payment
+        </button>
+      </form>
     </div>
   </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Inputs
-    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
-    const companyInput = document.getElementById('{{ form.company.id_for_label }}');
-    const locationInput = document.getElementById('{{ form.location.id_for_label }}');
-    const salaryInput = document.getElementById('{{ form.salary_range.id_for_label }}');
-    // NOTE: This JS still targets the old remote input, but the form field is now work_arrangement. 
-    // The visual preview will need manual update if you want it to reflect the radio button selection.
-    const remoteInput = document.getElementById('id_work_arrangement_0'); // Remote radio option for simple preview logic
-    const logoInput = document.getElementById('{{ form.company_logo.id_for_label }}');
-    const featureCheckbox = document.getElementById('feature-post');
-    const toolsInputs = document.querySelectorAll('input[name="tools"]');
+    const planCards = document.querySelectorAll('.plan-card');
+    const planInput = document.querySelector('input[name="plan"]');
 
-    // Preview Elements
-    const pTitle = document.getElementById('preview-title');
-    const pCompany = document.getElementById('preview-company');
-    const pLocation = document.getElementById('preview-location');
-    const pSalaryTag = document.getElementById('preview-salary-tag');
-    const pSalaryText = document.getElementById('preview-salary-text');
-    const pRemoteTag = document.getElementById('preview-remote-tag');
-    const pCard = document.getElementById('preview-card');
-    
-    // Logo Elements
-    const pLogoImg = document.getElementById('preview-logo-img');
-    const pLogoPlaceholder = document.getElementById('preview-logo-placeholder');
-    const pLogoText = document.getElementById('preview-logo-text');
-
-    // 1. Text Sync
-    function updateText(input, element, fallback) {
-        element.textContent = input.value || fallback;
-    }
-
-    if(titleInput) titleInput.addEventListener('input', () => updateText(titleInput, pTitle, 'Job Title'));
-    
-    if(companyInput) {
-        companyInput.addEventListener('input', () => {
-            updateText(companyInput, pCompany, 'Company');
-            if(!logoInput.files.length) pLogoText.textContent = (companyInput.value[0] || '?').toUpperCase();
-        });
-    }
-    
-    if(locationInput) locationInput.addEventListener('input', () => updateText(locationInput, pLocation, 'Location'));
-
-    // 2. Salary Tag Logic
-    if(salaryInput) {
-        salaryInput.addEventListener('input', () => {
-            if (salaryInput.value) {
-                pSalaryText.textContent = salaryInput.value;
-                pSalaryTag.classList.remove('hidden');
-            } else {
-                pSalaryTag.classList.add('hidden');
-            }
-        });
-    }
-
-    // 3. Remote Tag Logic (Updated to check for the first radio button)
-    const workArrangementInputs = document.querySelectorAll('input[name="work_arrangement"]');
-    if(workArrangementInputs) {
-        workArrangementInputs.forEach(input => {
-            input.addEventListener('change', () => {
-                const isRemote = document.getElementById('id_work_arrangement_0').checked;
-                if (isRemote) {
-                    pRemoteTag.classList.remove('hidden');
-                } else {
-                    pRemoteTag.classList.add('hidden');
-                }
+    planCards.forEach(card => {
+        card.addEventListener('click', () => {
+            planCards.forEach(c => {
+                c.classList.remove('border-indigo-500', 'shadow-lg', 'scale-105', 'z-10');
+                c.classList.add('border-slate-200');
+                c.querySelector('.select-btn').className = "mt-6 w-full py-2 text-center rounded-lg bg-slate-100 text-slate-600 font-bold text-sm select-btn";
+                c.querySelector('.select-btn').innerText = "Select";
             });
+            card.classList.add('border-indigo-500', 'shadow-lg', 'scale-105', 'z-10');
+            card.classList.remove('border-slate-200');
+            card.querySelector('.select-btn').className = "mt-6 w-full py-2 text-center rounded-lg bg-indigo-600 text-white font-bold text-sm select-btn";
+            card.querySelector('.select-btn').innerText = "Selected";
+            planInput.value = card.dataset.plan;
         });
-    }
-    
-
-    // 4. Logo Preview (File Reader)
-    if(logoInput) {
-        logoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    pLogoImg.src = e.target.result;
-                    pLogoImg.classList.remove('hidden');
-                    pLogoPlaceholder.classList.add('hidden');
-                }
-                reader.readAsDataURL(file);
-            } else {
-                pLogoImg.classList.add('hidden');
-                pLogoPlaceholder.classList.remove('hidden');
-            }
-        });
-    }
-
-    // 5. Highlight/Feature Toggle
-    if(featureCheckbox) {
-        featureCheckbox.addEventListener('change', () => {
-            if(featureCheckbox.checked) {
-                pCard.classList.add('border-amber-400', 'bg-amber-50');
-                pCard.classList.remove('bg-white', 'border-gray-200');
-            } else {
-                pCard.classList.remove('border-amber-400', 'bg-amber-50');
-                pCard.classList.add('bg-white', 'border-gray-200');
-            }
-        });
-    }
-    
-    // 6. Tech Stack Pills (Checkboxes)
-    const tagsContainer = document.getElementById('preview-tags');
-    function updateTechStack() {
-        // Remove existing dynamic tech tags (keep remote/salary)
-        const existingPills = tagsContainer.querySelectorAll('.tech-pill');
-        existingPills.forEach(el => el.remove());
-
-        // Add checked ones
-        let count = 0;
-        toolsInputs.forEach(checkbox => {
-            if(checkbox.checked && count < 4) { // Limit to 4 for preview
-                const label = checkbox.parentElement.textContent.trim();
-                const span = document.createElement('span');
-                span.className = 'tech-pill inline-flex items-center px-3 py-1 rounded-md text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100';
-                span.textContent = label;
-                tagsContainer.appendChild(span);
-                count++;
-            }
-        });
-    }
-
-    // Attach listeners to all tool checkboxes
-    if(toolsInputs) {
-        toolsInputs.forEach(checkbox => {
-            checkbox.addEventListener('change', updateTechStack);
-        });
-    }
-
+    });
 });
 </script>
 {% endblock %}
