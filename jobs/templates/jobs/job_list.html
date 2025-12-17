@@ -19,18 +19,11 @@
                 <input type="text" name="l" value="{{ location_filter }}" placeholder="City, state, or 'Remote'"
                        class="w-full border-none focus:ring-0 text-base p-0" />
             </div>
-
-            <select name="arrangement" class="hidden">
-                <option value="">Any</option>
-                <option value="remote" {% if work_arrangement_filter == "remote" %}selected{% endif %}>Remote</option>
-                <option value="hybrid" {% if work_arrangement_filter == "hybrid" %}selected{% endif %}>Hybrid</option>
-                <option value="onsite" {% if work_arrangement_filter == "onsite" %}selected{% endif %}>On-site</option>
-            </select>
             
             <div class="flex items-center gap-2 flex-shrink-0">
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-base font-bold px-6 py-3 rounded-lg transition shadow-md">Search</button>
                 
-                {% if query or location_filter or work_arrangement_filter or vendor_filter %}
+                {% if query or location_filter or vendor_filter %}
                 <a href="{% url 'job_list' %}" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-base font-bold px-4 py-3 rounded-lg transition shadow-md">
                     Clear
                 </a>
@@ -45,24 +38,15 @@
                 {{ stack.name }} <span class="ml-1 opacity-70">({{ stack.count }})</span>
             </a>
             {% endfor %}
-            
-            {% if vendor_filter and not query and not location_filter and not work_arrangement_filter %}
-            <a href="{% url 'job_list' %}" class="inline-flex items-center ml-4 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 hover:bg-red-100 text-red-700 transition">
-                Clear Filters
-            </a>
-            {% endif %}
         </div>
-        
     </div>
 </div>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 space-y-3">
-    
     {% for job in jobs %}
     <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.005] transition-all duration-300">
         <div class="flex items-start justify-between">
             <div class="flex items-start gap-3">
-                
                 <div class="flex-shrink-0 pt-1">
                     {% if job.company_logo %}
                         <img src="{{ job.company_logo }}" alt="{{ job.company }} Logo" class="w-8 h-8 rounded-lg object-contain border border-gray-100 bg-white p-1 shadow-sm">
@@ -85,7 +69,6 @@
                     </div>
                     
                     <div class="flex items-center gap-2 text-sm text-slate-600 font-medium">
-                        
                         <div class="flex items-center gap-1">
                             <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             <span class="text-sm">{{ job.location|default:"Worldwide" }}</span>
@@ -98,21 +81,7 @@
                         </div>
                         {% endif %}
                         
-                        {% if job.work_arrangement == 'remote' %}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
-                            Remote
-                        </span>
-                        {% elif job.work_arrangement == 'hybrid' %}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700">
-                            Hybrid
-                        </span>
-                        {% elif job.work_arrangement == 'onsite' %}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700">
-                            On-site
-                        </span>
-                        {% endif %}
-                        
-                    </div>
+                        </div>
                     
                     <div class="mt-3 flex flex-wrap gap-1.5">
                         {% for tool in job.tools.all|slice:":4" %}
@@ -132,34 +101,16 @@
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm transition">
                     Apply Now
                 </a>
-                </div>
+            </div>
         </div>
     </div>
     {% empty %}
     <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
         <p class="text-lg font-semibold text-gray-700">No jobs match your criteria.</p>
-        <p class="text-sm text-gray-500 mt-2">Try searching without filters or check back later.</p>
         <a href="{% url 'job_list' %}" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
             Clear All Filters
         </a>
     </div>
     {% endfor %}
-
-    {% if jobs.paginator.num_pages > 1 %}
-    <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-        <div class="text-sm text-gray-600">Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</div>
-        <div class="flex gap-2">
-            {% if jobs.has_previous %}
-                <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm"
-                   href="?page={{ jobs.previous_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&arrangement={{ work_arrangement_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Prev</a>
-            {% endif %}
-            {% if jobs.has_next %}
-                <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm"
-                   href="?page={{ jobs.next_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&arrangement={{ work_arrangement_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Next</a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
 </div>
 {% endblock %}
