@@ -1,3 +1,6 @@
+import stripe
+import json
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Case, When, Value, IntegerField
@@ -5,12 +8,17 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
 from django.utils.text import slugify
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
 
-# [KEEP YOUR EXISTING TOOL_MAPPING HERE - OMITTED FOR BREVITY]
+# Configure Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# [KEEP EXISTING TOOL_MAPPING]
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
@@ -21,7 +29,7 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
-    # [KEEP EXISTING JOB_LIST CODE UNCHANGED]
+    # [KEEP EXISTING JOB_LIST LOGIC - NO CHANGES NEEDED HERE]
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -93,23 +101,16 @@ def post_job(request):
             plan = form.cleaned_data.get('plan')
             job.plan_name = plan
             
-            # STRATEGY LOGIC:
-            if plan == 'featured':
-                job.is_featured = True
-                job.is_pinned = True
-                job.screening_status = 'approved' # Auto-approve Featured
-                job.is_active = True 
-            else:
-                job.is_featured = False
-                job.is_pinned = False
-                job.screening_status = 'pending' # Review Free
-                job.is_active = False 
-                
-            job.tags = f"User Submission: {plan}" 
+            # 1. ALWAYS SAVE AS PENDING/INACTIVE FIRST (Safety)
+            job.is_featured = False
+            job.is_pinned = False
+            job.screening_status = 'pending'
+            job.is_active = False 
+            job.tags = f"User Submission: {plan}"
             job.save()
             form.save_m2m()
-            
-            # PROCESS NEW CUSTOM TOOLS
+
+            # Process New Tools
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
@@ -122,12 +123,81 @@ def post_job(request):
                     job.tools.add(tool)
 
             cache.delete('popular_tech_stacks')
+
+            # 2. IF FEATURED -> REDIRECT TO STRIPE
+            if plan == 'featured':
+                try:
+                    checkout_session = stripe.checkout.Session.create(
+                        payment_method_types=['card'],
+                        line_items=[{
+                            'price_data': {
+                                'currency': 'usd',
+                                'unit_amount': 9900, # $99.00
+                                'product_data': {
+                                    'name': 'Featured Job Post',
+                                    'description': f'Premium listing for {job.title} at {job.company}',
+                                },
+                            },
+                            'quantity': 1,
+                        }],
+                        mode='payment',
+                        success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}',
+                        cancel_url=settings.DOMAIN_URL + '/post-job/',
+                        metadata={
+                            'job_id': job.id, # CRITICAL: We use this to find the job later
+                            'plan': 'featured'
+                        }
+                    )
+                    return redirect(checkout_session.url)
+                except Exception as e:
+                    # Fallback if Stripe fails
+                    print(f"Stripe Error: {e}")
+                    return redirect('/post-job/success/?error=payment_failed')
             
-            # UPDATED REDIRECT: Pass the plan type to the success page
-            return redirect(f"/post-job/success/?plan={plan}")
+            # 3. IF FREE -> DIRECT SUCCESS
+            return redirect('/post-job/success/?plan=free')
     else:
         form = JobPostForm()
     return render(request, 'jobs/post_job.html', {'form': form})
+
+# NEW: STRIPE WEBHOOK HANDLER
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return HttpResponse(status=400)
+
+    # Handle the event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        
+        # Retrieve the job_id from metadata
+        job_id = session.get('metadata', {}).get('job_id')
+        
+        if job_id:
+            try:
+                job = Job.objects.get(id=job_id)
+                # ACTIVATE THE JOB
+                job.is_featured = True
+                job.is_pinned = True
+                job.screening_status = 'approved'
+                job.is_active = True
+                job.save()
+                print(f"✅ PAYMENT SUCCESS: Job {job_id} is now LIVE & FEATURED.")
+                cache.delete('popular_tech_stacks')
+            except Job.DoesNotExist:
+                print(f"❌ ERROR: Job {job_id} not found during webhook.")
+
+    return HttpResponse(status=200)
 
 def post_job_success(request):
     return render(request, 'jobs/post_job_success.html')
