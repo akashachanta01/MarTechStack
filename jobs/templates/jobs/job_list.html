@@ -55,8 +55,15 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 space-y-3">
     
     {% for job in jobs %}
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.005] hover:bg-indigo-50/30 transition-all duration-300">
-        <div class="flex items-start justify-between">
+    <div class="{% if job.is_featured %}bg-amber-50 border-amber-200{% else %}bg-white border-slate-200{% endif %} border rounded-xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.005] transition-all duration-300 relative overflow-hidden group">
+        
+        {% if job.is_featured %}
+        <div class="absolute top-0 right-0 w-16 h-16 pointer-events-none overflow-hidden">
+            <div class="absolute top-[10px] right-[-25px] w-[100px] h-[20px] bg-amber-400/20 rotate-45 transform"></div>
+        </div>
+        {% endif %}
+
+        <div class="flex items-start justify-between relative z-10">
             <div class="flex items-start gap-3">
                 
                 <div class="flex-shrink-0 pt-1">
@@ -70,8 +77,13 @@
                 </div>
                 
                 <div class="flex-grow min-w-0">
-                    <h2 class="text-lg font-bold text-slate-900 leading-tight">
+                    <h2 class="text-lg font-bold text-slate-900 leading-tight flex items-center gap-2">
                         <a href="{{ job.apply_url }}" target="_blank" rel="noreferrer" class="hover:text-indigo-600">{{ job.title }}</a>
+                        {% if job.is_featured %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide">
+                                Featured
+                            </span>
+                        {% endif %}
                     </h2>
                     
                     <div class="text-sm text-slate-500 mt-0.5 mb-1.5">
