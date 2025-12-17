@@ -126,7 +126,7 @@ def job_list(request):
                     relevant_tool_ids.append(tool.id)
             jobs = jobs.filter(tools__id__in=relevant_tool_ids).distinct().order_by("-created_at")
 
-    # --- 2. ENHANCED TEXT SEARCH ---
+    # --- 2. ENHANCED TEXT SEARCH (Relevance Scoring Implemented Here) ---
     elif query:
         # A. Basic Text Search
         search_q = (
@@ -136,7 +136,7 @@ def job_list(request):
             | Q(tools__name__icontains=query)
         )
 
-        # B. Smart Vendor Expansion (The Enhancement)
+        # B. Smart Vendor Expansion
         query_lower = query.lower()
         matching_tool_ids = []
         
@@ -152,13 +152,16 @@ def job_list(request):
 
         jobs = jobs.filter(search_q).distinct()
 
-        # C. Relevance Ranking (The Score)
+        # C. Relevance Ranking (The Score) - NEW ENHANCEMENT
         jobs = jobs.annotate(
             relevance=Case(
+                # Highest Score for Title Match
                 When(title__icontains=query, then=Value(10)),
-                When(tools__name__icontains=query, then=Value(5)),
-                When(company__icontains=query, then=Value(5)),
-                default=Value(1),
+                # Medium Score for Company or Tool Match
+                When(Q(company__icontains=query) | Q(tools__name__icontains=query), then=Value(5)),
+                # Base Score for Description Match
+                When(description__icontains=query, then=Value(1)),
+                default=Value(0),
                 output_field=IntegerField(),
             )
         ).order_by('-relevance', '-created_at') # Sort by Score, then Date
@@ -167,7 +170,7 @@ def job_list(request):
     else:
         jobs = jobs.order_by("-created_at")
 
-    # --- 3. OTHER FILTERS (UPDATED) ---
+    # --- 3. OTHER FILTERS ---
     if location_query:
         if "remote" in location_query.lower() or "hybrid" in location_query.lower():
             # If search query contains remote/hybrid, search work_arrangement OR location
