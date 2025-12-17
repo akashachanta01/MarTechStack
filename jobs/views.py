@@ -43,7 +43,6 @@ def job_list(request):
             )
         )
     
-    # Sorting by Pin Status first, then Relevance/Date
     jobs = jobs.order_by('-is_pinned', '-created_at')
 
     if location_query:
@@ -55,14 +54,34 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # Cached Tech Stacks logic
-    popular_tech_stacks = cache.get('popular_tech_stacks', [])
+    # --- RESTORED TECH STACK AGGREGATION LOGIC ---
+    popular_tech_stacks = cache.get('popular_tech_stacks')
+    if popular_tech_stacks is None:
+        pairs = Tool.objects.filter(
+            jobs__is_active=True, 
+            jobs__screening_status='approved'
+        ).values_list('name', 'jobs__id')
+
+        vendor_jobs = defaultdict(set)
+        for tool_name, job_id in pairs:
+            clean_name = tool_name.lower()
+            group_name = TOOL_MAPPING.get(clean_name, tool_name) 
+            vendor_jobs[group_name].add(job_id)
+
+        stats_list = []
+        for group, job_ids in vendor_jobs.items():
+            if len(job_ids) > 0:
+                stats_list.append({'name': group, 'count': len(job_ids)})
+        
+        popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:10]
+        cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, 
         "query": query, 
         "location_filter": location_query,
-        "popular_tech_stacks": popular_tech_stacks
+        "popular_tech_stacks": popular_tech_stacks,
+        "vendor_filter": vendor_query,
     })
 
 def post_job(request):
@@ -71,8 +90,6 @@ def post_job(request):
         if form.is_valid():
             job = form.save(commit=False)
             plan = form.cleaned_data.get('plan')
-            
-            # Map plan selection to model fields
             job.plan_name = plan
             if plan == 'featured':
                 job.is_featured = True
