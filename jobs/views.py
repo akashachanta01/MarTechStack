@@ -22,7 +22,6 @@ TOOL_MAPPING = {
 
 def job_list(request):
     # [KEEP EXISTING JOB_LIST CODE UNCHANGED]
-    # ... (Copy the exact job_list function from your previous working version)
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -98,29 +97,24 @@ def post_job(request):
             if plan == 'featured':
                 job.is_featured = True
                 job.is_pinned = True
-                job.screening_status = 'approved' # Simulating payment success
+                job.screening_status = 'approved' # Auto-approve Featured
                 job.is_active = True 
             else:
                 job.is_featured = False
                 job.is_pinned = False
-                job.screening_status = 'pending'
+                job.screening_status = 'pending' # Review Free
                 job.is_active = False 
                 
             job.tags = f"User Submission: {plan}" 
             job.save()
-            
-            # Save selected tools (M2M)
             form.save_m2m()
             
             # PROCESS NEW CUSTOM TOOLS
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
-                # Get or Create a 'User Submitted' category
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
-                
                 tool_names = [t.strip() for t in new_tools_text.split(',') if t.strip()]
                 for name in tool_names:
-                    # Create tool if not exists
                     tool, created = Tool.objects.get_or_create(
                         name__iexact=name, 
                         defaults={'name': name, 'slug': slugify(name), 'category': category}
@@ -128,18 +122,22 @@ def post_job(request):
                     job.tools.add(tool)
 
             cache.delete('popular_tech_stacks')
-            return redirect('post_job_success')
+            
+            # UPDATED REDIRECT: Pass the plan type to the success page
+            return redirect(f"/post-job/success/?plan={plan}")
     else:
         form = JobPostForm()
     return render(request, 'jobs/post_job.html', {'form': form})
 
-# [KEEP OTHER VIEWS: post_job_success, subscribe, review_queue, review_action UNCHANGED]
-def post_job_success(request): return render(request, 'jobs/post_job_success.html')
-def subscribe(request): 
+def post_job_success(request):
+    return render(request, 'jobs/post_job_success.html')
+
+def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email: Subscriber.objects.get_or_create(email=email)
     return redirect("job_list")
+
 @staff_member_required
 def review_queue(request):
     status = request.GET.get("status", "pending").strip().lower()
@@ -151,6 +149,7 @@ def review_queue(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
     return render(request, "jobs/review_queue.html", {"jobs": jobs_page, "status": status, "q": q})
+
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
