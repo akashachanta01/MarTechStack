@@ -9,91 +9,14 @@ from collections import defaultdict
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
 
-# --- COMPREHENSIVE VENDOR & CATEGORY GROUPING ---
-# All keys must be lowercase for reliable matching.
+# --- VENDOR & CATEGORY GROUPING ---
 TOOL_MAPPING = {
-    # Salesforce
-    'salesforce marketing cloud': 'Salesforce',
-    'sfmc': 'Salesforce',
-    'salesforce mc': 'Salesforce',
-    'marketing cloud': 'Salesforce',
-    'pardot': 'Salesforce',
-    'marketing cloud account engagement': 'Salesforce',
-    'salesforce cdp': 'Salesforce',
-    'data cloud': 'Salesforce',
-    'salesforce crm': 'Salesforce',
-    'salesforce': 'Salesforce',
-
-    # Adobe
-    'marketo': 'Adobe',
-    'marketo engage': 'Adobe',
-    'adobe experience cloud': 'Adobe',
-    'adobe experience platform': 'Adobe',
-    'aep': 'Adobe',
-    'adobe target': 'Adobe',
-    'adobe analytics': 'Adobe',
-    'adobe campaign': 'Adobe',
-    'adobe journey optimizer': 'Adobe',
-    'ajo': 'Adobe',
-    'magento': 'Adobe',
-    'workfront': 'Adobe',
-    'adobe launch': 'Adobe',
-    'adobe': 'Adobe',
-
-    # HubSpot
-    'hubspot crm': 'HubSpot',
-    'hubspot marketing hub': 'HubSpot',
-    'hubspot operations hub': 'HubSpot',
-    'hubspot': 'HubSpot',
-
-    # Google
-    'google analytics': 'Google',
-    'ga4': 'Google',
-    'google tag manager': 'Google',
-    'gtm': 'Google',
-    'google ads': 'Google',
-    'dv360': 'Google',
-    'looker': 'Google',
-    'bigquery': 'Google',
-
-    # Functional Categories (Grouping by stack type)
-    'twilio segment': 'Data Stack',
-    'segment': 'Data Stack',
-    'segment.io': 'Data Stack',
-    'tealium': 'Data Stack',
-    'tealium iq': 'Data Stack',
-    'mparticle': 'Data Stack',
-    'hightouch': 'Data Stack',
-    'census': 'Data Stack',
-    'snowflake': 'Data Stack',
-    'sql': 'Data Stack',
-    'dbt': 'Data Stack',
-    'fivetran': 'Data Stack',
-
-    'outreach': 'Sales Tech',
-    'salesloft': 'Sales Tech',
-    'gong': 'Sales Tech',
-    'apollo': 'Sales Tech',
-    'zoominfo': 'Sales Tech',
-
-    'braze': 'Automation',
-    'iterable': 'Automation',
-    'klaviyo': 'Automation',
-    'customer.io': 'Automation',
-    'eloqua': 'Automation',
-    'activecampaign': 'Automation',
-    'mailchimp': 'Automation',
-
-    'shopify': 'Commerce',
-    'shopify plus': 'Commerce',
-    'bigcommerce': 'Commerce',
-    'woocommerce': 'Commerce',
-
-    'the trade desk': 'AdTech',
-    'stackadapt': 'AdTech',
-    'facebook ads': 'AdTech',
-    'linkedin ads': 'AdTech',
-    'bizible': 'Analytics',
+    'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
+    'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
+    'hubspot': 'HubSpot', 'google analytics': 'Google', 'ga4': 'Google',
+    'segment': 'Data Stack', 'tealium': 'Data Stack', 'snowflake': 'Data Stack',
+    'outreach': 'Sales Tech', 'salesloft': 'Sales Tech', 'braze': 'Automation',
+    'shopify': 'Commerce', 'the trade desk': 'AdTech'
 }
 
 def job_list(request):
@@ -111,7 +34,6 @@ def job_list(request):
         if vendor_query == "General":
             jobs = jobs.filter(tools__isnull=True)
         else:
-            # We must find all tools that map to this vendor name
             matching_tool_ids = []
             for tool in Tool.objects.all():
                 if TOOL_MAPPING.get(tool.name.lower(), tool.name) == vendor_query:
@@ -148,10 +70,8 @@ def job_list(request):
     jobs_page = paginator.get_page(page_number)
 
     # --- AGGREGATION LOGIC FOR TRENDING SECTION ---
-    # We group tools into vendors using TOOL_MAPPING
     popular_tech_stacks = cache.get('popular_tech_stacks')
     if popular_tech_stacks is None:
-        # Get all approved jobs and their associated tools
         pairs = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__screening_status='approved'
@@ -160,8 +80,6 @@ def job_list(request):
         vendor_jobs = defaultdict(set)
         for tool_name, job_id in pairs:
             clean_name = tool_name.lower()
-            # If the tool is in our map (e.g. 'marketo' -> 'Adobe'), use the group name.
-            # Otherwise, use the tool's original name.
             group_name = TOOL_MAPPING.get(clean_name, tool_name) 
             vendor_jobs[group_name].add(job_id)
 
@@ -170,7 +88,6 @@ def job_list(request):
             if len(job_ids) > 0:
                 stats_list.append({'name': group, 'count': len(job_ids)})
         
-        # Sort by most jobs first and take top 10
         popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:10]
         cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
 
@@ -188,20 +105,25 @@ def post_job(request):
         if form.is_valid():
             job = form.save(commit=False)
             plan = form.cleaned_data.get('plan')
-            
             job.plan_name = plan
+            
+            # STRATEGY LOGIC:
             if plan == 'featured':
                 job.is_featured = True
-            elif plan == 'premium':
-                job.is_featured = True
                 job.is_pinned = True
+                # Simulate "Paid & Approved" for demo
+                job.screening_status = 'approved' 
+                job.is_active = True 
+            else:
+                # Free Tier -> Standard Review Queue
+                job.is_featured = False
+                job.is_pinned = False
+                job.screening_status = 'pending'
+                job.is_active = False 
                 
-            job.screening_status = 'approved' 
-            job.is_active = True 
             job.tags = f"User Submission: {plan}" 
             job.save()
             form.save_m2m()
-            # Clear cache so the new job reflects in trending
             cache.delete('popular_tech_stacks')
             return redirect('post_job_success')
     else:
