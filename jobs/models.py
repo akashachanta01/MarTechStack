@@ -21,9 +21,6 @@ class Tool(models.Model):
 
     @property
     def color_class(self):
-        """
-        Returns a consistent Tailwind CSS class string based on the tool name.
-        """
         colors = [
             'bg-emerald-100 text-emerald-700 border-emerald-200',
             'bg-amber-100 text-amber-800 border-amber-200',
@@ -56,7 +53,6 @@ class Job(models.Model):
         ('rejected', 'Rejected'),
     ]
     
-    # 💥 NEW FIELD DEFINITION
     WORK_ARRANGEMENT_CHOICES = [
         ('remote', 'Remote'),
         ('hybrid', 'Hybrid'),
@@ -67,31 +63,25 @@ class Job(models.Model):
     company = models.CharField(max_length=200)
     company_logo = models.URLField(max_length=500, blank=True, null=True)
     location = models.CharField(max_length=200, blank=True, null=True)
-    
     description = models.TextField()
     apply_url = models.URLField(max_length=500)
-    
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
-    
-    # 💥 CHANGED: Replaced remote (bool) with work_arrangement (char)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
-    
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
     
-    # Screening fields
+    # Screening & Status
     screening_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
-    # AI/Scraper Fields
-    screening_score = models.FloatField(blank=True, null=True)
-    screening_reason = models.TextField(blank=True, default="")
-    screening_details = models.JSONField(blank=True, default=dict)
+    # Monetization Features
+    is_featured = models.BooleanField(default=False)
+    is_pinned = models.BooleanField(default=False)
+    plan_name = models.CharField(max_length=50, blank=True, null=True)
     
-    # Simple tagging
+    # Audit & Tracking
     tags = models.CharField(max_length=200, blank=True, null=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -99,7 +89,7 @@ class Job(models.Model):
         return f"{self.title} at {self.company}"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-is_pinned', '-created_at']
         indexes = [
             models.Index(fields=['is_active', 'screening_status']),
             models.Index(fields=['created_at']),
@@ -128,7 +118,6 @@ class BlockRule(models.Model):
     def __str__(self):
         return f"{self.rule_type}: {self.value}"
 
-# --- PROXY MODEL FOR ADMIN ---
 class UserSubmission(Job):
     class Meta:
         proxy = True
