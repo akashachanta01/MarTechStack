@@ -195,8 +195,9 @@ def job_list(request):
 
     # --- ⚡️ CACHED TECH STACK AGGREGATION ---
     popular_tech_stacks = cache.get('popular_tech_stacks')
+    general_jobs_count = cache.get('general_jobs_count')
 
-    if not popular_tech_stacks:
+    if not popular_tech_stacks or general_jobs_count is None:
         pairs = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__screening_status='approved'
@@ -234,7 +235,11 @@ def job_list(request):
             })
 
         popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:10]
+        
+        # Cache results for 1 hour
         cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
+        cache.set('general_jobs_count', general_jobs_count, 3600)
+
 
     context = {
         "jobs": jobs_page,
@@ -246,14 +251,10 @@ def job_list(request):
         "category_filter": category_filter,
         "role_type_filter": role_type_filter,
         "popular_tech_stacks": popular_tech_stacks,
+        "general_jobs_count": general_jobs_count,
         "categories": Category.objects.all().order_by("name"),
     }
     return render(request, "jobs/job_list.html", context)
-
-
-def job_detail(request, job_id):
-    job = get_object_or_404(Job, id=job_id, is_active=True, screening_status="approved")
-    return render(request, "jobs/job_detail.html", {"job": job})
 
 
 def post_job(request):
