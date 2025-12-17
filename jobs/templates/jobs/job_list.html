@@ -1,41 +1,179 @@
-<div class="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5 text-xs font-medium text-slate-500">
-                    <div class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        <span>{{ job.location|default:"Worldwide" }}</span>
+{% extends "jobs/base.html" %}
+{% block title %}MarTechStack — The #1 Job Board for Marketing Ops{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Search Keywords</label>
+                <input type="text" name="q" value="{{ query }}" placeholder="e.g. Marketo, Segment, MOPs"
+                       class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Location</label>
+                <input type="text" name="l" value="{{ location_filter }}" placeholder="City, State"
+                       class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" />
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Work Arrangement</label>
+                <select name="arrangement" class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                    <option value="">Any</option>
+                    <option value="remote" {% if work_arrangement_filter == "remote" %}selected{% endif %}>Remote</option>
+                    <option value="hybrid" {% if work_arrangement_filter == "hybrid" %}selected{% endif %}>Hybrid</option>
+                    <option value="onsite" {% if work_arrangement_filter == "onsite" %}selected{% endif %}>On-site</option>
+                </select>
+            </div>
+            <div class="md:col-span-4 flex gap-3">
+                <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-3 text-white font-semibold hover:bg-indigo-700 transition w-full md:w-auto">Search Jobs</button>
+                <a href="{% url 'job_list' %}" class="px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold w-full md:w-auto text-center">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        <div class="lg:col-span-2 space-y-4">
+            
+            {% for job in jobs %}
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200
+                {% if job.tags and 'user submission' in job.tags|lower %}border-indigo-400{% endif %}">
+                
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 pt-1">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" alt="{{ job.company }} Logo" class="w-14 h-14 rounded-xl object-contain border border-gray-100 bg-white p-1">
+                        {% else %}
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-inner">
+                                {{ job.company|slice:":1"|default:"?"|upper }}
+                            </div>
+                        {% endif %}
                     </div>
-                    {% if job.salary_range %}
-                    <div class="flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span>{{ job.salary_range }}</span>
-                    </div>
-                    {% endif %}
                     
-                    {% if job.work_arrangement == 'remote' %}
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        Remote
-                    </span>
-                    {% elif job.work_arrangement == 'hybrid' %}
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                        Hybrid
-                    </span>
+                    <div class="flex-grow min-w-0">
+                        <h2 class="text-xl font-bold text-slate-900 leading-snug break-words hover:text-indigo-600 transition">
+                            <a href="{% url 'job_detail' job.id %}">{{ job.title }}</a>
+                        </h2>
+                        
+                        <div class="text-sm font-medium text-slate-500 mt-1 mb-2">
+                            {{ job.company }} 
+                            <span class="text-slate-300 mx-1">•</span> 
+                            {{ job.role_type|default:'Full-time'|capfirst }}
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 mt-1.5 text-xs font-medium text-slate-500">
+                            <div class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span>{{ job.location|default:"Worldwide" }}</span>
+                            </div>
+                            
+                            {% if job.salary_range %}
+                            <div class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ job.salary_range }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if job.work_arrangement == 'remote' %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                Remote
+                            </span>
+                            {% elif job.work_arrangement == 'hybrid' %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                Hybrid
+                            </span>
+                            {% elif job.work_arrangement == 'onsite' %}
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-100">
+                                On-site
+                            </span>
+                            {% endif %}
+                            
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            {% for tool in job.tools.all|slice:":4" %}
+                                <span class="{{ tool.color_class }} inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border-2">
+                                    {{ tool.name }}
+                                </span>
+                            {% empty %}
+                                <span class="text-xs font-medium text-slate-400">MarTech Generalist Role</span>
+                            {% endfor %}
+                            {% if job.tools.count > 4 %}
+                                <span class="text-xs font-medium text-slate-400">+{{ job.tools.count|add:"-4" }} more</span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-50 flex justify-end">
+                    <a href="{{ job.apply_url }}" target="_blank" rel="noreferrer"
+                        class="bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm hover:bg-indigo-700 transition">
+                        Apply now &nearr;
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm text-center">
+                <p class="text-lg font-semibold text-gray-700">No jobs match your criteria.</p>
+                <p class="text-sm text-gray-500 mt-2">Try clearing your filters or searching a broader term.</p>
+                <a href="{% url 'job_list' %}" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Clear All Filters
+                </a>
+            </div>
+            {% endfor %}
+
+            {% if jobs.paginator.num_pages > 1 %}
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div class="text-sm text-gray-600">Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</div>
+                <div class="flex gap-2">
+                    {% if jobs.has_previous %}
+                        <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm"
+                           href="?page={{ jobs.previous_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&arrangement={{ work_arrangement_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Prev</a>
+                    {% endif %}
+                    {% if jobs.has_next %}
+                        <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm"
+                           href="?page={{ jobs.next_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&arrangement={{ work_arrangement_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Next</a>
                     {% endif %}
                 </div>
-                ```
+            </div>
+            {% endif %}
 
----
+        </div>
 
-### **CRITICAL STEP: Migrations**
+        <div class="lg:col-span-1 space-y-4 sticky top-20">
+            
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <h3 class="text-sm font-bold text-gray-900 mb-4">Top Tech Stacks</h3>
+                <div class="space-y-2">
+                    {% for stack in popular_tech_stacks %}
+                    <a href="?vendor={{ stack.name|urlencode }}" class="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 transition">
+                        <span class="text-sm font-medium text-gray-700">{{ stack.name }}</span>
+                        <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ stack.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <div class="pt-4 mt-4 border-t border-gray-100">
+                    <a href="?vendor=General" class="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 transition">
+                        <span class="text-sm font-medium text-gray-700">General MOPs</span>
+                        <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ general_jobs_count }}</span>
+                    </a>
+                </div>
+            </div>
 
-Because you changed the `remote` Boolean field to a `work_arrangement` CharField in `jobs/models.py`, you **must** perform a schema change operation on your database.
+            <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 shadow-sm text-sm">
+                <h3 class="font-bold text-indigo-800 mb-2">What is MarTechStack?</h3>
+                <p class="text-indigo-700">
+                    The zero-noise job board dedicated exclusively to Marketing Operations, MarTech Engineering, and Growth Engineering roles. We screen out all the noise.
+                </p>
+                <div class="mt-4 pt-4 border-t border-indigo-200">
+                    <a href="{% url 'post_job' %}" class="font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1">
+                        Post a job &rarr;
+                    </a>
+                </div>
+            </div>
 
-1.  **Commit and Deploy** the 5 files above.
-2.  Once deployed, run these two commands in your **Render Shell** (sequentially):
-
-    ```bash
-    python manage.py makemigrations jobs
-    python manage.py migrate
-    ```
-
-The `makemigrations` step will detect the deletion of the old `remote` field and the addition of the new `work_arrangement` field. It will prompt you to provide a **one-off default value** for the existing jobs. You can safely enter: `'onsite'`.
-
-After the migration succeeds, run `python manage.py fetch_jobs` again to populate your database with the new, correct Remote/Hybrid/On-site classifications.
+        </div>
+    </div>
+</div>
+{% endblock %}
