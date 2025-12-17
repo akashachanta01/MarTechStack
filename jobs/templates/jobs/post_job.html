@@ -39,22 +39,46 @@
 
     </div>
 
-    <div id="job-form-section" class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start opacity-50 pointer-events-none transition-opacity duration-500">
+    <div id="job-form-section" class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start {% if not form.errors %}opacity-50 pointer-events-none{% endif %} transition-opacity duration-500">
       
       <div class="lg:col-span-2">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
           <form method="post" enctype="multipart/form-data" class="space-y-8" id="job-form">
             {% csrf_token %}
             {{ form.plan }} <div class="space-y-6 border-b border-slate-100 pb-8">
-                <h3 class="text-xl font-bold text-slate-900">The Basics</h3>
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Job Title</label>{{ form.title }}</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Company Name</label>{{ form.company }}</div>
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Company Logo URL</label>{{ form.company_logo }}</div>
+                <h3 class="text-xl font-bold text-slate-900">Job Details</h3> {% if form.errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                    <strong>Please fix the errors below:</strong>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Job Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Location</label>{{ form.location }}</div>
-                    <div><label class="block text-sm font-bold text-slate-700 mb-1">Salary Range</label>{{ form.salary_range }}</div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Company Name</label>
+                        {{ form.company }}
+                        {% if form.company.errors %}<p class="text-red-500 text-xs mt-1">{{ form.company.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Company Logo URL</label>
+                        {{ form.company_logo }}
+                        {% if form.company_logo.errors %}<p class="text-red-500 text-xs mt-1">{{ form.company_logo.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Location</label>
+                        {{ form.location }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Salary Range</label>
+                        {{ form.salary_range }}
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Work Arrangement</label>
@@ -102,13 +126,18 @@
 
             <div class="space-y-6">
                 <h3 class="text-xl font-bold text-slate-900">Details</h3>
-                <div><label class="block text-sm font-bold text-slate-700 mb-1">Application URL</label>{{ form.apply_url }}</div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Application URL</label>
+                    {{ form.apply_url }}
+                    {% if form.apply_url.errors %}<p class="text-red-500 text-xs mt-1">{{ form.apply_url.errors.0 }}</p>{% endif %}
+                </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Full Description</label>
                     <div class="relative">
                         {{ form.description }}
                         <div class="absolute top-2 right-2 text-xs text-slate-400 font-medium">Markdown Supported</div>
                     </div>
+                    {% if form.description.errors %}<p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
@@ -178,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 1. Plan Selection Logic ---
     planCards.forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
             // UI Reset
             planCards.forEach(c => {
                 c.classList.remove('border-indigo-500', 'ring-4', 'ring-indigo-50');
@@ -219,12 +248,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewCard.classList.remove('bg-amber-50', 'border-amber-200');
             }
 
-            // Smooth Scroll to Form
-            formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Smooth Scroll to Form (Only if clicked by user, not auto-initialized)
+            if (e.isTrusted) {
+                formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
     });
 
-    // --- 2. Real-time Preview Logic ---
+    // --- 2. Auto-Initialize if Form has Data (Fixes "Locked on Reload" bug) ---
+    if (planInput.value) {
+        const preSelectedCard = document.querySelector(`.plan-card[data-plan="${planInput.value}"]`);
+        if (preSelectedCard) {
+            // Trigger click but without the smooth scroll (via isTrusted check above)
+            preSelectedCard.click(); 
+        }
+    }
+
+    // --- 3. Real-time Preview Logic ---
     const inputs = {
         title: document.getElementById('{{ form.title.id_for_label }}'),
         company: document.getElementById('{{ form.company.id_for_label }}'),
@@ -252,21 +292,27 @@ document.addEventListener('DOMContentLoaded', function() {
     sync(inputs.company, previews.company, "Company");
     sync(inputs.location, previews.location, "Location");
 
+    // Initialize values if present (e.g. on error reload)
+    if(inputs.title && inputs.title.value) previews.title.innerText = inputs.title.value;
+    if(inputs.company && inputs.company.value) previews.company.innerText = inputs.company.value;
+
     // Salary Tag Visibility
     if(inputs.salary) {
-        inputs.salary.addEventListener('input', () => {
+        const updateSalary = () => {
             if(inputs.salary.value) {
                 previews.salary.innerText = inputs.salary.value;
                 previews.salary.classList.remove('hidden');
             } else {
                 previews.salary.classList.add('hidden');
             }
-        });
+        };
+        inputs.salary.addEventListener('input', updateSalary);
+        updateSalary(); // Run on load
     }
 
     // Logo Preview
     if(inputs.logo) {
-        inputs.logo.addEventListener('input', () => {
+        const updateLogo = () => {
             if(inputs.logo.value) {
                 previews.logoImg.src = inputs.logo.value;
                 previews.logoImg.classList.remove('hidden');
@@ -275,7 +321,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 previews.logoImg.classList.add('hidden');
                 previews.logoPlace.classList.remove('hidden');
             }
-        });
+        };
+        inputs.logo.addEventListener('input', updateLogo);
+        updateLogo(); // Run on load
     }
 
     // Tech Stack Pill Logic
@@ -313,6 +361,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     toolCheckboxes.forEach(cb => cb.addEventListener('change', updatePreviewStack));
     if(inputs.newTools) inputs.newTools.addEventListener('input', updatePreviewStack);
+    
+    // Initial update for checked tools
+    updatePreviewStack();
 
 });
 </script>
