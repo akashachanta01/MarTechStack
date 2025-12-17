@@ -77,7 +77,7 @@ class Job(models.Model):
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
-    # AI/Scraper Fields (RESTORED THESE)
+    # AI/Scraper Fields (Required by Admin)
     screening_score = models.FloatField(blank=True, null=True)
     screening_reason = models.TextField(blank=True, default="")
     screening_details = models.JSONField(blank=True, default=dict)
