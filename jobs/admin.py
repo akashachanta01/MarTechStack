@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse # Needed for the 'Edit Details' link
+from django.urls import reverse
 
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission # All models imported
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission
 
 # --- ADMIN REGISTRATIONS ---
 
@@ -25,17 +25,19 @@ class JobAdmin(admin.ModelAdmin):
         "logo_preview",
         "job_card_header",
         "score_badge",
-        "remote",         # <-- LIST EDITABLE
-        "salary_range",   # <-- LIST EDITABLE
+        "work_arrangement", # 💥 CHANGED from "remote"
+        "salary_range",   
         "tech_stack_preview",
         "status_badge",
         "action_buttons",
     )
-    list_filter = ("screening_status", "is_active", "remote", "role_type", "created_at")
+    # 💥 CHANGED from "remote"
+    list_filter = ("screening_status", "is_active", "work_arrangement", "role_type", "created_at")
     search_fields = ("title", "company", "description")
     
     # ⚡️ ENHANCEMENT: Make these fields directly editable in the list view
-    list_editable = ("remote", "salary_range")
+    # 💥 CHANGED from "remote"
+    list_editable = ("work_arrangement", "salary_range")
 
     # Readonly fields (prevent accidental changes to system-managed data)
     readonly_fields = ("created_at", "screened_at", "screening_details")
@@ -71,7 +73,7 @@ class JobAdmin(admin.ModelAdmin):
             '</div>',
             obj.title,
             obj.company,
-            obj.location or "Remote"
+            obj.location or obj.get_work_arrangement_display()
         )
     job_card_header.short_description = "Role & Company"
     job_card_header.admin_order_field = "title"
@@ -127,7 +129,6 @@ class JobAdmin(admin.ModelAdmin):
     tech_stack_preview.short_description = "Tech Stack"
 
     def action_buttons(self, obj):
-        # Correctly generate the admin change URL
         change_url = reverse('admin:jobs_job_change', args=[obj.id])
         
         return format_html(
@@ -177,7 +178,7 @@ class SubscriberAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 @admin.register(BlockRule)
-class BlockRuleAdmin(admin.ModelAdmin): # <-- FIX: Changed base class from models.Model to admin.ModelAdmin
+class BlockRuleAdmin(admin.ModelAdmin):
     list_display = ("rule_type", "value", "enabled", "created_at")
     list_filter = ("rule_type", "enabled")
     search_fields = ("value", "notes")
