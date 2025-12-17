@@ -9,11 +9,20 @@ class JobPostForm(forms.ModelForm):
         required=False,
         label="Tech Stack (Select all that apply)"
     )
+    
+    # 💥 NEW: Use RadioSelect for work_arrangement
+    work_arrangement = forms.ChoiceField(
+        choices=Job.WORK_ARRANGEMENT_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'flex gap-6'}),
+        initial='onsite',
+        label="Work Arrangement"
+    )
 
     class Meta:
         model = Job
+        # 💥 REMOVED 'remote', ADDED 'work_arrangement'
         fields = [
-            'title', 'company', 'company_logo', 'location', 'remote', 
+            'title', 'company', 'company_logo', 'location', 'work_arrangement', 
             'role_type', 'salary_range', 'apply_url', 'description', 'tools'
         ]
         widgets = {
