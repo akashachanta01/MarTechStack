@@ -65,9 +65,11 @@ class Job(models.Model):
     location = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField()
     apply_url = models.URLField(max_length=500)
+    
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
+    
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
     
     # Screening & Status
@@ -75,6 +77,11 @@ class Job(models.Model):
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
+    # AI/Scraper Fields (RESTORED THESE)
+    screening_score = models.FloatField(blank=True, null=True)
+    screening_reason = models.TextField(blank=True, default="")
+    screening_details = models.JSONField(blank=True, default=dict)
+
     # Monetization Features
     is_featured = models.BooleanField(default=False)
     is_pinned = models.BooleanField(default=False)
