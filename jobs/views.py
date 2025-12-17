@@ -1,5 +1,6 @@
 import stripe
 import json
+import os
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
@@ -98,16 +99,23 @@ def post_job(request):
         form = JobPostForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
+            
+            # --- CRITICAL FIX: Prevent Database Crash ---
+            # If location is missing, default it to "Remote" so the DB doesn't reject it.
+            if not job.location:
+                job.location = "Remote"
+
             plan = form.cleaned_data.get('plan')
             job.plan_name = plan
             
-            # 1. ALWAYS SAVE AS PENDING/INACTIVE FIRST (Safety)
+            # 1. SAVE AS PENDING
             job.is_featured = False
             job.is_pinned = False
             job.screening_status = 'pending'
             job.is_active = False 
             job.tags = f"User Submission: {plan}"
-            job.save()
+            
+            job.save() # This should now succeed
             form.save_m2m()
 
             # Process New Tools
@@ -124,37 +132,37 @@ def post_job(request):
 
             cache.delete('popular_tech_stacks')
 
-            # 2. IF FEATURED -> REDIRECT TO STRIPE
+            # 2. STRIPE REDIRECT (NO ERROR MASKING)
             if plan == 'featured':
-                try:
-                    checkout_session = stripe.checkout.Session.create(
-                        payment_method_types=['card'],
-                        line_items=[{
-                            'price_data': {
-                                'currency': 'usd',
-                                'unit_amount': 9900, # $99.00
-                                'product_data': {
-                                    'name': 'Featured Job Post',
-                                    'description': f'Premium listing for {job.title} at {job.company}',
-                                },
+                # Check for keys explicitly
+                if not settings.STRIPE_SECRET_KEY:
+                     return HttpResponse("CRITICAL ERROR: STRIPE_SECRET_KEY is missing in Render Environment Variables.", status=500)
+
+                # Create Session (Errors will now show on screen instead of redirecting)
+                checkout_session = stripe.checkout.Session.create(
+                    payment_method_types=['card'],
+                    line_items=[{
+                        'price_data': {
+                            'currency': 'usd',
+                            'unit_amount': 9900, # $99.00
+                            'product_data': {
+                                'name': 'Featured Job Post',
+                                'description': f'Premium listing for {job.title} at {job.company}',
                             },
-                            'quantity': 1,
-                        }],
-                        mode='payment',
-                        success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}',
-                        cancel_url=settings.DOMAIN_URL + '/post-job/',
-                        metadata={
-                            'job_id': job.id, # CRITICAL: We use this to find the job later
-                            'plan': 'featured'
-                        }
-                    )
-                    return redirect(checkout_session.url)
-                except Exception as e:
-                    # Fallback if Stripe fails
-                    print(f"Stripe Error: {e}")
-                    return redirect('/post-job/success/?error=payment_failed')
+                        },
+                        'quantity': 1,
+                    }],
+                    mode='payment',
+                    success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}',
+                    cancel_url=settings.DOMAIN_URL + '/post-job/',
+                    metadata={
+                        'job_id': job.id,
+                        'plan': 'featured'
+                    }
+                )
+                return redirect(checkout_session.url)
             
-            # 3. IF FREE -> DIRECT SUCCESS
+            # 3. FREE TIER
             return redirect('/post-job/success/?plan=free')
     else:
         form = JobPostForm()
