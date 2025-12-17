@@ -43,33 +43,39 @@
       
       <div class="lg:col-span-2">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-          <form method="post" enctype="multipart/form-data" class="space-y-8" id="job-form">
+          <form method="post" enctype="multipart/form-data" class="space-y-8" id="job-form" novalidate>
             {% csrf_token %}
             {{ form.plan }} <div class="space-y-6 border-b border-slate-100 pb-8">
-                <h3 class="text-xl font-bold text-slate-900">Job Details</h3> {% if form.errors %}
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                    <strong>Please fix the errors below:</strong>
+                <h3 class="text-xl font-bold text-slate-900">Job Details</h3>
+                
+                {% if form.errors %}
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+                    <strong class="block mb-1">Please fix the errors below:</strong>
                     {{ form.non_field_errors }}
+                    <ul class="list-disc pl-5">
+                        {% for field, errors in form.errors.items %}
+                            <li><strong>{{ field|title }}:</strong> {{ errors.0 }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 {% endif %}
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Job Title</label>
                     {{ form.title }}
-                    {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
                 </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Company Name</label>
                         {{ form.company }}
-                        {% if form.company.errors %}<p class="text-red-500 text-xs mt-1">{{ form.company.errors.0 }}</p>{% endif %}
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Company Logo URL</label>
                         {{ form.company_logo }}
-                        {% if form.company_logo.errors %}<p class="text-red-500 text-xs mt-1">{{ form.company_logo.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Location</label>
@@ -80,6 +86,12 @@
                         {{ form.salary_range }}
                     </div>
                 </div>
+
+                <div>
+                     <label class="block text-sm font-bold text-slate-700 mb-1">Job Type</label>
+                     {{ form.role_type }}
+                </div>
+
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Work Arrangement</label>
                     <div class="flex gap-4">
@@ -129,7 +141,6 @@
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Application URL</label>
                     {{ form.apply_url }}
-                    {% if form.apply_url.errors %}<p class="text-red-500 text-xs mt-1">{{ form.apply_url.errors.0 }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-1">Full Description</label>
@@ -137,7 +148,6 @@
                         {{ form.description }}
                         <div class="absolute top-2 right-2 text-xs text-slate-400 font-medium">Markdown Supported</div>
                     </div>
-                    {% if form.description.errors %}<p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
@@ -174,7 +184,7 @@
                 </div>
 
                 <div id="p-stack" class="flex flex-wrap gap-1">
-                    </div>
+                </div>
               </div>
             </div>
          </div>
@@ -255,11 +265,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- 2. Auto-Initialize if Form has Data (Fixes "Locked on Reload" bug) ---
+    // --- 2. Auto-Initialize if Form has Data ---
     if (planInput.value) {
         const preSelectedCard = document.querySelector(`.plan-card[data-plan="${planInput.value}"]`);
         if (preSelectedCard) {
-            // Trigger click but without the smooth scroll (via isTrusted check above)
             preSelectedCard.click(); 
         }
     }
@@ -285,18 +294,17 @@ document.addEventListener('DOMContentLoaded', function() {
         stack: document.getElementById('p-stack')
     };
 
-    // Text Sync Helper
     const sync = (input, el, def) => { if(input) input.addEventListener('input', () => el.innerText = input.value || def); };
     
     sync(inputs.title, previews.title, "Job Title");
     sync(inputs.company, previews.company, "Company");
     sync(inputs.location, previews.location, "Location");
 
-    // Initialize values if present (e.g. on error reload)
+    // Initialize values if present
     if(inputs.title && inputs.title.value) previews.title.innerText = inputs.title.value;
     if(inputs.company && inputs.company.value) previews.company.innerText = inputs.company.value;
+    if(inputs.location && inputs.location.value) previews.location.innerText = inputs.location.value;
 
-    // Salary Tag Visibility
     if(inputs.salary) {
         const updateSalary = () => {
             if(inputs.salary.value) {
@@ -307,10 +315,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         inputs.salary.addEventListener('input', updateSalary);
-        updateSalary(); // Run on load
+        updateSalary();
     }
 
-    // Logo Preview
     if(inputs.logo) {
         const updateLogo = () => {
             if(inputs.logo.value) {
@@ -323,17 +330,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         inputs.logo.addEventListener('input', updateLogo);
-        updateLogo(); // Run on load
+        updateLogo();
     }
 
-    // Tech Stack Pill Logic
     const toolCheckboxes = document.querySelectorAll('input[name="tools"]');
     
     const updatePreviewStack = () => {
-        previews.stack.innerHTML = ''; // Clear
+        previews.stack.innerHTML = ''; 
         let count = 0;
         
-        // Add Checked Tools
         toolCheckboxes.forEach(cb => {
             if(cb.checked && count < 5) {
                 const span = document.createElement('span');
@@ -344,7 +349,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Add New Custom Tools
         if (inputs.newTools && inputs.newTools.value) {
             const customs = inputs.newTools.value.split(',');
             customs.forEach(t => {
@@ -362,9 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
     toolCheckboxes.forEach(cb => cb.addEventListener('change', updatePreviewStack));
     if(inputs.newTools) inputs.newTools.addEventListener('input', updatePreviewStack);
     
-    // Initial update for checked tools
     updatePreviewStack();
-
 });
 </script>
 {% endblock %}
