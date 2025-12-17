@@ -55,16 +55,21 @@
                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Job Type</label>
                         {{ form.role_type }}
                     </div>
-                    <div class="flex items-center gap-2 pt-6">
-                        {{ form.remote }}
-                        <label for="{{ form.remote.id_for_label }}" class="text-sm font-semibold text-gray-700 cursor-pointer">
-                            This position is fully remote
-                        </label>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Work Arrangement</label>
+                        <div class="mt-2 flex gap-6">
+                           {% for choice in form.work_arrangement %}
+                           <div class="flex items-center">
+                               {{ choice.tag }}
+                               <label for="{{ choice.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700 cursor-pointer">{{ choice.choice_label }}</label>
+                           </div>
+                           {% endfor %}
+                        </div>
                     </div>
                 </div>
 
@@ -175,7 +180,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const companyInput = document.getElementById('{{ form.company.id_for_label }}');
     const locationInput = document.getElementById('{{ form.location.id_for_label }}');
     const salaryInput = document.getElementById('{{ form.salary_range.id_for_label }}');
-    const remoteInput = document.getElementById('{{ form.remote.id_for_label }}');
+    // NOTE: This JS still targets the old remote input, but the form field is now work_arrangement. 
+    // The visual preview will need manual update if you want it to reflect the radio button selection.
+    const remoteInput = document.getElementById('id_work_arrangement_0'); // Remote radio option for simple preview logic
     const logoInput = document.getElementById('{{ form.company_logo.id_for_label }}');
     const featureCheckbox = document.getElementById('feature-post');
     const toolsInputs = document.querySelectorAll('input[name="tools"]');
@@ -222,16 +229,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 3. Remote Tag Logic
-    if(remoteInput) {
-        remoteInput.addEventListener('change', () => {
-            if (remoteInput.checked) {
-                pRemoteTag.classList.remove('hidden');
-            } else {
-                pRemoteTag.classList.add('hidden');
-            }
+    // 3. Remote Tag Logic (Updated to check for the first radio button)
+    const workArrangementInputs = document.querySelectorAll('input[name="work_arrangement"]');
+    if(workArrangementInputs) {
+        workArrangementInputs.forEach(input => {
+            input.addEventListener('change', () => {
+                const isRemote = document.getElementById('id_work_arrangement_0').checked;
+                if (isRemote) {
+                    pRemoteTag.classList.remove('hidden');
+                } else {
+                    pRemoteTag.classList.add('hidden');
+                }
+            });
         });
     }
+    
 
     // 4. Logo Preview (File Reader)
     if(logoInput) {
