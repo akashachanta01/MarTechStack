@@ -38,9 +38,7 @@ class Tool(models.Model):
             'bg-lime-100 text-lime-700 border-lime-200',
             'bg-pink-100 text-pink-700 border-pink-200',
         ]
-        # Sum the ASCII values of the characters to get a consistent number
         char_sum = sum(ord(c) for c in self.name)
-        # Use modulo to pick a color from the list
         return colors[char_sum % len(colors)]
 
 class Job(models.Model):
@@ -76,8 +74,7 @@ class Job(models.Model):
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     
-    # 💥 REMOVED 'remote' BooleanField
-    # 💥 ADDED work_arrangement CharField
+    # 💥 CHANGED: Replaced remote (bool) with work_arrangement (char)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
     
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
@@ -96,7 +93,7 @@ class Job(models.Model):
     tags = models.CharField(max_length=200, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True) # You had this in another file, ensuring it's here
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"
