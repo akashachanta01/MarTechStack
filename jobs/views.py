@@ -15,6 +15,8 @@ from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
+# NEW: Import the email alert function
+from .emails import send_job_alert
 
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -202,6 +204,10 @@ def stripe_webhook(request):
                 job.save()
                 print(f"✅ PAYMENT SUCCESS: Job {job_id} is now LIVE & FEATURED.")
                 cache.delete('popular_tech_stacks')
+
+                # NEW: SEND ALERT
+                send_job_alert(job)
+
             except Job.DoesNotExist:
                 print(f"❌ ERROR: Job {job_id} not found during webhook.")
 
@@ -232,7 +238,15 @@ def review_queue(request):
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
     if action == "approve":
-        job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks') 
+        job.screening_status = "approved" 
+        job.is_active = True 
+        job.screened_at = timezone.now()
+        job.save() 
+        cache.delete('popular_tech_stacks') 
+        
+        # NEW: SEND ALERT
+        send_job_alert(job)
+
     elif action == "reject":
         job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending":
