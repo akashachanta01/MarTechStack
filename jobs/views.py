@@ -15,6 +15,7 @@ from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
+
 # NEW: Import the email alert function
 from .emails import send_job_alert
 
