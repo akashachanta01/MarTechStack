@@ -132,7 +132,10 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = f'MarTechStack <{EMAIL_HOST_USER}>'
 
 # STRIPE PAYMENTS
-STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
-DOMAIN_URL = os.environ.get("DOMAIN_URL", "http://127.0.0.1:8000")
+# The .strip() function removes any accidental spaces or newlines
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
+
+# DOMAIN URL
+DOMAIN_URL = os.environ.get("DOMAIN_URL", "http://127.0.0.1:8000").strip()
