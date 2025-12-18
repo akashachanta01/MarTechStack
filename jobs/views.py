@@ -220,8 +220,11 @@ def post_job_success(request):
 def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
-        if email: Subscriber.objects.get_or_create(email=email)
-    return redirect("job_list")
+        if email: 
+            Subscriber.objects.get_or_create(email=email)
+            return JsonResponse({"success": True})
+            
+    return JsonResponse({"success": False}, status=400)
 
 @staff_member_required
 def review_queue(request):
