@@ -4,108 +4,80 @@
 {% block content %}
 <div class="bg-slate-50 min-h-screen pb-20 font-sans">
     
-    <div class="bg-white border-b border-slate-200 pt-12 pb-16">
-        <div class="max-w-7xl mx-auto px-4 text-center">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        
+        <div class="mb-10">
             
-            <span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wide mb-8 border border-indigo-100">
-                Limited Time Offer
-            </span>
+            <input type="hidden" name="plan" value="free">
 
-            <div class="flex justify-center max-w-4xl mx-auto relative">
+            <div id="plan-card-free" class="w-full bg-indigo-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden transition-all duration-300">
+                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl pointer-events-none"></div>
                 
-                <div id="plan-card-free" class="plan-card mx-auto max-w-lg bg-white border border-indigo-100 rounded-3xl p-8 cursor-pointer shadow-xl shadow-indigo-100/50 transition-all hover:-translate-y-1 hover:shadow-2xl relative overflow-hidden group" data-plan="free">
-                    
-                    <div class="selection-ring absolute inset-0 border-2 border-indigo-600 rounded-3xl pointer-events-none"></div>
-                    
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="text-left">
-                            <h3 class="text-xl font-bold text-slate-900">Launch Partner</h3>
-                            <p class="text-slate-500 text-sm mt-1">Perfect for early adopters.</p>
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Launch Partner</h2>
+                            <svg class="w-6 h-6 text-indigo-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
                         </div>
-                        <div class="text-right">
-                            <span class="block text-4xl font-extrabold text-slate-900">$0</span>
-                            <span class="text-xs text-slate-400 font-medium uppercase tracking-wide">Free Forever</span>
+                        <p class="text-indigo-100 text-lg mb-6">Perfect for early adopters.</p>
+                        
+                        <div class="flex flex-wrap gap-4 md:gap-8">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                <span class="font-medium">Live for 30 Days</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                <span class="font-medium">Instant Google Indexing</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                <span class="font-medium">Included in Newsletter</span>
+                            </div>
                         </div>
                     </div>
 
-                    <ul class="space-y-3 mb-8 border-t border-slate-100 pt-6">
-                        <li class="flex items-center gap-3 text-sm text-slate-600">
-                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                            <span class="font-medium">Live for 30 Days</span>
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-slate-600">
-                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                            <span>Instant Google Jobs Indexing</span>
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-slate-600">
-                            <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                            <span>Included in Weekly Newsletter</span>
-                        </li>
-                    </ul>
-
-                    <div class="select-btn w-full py-3.5 text-center rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg group-hover:bg-black transition">
-                        Selected & Ready to Post
+                    <div class="text-left md:text-right bg-indigo-700/30 p-4 rounded-2xl border border-indigo-500/30 backdrop-blur-sm">
+                        <span class="block text-5xl font-extrabold">$0</span>
+                        <span class="text-sm font-bold text-indigo-200 uppercase tracking-wide">Free Forever</span>
                     </div>
                 </div>
+            </div>
 
-                <div id="plan-card-featured" class="hidden plan-card bg-white border-2 border-indigo-500 rounded-3xl p-8 cursor-pointer shadow-xl relative z-10 mx-4" data-plan="featured">
-                    <div class="absolute -top-4 right-6">
-                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md uppercase tracking-wide">
-                            Most Popular
-                        </span>
+            <div id="plan-card-featured" class="hidden w-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden mt-6 cursor-pointer hover:scale-[1.01] transition-transform">
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Featured Boost</h2>
+                        <p class="text-amber-100 text-lg mb-6">3x more views & applicants.</p>
+                        <ul class="flex flex-wrap gap-4 md:gap-8">
+                            <li class="flex items-center gap-2 font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg> Pinned to Top</li>
+                            <li class="flex items-center gap-2 font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Yellow Highlight</li>
+                        </ul>
                     </div>
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="text-left">
-                            <h3 class="text-xl font-bold text-slate-900">Featured Boost</h3>
-                            <p class="text-slate-500 text-sm mt-1">3x more views & applicants.</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="block text-4xl font-extrabold text-slate-900">$99</span>
-                        </div>
-                    </div>
-                    <ul class="space-y-3 mb-8 border-t border-slate-100 pt-6">
-                        <li class="flex items-center gap-3 text-sm text-slate-700 font-medium">
-                            <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            Pinned to Top (7 Days)
-                        </li>
-                        <li class="flex items-center gap-3 text-sm text-slate-700 font-medium">
-                            <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                            Highlighted in Yellow
-                        </li>
-                    </ul>
-                    <div class="select-btn w-full py-3.5 text-center rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md hover:bg-indigo-700 transition">
-                        Select Featured
+                    <div class="text-right">
+                        <span class="block text-5xl font-extrabold">$99</span>
+                        <button class="mt-2 bg-white text-orange-600 px-6 py-2 rounded-lg font-bold text-sm hover:bg-orange-50 transition shadow-sm">Select Plan</button>
                     </div>
                 </div>
             </div>
 
         </div>
-    </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        
-        <div id="job-form-section" class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start transition-all duration-500 {% if not form.errors %}opacity-50 pointer-events-none{% endif %}">
+        <div id="job-form-section" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <div class="lg:col-span-8 space-y-8">
+            <div class="lg:col-span-8">
                 <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
                     {% csrf_token %}
-                    {{ form.plan }}
-
+                    
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="bg-slate-50 px-8 py-5 border-b border-slate-200 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 shadow-sm">1</div>
-                            <h3 class="text-lg font-bold text-slate-900">Job Details</h3>
-                        </div>
-                        
-                        <div class="p-8 space-y-6">
+                        <div class="p-8 space-y-8">
+                            
+                            <div class="border-b border-slate-100 pb-4 mb-6">
+                                <h3 class="text-xl font-bold text-slate-900">1. Job Details</h3>
+                            </div>
+
                             {% if form.errors %}
-                            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm mb-6">
+                            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
                                 <strong class="block mb-1">Please fix the errors below:</strong>
                                 <ul class="list-disc pl-5 mt-1">
                                     {% for field, errors in form.errors.items %}
@@ -116,17 +88,17 @@
                             {% endif %}
 
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Job Title</label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Job Title</label>
                                 {{ form.title }}
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Company Name</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Company Name</label>
                                     {{ form.company }}
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">
                                         Logo URL <span class="font-normal text-slate-400 ml-1">(Optional)</span>
                                     </label>
                                     {{ form.company_logo }}
@@ -135,27 +107,27 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Location</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Location</label>
                                     {{ form.location }}
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Salary Range</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Salary Range</label>
                                     {{ form.salary_range }}
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Job Type</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Job Type</label>
                                     {{ form.role_type }}
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Work Arrangement</label>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Work Arrangement</label>
                                     <div class="flex gap-3">
                                         {% for choice in form.work_arrangement %}
                                             <label class="cursor-pointer">
                                                 <span class="sr-only">{{ choice.choice_label }}</span>
-                                                <div class="work-radio-option flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm font-medium text-slate-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 peer-checked:border-indigo-500 peer-checked:font-bold">
+                                                <div class="work-radio-option flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm font-medium text-slate-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 peer-checked:border-indigo-500 peer-checked:font-bold bg-white">
                                                     {{ choice.tag }}
                                                     <span class="ml-2">{{ choice.choice_label }}</span>
                                                 </div>
@@ -164,63 +136,57 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-8">
-                        <div class="bg-slate-50 px-8 py-5 border-b border-slate-200 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 shadow-sm">2</div>
-                            <h3 class="text-lg font-bold text-slate-900">Tech Stack</h3>
-                        </div>
-                        <div class="p-8">
-                            <label class="block text-sm font-bold text-slate-700 mb-3">Select Relevant Tools</label>
-                            <div class="h-60 overflow-y-auto p-4 border border-slate-200 rounded-xl bg-slate-50 mb-4 scrollbar-thin scrollbar-thumb-slate-200">
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    {% for checkbox in form.tools %}
-                                    <label class="cursor-pointer group relative">
-                                        {{ checkbox.tag }} 
-                                        <div class="px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg text-center transition-all shadow-sm group-hover:border-indigo-300 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
-                                            {{ checkbox.choice_label }}
-                                        </div>
-                                    </label>
-                                    {% endfor %}
+                            <div class="border-b border-slate-100 pb-4 mb-6 pt-6">
+                                <h3 class="text-xl font-bold text-slate-900">2. Tech Stack</h3>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-3">Select Relevant Tools</label>
+                                <div class="h-60 overflow-y-auto p-4 border border-slate-200 rounded-xl bg-slate-50 mb-4 scrollbar-thin">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        {% for checkbox in form.tools %}
+                                        <label class="cursor-pointer group relative">
+                                            {{ checkbox.tag }} 
+                                            <div class="px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg text-center transition-all shadow-sm group-hover:border-indigo-300 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
+                                                {{ checkbox.choice_label }}
+                                            </div>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Custom Tool <span class="font-normal text-slate-400">(Optional)</span></label>
+                                    {{ form.new_tools }}
                                 </div>
                             </div>
-                            
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Custom Tool <span class="font-normal text-slate-400">(Optional)</span></label>
-                                {{ form.new_tools }}
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-8">
-                        <div class="bg-slate-50 px-8 py-5 border-b border-slate-200 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 shadow-sm">3</div>
-                            <h3 class="text-lg font-bold text-slate-900">Description</h3>
-                        </div>
-                        <div class="p-8 space-y-6">
+                            <div class="border-b border-slate-100 pb-4 mb-6 pt-6">
+                                <h3 class="text-xl font-bold text-slate-900">3. Description</h3>
+                            </div>
+
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Application URL</label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Application URL</label>
                                 {{ form.apply_url }}
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Job Description</label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Job Description</label>
                                 <div class="relative">
                                     {{ form.description }}
                                     <div class="absolute bottom-3 right-3 text-xs text-slate-400 pointer-events-none font-medium">Markdown Supported</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="pt-6 pb-10">
-                        <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all text-lg flex items-center justify-center gap-2 transform active:scale-[0.99]">
-                            🚀 Post Job Now
-                        </button>
-                        <p class="text-center text-slate-400 text-xs mt-4">
-                            By posting, you agree to our Terms of Service. All jobs are reviewed within 24 hours.
-                        </p>
+                            <div class="pt-6">
+                                <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all text-lg flex items-center justify-center gap-2 transform active:scale-[0.99]">
+                                    Post Job Now
+                                </button>
+                                <p class="text-center text-slate-400 text-xs mt-4">
+                                    By posting, you agree to our Terms of Service.
+                                </p>
+                            </div>
+
+                        </div>
                     </div>
                 </form>
             </div>
@@ -244,16 +210,12 @@
 
                         <div class="flex-grow min-w-0">
                             <h3 class="text-md font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
-                                <span id="p-title">Senior Marketer</span>
-                                <span id="p-featured-badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide border border-amber-200">
-                                    Featured
-                                </span>
+                                <span id="p-title">Job Title</span>
+                                <span id="p-featured-badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide border border-amber-200">Featured</span>
                             </h3>
                             
                             <div class="text-xs text-slate-500 mb-2">
-                                <span id="p-company">Acme Corp</span> 
-                                <span class="mx-1">•</span> 
-                                <span class="text-slate-400">Just now</span>
+                                <span id="p-company">Company</span> <span class="mx-1">•</span> <span class="text-slate-400">Just now</span>
                             </div>
                             
                             <div class="flex flex-wrap gap-2 text-xs text-slate-600 font-medium mb-3">
@@ -265,17 +227,10 @@
                             </div>
 
                             <div id="p-stack" class="flex flex-wrap gap-1.5">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Marketo</span>
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Salesforce</span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Tool</span>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="mt-4 text-center px-6">
-                     <p class="text-xs text-slate-400 leading-relaxed">
-                        Your listing will be reviewed by our team and indexed on Google Jobs within 24 hours.
-                     </p>
                 </div>
             </div>
 
@@ -288,99 +243,55 @@
     .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
     
+    /* Clean inputs matching the reference image style */
     input[type="text"], input[type="url"], select, textarea {
+        width: 100%;
+        border-radius: 0.75rem; /* rounded-xl */
+        border-color: #cbd5e1; /* border-slate-300 */
+        padding: 0.75rem 1rem;
         transition: all 0.2s ease;
     }
     input[type="text"]:focus, input[type="url"]:focus, select:focus, textarea:focus {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border-color: #6366f1; /* indigo-500 */
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
     }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const planCards = document.querySelectorAll('.plan-card');
     const planInput = document.querySelector('input[name="plan"]');
     const submitBtn = document.getElementById('submit-btn');
-    const formSection = document.getElementById('job-form-section');
+    const featuredCard = document.getElementById('plan-card-featured');
+    
+    // Preview Elements
     const previewCard = document.getElementById('preview-card');
     const featuredRibbon = document.getElementById('p-featured-ribbon');
     const featuredBadge = document.getElementById('p-featured-badge');
 
-    // 1. PLAN SELECTION LOGIC
-    planCards.forEach(card => {
-        card.addEventListener('click', (e) => {
-            // Reset ALL cards
-            planCards.forEach(c => {
-                c.querySelector('.selection-ring')?.classList.add('hidden');
-                if(c.dataset.plan === 'free') {
-                    c.querySelector('.select-btn').innerText = "Select Launch Partner";
-                    c.querySelector('.select-btn').className = "select-btn w-full py-3.5 text-center rounded-xl bg-slate-100 text-slate-600 font-bold text-sm shadow-sm group-hover:bg-slate-200 transition";
-                } else {
-                    c.querySelector('.select-btn').innerText = "Select Featured";
-                    c.classList.remove('ring-4', 'ring-indigo-100', 'border-indigo-600');
-                    c.classList.add('border-indigo-500');
-                }
-            });
-
-            // Activate THIS card
-            if(card.dataset.plan === 'free') {
-                card.querySelector('.selection-ring')?.classList.remove('hidden');
-                const btn = card.querySelector('.select-btn');
-                btn.innerText = "Selected & Ready to Post";
-                btn.className = "select-btn w-full py-3.5 text-center rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg transition";
-            } else {
-                card.classList.remove('border-indigo-500');
-                card.classList.add('ring-4', 'ring-indigo-100', 'border-indigo-600');
-                card.querySelector('.select-btn').innerText = "Selected";
-            }
+    // 1. FEATURED CARD LOGIC (Hidden Feature Flag)
+    // If the featured card is ever visible and clicked:
+    if (featuredCard) {
+        featuredCard.addEventListener('click', () => {
+            planInput.value = 'featured';
+            submitBtn.innerHTML = "💳 Proceed to Payment ($99)";
+            submitBtn.classList.replace('bg-slate-900', 'bg-indigo-600');
+            submitBtn.classList.replace('hover:bg-black', 'hover:bg-indigo-700');
             
-            // UNLOCK FORM (Immediate)
-            formSection.classList.remove('opacity-50', 'pointer-events-none');
-            formSection.classList.add('opacity-100');
+            // Highlight Featured Card
+            featuredCard.classList.add('ring-4', 'ring-indigo-300', 'border-indigo-600');
             
-            // Set Input Value
-            const plan = card.dataset.plan;
-            planInput.value = plan;
-
-            // Update UI elements
-            if (plan === 'featured') {
-                submitBtn.innerHTML = "💳 Proceed to Payment ($99)";
-                submitBtn.classList.replace('bg-slate-900', 'bg-indigo-600');
-                submitBtn.classList.replace('hover:bg-black', 'hover:bg-indigo-700');
-                previewCard.className = "bg-gradient-to-r from-amber-50/80 to-white border border-amber-300 rounded-xl p-5 shadow-md transition-all duration-300 relative overflow-hidden group";
-                featuredRibbon.classList.remove('hidden');
-                featuredBadge.classList.remove('hidden');
-            } else {
-                submitBtn.innerHTML = "🚀 Post Job Now";
-                submitBtn.classList.replace('bg-indigo-600', 'bg-slate-900');
-                submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-black');
-                previewCard.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group";
-                featuredRibbon.classList.add('hidden');
-                featuredBadge.classList.add('hidden');
-            }
-
-            // ROBUST SCROLL LOGIC
-            if (e.isTrusted) {
-                // Calculate position to ensure we clear the sticky header
-                const yOffset = -150; // Buffer for header + padding
-                const y = formSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                
-                window.scrollTo({
-                    top: y,
-                    behavior: 'smooth'
-                });
-            }
+            // Reset Free Card Visuals
+            document.getElementById('plan-card-free').classList.add('opacity-50', 'grayscale');
+            
+            // Update Preview
+            previewCard.className = "bg-gradient-to-r from-amber-50/80 to-white border border-amber-300 rounded-xl p-5 shadow-md transition-all duration-300 relative overflow-hidden group";
+            featuredRibbon.classList.remove('hidden');
+            featuredBadge.classList.remove('hidden');
         });
-    });
-
-    // 2. AUTO-INIT
-    if (planInput.value) {
-        const card = document.querySelector(`.plan-card[data-plan="${planInput.value}"]`);
-        if(card) card.click();
     }
 
-    // 3. LIVE PREVIEW SYNC
+    // 2. LIVE PREVIEW SYNC
     const inputs = {
         title: document.getElementById('{{ form.title.id_for_label }}'),
         company: document.getElementById('{{ form.company.id_for_label }}'),
