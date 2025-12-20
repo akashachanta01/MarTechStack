@@ -15,9 +15,7 @@ from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
-
-# NEW: Import the email alert function
-from .emails import send_job_alert
+from .emails import send_job_alert, send_welcome_email
 
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -33,7 +31,7 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
-    # [KEEP EXISTING JOB_LIST LOGIC - NO CHANGES NEEDED HERE]
+    # [KEEP EXISTING JOB_LIST LOGIC]
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -102,26 +100,21 @@ def post_job(request):
         form = JobPostForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
-            
-            # --- CRITICAL FIX: Prevent Database Crash ---
-            # If location is missing, default it to "Remote" so the DB doesn't reject it.
             if not job.location:
                 job.location = "Remote"
 
             plan = form.cleaned_data.get('plan')
             job.plan_name = plan
             
-            # 1. SAVE AS PENDING
             job.is_featured = False
             job.is_pinned = False
             job.screening_status = 'pending'
             job.is_active = False 
             job.tags = f"User Submission: {plan}"
             
-            job.save() # This should now succeed
+            job.save() 
             form.save_m2m()
 
-            # Process New Tools
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
@@ -135,19 +128,16 @@ def post_job(request):
 
             cache.delete('popular_tech_stacks')
 
-            # 2. STRIPE REDIRECT (NO ERROR MASKING)
             if plan == 'featured':
-                # Check for keys explicitly
                 if not settings.STRIPE_SECRET_KEY:
-                     return HttpResponse("CRITICAL ERROR: STRIPE_SECRET_KEY is missing in Render Environment Variables.", status=500)
+                     return HttpResponse("CRITICAL ERROR: STRIPE_SECRET_KEY is missing.", status=500)
 
-                # Create Session (Errors will now show on screen instead of redirecting)
                 checkout_session = stripe.checkout.Session.create(
                     payment_method_types=['card'],
                     line_items=[{
                         'price_data': {
                             'currency': 'usd',
-                            'unit_amount': 9900, # $99.00
+                            'unit_amount': 9900,
                             'product_data': {
                                 'name': 'Featured Job Post',
                                 'description': f'Premium listing for {job.title} at {job.company}',
@@ -158,20 +148,15 @@ def post_job(request):
                     mode='payment',
                     success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}',
                     cancel_url=settings.DOMAIN_URL + '/post-job/',
-                    metadata={
-                        'job_id': job.id,
-                        'plan': 'featured'
-                    }
+                    metadata={'job_id': job.id, 'plan': 'featured'}
                 )
                 return redirect(checkout_session.url)
             
-            # 3. FREE TIER
             return redirect('/post-job/success/?plan=free')
     else:
         form = JobPostForm()
     return render(request, 'jobs/post_job.html', {'form': form})
 
-# NEW: STRIPE WEBHOOK HANDLER
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -179,38 +164,26 @@ def stripe_webhook(request):
     event = None
 
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError as e:
-        return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError as e:
-        return HttpResponse(status=400)
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+    except ValueError: return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError: return HttpResponse(status=400)
 
-    # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        
-        # Retrieve the job_id from metadata
         job_id = session.get('metadata', {}).get('job_id')
         
         if job_id:
             try:
                 job = Job.objects.get(id=job_id)
-                # ACTIVATE THE JOB
                 job.is_featured = True
                 job.is_pinned = True
                 job.screening_status = 'approved'
                 job.is_active = True
                 job.save()
-                print(f"✅ PAYMENT SUCCESS: Job {job_id} is now LIVE & FEATURED.")
                 cache.delete('popular_tech_stacks')
-
-                # NEW: SEND ALERT
                 send_job_alert(job)
-
             except Job.DoesNotExist:
-                print(f"❌ ERROR: Job {job_id} not found during webhook.")
+                print(f"❌ ERROR: Job {job_id} not found.")
 
     return HttpResponse(status=200)
 
@@ -218,30 +191,12 @@ def post_job_success(request):
     return render(request, 'jobs/post_job_success.html')
 
 def subscribe(request):
-    # 1. Debug Print (Forces log to appear)
-    print("--------------------------------------------------", flush=True)
-    print("👀 DEBUG: Subscribe View Triggered!", flush=True)
-
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
-        print(f"📧 DEBUG: Received email: {email}", flush=True)
-
         if email: 
-            # 2. Get or Create User
             subscriber, created = Subscriber.objects.get_or_create(email=email)
-            print(f"👤 DEBUG: User Created? {created}", flush=True)
-            print(f"👤 DEBUG: User ID: {subscriber.id}", flush=True)
-
-            # 3. FORCE SEND EMAIL (Ignore 'created' check for now)
-            print("🚀 DEBUG: Attempting to send email NOW...", flush=True)
-            try:
-                # Direct import to be 100% sure we use the right function
-                from .emails import send_welcome_email
+            if created:
                 send_welcome_email(email)
-                print("✅ DEBUG: Email function finished without error.", flush=True)
-            except Exception as e:
-                print(f"❌ DEBUG: Email function CRASHED: {e}", flush=True)
-                
             return JsonResponse({"success": True})
             
     return JsonResponse({"success": False}, status=400)
@@ -262,15 +217,13 @@ def review_queue(request):
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
     if action == "approve":
-        job.screening_status = "approved" 
+        job.screening_status = "approved"
         job.is_active = True 
         job.screened_at = timezone.now()
-        job.save() 
+        job.save()
         cache.delete('popular_tech_stacks') 
-        
-        # NEW: SEND ALERT
         send_job_alert(job)
-
+        
     elif action == "reject":
         job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending":
