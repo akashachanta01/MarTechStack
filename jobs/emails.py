@@ -1,16 +1,17 @@
 from django.core.mail import EmailMessage
 from django.conf import settings
 from .models import Subscriber
-import threading
 
 def send_welcome_email(to_email):
     """
     Sends a welcome confirmation to a new subscriber.
+    Sent synchronously to ensure delivery/debugging.
     """
-    def _send():
-        try:
-            subject = "Welcome to MarTechStack Alerts! 🚀"
-            body = f"""
+    try:
+        print(f"🚀 Attempting to send welcome email to {to_email}...")
+        
+        subject = "Welcome to MarTechStack Alerts! 🚀"
+        body = f"""
 Hi there,
 
 You're officially confirmed! 
@@ -22,41 +23,37 @@ We curate for quality, so you won't get spammed with irrelevant "Digital Marketi
 Best,
 The MarTechStack Team
 {settings.DOMAIN_URL}
-            """
-            
-            # Send the email
-            email = EmailMessage(
-                subject=subject,
-                body=body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[to_email]
-            )
-            email.send(fail_silently=False)
-            print(f"✅ Welcome email sent to {to_email}")
+        """
+        
+        # Send the email
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email]
+        )
+        email.send(fail_silently=False)
+        print(f"✅ Welcome email sent successfully to {to_email}")
 
-        except Exception as e:
-            print(f"❌ Welcome Email Error: {e}")
-
-    # Run in background to keep the popup fast
-    threading.Thread(target=_send).start()
+    except Exception as e:
+        print(f"❌ CRITICAL EMAIL ERROR: {e}")
 
 def send_job_alert(job):
     """
     Sends an email to all subscribers about a new job.
     """
-    def _send():
-        try:
-            subscribers = list(Subscriber.objects.values_list('email', flat=True))
-            
-            if not subscribers:
-                print("📭 No subscribers to email.")
-                return
+    try:
+        subscribers = list(Subscriber.objects.values_list('email', flat=True))
+        
+        if not subscribers:
+            print("📭 No subscribers to email.")
+            return
 
-            print(f"📧 Sending alert to {len(subscribers)} subscribers for {job.title}...")
+        print(f"📧 Sending alert to {len(subscribers)} subscribers for {job.title}...")
 
-            subject = f"New Role: {job.title} at {job.company}"
-            
-            body = f"""
+        subject = f"New Role: {job.title} at {job.company}"
+        
+        body = f"""
 New opportunity on MarTechStack:
 
 Role: {job.title}
@@ -68,20 +65,18 @@ View Job: {settings.DOMAIN_URL}/?q={job.title.replace(' ', '+')}
 
 --------------------------------------------------
 You are receiving this because you subscribed to MarTechStack alerts.
-            """
+        """
 
-            email = EmailMessage(
-                subject=subject,
-                body=body,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[settings.DEFAULT_FROM_EMAIL], # Send to self
-                bcc=subscribers # Blind copy everyone else
-            )
-            
-            email.send(fail_silently=False)
-            print(f"✅ Job alerts sent successfully!")
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.DEFAULT_FROM_EMAIL], # Send to self
+            bcc=subscribers # Blind copy everyone else
+        )
+        
+        email.send(fail_silently=False)
+        print(f"✅ Job alerts sent successfully!")
 
-        except Exception as e:
-            print(f"❌ Email Error: {e}")
-
-    threading.Thread(target=_send).start()
+    except Exception as e:
+        print(f"❌ Email Error: {e}")
