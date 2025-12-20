@@ -130,3 +130,10 @@ class UserSubmission(Job):
         proxy = True
         verbose_name = "User Submission"
         verbose_name_plural = "User Submissions"
+
+# --- NEW: Add this class at the bottom ---
+class ActiveJob(Job):
+    class Meta:
+        proxy = True
+        verbose_name = "Active Job" # Name in Sidebar (Singular)
+        verbose_name_plural = "Active Jobs" # Name in Sidebar (Plural)
