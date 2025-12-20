@@ -52,7 +52,7 @@
     </footer>
 
     <div class="modal hidden opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50" id="modal-id">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-50"></div>
+        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-50" onclick="toggleModal('modal-id')"></div>
         
         <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform scale-95 transition-transform duration-300">
             <div class="relative py-8 px-8 text-left">
@@ -77,10 +77,6 @@
                             
                             <button type="submit" id="sub-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-md transition-all">
                                 Subscribe Free
-                            </button>
-                            
-                            <button type="button" onclick="toggleModal('modal-id')" class="w-full bg-white border border-slate-200 text-slate-500 font-bold py-3 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition">
-                                Cancel
                             </button>
                         </div>
                     </form>
