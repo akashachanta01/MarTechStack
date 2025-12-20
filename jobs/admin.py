@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission
+# Import all models, including the new 'ActiveJob' proxy model
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob
 
 # --- ADMIN REGISTRATIONS ---
 
@@ -25,18 +26,17 @@ class JobAdmin(admin.ModelAdmin):
         "logo_preview",
         "job_card_header",
         "score_badge",
-        "work_arrangement", # 💥 CHANGED from "remote"
+        "work_arrangement", 
         "salary_range",   
         "tech_stack_preview",
         "status_badge",
         "action_buttons",
     )
-    # 💥 CHANGED from "remote"
+    
     list_filter = ("screening_status", "is_active", "work_arrangement", "role_type", "created_at")
     search_fields = ("title", "company", "description")
     
-    # ⚡️ ENHANCEMENT: Make these fields directly editable in the list view
-    # 💥 CHANGED from "remote"
+    # Editable fields in the list view
     list_editable = ("work_arrangement", "salary_range")
 
     # Readonly fields (prevent accidental changes to system-managed data)
@@ -170,6 +170,34 @@ class UserSubmissionAdmin(JobAdmin):
     # Only show jobs tagged "User Submission"
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tags__icontains="User Submission")
+
+# --- NEW: ACTIVE JOBS (LIVE ON SITE) ---
+@admin.register(ActiveJob)
+class ActiveJobAdmin(JobAdmin):
+    """
+    A read-focused view for jobs that are currently live on the site.
+    """
+    list_display = (
+        "logo_preview",
+        "job_card_header",
+        "score_badge",
+        "work_arrangement",
+        "salary_range",
+        "tech_stack_preview",
+        "action_buttons",
+    )
+    
+    # FILTER: Only show jobs that are live
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(is_active=True)
+
+    # Disable "Add" to prevent accidental creation here
+    def has_add_permission(self, request):
+        return False
+    
+    # Disable "Delete" to ensure deletions happen in the main view
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
