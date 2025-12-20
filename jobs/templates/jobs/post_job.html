@@ -228,3 +228,249 @@
             <div class="hidden lg:block lg:col-span-4 sticky top-24">
                 <div class="flex items-center gap-2 mb-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Preview</span>
+                    <div class="h-px bg-slate-200 flex-grow"></div>
+                </div>
+
+                <div id="preview-card" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group">
+                    <div id="p-featured-ribbon" class="hidden absolute top-0 right-0 w-16 h-16 pointer-events-none overflow-hidden">
+                        <div class="absolute top-[10px] right-[-25px] w-[100px] h-[20px] bg-amber-400/20 rotate-45 transform"></div>
+                    </div>
+
+                    <div class="flex items-start gap-4 relative z-10">
+                        <div class="flex-shrink-0 pt-1">
+                            <img id="p-logo-img" src="" class="hidden w-10 h-10 rounded-lg object-contain border border-gray-100 bg-white p-1">
+                            <div id="p-logo-placeholder" class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400 border border-slate-200">?</div>
+                        </div>
+
+                        <div class="flex-grow min-w-0">
+                            <h3 class="text-md font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
+                                <span id="p-title">Senior Marketer</span>
+                                <span id="p-featured-badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide border border-amber-200">
+                                    Featured
+                                </span>
+                            </h3>
+                            
+                            <div class="text-xs text-slate-500 mb-2">
+                                <span id="p-company">Acme Corp</span> 
+                                <span class="mx-1">•</span> 
+                                <span class="text-slate-400">Just now</span>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2 text-xs text-slate-600 font-medium mb-3">
+                                <span id="p-location" class="flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> 
+                                    Remote
+                                </span>
+                                <span id="p-salary" class="hidden text-slate-500"></span>
+                            </div>
+
+                            <div id="p-stack" class="flex flex-wrap gap-1.5">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Marketo</span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Salesforce</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center px-6">
+                     <p class="text-xs text-slate-400 leading-relaxed">
+                        Your listing will be reviewed by our team and indexed on Google Jobs within 24 hours.
+                     </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom Scrollbar for Tool List */
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    
+    /* Input Styling Override */
+    input[type="text"], input[type="url"], select, textarea {
+        transition: all 0.2s ease;
+    }
+    input[type="text"]:focus, input[type="url"]:focus, select:focus, textarea:focus {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const planCards = document.querySelectorAll('.plan-card');
+    const planInput = document.querySelector('input[name="plan"]');
+    const submitBtn = document.getElementById('submit-btn');
+    const formSection = document.getElementById('job-form-section');
+    const previewCard = document.getElementById('preview-card');
+    const featuredRibbon = document.getElementById('p-featured-ribbon');
+    const featuredBadge = document.getElementById('p-featured-badge');
+
+    // 1. PLAN SELECTION LOGIC
+    planCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Reset ALL cards
+            planCards.forEach(c => {
+                c.querySelector('.absolute.inset-0')?.classList.add('hidden'); // Hide border ring
+                if(c.dataset.plan === 'free') {
+                    // Reset Free Card Text
+                    c.querySelector('.select-btn').innerText = "Select Launch Partner";
+                    c.querySelector('.select-btn').className = "w-full py-3.5 text-center rounded-xl bg-slate-100 text-slate-600 font-bold text-sm shadow-sm group-hover:bg-slate-200 transition select-btn";
+                } else {
+                    // Reset Featured Card Text
+                    c.querySelector('.select-btn').innerText = "Select Featured";
+                    c.classList.remove('ring-4', 'ring-indigo-100', 'border-indigo-600');
+                    c.classList.add('border-indigo-500');
+                }
+            });
+
+            // Activate THIS card
+            if(card.dataset.plan === 'free') {
+                // Activate Free Card
+                card.querySelector('.absolute.inset-0')?.classList.remove('hidden'); // Show ring
+                const btn = card.querySelector('.select-btn');
+                btn.innerText = "Selected & Ready to Post";
+                btn.className = "w-full py-3.5 text-center rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg transition select-btn";
+            } else {
+                // Activate Featured Card
+                card.classList.remove('border-indigo-500');
+                card.classList.add('ring-4', 'ring-indigo-100', 'border-indigo-600');
+                card.querySelector('.select-btn').innerText = "Selected";
+            }
+            
+            // Unlock Form
+            formSection.classList.remove('opacity-60', 'pointer-events-none');
+            formSection.classList.add('opacity-100');
+            
+            // Set Input Value
+            const plan = card.dataset.plan;
+            planInput.value = plan;
+
+            // Button & Preview Updates
+            if (plan === 'featured') {
+                submitBtn.innerHTML = "💳 Proceed to Payment ($99)";
+                submitBtn.classList.replace('bg-slate-900', 'bg-indigo-600');
+                submitBtn.classList.replace('hover:bg-black', 'hover:bg-indigo-700');
+                
+                // Featured Preview Style
+                previewCard.className = "bg-gradient-to-r from-amber-50/80 to-white border border-amber-300 rounded-xl p-5 shadow-md transition-all duration-300 relative overflow-hidden group";
+                featuredRibbon.classList.remove('hidden');
+                featuredBadge.classList.remove('hidden');
+            } else {
+                submitBtn.innerHTML = "🚀 Post Job Now";
+                submitBtn.classList.replace('bg-indigo-600', 'bg-slate-900');
+                submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-black');
+                
+                // Standard Preview Style
+                previewCard.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group";
+                featuredRibbon.classList.add('hidden');
+                featuredBadge.classList.add('hidden');
+            }
+
+            if (e.isTrusted) {
+                formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // 2. AUTO-INIT (Trigger click on load)
+    if (planInput.value) {
+        const card = document.querySelector(`.plan-card[data-plan="${planInput.value}"]`);
+        if(card) card.click();
+    }
+
+    // 3. LIVE PREVIEW SYNC
+    const inputs = {
+        title: document.getElementById('{{ form.title.id_for_label }}'),
+        company: document.getElementById('{{ form.company.id_for_label }}'),
+        location: document.getElementById('{{ form.location.id_for_label }}'),
+        salary: document.getElementById('{{ form.salary_range.id_for_label }}'),
+        logo: document.getElementById('{{ form.company_logo.id_for_label }}'),
+        newTools: document.getElementById('{{ form.new_tools.id_for_label }}')
+    };
+
+    const previews = {
+        title: document.getElementById('p-title'),
+        company: document.getElementById('p-company'),
+        location: document.getElementById('p-location'),
+        salary: document.getElementById('p-salary'),
+        logoImg: document.getElementById('p-logo-img'),
+        logoPlace: document.getElementById('p-logo-placeholder'),
+        stack: document.getElementById('p-stack')
+    };
+
+    const sync = (input, el, def) => { if(input) input.addEventListener('input', () => el.innerText = input.value || def); };
+    
+    sync(inputs.title, previews.title, "Job Title");
+    sync(inputs.company, previews.company, "Company");
+    
+    if(inputs.location) {
+        inputs.location.addEventListener('input', () => {
+            const val = inputs.location.value || "Location";
+            previews.location.innerHTML = `<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> ${val}`;
+        });
+    }
+
+    if(inputs.salary) {
+        const updateSalary = () => {
+            if(inputs.salary.value) {
+                previews.salary.innerText = "• " + inputs.salary.value;
+                previews.salary.classList.remove('hidden');
+            } else {
+                previews.salary.classList.add('hidden');
+            }
+        };
+        inputs.salary.addEventListener('input', updateSalary);
+        updateSalary();
+    }
+
+    if(inputs.logo) {
+        const updateLogo = () => {
+            if(inputs.logo.value) {
+                previews.logoImg.src = inputs.logo.value;
+                previews.logoImg.classList.remove('hidden');
+                previews.logoPlace.classList.add('hidden');
+            } else {
+                previews.logoImg.classList.add('hidden');
+                previews.logoPlace.classList.remove('hidden');
+            }
+        };
+        inputs.logo.addEventListener('input', updateLogo);
+        updateLogo();
+    }
+
+    const toolCheckboxes = document.querySelectorAll('input[name="tools"]');
+    const updateStack = () => {
+        previews.stack.innerHTML = ''; 
+        let count = 0;
+        
+        toolCheckboxes.forEach(cb => {
+            if(cb.checked && count < 5) {
+                const span = document.createElement('span');
+                span.className = "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200";
+                span.innerText = cb.parentElement.innerText.trim();
+                previews.stack.appendChild(span);
+                count++;
+            }
+        });
+        if (inputs.newTools && inputs.newTools.value) {
+            const customs = inputs.newTools.value.split(',');
+            customs.forEach(t => {
+                if(t.trim() && count < 6) {
+                    const span = document.createElement('span');
+                    span.className = "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200";
+                    span.innerText = t.trim();
+                    previews.stack.appendChild(span);
+                    count++;
+                }
+            });
+        }
+    };
+    toolCheckboxes.forEach(cb => cb.addEventListener('change', updateStack));
+    if(inputs.newTools) inputs.newTools.addEventListener('input', updateStack);
+});
+</script>
+{% endblock %}
