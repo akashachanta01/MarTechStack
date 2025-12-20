@@ -90,7 +90,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         
-        <div id="job-form-section" class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start {% if not form.errors %}opacity-60 pointer-events-none{% endif %} transition-all duration-500">
+        <div id="job-form-section" class="scroll-mt-32 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start {% if not form.errors %}opacity-60 pointer-events-none{% endif %} transition-all duration-500">
             
             <div class="lg:col-span-8 space-y-8">
                 <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 c.querySelector('.absolute.inset-0')?.classList.add('hidden'); // Hide border ring
                 if(c.dataset.plan === 'free') {
                     // Reset Free Card Text
-                    c.querySelector('.select-btn').innerText = "Select Launch Partner";
+                    c.querySelector('.select-btn').innerText = "Selected & Ready to Post";
                     c.querySelector('.select-btn').className = "w-full py-3.5 text-center rounded-xl bg-slate-100 text-slate-600 font-bold text-sm shadow-sm group-hover:bg-slate-200 transition select-btn";
                 } else {
                     // Reset Featured Card Text
@@ -370,8 +370,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 featuredBadge.classList.add('hidden');
             }
 
+            // FIX: Reliable Scrolling
+            // e.isTrusted checks if the click was real (user) vs triggered by script (on load)
             if (e.isTrusted) {
-                formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Wait slightly for any UI updates, then scroll
+                setTimeout(() => {
+                    formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
             }
         });
     });
@@ -382,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(card) card.click();
     }
 
-    // 3. LIVE PREVIEW SYNC
+    // 3. LIVE PREVIEW SYNC (Logic Unchanged)
     const inputs = {
         title: document.getElementById('{{ form.title.id_for_label }}'),
         company: document.getElementById('{{ form.company.id_for_label }}'),
