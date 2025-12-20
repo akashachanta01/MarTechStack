@@ -218,10 +218,30 @@ def post_job_success(request):
     return render(request, 'jobs/post_job_success.html')
 
 def subscribe(request):
+    # 1. Debug Print (Forces log to appear)
+    print("--------------------------------------------------", flush=True)
+    print("👀 DEBUG: Subscribe View Triggered!", flush=True)
+
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
+        print(f"📧 DEBUG: Received email: {email}", flush=True)
+
         if email: 
-            Subscriber.objects.get_or_create(email=email)
+            # 2. Get or Create User
+            subscriber, created = Subscriber.objects.get_or_create(email=email)
+            print(f"👤 DEBUG: User Created? {created}", flush=True)
+            print(f"👤 DEBUG: User ID: {subscriber.id}", flush=True)
+
+            # 3. FORCE SEND EMAIL (Ignore 'created' check for now)
+            print("🚀 DEBUG: Attempting to send email NOW...", flush=True)
+            try:
+                # Direct import to be 100% sure we use the right function
+                from .emails import send_welcome_email
+                send_welcome_email(email)
+                print("✅ DEBUG: Email function finished without error.", flush=True)
+            except Exception as e:
+                print(f"❌ DEBUG: Email function CRASHED: {e}", flush=True)
+                
             return JsonResponse({"success": True})
             
     return JsonResponse({"success": False}, status=400)
