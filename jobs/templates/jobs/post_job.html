@@ -8,7 +8,7 @@
         
         <div class="mb-10">
             
-            <div id="plan-card-free" class="w-full bg-indigo-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden transition-all duration-300 cursor-pointer group" data-plan="free">
+            <div id="plan-card-free" class="w-full bg-indigo-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden transition-all duration-300 cursor-pointer group hover:shadow-2xl hover:-translate-y-1" data-plan="free">
                 <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl pointer-events-none"></div>
                 
                 <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -38,7 +38,7 @@
                     <div class="text-left md:text-right bg-indigo-700/30 p-4 rounded-2xl border border-indigo-500/30 backdrop-blur-sm group-hover:bg-indigo-700/50 transition">
                         <span class="block text-5xl font-extrabold">$0</span>
                         <span class="text-sm font-bold text-indigo-200 uppercase tracking-wide">Free Forever</span>
-                        <div class="mt-2 text-xs font-bold text-white bg-indigo-500 px-3 py-1 rounded-full text-center shadow-sm">Selected</div>
+                        <div class="mt-2 text-xs font-bold text-white bg-indigo-500 px-3 py-1 rounded-full text-center shadow-sm" id="free-selected-badge">Selected</div>
                     </div>
                 </div>
             </div>
@@ -62,7 +62,9 @@
 
         </div>
 
-        <div id="job-form-section" class="scroll-mt-32 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div id="job-form-anchor" class="scroll-mt-32"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             <div class="lg:col-span-8">
                 <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
@@ -78,7 +80,7 @@
                             </div>
 
                             {% if form.errors %}
-                            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm">
+                            <div id="form-errors" class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm scroll-mt-32">
                                 <strong class="block mb-1">Please fix the errors below:</strong>
                                 <ul class="list-disc pl-5 mt-1">
                                     {% for field, errors in form.errors.items %}
@@ -244,7 +246,6 @@
     .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
     
-    /* Clean inputs matching the reference image style */
     input[type="text"], input[type="url"], select, textarea {
         width: 100%;
         border-radius: 0.75rem; /* rounded-xl */
@@ -271,7 +272,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const featuredRibbon = document.getElementById('p-featured-ribbon');
     const featuredBadge = document.getElementById('p-featured-badge');
 
-    // 1. FEATURED CARD LOGIC (Hidden Feature Flag)
+    // 0. SCROLL TO ERROR (Priority)
+    // If validation failed, ignore sticky header and go straight to error
+    const errorBox = document.getElementById('form-errors');
+    if (errorBox) {
+        setTimeout(() => {
+            const yOffset = -150; 
+            const y = errorBox.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({top: y, behavior: 'smooth'});
+        }, 100);
+    }
+
+    // 1. FEATURED CARD LOGIC
     if (featuredCard) {
         featuredCard.addEventListener('click', (e) => {
             planInput.value = 'featured';
@@ -279,12 +291,9 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.classList.replace('bg-slate-900', 'bg-indigo-600');
             submitBtn.classList.replace('hover:bg-black', 'hover:bg-indigo-700');
             
-            // Highlight Featured Card
-            featuredCard.classList.add('ring-4', 'ring-indigo-300', 'border-indigo-600');
-            
             // Dim Free Card
-            freeCard.classList.add('opacity-50');
-            freeCard.classList.remove('ring-4', 'ring-indigo-300', 'border-indigo-600');
+            freeCard.classList.add('opacity-60', 'scale-95');
+            document.getElementById('free-selected-badge').classList.add('hidden');
             
             // Update Preview
             previewCard.className = "bg-gradient-to-r from-amber-50/80 to-white border border-amber-300 rounded-xl p-5 shadow-md transition-all duration-300 relative overflow-hidden group";
@@ -292,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
             featuredBadge.classList.remove('hidden');
 
             if (e.isTrusted) {
-                document.getElementById('job-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scrollToForm();
             }
         });
     }
@@ -305,13 +314,9 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.classList.replace('bg-indigo-600', 'bg-slate-900');
             submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-black');
 
-            // Highlight Free Card
-            freeCard.classList.remove('opacity-50');
-            // Visual feedback handled by CSS hover mostly, but we can enforce active state if needed
-            
-            if (featuredCard) {
-                featuredCard.classList.remove('ring-4', 'ring-indigo-300', 'border-indigo-600');
-            }
+            // Restore Free Card
+            freeCard.classList.remove('opacity-60', 'scale-95');
+            document.getElementById('free-selected-badge').classList.remove('hidden');
 
             // Update Preview
             previewCard.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group";
@@ -319,9 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
             featuredBadge.classList.add('hidden');
 
             if (e.isTrusted) {
-                document.getElementById('job-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scrollToForm();
             }
         });
+    }
+
+    // Helper: Robust Scroll Calculation
+    function scrollToForm() {
+        const anchor = document.getElementById('job-form-anchor');
+        const yOffset = -120; // Clear the sticky header
+        const y = anchor.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
     }
 
     // 3. LIVE PREVIEW SYNC
