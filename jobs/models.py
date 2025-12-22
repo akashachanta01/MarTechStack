@@ -95,6 +95,20 @@ class Job(models.Model):
     def __str__(self):
         return f"{self.title} at {self.company}"
 
+    # --- AUTO-SYNC STATUS ---
+    def save(self, *args, **kwargs):
+        # Auto-sync is_active with screening_status
+        if self.screening_status == 'approved':
+            self.is_active = True
+        elif self.screening_status == 'rejected':
+            self.is_active = False
+        
+        # Ensure 'pending' jobs are hidden unless manually activated
+        elif self.screening_status == 'pending' and not self.pk:
+            self.is_active = False
+            
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ['-is_pinned', '-created_at']
         indexes = [
@@ -131,36 +145,9 @@ class UserSubmission(Job):
         verbose_name = "User Submission"
         verbose_name_plural = "User Submissions"
 
-# --- NEW: Add this class at the bottom ---
+# --- NEW: ACTIVE JOBS (Corrected) ---
 class ActiveJob(Job):
     class Meta:
         proxy = True
-        verbose_name = "Active Job" # Name in Sidebar (Singular)
-        verbose_name_plural = "Active Jobs" # Name in Sidebar (Plural)
-        tags = models.CharField(max_length=200, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} at {self.company}"
-
-    # --- ADD THIS NEW METHOD HERE ---
-    def save(self, *args, **kwargs):
-        # Auto-sync is_active with screening_status
-        if self.screening_status == 'approved':
-            self.is_active = True
-        elif self.screening_status == 'rejected':
-            self.is_active = False
-        
-        # Ensure 'pending' jobs are hidden unless manually activated
-        elif self.screening_status == 'pending' and not self.pk:
-            self.is_active = False
-            
-        super().save(*args, **kwargs)
-
-    class Meta:
-        ordering = ['-is_pinned', '-created_at']
-        indexes = [
-            models.Index(fields=['is_active', 'screening_status']),
-            models.Index(fields=['created_at']),
-        ]
+        verbose_name = "Active Job"
+        verbose_name_plural = "Active Jobs"
