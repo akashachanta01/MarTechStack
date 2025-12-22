@@ -17,9 +17,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 
 # ⚠️ DIAGNOSIS MODE: Forced DEBUG=True to see the 500 error details.
 # Change this back to 'False' after fixing the issue!
-DEBUG = True 
-
-ALLOWED_HOSTS = ['*'] # Allow all hosts for debugging
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechstack.io,www.martechstack.io,.onrender.com').split(',')
 
 # Trusted origins for CSRF
 CSRF_TRUSTED_ORIGINS = [
