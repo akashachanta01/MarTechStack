@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 
-# Import all models, including the new 'ActiveJob' proxy model
+# Import all models
 from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob
 
 # --- ADMIN REGISTRATIONS ---
@@ -20,8 +20,12 @@ class ToolAdmin(admin.ModelAdmin):
     list_filter = ("category",)
     prepopulated_fields = {"slug": ("name",)}
 
-@admin.register(Job)
-class JobAdmin(admin.ModelAdmin):
+# --- BASE ADMIN (Shared Visuals & Logic) ---
+class BaseJobAdmin(admin.ModelAdmin):
+    """
+    Holds all the visual settings so we don't have to duplicate code.
+    Both 'Inbox' and 'Active' admins will inherit from this.
+    """
     list_display = (
         "logo_preview",
         "job_card_header",
@@ -33,27 +37,48 @@ class JobAdmin(admin.ModelAdmin):
         "action_buttons",
     )
     
-    list_filter = ("screening_status", "is_active", "work_arrangement", "role_type", "created_at")
-    search_fields = ("title", "company", "description")
+    list_filter = ("screening_status", "work_arrangement", "role_type", "created_at")
     
-    # Editable fields in the list view
+    # UPGRADE 1: Search by Tool Name too (e.g., search "Marketo")
+    search_fields = ("title", "company", "description", "tools__name")
+    
+    # UPGRADE 2: Organized "Edit" Screen
+    fieldsets = (
+        ("Key Info", {
+            "fields": ("title", "company", "company_logo", "apply_url", "location")
+        }),
+        ("Job Details", {
+            "fields": ("description", "role_type", "work_arrangement", "salary_range", "tools")
+        }),
+        ("Screening & AI", {
+            "fields": ("screening_status", "screening_score", "screening_reason", "tags"),
+            "classes": ("collapse",), # Click to expand
+        }),
+        ("Monetization", {
+            "fields": ("is_pinned", "is_featured", "plan_name"),
+            "classes": ("collapse",),
+        }),
+        ("System Data", {
+            "fields": ("created_at", "updated_at", "screened_at", "screening_details"),
+            "classes": ("collapse",),
+        }),
+    )
+
+    # Editable fields in the list view (Quick edits)
     list_editable = ("work_arrangement", "salary_range")
 
-    # Readonly fields (prevent accidental changes to system-managed data)
-    readonly_fields = ("created_at", "screened_at", "screening_details")
+    # Readonly fields
+    readonly_fields = ("created_at", "updated_at", "screened_at", "screening_details")
     
     filter_horizontal = ("tools",)
     list_per_page = 25
-    
-    # Default sorting: Newest first
     ordering = ("-created_at",)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.prefetch_related('tools')
 
-    # --- 1. VISUAL COLUMNS (Sortable/Style) ---
-
+    # --- VISUAL COLUMNS ---
     def logo_preview(self, obj):
         if obj.company_logo:
             return format_html(
@@ -130,10 +155,9 @@ class JobAdmin(admin.ModelAdmin):
 
     def action_buttons(self, obj):
         change_url = reverse('admin:jobs_job_change', args=[obj.id])
-        
         return format_html(
             '<div style="display: flex; align-items: center; gap: 8px;">'
-            '<a href="{}" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Edit Details</a>'
+            '<a href="{}" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Edit</a>'
             '<a href="{}" target="_blank" style="opacity: 0.7; font-size: 12px; text-decoration: none;">↗ Apply</a>'
             '</div>',
             change_url,
@@ -141,7 +165,7 @@ class JobAdmin(admin.ModelAdmin):
         )
     action_buttons.short_description = "Actions"
 
-    # --- 2. BULK ACTIONS ---
+    # --- BULK ACTIONS ---
     actions = ("mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs")
 
     @admin.action(description="✅ Approve selected")
@@ -164,40 +188,61 @@ class JobAdmin(admin.ModelAdmin):
     def deactivate_jobs(self, request, queryset):
         queryset.update(is_active=False)
 
-
-@admin.register(UserSubmission)
-class UserSubmissionAdmin(JobAdmin):
-    # Only show jobs tagged "User Submission"
+# --- 1. INBOX (INACTIVE JOBS ONLY) ---
+@admin.register(Job)
+class JobAdmin(BaseJobAdmin):
+    """
+    Shows ONLY inactive jobs (Pending, Rejected, or manually hidden).
+    This is your 'To-Do' list.
+    """
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(tags__icontains="User Submission")
+        return super().get_queryset(request).filter(is_active=False)
 
-# --- NEW: ACTIVE JOBS (LIVE ON SITE) ---
+# --- 2. ACTIVE JOBS (LIVE ON SITE ONLY) ---
 @admin.register(ActiveJob)
-class ActiveJobAdmin(JobAdmin):
+class ActiveJobAdmin(BaseJobAdmin):
     """
-    A read-focused view for jobs that are currently live on the site.
+    Shows ONLY live jobs.
+    This is your 'Dashboard'.
     """
+    # UPGRADE 3: Add 'is_pinned' to list_editable so you can pin jobs instantly from the list!
+    list_editable = ("work_arrangement", "salary_range", "is_pinned", "is_featured") 
+    
     list_display = (
         "logo_preview",
         "job_card_header",
         "score_badge",
+        "is_pinned",  # Add checkbox column
+        "is_featured", # Add checkbox column
         "work_arrangement",
         "salary_range",
         "tech_stack_preview",
         "action_buttons",
     )
-    
-    # FILTER: Only show jobs that are live
+
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_active=True)
 
-    # Disable "Add" to prevent accidental creation here
+    # Disable "Add" here (create new jobs in the main inbox or via script)
     def has_add_permission(self, request):
         return False
     
-    # Disable "Delete" to ensure deletions happen in the main view
+    # Disable "Delete" here to prevent accidents
     def has_delete_permission(self, request, obj=None):
         return False
+
+# --- 3. USER SUBMISSIONS (ALL) ---
+@admin.register(UserSubmission)
+class UserSubmissionAdmin(BaseJobAdmin):
+    """
+    Shows all user submissions, regardless of status.
+    """
+    def get_queryset(self, request):
+        # We inherit from BaseJobAdmin directly so we don't get the 'False' filter from JobAdmin
+        qs = super(BaseJobAdmin, self).get_queryset(request) # Call grandparent queryset
+        return qs.prefetch_related('tools').filter(tags__icontains="User Submission")
+
+# --- OTHER ADMINS ---
 
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
