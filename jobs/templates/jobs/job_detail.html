@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,101 +8,181 @@
     <title>{{ job.title }} at {{ job.company }} - MarTechStack.io</title>
     <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today on MarTechStack.io.">
     
-    <meta property="og:title" content="{{ job.title }} at {{ job.company }}">
-    <meta property="og:description" content="{{ job.description|striptags|truncatewords:25 }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{{ job.title }} - {{ job.company }}">
+    <meta property="og:description" content="View details and apply for this Marketing Operations role.">
     <meta property="og:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechstack.io/static/og-image.png{% endif %}">
-    <meta property="og:url" content="https://martechstack.io/job/{{ job.pk }}/">
-    <meta property="og:type" content="article">
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5DL9PF78WG"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-5DL9PF78WG');
-    </script>
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{{ job.title }}">
+    <meta property="twitter:description" content="Hiring now: {{ job.title }} at {{ job.company }}.">
+    <meta property="twitter:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechstack.io/static/og-image.png{% endif %}">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style> 
+        body { font-family: 'Plus Jakarta Sans', sans-serif; } 
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-white text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-700">
 
-    <nav class="border-b border-slate-100 bg-white sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-2 flex-shrink-0">
-                <div class="bg-teal-600 text-white p-1.5 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <nav class="border-b border-slate-100 bg-white sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-2 group">
+                <div class="bg-indigo-600 text-white p-1.5 rounded-lg group-hover:bg-indigo-700 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="text-xl font-bold tracking-tight text-slate-900">MarTechStack</span>
+                <span class="text-lg font-bold tracking-tight text-slate-900">MarTechStack</span>
             </a>
-            <div class="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
-                <a href="/" class="text-sm font-semibold text-slate-900">Jobs</a>
-                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Companies</a>
-                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Salaries</a>
-                <a href="#" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Blueprint</a>
-            </div>
-            <div class="flex-shrink-0">
-                <a href="#" class="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-colors shadow-sm">
-                    Post a job
-                </a>
-            </div>
+            <a href="{% url 'post_job' %}" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition">Post a Job</a>
         </div>
     </nav>
 
-    <div class="max-w-4xl mx-auto px-6 py-10">
-        <a href="/" class="text-sm font-bold text-slate-500 hover:text-teal-600 flex items-center gap-1 mb-6">
-            &larr; Back to all jobs
-        </a>
-        
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="p-8 border-b border-slate-100">
-                <div class="flex items-start gap-6">
+    <div class="bg-slate-50 border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+            
+            <a href="/" class="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-8 transition">
+                &larr; Back to jobs
+            </a>
+
+            <div class="flex flex-col md:flex-row gap-6 md:items-start">
+                <div class="flex-shrink-0">
                     {% if job.company_logo %}
-                        <img src="{{ job.company_logo }}" class="w-20 h-20 rounded-xl border border-slate-100 object-contain p-1">
+                        <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-20 h-20 rounded-xl border border-slate-200 bg-white p-2 object-contain shadow-sm">
                     {% else %}
-                        <div class="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-2xl font-bold">
+                        <div class="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-500 border border-slate-300">
                             {{ job.company|slice:":1" }}
                         </div>
                     {% endif %}
+                </div>
+
+                <div class="flex-grow">
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-3">
+                        {{ job.title }}
+                    </h1>
                     
-                    <div class="flex-1">
-                        <h1 class="text-3xl font-bold text-slate-900 mb-2">{{ job.title }}</h1>
-                        <div class="flex flex-wrap items-center gap-4 text-slate-600 font-medium">
-                            <span class="flex items-center gap-1">🏢 {{ job.company }}</span>
-                            <span class="flex items-center gap-1">🌍 {{ job.location }}</span>
-                            {% if job.salary_range %}
-                                <span class="flex items-center gap-1 text-green-700 bg-green-50 px-2 py-0.5 rounded-md text-sm">
-                                    💰 {{ job.salary_range }}
-                                </span>
-                            {% endif %}
-                        </div>
+                    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-slate-600 font-medium text-sm md:text-base">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            {{ job.company }}
+                        </span>
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            {{ job.location|default:"Remote" }}
+                        </span>
+                        {% if job.salary_range %}
+                        <span class="flex items-center gap-2 text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-100">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            {{ job.salary_range }}
+                        </span>
+                        {% endif %}
                     </div>
                 </div>
-                
-                <div class="mt-8 flex gap-3">
-                    <a href="{{ job.apply_url }}" target="_blank" class="flex-1 bg-teal-600 text-white text-center font-bold py-3 rounded-lg hover:bg-teal-700 transition shadow-sm hover:shadow-md">
-                        Apply Now &nearr;
+
+                <div class="hidden md:block flex-shrink-0 pt-2">
+                    <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all transform flex items-center gap-2">
+                        Apply Now 
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     </a>
-                </div>
-            </div>
-
-            <div class="p-8 prose prose-slate max-w-none">
-                <h3 class="text-lg font-bold mb-4">Tech Stack</h3>
-                <div class="flex flex-wrap gap-2 not-prose mb-8">
-                    {% for tool in job.tools.all %}
-                        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium border border-slate-200">
-                            {{ tool.name }}
-                        </span>
-                    {% endfor %}
-                </div>
-
-                <h3 class="text-lg font-bold mb-4">About the Role</h3>
-                <div class="whitespace-pre-line text-slate-600 leading-relaxed">
-                    {{ job.description }}
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            <div class="lg:col-span-8">
+                <h3 class="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2">About the Role</h3>
+                
+                <article class="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed">
+                    {{ job.description|linebreaks }}
+                </article>
+
+                <div class="mt-12 pt-8 border-t border-slate-200">
+                    <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 text-lg">
+                        Apply on company site &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 space-y-8">
+                
+                {% if job.tools.exists %}
+                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Tech Stack</h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tool in job.tools.all %}
+                            <span class="{{ tool.color_class }} inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border">{{ tool.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Job Info</h3>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Posted {{ job.created_at|timesince }} ago</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Verified by MarTechStack AI</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 md:hidden z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center font-bold py-3.5 rounded-xl shadow-md transition">
+            Apply Now
+        </a>
+    </div>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org/",
+      "@type": "JobPosting",
+      "title": "{{ job.title|escapejs }}",
+      "description": "{{ job.description|linebreaksbr|escapejs }}",
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "{{ job.company|escapejs }}",
+        "value": "{{ job.id }}"
+      },
+      "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
+      "validThrough": "{{ job.created_at|date:'Y-m-d' }}",
+      "employmentType": "{{ job.role_type|default:'FULL_TIME'|upper }}",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "{{ job.company|escapejs }}",
+        "logo": "{{ job.company_logo|default:'' }}"
+      },
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "{{ job.location|escapejs }}",
+          "addressCountry": "US" 
+        }
+      },
+      "baseSalary": {
+        "@type": "MonetaryAmount",
+        "currency": "USD",
+        "value": {
+          "@type": "QuantitativeValue",
+          "value": 0,
+          "unitText": "YEAR"
+        }
+      }
+    }
+    </script>
 </body>
 </html>
