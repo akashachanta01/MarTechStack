@@ -4,7 +4,8 @@ import os
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Case, When, Value, IntegerField
+# ADDED: Count
+from django.db.models import Q, Case, When, Value, IntegerField, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
@@ -20,7 +21,7 @@ from .emails import send_job_alert, send_welcome_email
 # Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# [KEEP EXISTING TOOL_MAPPING]
+# [KEEP EXISTING TOOL_MAPPING - Still used for search filtering]
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
@@ -31,7 +32,7 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
-    # [KEEP EXISTING JOB_LIST LOGIC]
+    # [KEEP EXISTING FILTER LOGIC]
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -73,33 +74,26 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    popular_tech_stacks = cache.get('popular_tech_stacks')
+    # --- UPGRADE: TOPIC CLUSTER BUBBLES ---
+    # We now fetch specific tools (name + slug) ordered by job count.
+    popular_tech_stacks = cache.get('popular_tech_stacks_v2')
     if popular_tech_stacks is None:
-        pairs = Tool.objects.filter(jobs__is_active=True, jobs__screening_status='approved').values_list('name', 'jobs__id')
-        vendor_jobs = defaultdict(set)
-        for tool_name, job_id in pairs:
-            clean_name = tool_name.lower()
-            group_name = TOOL_MAPPING.get(clean_name, tool_name) 
-            vendor_jobs[group_name].add(job_id)
-
-        stats_list = []
-        for group, job_ids in vendor_jobs.items():
-            if len(job_ids) > 0:
-                stats_list.append({'name': group, 'count': len(job_ids)})
+        popular_tech_stacks = Tool.objects.filter(
+            jobs__is_active=True, 
+            jobs__screening_status='approved'
+        ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:10]
         
-        popular_tech_stacks = sorted(stats_list, key=lambda x: x['count'], reverse=True)[:10]
-        cache.set('popular_tech_stacks', popular_tech_stacks, 3600)
+        cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, "query": query, "location_filter": location_query,
         "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
     })
 
-# --- NEW SEO VIEW: TOOL DETAIL ---
+# --- TOOL DETAIL (Topic Cluster Page) ---
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
     
-    # Fetch active jobs for this specific tool
     jobs = Job.objects.filter(
         tools=tool, 
         is_active=True, 
@@ -117,11 +111,8 @@ def tool_detail(request, slug):
 
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id)
-    
-    # 1. SEO Canoncial Check
     if job.slug and job.slug != slug:
         return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
-
     return render(request, 'jobs/job_detail.html', {'job': job})
 
 def post_job(request):
@@ -129,105 +120,57 @@ def post_job(request):
         form = JobPostForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
-            if not job.location:
-                job.location = "Remote"
-
+            if not job.location: job.location = "Remote"
             plan = form.cleaned_data.get('plan')
             job.plan_name = plan
-            
-            job.is_featured = False
-            job.is_pinned = False
-            job.screening_status = 'pending'
-            job.is_active = False 
-            job.tags = f"User Submission: {plan}"
-            
-            job.save() 
-            form.save_m2m()
+            job.is_featured = False; job.is_pinned = False; job.screening_status = 'pending'; job.is_active = False 
+            job.tags = f"User Submission: {plan}"; job.save(); form.save_m2m()
 
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
-                tool_names = [t.strip() for t in new_tools_text.split(',') if t.strip()]
-                for name in tool_names:
-                    tool, created = Tool.objects.get_or_create(
-                        name__iexact=name, 
-                        defaults={'name': name, 'slug': slugify(name), 'category': category}
-                    )
+                for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
+                    tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
                     job.tools.add(tool)
 
-            cache.delete('popular_tech_stacks')
+            cache.delete('popular_tech_stacks_v2')
 
             if plan == 'featured':
-                if not settings.STRIPE_SECRET_KEY:
-                     return HttpResponse("CRITICAL ERROR: STRIPE_SECRET_KEY is missing.", status=500)
-
+                if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
                     payment_method_types=['card'],
-                    line_items=[{
-                        'price_data': {
-                            'currency': 'usd',
-                            'unit_amount': 9900,
-                            'product_data': {
-                                'name': 'Featured Job Post',
-                                'description': f'Premium listing for {job.title} at {job.company}',
-                            },
-                        },
-                        'quantity': 1,
-                    }],
-                    mode='payment',
-                    success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}',
-                    cancel_url=settings.DOMAIN_URL + '/post-job/',
-                    metadata={'job_id': job.id, 'plan': 'featured'}
+                    line_items=[{'price_data': {'currency': 'usd', 'unit_amount': 9900, 'product_data': {'name': 'Featured Job Post', 'description': f'Premium listing for {job.title}'}}, 'quantity': 1}],
+                    mode='payment', success_url=settings.DOMAIN_URL + f'/post-job/success/?plan=featured&session_id={{CHECKOUT_SESSION_ID}}', cancel_url=settings.DOMAIN_URL + '/post-job/', metadata={'job_id': job.id, 'plan': 'featured'}
                 )
                 return redirect(checkout_session.url)
-            
             return redirect('/post-job/success/?plan=free')
-    else:
-        form = JobPostForm()
+    else: form = JobPostForm()
     return render(request, 'jobs/post_job.html', {'form': form})
 
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    event = None
-
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
-    except ValueError: return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError: return HttpResponse(status=400)
-
+    try: event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+    except: return HttpResponse(status=400)
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         job_id = session.get('metadata', {}).get('job_id')
-        
         if job_id:
-            try:
-                job = Job.objects.get(id=job_id)
-                job.is_featured = True
-                job.is_pinned = True
-                job.screening_status = 'approved'
-                job.is_active = True
-                job.save()
-                cache.delete('popular_tech_stacks')
-                send_job_alert(job)
-            except Job.DoesNotExist:
-                print(f"❌ ERROR: Job {job_id} not found.")
-
+            try: 
+                job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
+                cache.delete('popular_tech_stacks_v2'); send_job_alert(job)
+            except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
-def post_job_success(request):
-    return render(request, 'jobs/post_job_success.html')
-
+def post_job_success(request): return render(request, 'jobs/post_job_success.html')
 def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email: 
-            subscriber, created = Subscriber.objects.get_or_create(email=email)
-            if created:
-                send_welcome_email(email)
+            sub, created = Subscriber.objects.get_or_create(email=email)
+            if created: send_welcome_email(email)
             return JsonResponse({"success": True})
-            
     return JsonResponse({"success": False}, status=400)
 
 @staff_member_required
@@ -238,23 +181,13 @@ def review_queue(request):
     if status in ("pending", "approved", "rejected"): jobs = jobs.filter(screening_status=status)
     if q: jobs = jobs.filter(Q(title__icontains=q) | Q(company__icontains=q))
     paginator = Paginator(jobs, 50)
-    page_number = request.GET.get("page")
-    jobs_page = paginator.get_page(page_number)
+    jobs_page = paginator.get_page(request.GET.get("page"))
     return render(request, "jobs/review_queue.html", {"jobs": jobs_page, "status": status, "q": q})
 
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
-    if action == "approve":
-        job.screening_status = "approved"
-        job.is_active = True 
-        job.screened_at = timezone.now()
-        job.save()
-        cache.delete('popular_tech_stacks') 
-        send_job_alert(job)
-        
-    elif action == "reject":
-        job.screening_status = "rejected"; job.is_active = False; job.save()
-    elif action == "pending":
-        job.screening_status = "pending"; job.save()
+    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); send_job_alert(job)
+    elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
+    elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
