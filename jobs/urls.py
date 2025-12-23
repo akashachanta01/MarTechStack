@@ -4,8 +4,11 @@ from . import views
 urlpatterns = [
     path('', views.job_list, name='job_list'),
     
-    # --- SEO DETAIL PAGE ---
-    # This captures /job/123/marketing-manager-at-hubspot/
+    # --- SEO: TOOL LANDING PAGES (Topic Clusters) ---
+    # Example: /stack/hubspot/ -> Shows all HubSpot jobs
+    path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
+    
+    # --- SEO: JOB DETAIL PAGE ---
     path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
 
     path('post-job/', views.post_job, name='post_job'),
