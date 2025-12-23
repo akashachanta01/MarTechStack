@@ -3,6 +3,11 @@ from . import views
 
 urlpatterns = [
     path('', views.job_list, name='job_list'),
+    
+    # --- NEW SEO DETAIL PAGE ---
+    # This captures /job/123/marketing-manager-at-hubspot/
+    path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
+
     path('post-job/', views.post_job, name='post_job'),
     path('post-job/success/', views.post_job_success, name='post_job_success'),
     
