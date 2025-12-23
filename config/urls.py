@@ -6,14 +6,13 @@ from django.contrib.sitemaps import Sitemap
 from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 
-# --- DEFINING SITEMAP HERE TO PREVENT CIRCULAR IMPORTS ---
+# --- 1. JOB SITEMAP ---
 class JobSitemap(Sitemap):
     changefreq = "daily"
     priority = 0.8
     protocol = 'https'
 
     def items(self):
-        # Lazy import explicitly to prevent recursion error during build
         from jobs.models import Job
         return Job.objects.filter(is_active=True, screening_status='approved')
 
@@ -23,12 +22,27 @@ class JobSitemap(Sitemap):
     def location(self, obj):
         return reverse('job_detail', args=[obj.id, obj.slug])
 
-# Define sitemaps dict
+# --- 2. TOOL SITEMAP (New Topic Clusters) ---
+class ToolSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.6
+    protocol = 'https'
+
+    def items(self):
+        from jobs.models import Tool
+        # Only list tools that actually have jobs
+        return Tool.objects.filter(jobs__is_active=True).distinct()
+
+    def location(self, obj):
+        return reverse('tool_detail', args=[obj.slug])
+
+# --- DEFINITIONS ---
 sitemaps = {
     'jobs': JobSitemap,
+    'tools': ToolSitemap, 
 }
 
-# Simple Robots.txt view
+# --- ROBOTS.TXT ---
 def robots_txt(request):
     content = f"""User-agent: *
 Disallow: /admin/
@@ -40,15 +54,10 @@ Sitemap: {settings.DOMAIN_URL}/sitemap.xml
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Main App URLs
     path('', include('jobs.urls')),
-    
-    # SEO: Sitemap & Robots
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', robots_txt),
 ]
 
-# Serve media files (images) during development/debug
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
