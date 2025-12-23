@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    # NEW: SEO Sitemap Support
+    'django.contrib.sitemaps',
+    
     # Your Apps
     'jobs',
 ]
@@ -103,7 +106,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================
-# STATIC & MEDIA FILES (THE FIX)
+# STATIC & MEDIA FILES
 # ==============================================
 
 # 1. Static files (CSS, JS) - Managed by Whitenoise
@@ -111,9 +114,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# 2. Media files (User Uploads) - REQUIRED for ImageField
-# Note: On Render Free Tier, these files vanish on redeploy. 
-# For production persistence, you would need AWS S3, but this fixes the crash.
+# 2. Media files (User Uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -131,10 +132,9 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = f'MarTechStack <{EMAIL_HOST_USER}>'
 
 # STRIPE PAYMENTS
-# The .strip() function removes any accidental spaces or newlines
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
 # DOMAIN URL
-DOMAIN_URL = os.environ.get("DOMAIN_URL", "http://127.0.0.1:8000").strip()
+DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechstack.io").strip()
