@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -66,6 +67,9 @@ class Job(models.Model):
     description = models.TextField()
     apply_url = models.URLField(max_length=500)
     
+    # SEO Friendly URL Slug
+    slug = models.SlugField(max_length=250, null=True, blank=True)
+    
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
@@ -77,7 +81,7 @@ class Job(models.Model):
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
-    # AI/Scraper Fields (Required by Admin)
+    # AI/Scraper Fields
     screening_score = models.FloatField(blank=True, null=True)
     screening_reason = models.TextField(blank=True, default="")
     screening_details = models.JSONField(blank=True, default=dict)
@@ -95,15 +99,16 @@ class Job(models.Model):
     def __str__(self):
         return f"{self.title} at {self.company}"
 
-    # --- AUTO-SYNC STATUS ---
     def save(self, *args, **kwargs):
-        # Auto-sync is_active with screening_status
+        # 1. Auto-generate Slug for SEO
+        if not self.slug:
+            self.slug = slugify(f"{self.title} at {self.company}")
+            
+        # 2. Auto-sync is_active with screening_status
         if self.screening_status == 'approved':
             self.is_active = True
         elif self.screening_status == 'rejected':
             self.is_active = False
-        
-        # Ensure 'pending' jobs are hidden unless manually activated
         elif self.screening_status == 'pending' and not self.pk:
             self.is_active = False
             
@@ -145,7 +150,6 @@ class UserSubmission(Job):
         verbose_name = "User Submission"
         verbose_name_plural = "User Submissions"
 
-# --- NEW: ACTIVE JOBS (Corrected) ---
 class ActiveJob(Job):
     class Meta:
         proxy = True
