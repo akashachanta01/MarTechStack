@@ -1,6 +1,5 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from .models import Job
 
 class JobSitemap(Sitemap):
     changefreq = "daily"
@@ -8,7 +7,8 @@ class JobSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        # Only list ACTIVE and APPROVED jobs to Google
+        # ⚠️ LAZY IMPORT: Prevents "RecursionError" in urls.py
+        from .models import Job
         return Job.objects.filter(is_active=True, screening_status='approved')
 
     def lastmod(self, obj):
