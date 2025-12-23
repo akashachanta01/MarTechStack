@@ -95,12 +95,30 @@ def job_list(request):
         "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
     })
 
-# --- NEW SEO VIEW ---
+# --- NEW SEO VIEW: TOOL DETAIL ---
+def tool_detail(request, slug):
+    tool = get_object_or_404(Tool, slug=slug)
+    
+    # Fetch active jobs for this specific tool
+    jobs = Job.objects.filter(
+        tools=tool, 
+        is_active=True, 
+        screening_status='approved'
+    ).order_by('-is_pinned', '-created_at')
+
+    paginator = Paginator(jobs, 20)
+    page_number = request.GET.get('page')
+    jobs_page = paginator.get_page(page_number)
+
+    return render(request, 'jobs/tool_detail.html', {
+        'tool': tool,
+        'jobs': jobs_page,
+    })
+
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id)
     
     # 1. SEO Canoncial Check
-    # If the URL slug doesn't match the DB slug, 301 Redirect to the correct one.
     if job.slug and job.slug != slug:
         return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
 
