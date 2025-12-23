@@ -95,6 +95,17 @@ def job_list(request):
         "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
     })
 
+# --- NEW SEO VIEW ---
+def job_detail(request, id, slug):
+    job = get_object_or_404(Job, id=id)
+    
+    # 1. SEO Canoncial Check
+    # If the URL slug doesn't match the DB slug, 301 Redirect to the correct one.
+    if job.slug and job.slug != slug:
+        return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
+
+    return render(request, 'jobs/job_detail.html', {'job': job})
+
 def post_job(request):
     if request.method == 'POST':
         form = JobPostForm(request.POST)
