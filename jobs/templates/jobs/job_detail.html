@@ -25,6 +25,9 @@
     
     <style> 
         body { font-family: 'Plus Jakarta Sans', sans-serif; } 
+        /* Override generic styles that might come from raw HTML imports */
+        .prose p { margin-bottom: 1rem; }
+        .prose li { margin-bottom: 0.25rem; }
     </style>
 </head>
 <body class="bg-white text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-700">
@@ -99,7 +102,7 @@
                 <h3 class="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2">About the Role</h3>
                 
                 <article class="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed">
-                    {{ job.description|linebreaks }}
+                    {{ job.description|safe }}
                 </article>
 
                 <div class="mt-12 pt-8 border-t border-slate-200">
@@ -151,7 +154,7 @@
       "@context": "https://schema.org/",
       "@type": "JobPosting",
       "title": "{{ job.title|escapejs }}",
-      "description": "{{ job.description|linebreaksbr|escapejs }}",
+      "description": "{{ job.description|striptags|escapejs }}",
       "identifier": {
         "@type": "PropertyValue",
         "name": "{{ job.company|escapejs }}",
