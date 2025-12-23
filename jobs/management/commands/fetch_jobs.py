@@ -20,7 +20,7 @@ class Command(BaseCommand):
     help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals (EU/US/APAC).'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt...")
+        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt (Rich Content Edition)...")
         
         # 1. Setup
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
@@ -38,8 +38,6 @@ class Command(BaseCommand):
         self.processed_tokens = set()
 
         # 2. The "Global ATS" List
-        # Note: "site:greenhouse.io" automatically covers "eu.greenhouse.io"
-        # "site:myworkdayjobs.com" covers "wd3.myworkdayjobs.com" (EU data centers)
         ats_groups = [
             # Group A: Modern Tech (Global)
             "site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:jobs.smartrecruiters.com",
@@ -58,7 +56,6 @@ class Command(BaseCommand):
                 query = f'"{keyword}" ({group_query})'
                 self.stdout.write(f"\n🔎 Hunting: {keyword} in {group_query[:30]}...")
                 
-                # Fetch 50 results per keyword
                 links = self.search_google(query, num=50)
                 self.stdout.write(f"   Found {len(links)} direct links. Processing...")
 
@@ -88,7 +85,6 @@ class Command(BaseCommand):
     # --- THE BRAIN: ANALYZE URL (Region Aware) ---
     def analyze_and_fetch(self, url):
         # 1. Greenhouse (US & EU)
-        # Matches: boards.greenhouse.io, eu.greenhouse.io, etc.
         if "greenhouse.io" in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
@@ -113,8 +109,8 @@ class Command(BaseCommand):
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', url) or re.search(r'([^.]+)\.smartrecruiters\.com', url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
-        # 6. Enterprise Fallback (Workday, Taleo, iCIMS - All Regions)
-        # Matches wd3.myworkdayjobs.com (Europe), wd1... (US), etc.
+        # 6. Enterprise Fallback (Workday, Taleo, iCIMS, BambooHR)
+        # These sites are hard to scrape via API, so we send them to the AI Agent.
         if any(x in url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
             if any(k in url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(url)
@@ -126,8 +122,6 @@ class Command(BaseCommand):
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
-        # Note: The API endpoint is the same for US/EU content usually, 
-        # but if needed we could check 'eu.greenhouse.io' in the future.
         try:
             resp = requests.get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
@@ -135,7 +129,12 @@ class Command(BaseCommand):
                     if self.is_fresh(item.get('updated_at')):
                         raw_loc = item.get('location', {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
-                        self.screen_and_upsert({"title": item.get('title'), "company": token.capitalize(), "location": clean_loc, "description": item.get('content'), "apply_url": item.get('absolute_url'), "work_arrangement": arr, "source": "Greenhouse"})
+                        # Greenhouse usually provides full HTML in 'content'
+                        self.screen_and_upsert({
+                            "title": item.get('title'), "company": token.capitalize(), "location": clean_loc, 
+                            "description": item.get('content'), "apply_url": item.get('absolute_url'), 
+                            "work_arrangement": arr, "source": "Greenhouse"
+                        })
         except: pass
 
     def fetch_lever_api(self, token):
@@ -148,7 +147,13 @@ class Command(BaseCommand):
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
-                        self.screen_and_upsert({"title": item.get('text'), "company": token.capitalize(), "location": clean_loc, "description": item.get('description'), "apply_url": item.get('hostedUrl'), "work_arrangement": arr, "source": "Lever"})
+                        # Lever 'description' is often plain text, 'lists' contains requirements.
+                        # For now we use what we have, but Lever is usually passable.
+                        self.screen_and_upsert({
+                            "title": item.get('text'), "company": token.capitalize(), "location": clean_loc, 
+                            "description": item.get('description'), "apply_url": item.get('hostedUrl'), 
+                            "work_arrangement": arr, "source": "Lever"
+                        })
         except: pass
 
     def fetch_ashby_api(self, company):
@@ -159,7 +164,14 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('jobs', []):
                     clean_loc, arr = self._clean_location(item.get('location'), item.get('isRemote', False))
-                    self.screen_and_upsert({"title": item.get('title'), "company": company.capitalize(), "location": clean_loc, "description": f"See {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), "work_arrangement": arr, "source": "Ashby"})
+                    # Ashby List API is thin on description. 
+                    # Improvement: If we really need rich text for Ashby, we'd need a secondary fetch here.
+                    # For now, we link to the board to avoid "Empty Page" SEO penalty manually.
+                    self.screen_and_upsert({
+                        "title": item.get('title'), "company": company.capitalize(), "location": clean_loc, 
+                        "description": f"Full details available at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), 
+                        "work_arrangement": arr, "source": "Ashby"
+                    })
         except: pass
 
     def fetch_workable_api(self, sub):
@@ -171,7 +183,11 @@ class Command(BaseCommand):
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('published_on')):
                         clean_loc, arr = self._clean_location(f"{item.get('city')}, {item.get('country')}", item.get('telecommuting', False))
-                        self.screen_and_upsert({"title": item.get('title'), "company": sub.capitalize(), "location": clean_loc, "description": item.get('description'), "apply_url": item.get('url'), "work_arrangement": arr, "source": "Workable"})
+                        self.screen_and_upsert({
+                            "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc, 
+                            "description": item.get('description'), "apply_url": item.get('url'), 
+                            "work_arrangement": arr, "source": "Workable"
+                        })
         except: pass
 
     def fetch_smartrecruiters_api(self, company):
@@ -182,17 +198,35 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('content', []):
                     if self.is_fresh(item.get('releasedDate')):
+                        # UPGRADE: Fetch Full Detail for SmartRecruiters
+                        try:
+                            detail_resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=3)
+                            if detail_resp.status_code == 200:
+                                detail = detail_resp.json()
+                                # Combine sections into HTML
+                                desc_html = detail.get('jobAd', {}).get('sections', {}).get('jobDescription', {}).get('text', '')
+                                qual_html = detail.get('jobAd', {}).get('sections', {}).get('qualifications', {}).get('text', '')
+                                full_desc = f"<h3>Job Description</h3>{desc_html}<br><h3>Qualifications</h3>{qual_html}"
+                            else:
+                                full_desc = "See Job Post"
+                        except:
+                            full_desc = "See Job Post"
+
                         raw_loc = item.get('location', {}).get('city')
                         clean_loc, arr = self._clean_location(raw_loc, item.get('location', {}).get('remote', False))
+                        
                         self.screen_and_upsert({
                             "title": item.get('name'), "company": company.capitalize(), "location": clean_loc,
-                            "description": "See Job Post", "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
+                            "description": full_desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
                             "work_arrangement": arr, "source": "SmartRecruiters"
                         })
         except: pass
 
     # --- GENERIC AI FALLBACK (Global Support) ---
     def fetch_generic_ai(self, url):
+        """
+        The heavy hitter. Uses OpenAI to extract structured data + FULL HTML from complex pages.
+        """
         if Job.objects.filter(apply_url=url).exists(): return
         
         self.stdout.write(f"   🤖 AI Scraping: {url}...")
@@ -200,14 +234,29 @@ class Command(BaseCommand):
             resp = requests.get(url, headers=self.get_headers(), timeout=10)
             if resp.status_code != 200: return
             
+            # Clean soup but keep structural tags
             soup = BeautifulSoup(resp.text, 'html.parser')
-            for tag in soup(["script", "style", "nav", "footer", "iframe"]): tag.extract()
-            text = " ".join(soup.get_text().split())[:5000]
+            for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript"]): tag.extract()
+            
+            # UPGRADE: Capture more text (12k chars) to get full descriptions
+            text = " ".join(soup.get_text(separator=' ').split())[:12000]
 
-            prompt = f"""Extract job details into JSON. URL: {url}
-            Text: {text}
-            Fields: title, company, location, description_summary, is_remote (bool).
-            Output JSON only."""
+            # UPGRADE: Prompt asks for 'description_html' explicitly
+            prompt = f"""
+            You are a Job Parser. Convert the job posting text below into structured JSON.
+            
+            URL: {url}
+            TEXT: {text}
+            
+            REQUIRED FIELDS:
+            - title: Job title.
+            - company: Company name.
+            - location: Location string (e.g. "New York, NY").
+            - is_remote: Boolean.
+            - description_html: The FULL job description formatted as clean HTML (use <h2>, <p>, <ul>, <li>). Include all sections (About, Responsibilities, Requirements). Do NOT summarize.
+            
+            Output valid JSON.
+            """
 
             completion = self.client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -217,9 +266,13 @@ class Command(BaseCommand):
             data = json.loads(completion.choices[0].message.content)
             
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
+            
+            # Use the rich HTML, fallback to summary if missing
+            final_desc = data.get('description_html') or data.get('description') or "See Job Link"
+
             self.screen_and_upsert({
                 "title": data.get('title'), "company": data.get('company'), "location": clean_loc,
-                "description": data.get('description_summary'), "apply_url": url,
+                "description": final_desc, "apply_url": url,
                 "work_arrangement": arr, "source": "AI Scraper"
             })
         except Exception as e:
