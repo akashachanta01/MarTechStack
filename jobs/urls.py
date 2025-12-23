@@ -1,39 +1,20 @@
-from django.contrib import admin
-from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
-from django.contrib.sitemaps.views import sitemap
-from django.http import HttpResponse
-
-# Import the Sitemap class
-from jobs.sitemaps import JobSitemap
-
-# Define the dictionary of sitemaps
-sitemaps = {
-    'jobs': JobSitemap,
-}
-
-# Simple Robots.txt view
-def robots_txt(request):
-    content = f"""User-agent: *
-Disallow: /admin/
-Disallow: /staff/
-
-Sitemap: {settings.DOMAIN_URL}/sitemap.xml
-"""
-    return HttpResponse(content, content_type="text/plain")
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', views.job_list, name='job_list'),
     
-    # Main App URLs
-    path('', include('jobs.urls')),
-    
-    # SEO: Sitemap & Robots
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
-    path('robots.txt', robots_txt),
-]
+    # --- SEO DETAIL PAGE ---
+    # This captures /job/123/marketing-manager-at-hubspot/
+    path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
 
-# Serve media files (images) during development/debug
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('post-job/', views.post_job, name='post_job'),
+    path('post-job/success/', views.post_job_success, name='post_job_success'),
+    
+    # Stripe Webhook
+    path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
+    
+    path('subscribe/', views.subscribe, name='subscribe'),
+    path('staff/review/', views.review_queue, name='review_queue'),
+    path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
+]
