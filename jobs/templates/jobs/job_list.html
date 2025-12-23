@@ -58,7 +58,7 @@
                 
                 <div class="flex-grow min-w-0">
                     <h2 class="text-lg font-bold text-slate-900 leading-tight flex items-center gap-2">
-                        <a href="{{ job.apply_url }}" target="_blank" rel="noreferrer" class="hover:text-indigo-600">{{ job.title }}</a>
+                        <a href="{% url 'job_detail' job.id job.slug %}" class="hover:text-indigo-600">{{ job.title }}</a>
                         {% if job.is_featured %}
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide border border-amber-200">
                                 Featured
@@ -77,47 +77,4 @@
                         </div>
                         {% if job.salary_range %}
                         <div class="flex items-center gap-1">
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span class="text-sm">{{ job.salary_range }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mt-3 flex flex-wrap gap-1.5">
-                        {% for tool in job.tools.all|slice:":4" %}
-                            <span class="{{ tool.color_class }} inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border-2">{{ tool.name }}</span>
-                        {% endfor %}
-                        {% if job.tools.count > 4 %}
-                            <span class="text-xs font-medium text-slate-400">+{{ job.tools.count|add:"-4" }} more</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-shrink-0 pt-1">
-                <a href="{{ job.apply_url }}" target="_blank" rel="noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm transition">Apply Now</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
-        <p class="text-lg font-semibold text-gray-700">No jobs match your criteria.</p>
-        <a href="{% url 'job_list' %}" class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Clear All Filters</a>
-    </div>
-    {% endfor %}
-
-    {% if jobs.paginator.num_pages > 1 %}
-    <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-        <div class="text-sm text-gray-600">Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</div>
-        <div class="flex gap-2">
-            {% if jobs.has_previous %}
-                <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm" href="?page={{ jobs.previous_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Prev</a>
-            {% endif %}
-            {% if jobs.has_next %}
-                <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold text-sm" href="?page={{ jobs.next_page_number }}&q={{ query|urlencode }}&l={{ location_filter|urlencode }}&vendor={{ vendor_filter|urlencode }}">Next</a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endblock %}
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.
