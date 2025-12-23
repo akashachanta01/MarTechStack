@@ -28,7 +28,7 @@
         <div class="mt-3 text-sm text-slate-600">
             Trending:
             {% for stack in popular_tech_stacks|slice:":6" %}
-            <a href="?vendor={{ stack.name|urlencode }}" class="inline-flex items-center ml-2 px-3 py-1 rounded-full text-xs font-medium bg-white hover:bg-indigo-100 text-indigo-700 transition">
+            <a href="{% url 'tool_detail' stack.slug %}" class="inline-flex items-center ml-2 px-3 py-1 rounded-full text-xs font-medium bg-white hover:bg-indigo-100 text-indigo-700 transition border border-indigo-50">
                 {{ stack.name }} <span class="ml-1 opacity-70">({{ stack.count }})</span>
             </a>
             {% endfor %}
