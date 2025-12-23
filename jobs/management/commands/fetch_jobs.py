@@ -6,7 +6,6 @@ import os
 import json
 from datetime import datetime, timedelta
 from typing import Any, Dict
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from openai import OpenAI
 
@@ -17,16 +16,11 @@ from django.conf import settings
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
-# 🚫 BLACKLIST
-BLACKLIST_TOKENS = {'embed', 'api', 'test', 'demo', 'jobs', 'careers', 'board', 'job', 'linkedin', 'indeed', 'glassdoor'}
-REMOTE_KEYWORDS = {'remote', 'anywhere', 'global', 'work from home', 'wfh'}
-HYBRID_KEYWORDS = {'hybrid', 'flexible', 'flex', 'part-time remote', 'in-office required', 'partial remote', 'blended'}
-
 class Command(BaseCommand):
-    help = 'The Enterprise Hunter: SerpApi (Paid) + Multi-ATS Support + AI Fallback'
+    help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals (EU/US/APAC).'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Job Hunt (Wide Net Mode)...")
+        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt...")
         
         # 1. Setup
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
@@ -42,62 +36,46 @@ class Command(BaseCommand):
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         self.cutoff_date = timezone.now() - timedelta(days=28)
         self.processed_tokens = set()
-        
-        # 2. Load Targets
-        hunt_targets = []
-        target_file_path = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
-        if os.path.exists(target_file_path):
-            with open(target_file_path, 'r') as f:
-                hunt_targets = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-        
-        if not hunt_targets:
-            hunt_targets = ['Marketo', 'Salesforce Marketing Cloud', 'HubSpot', 'Braze', 'Marketing Operations']
 
-        # 3. WIDE NET SEARCH QUERY
-        # We removed the 'site:...' restriction to find Workday, Taleo, etc.
-        # But we exclude aggregators to avoid duplicates.
-        exclude_sites = '-site:linkedin.com -site:indeed.com -site:glassdoor.com -site:zoominfo.com'
-        
-        for tool in hunt_targets:
-            # We search for the tool + "jobs" or "careers"
-            query = f'"{tool}" (jobs OR careers) {exclude_sites}'
-            self.stdout.write(f"\n🔎 Hunting: {tool}...")
-            
-            # Increased to 100 results per tool
-            links = self.search_google(query, num=100)
-            self.stdout.write(f"   Found {len(links)} links. Analyzing...")
+        # 2. The "Global ATS" List
+        # Note: "site:greenhouse.io" automatically covers "eu.greenhouse.io"
+        # "site:myworkdayjobs.com" covers "wd3.myworkdayjobs.com" (EU data centers)
+        ats_groups = [
+            # Group A: Modern Tech (Global)
+            "site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:jobs.smartrecruiters.com",
+            # Group B: Enterprise Giants (Global)
+            "site:myworkdayjobs.com OR site:taleo.net OR site:icims.com OR site:jobvite.com",
+            # Group C: Mid-Market
+            "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
+        ]
 
-            for link in links:
-                try:
-                    self.analyze_and_fetch(link)
-                    # Be polite to servers
-                    time.sleep(0.5) 
-                except Exception as e:
-                    pass
+        # 3. Load Targets
+        hunt_targets = ['Marketing Operations', 'MarTech', 'Salesforce Marketing Cloud', 'HubSpot', 'Marketo']
 
-        self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} jobs."))
+        # 4. Execute Search
+        for group_query in ats_groups:
+            for keyword in hunt_targets:
+                query = f'"{keyword}" ({group_query})'
+                self.stdout.write(f"\n🔎 Hunting: {keyword} in {group_query[:30]}...")
+                
+                # Fetch 50 results per keyword
+                links = self.search_google(query, num=50)
+                self.stdout.write(f"   Found {len(links)} direct links. Processing...")
 
-    # --- LOCATION CLEANUP ---
-    def _clean_location(self, location_str, is_remote_flag):
-        if not location_str: return "On-site", 'onsite'
-        clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
-        loc_lower = clean_loc.lower()
-        arrangement = 'onsite'
+                for link in links:
+                    try:
+                        self.analyze_and_fetch(link)
+                        time.sleep(0.5) 
+                    except Exception:
+                        pass
 
-        if is_remote_flag or any(k in loc_lower for k in REMOTE_KEYWORDS): arrangement = 'remote'
-        if any(k in loc_lower for k in HYBRID_KEYWORDS): arrangement = 'hybrid'
-
-        all_work_keywords = REMOTE_KEYWORDS.union(HYBRID_KEYWORDS).union({'onsite', 'remote'})
-        location_parts = [p.strip() for p in clean_loc.split(',') if p.strip() and not any(k in p.strip().lower() for k in all_work_keywords)]
-        final_location = ", ".join(location_parts)
-        
-        return (final_location or arrangement.capitalize()), arrangement
+        self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} Direct-Apply jobs."))
 
     # --- SERPAPI ENGINE ---
-    def search_google(self, query, num=100):
+    def search_google(self, query, num=50):
         params = { 
             "engine": "google", "q": query, "api_key": self.serpapi_key, 
-            "num": num, "gl": "us", "hl": "en", "tbs": "qdr:m" # Past month only
+            "num": num, "gl": "us", "hl": "en", "tbs": "qdr:m"
         }
         try:
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
@@ -107,37 +85,49 @@ class Command(BaseCommand):
         except: pass
         return []
 
-    # --- THE BRAIN: ANALYZE URL ---
+    # --- THE BRAIN: ANALYZE URL (Region Aware) ---
     def analyze_and_fetch(self, url):
-        # 1. API Handlers (Fast & Free)
+        # 1. Greenhouse (US & EU)
+        # Matches: boards.greenhouse.io, eu.greenhouse.io, etc.
         if "greenhouse.io" in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
+            
+        # 2. Lever (Global)
         elif "lever.co" in url:
             match = re.search(r'lever\.co/([^/]+)', url)
             if match: self.fetch_lever_api(match.group(1)); return
+            
+        # 3. Ashby (Global)
         elif "ashbyhq.com" in url:
             match = re.search(r'jobs\.ashbyhq\.com/([^/]+)', url)
             if match: self.fetch_ashby_api(match.group(1)); return
+            
+        # 4. Workable (Global)
         elif "workable.com" in url:
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1)); return
+            
+        # 5. SmartRecruiters (Global)
         elif "smartrecruiters.com" in url:
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', url) or re.search(r'([^.]+)\.smartrecruiters\.com', url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
-        # 2. AI Fallback (Slower but catches Workday, Taleo, etc.)
-        # Only use this if the URL looks like a specific job post, not a career page listing
-        if any(x in url for x in ['/job/', '/jobs/', '/career/', '/careers/', '/position/']):
-             self.fetch_generic_ai(url)
+        # 6. Enterprise Fallback (Workday, Taleo, iCIMS - All Regions)
+        # Matches wd3.myworkdayjobs.com (Europe), wd1... (US), etc.
+        if any(x in url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
+            if any(k in url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
+                 self.fetch_generic_ai(url)
 
     # --- SPECIFIC API WORKERS ---
     def get_headers(self):
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 
     def fetch_greenhouse_api(self, token):
-        if token in self.processed_tokens or token in BLACKLIST_TOKENS: return
+        if token in self.processed_tokens: return
         self.processed_tokens.add(token)
+        # Note: The API endpoint is the same for US/EU content usually, 
+        # but if needed we could check 'eu.greenhouse.io' in the future.
         try:
             resp = requests.get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
@@ -188,7 +178,6 @@ class Command(BaseCommand):
         if company in self.processed_tokens: return
         self.processed_tokens.add(company)
         try:
-            # SmartRecruiters often uses a public API for listings
             resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 for item in resp.json().get('content', []):
@@ -202,9 +191,8 @@ class Command(BaseCommand):
                         })
         except: pass
 
-    # --- GENERIC AI FALLBACK (Expensive but Effective) ---
+    # --- GENERIC AI FALLBACK (Global Support) ---
     def fetch_generic_ai(self, url):
-        # We only try this if we haven't already grabbed it via API
         if Job.objects.filter(apply_url=url).exists(): return
         
         self.stdout.write(f"   🤖 AI Scraping: {url}...")
@@ -280,3 +268,16 @@ class Command(BaseCommand):
         if status == "approved":
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {title[:30]}.. [APPROVED]"))
+
+    def _clean_location(self, location_str, is_remote_flag):
+        if not location_str: return "On-site", 'onsite'
+        clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
+        loc_lower = clean_loc.lower()
+        arrangement = 'onsite'
+        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh'}): arrangement = 'remote'
+        if any(k in loc_lower for k in {'hybrid', 'flexible'}): arrangement = 'hybrid'
+        
+        all_work_keywords = {'remote', 'hybrid', 'onsite', 'flexible', 'wfh', 'anywhere'}
+        location_parts = [p.strip() for p in clean_loc.split(',') if p.strip() and not any(k in p.strip().lower() for k in all_work_keywords)]
+        final_location = ", ".join(location_parts)
+        return (final_location or arrangement.capitalize()), arrangement
