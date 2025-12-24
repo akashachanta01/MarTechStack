@@ -1,48 +1,99 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
+from django.db.models import Count, Q
+from django.contrib import messages
 
 # Import all models
 from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob
 
-# --- ADMIN REGISTRATIONS ---
+# --- 1. GLOBAL ACTIONS (Available everywhere) ---
+
+@admin.action(description="🤖 Auto-Tag Tech Stack (Scan Description)")
+def auto_tag_tools(modeladmin, request, queryset):
+    """
+    Scans the description of selected jobs and adds Tool tags 
+    if the tool name appears in the text.
+    """
+    # 1. Load all tools into memory for fast matching
+    all_tools = list(Tool.objects.all())
+    affected_jobs = 0
+    
+    for job in queryset:
+        # Normalize text for matching
+        text = (job.description + " " + job.title).lower()
+        added_count = 0
+        
+        for tool in all_tools:
+            # Check if tool is already added to avoid DB hits
+            if tool in job.tools.all():
+                continue
+                
+            # strict check: look for tool name boundaries to avoid substrings
+            # e.g. avoid matching "R" in "Re-engagement"
+            tool_name = tool.name.lower()
+            
+            # Simple check (can be improved with regex if needed)
+            if tool_name in text:
+                job.tools.add(tool)
+                added_count += 1
+        
+        if added_count > 0:
+            affected_jobs += 1
+            
+    modeladmin.message_user(request, f"✅ Scanned {queryset.count()} jobs. Updated Tech Stack for {affected_jobs} jobs.", messages.SUCCESS)
+
+@admin.action(description="🗑️ DELETE ALL 'Rejected' Jobs (Cleanup)")
+def delete_all_rejected(modeladmin, request, queryset):
+    """
+    Nuclear option to clean up the database. 
+    Ignores the selection and deletes ALL jobs marked as 'rejected'.
+    """
+    count, _ = Job.objects.filter(screening_status='rejected').delete()
+    modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs from existence.", messages.WARNING)
+
+# --- 2. MODEL ADMINS ---
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
+    list_display = ("name", "slug", "tool_count")
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
 
+    def tool_count(self, obj):
+        return obj.tools.count()
+
 @admin.register(Tool)
 class ToolAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "slug")
+    list_display = ("name", "category", "job_count")
     search_fields = ("name",)
     list_filter = ("category",)
     prepopulated_fields = {"slug": ("name",)}
 
-# --- BASE ADMIN (Shared Visuals & Logic) ---
+    def job_count(self, obj):
+        return obj.jobs.count()
+
+# --- BASE JOB ADMIN ---
 class BaseJobAdmin(admin.ModelAdmin):
     """
-    Holds all the visual settings so we don't have to duplicate code.
-    Both 'Inbox' and 'Active' admins will inherit from this.
+    Shared Logic for all Job views.
     """
-    list_display = (
-        "logo_preview",
-        "job_card_header",
-        "score_badge",
-        "work_arrangement", 
-        "salary_range",   
-        "tech_stack_preview",
-        "status_badge",
-        "action_buttons",
-    )
+    # UI CONFIG
+    list_per_page = 50
+    save_on_top = True
+    list_display_links = ("job_card_header",) # Makes the title clickable!
     
-    list_filter = ("screening_status", "work_arrangement", "role_type", "created_at")
-    
-    # UPGRADE 1: Search by Tool Name too (e.g., search "Marketo")
+    # SEARCH & FILTER
     search_fields = ("title", "company", "description", "tools__name")
-    
-    # UPGRADE 2: Organized "Edit" Screen
+    list_filter = (
+        "screening_status", 
+        "work_arrangement", 
+        "role_type", 
+        "created_at",
+        ("tools", admin.EmptyFieldListFilter), # Filter by "Has Tools" vs "Empty"
+    )
+
+    # LAYOUT
     fieldsets = (
         ("Key Info", {
             "fields": ("title", "company", "company_logo", "apply_url", "location")
@@ -52,121 +103,78 @@ class BaseJobAdmin(admin.ModelAdmin):
         }),
         ("Screening & AI", {
             "fields": ("screening_status", "screening_score", "screening_reason", "tags"),
-            "classes": ("collapse",), # Click to expand
+            "classes": ("collapse",), 
         }),
         ("Monetization", {
             "fields": ("is_pinned", "is_featured", "plan_name"),
             "classes": ("collapse",),
         }),
         ("System Data", {
-            "fields": ("created_at", "updated_at", "screened_at", "screening_details"),
+            "fields": ("slug", "created_at", "updated_at", "screened_at", "screening_details"),
             "classes": ("collapse",),
         }),
     )
 
-    # Editable fields in the list view (Quick edits)
-    list_editable = ("work_arrangement", "salary_range")
-
-    # Readonly fields
     readonly_fields = ("created_at", "updated_at", "screened_at", "screening_details")
-    
     filter_horizontal = ("tools",)
-    list_per_page = 25
     ordering = ("-created_at",)
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.prefetch_related('tools')
-
-    # --- VISUAL COLUMNS ---
+    # --- VISUALS ---
     def logo_preview(self, obj):
         if obj.company_logo:
             return format_html(
-                '<img src="{}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff;" />',
+                '<img src="{}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; background: white;" />',
                 obj.company_logo
             )
-        return format_html(
-            '<div style="width: 40px; height: 40px; border-radius: 6px; background: #f3f4f6; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">?</div>'
-        )
-    logo_preview.short_description = "Logo"
+        return "No Logo"
+    logo_preview.short_description = "Img"
 
     def job_card_header(self, obj):
+        # Color code the score
+        score = obj.screening_score or 0
+        color = "green" if score > 70 else "orange" if score > 40 else "red"
+        
         return format_html(
             '<div style="line-height: 1.2;">'
-            '<div style="font-weight: 700; font-size: 14px;">{}</div>'
-            '<div style="font-size: 12px; opacity: 0.8;">{} • {}</div>'
+            '<div style="font-weight: 600; font-size: 14px; color: #1f2937;">{}</div>'
+            '<div style="font-size: 12px; color: #6b7280;">{}</div>'
             '</div>',
             obj.title,
-            obj.company,
-            obj.location or obj.get_work_arrangement_display()
+            obj.company
         )
-    job_card_header.short_description = "Role & Company"
-    job_card_header.admin_order_field = "title"
+    job_card_header.short_description = "Job Details"
 
-    def score_badge(self, obj):
-        try:
-            val = float(obj.screening_score) if obj.screening_score is not None else 0.0
-        except (ValueError, TypeError):
-            val = 0.0
-
-        if val >= 80:
-            bg, text = "#d1fae5", "#065f46" # Green
-        elif val >= 50:
-            bg, text = "#fef3c7", "#92400e" # Amber
-        else:
-            bg, text = "#fee2e2", "#b91c1c" # Red
-        
-        score_str = "{:.0f}".format(val)
-
+    def score_display(self, obj):
+        val = obj.screening_score or 0
+        bg = "#d1fae5" if val >= 80 else "#fef3c7" if val >= 50 else "#fee2e2"
+        text = "#065f46" if val >= 80 else "#92400e" if val >= 50 else "#b91c1c"
         return format_html(
-            '<span style="background: {}; color: {}; padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 11px;">{}</span>',
-            bg, text, score_str
+            '<span style="background: {}; color: {}; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px;">{:.0f}</span>',
+            bg, text, val
         )
-    score_badge.short_description = "Score"
-    score_badge.admin_order_field = "screening_score"
+    score_display.short_description = "AI Score"
 
-    def status_badge(self, obj):
-        colors = {
-            'approved': ('#dcfce7', '#166534'), # Green
-            'rejected': ('#f3f4f6', '#374151'), # Gray
-            'pending':  ('#e0e7ff', '#3730a3'), # Indigo
-        }
-        bg, text = colors.get(obj.screening_status, ('#f3f4f6', '#000'))
-        return format_html(
-            '<span style="background: {}; color: {}; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;">{}</span>',
-            bg, text, obj.screening_status
-        )
-    status_badge.short_description = "Status"
-    status_badge.admin_order_field = "screening_status"
-
-    def tech_stack_preview(self, obj):
-        tools = obj.tools.all()[:4]
+    def tools_preview(self, obj):
+        tools = list(obj.tools.all()[:3])
+        count = obj.tools.count()
         if not tools:
-            return format_html('<span style="color: #9ca3af;">-</span>')
+            return format_html('<span style="color: #d1d5db;">(empty)</span>')
         
-        html = '<div style="display: flex; gap: 4px; flex-wrap: wrap;">'
-        for tool in tools:
-            html += f'<span style="background: rgba(128,128,128,0.2); border: 1px solid rgba(128,128,128,0.3); padding: 1px 6px; border-radius: 4px; font-size: 10px; white-space: nowrap;">{tool.name}</span>'
-        if obj.tools.count() > 4:
-            html += '<span style="font-size: 10px; opacity: 0.7;">...</span>'
-        html += '</div>'
-        return format_html(html)
-    tech_stack_preview.short_description = "Tech Stack"
+        html_str = ""
+        for t in tools:
+            html_str += f'<span style="border:1px solid #e5e7eb; background:#f9fafb; padding:0px 4px; border-radius:3px; font-size:10px; margin-right:2px;">{t.name}</span>'
+        
+        if count > 3:
+            html_str += f'<span style="font-size:10px; color:#6b7280;">+{count-3}</span>'
+        return format_html(html_str)
+    tools_preview.short_description = "Stack"
 
-    def action_buttons(self, obj):
-        change_url = reverse('admin:jobs_job_change', args=[obj.id])
-        return format_html(
-            '<div style="display: flex; align-items: center; gap: 8px;">'
-            '<a href="{}" style="background: #4f46e5; color: white; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Edit</a>'
-            '<a href="{}" target="_blank" style="opacity: 0.7; font-size: 12px; text-decoration: none;">↗ Apply</a>'
-            '</div>',
-            change_url,
-            obj.apply_url
-        )
-    action_buttons.short_description = "Actions"
-
-    # --- BULK ACTIONS ---
-    actions = ("mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs")
+    # --- ACTIONS ---
+    actions = [
+        "mark_approved", "mark_rejected", "mark_pending", 
+        "activate_jobs", "deactivate_jobs", 
+        "delete_all_rejected", "auto_tag_tools" # <--- NEW ACTIONS
+    ]
 
     @admin.action(description="✅ Approve selected")
     def mark_approved(self, request, queryset):
@@ -176,83 +184,63 @@ class BaseJobAdmin(admin.ModelAdmin):
     def mark_rejected(self, request, queryset):
         queryset.update(screening_status="rejected", is_active=False)
 
-    @admin.action(description="⏳ Mark as Pending")
+    @admin.action(description="⏳ Mark Pending")
     def mark_pending(self, request, queryset):
         queryset.update(screening_status="pending", is_active=False)
 
-    @admin.action(description="👁️ Set Active (Visible)")
+    @admin.action(description="👁️ Set Visible")
     def activate_jobs(self, request, queryset):
         queryset.update(is_active=True)
 
-    @admin.action(description="🚫 Set Inactive (Hidden)")
+    @admin.action(description="🚫 Set Hidden")
     def deactivate_jobs(self, request, queryset):
         queryset.update(is_active=False)
 
-# --- 1. INBOX (INACTIVE JOBS ONLY) ---
+# --- 1. INBOX ADMIN (To-Do List) ---
 @admin.register(Job)
 class JobAdmin(BaseJobAdmin):
-    """
-    Shows ONLY inactive jobs (Pending, Rejected, or manually hidden).
-    This is your 'To-Do' list.
-    """
+    # Only show inactive jobs in the main inbox
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_active=False)
 
-# --- 2. ACTIVE JOBS (LIVE ON SITE ONLY) ---
+    list_display = (
+        "logo_preview", "job_card_header", "score_display", 
+        "screening_status", "location", "tools_preview", "created_at"
+    )
+    
+    # Quick edits right from the list
+    list_editable = ("screening_status",) 
+
+# --- 2. ACTIVE JOBS ADMIN (Live Dashboard) ---
 @admin.register(ActiveJob)
 class ActiveJobAdmin(BaseJobAdmin):
-    """
-    Shows ONLY live jobs.
-    This is your 'Dashboard'.
-    """
-    # UPGRADE 3: Add 'is_pinned' to list_editable so you can pin jobs instantly from the list!
-    list_editable = ("work_arrangement", "salary_range", "is_pinned", "is_featured") 
-    
-    list_display = (
-        "logo_preview",
-        "job_card_header",
-        "score_badge",
-        "is_pinned",  # Add checkbox column
-        "is_featured", # Add checkbox column
-        "work_arrangement",
-        "salary_range",
-        "tech_stack_preview",
-        "action_buttons",
-    )
-
+    # Only show LIVE jobs
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_active=True)
-
-    # Disable "Add" here (create new jobs in the main inbox or via script)
-    def has_add_permission(self, request):
-        return False
     
-    # Disable "Delete" here to prevent accidents
-    def has_delete_permission(self, request, obj=None):
-        return False
+    list_display = (
+        "logo_preview", "job_card_header", "score_display", 
+        "is_pinned", "is_featured", # Easy monetization toggles
+        "tools_preview", "open_link"
+    )
+    
+    list_editable = ("is_pinned", "is_featured")
 
-# --- 3. USER SUBMISSIONS (ALL) ---
+    def open_link(self, obj):
+        return format_html('<a href="{}" target="_blank">↗ Apply</a>', obj.apply_url)
+    open_link.short_description = "Link"
+
+# --- 3. SUBMISSIONS ---
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(BaseJobAdmin):
-    """
-    Shows all user submissions, regardless of status.
-    """
     def get_queryset(self, request):
-        # We inherit from BaseJobAdmin directly so we don't get the 'False' filter from JobAdmin
-        qs = super(BaseJobAdmin, self).get_queryset(request) # Call grandparent queryset
-        return qs.prefetch_related('tools').filter(tags__icontains="User Submission")
+        return super().get_queryset(request).filter(tags__icontains="User Submission")
 
 # --- OTHER ADMINS ---
-
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
     list_display = ("email", "created_at")
-    search_fields = ("email",)
-    ordering = ("-created_at",)
 
 @admin.register(BlockRule)
 class BlockRuleAdmin(admin.ModelAdmin):
-    list_display = ("rule_type", "value", "enabled", "created_at")
-    list_filter = ("rule_type", "enabled")
-    search_fields = ("value", "notes")
-    ordering = ("-created_at",)
+    list_display = ("rule_type", "value", "enabled")
