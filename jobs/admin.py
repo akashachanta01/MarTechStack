@@ -9,7 +9,7 @@ from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, 
 
 # --- 1. GLOBAL ACTIONS ---
 
-@admin.action(description="🤖 Auto-Tag Tech Stack (Scan Description)")
+@admin.action(description="🤖 Auto-Tag Tech Stack")
 def auto_tag_tools(modeladmin, request, queryset):
     """
     Scans the description of selected jobs and adds Tool tags 
@@ -47,7 +47,7 @@ def delete_all_rejected(modeladmin, request, queryset):
     count, _ = Job.objects.filter(screening_status='rejected').delete()
     modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs.", messages.WARNING)
 
-# --- 2. HELPERS ---
+# --- 2. MODEL ADMINS ---
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -120,7 +120,7 @@ class BaseJobAdmin(admin.ModelAdmin):
     job_card_header.short_description = "Job Details"
 
     def score_display(self, obj):
-        # FIX: Force convert to float to prevent SafeString crashes
+        # FIX: Robust Float Conversion
         try:
             val = float(obj.screening_score) if obj.screening_score is not None else 0.0
         except (ValueError, TypeError):
@@ -129,9 +129,12 @@ class BaseJobAdmin(admin.ModelAdmin):
         bg = "#d1fae5" if val >= 80 else "#fef3c7" if val >= 50 else "#fee2e2"
         text = "#065f46" if val >= 80 else "#92400e" if val >= 50 else "#b91c1c"
         
+        # FIX: Pre-format to string to prevent "SafeString" formatting crash
+        score_str = "{:.0f}".format(val)
+        
         return format_html(
-            '<span style="background:{}; color:{}; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">{:.0f}</span>',
-            bg, text, val
+            '<span style="background:{}; color:{}; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:11px;">{}</span>',
+            bg, text, score_str
         )
     score_display.short_description = "AI Score"
 
@@ -174,11 +177,16 @@ class ActiveJobAdmin(BaseJobAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_active=True)
 
-    list_display = ("logo_preview", "job_card_header", "score_display", "is_pinned", "is_featured", "tools_preview", "open_link")
+    # Added 'view_live' button
+    list_display = ("logo_preview", "job_card_header", "score_display", "is_pinned", "is_featured", "tools_preview", "view_live")
     list_editable = ("is_pinned", "is_featured")
 
-    def open_link(self, obj):
-        return format_html('<a href="{}" target="_blank">Apply</a>', obj.apply_url)
+    def view_live(self, obj):
+        if obj.slug:
+            url = f"/job/{obj.id}/{obj.slug}/"
+            return format_html('<a href="{}" target="_blank" style="color:#4f46e5; font-weight:bold;">View ↗</a>', url)
+        return "-"
+    view_live.short_description = "Live Page"
 
 # C. USER SUBMISSIONS (All)
 @admin.register(UserSubmission)
