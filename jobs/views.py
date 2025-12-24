@@ -4,7 +4,6 @@ import os
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-# ADDED: Count
 from django.db.models import Q, Case, When, Value, IntegerField, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -18,10 +17,9 @@ from .models import Job, Tool, Category, Subscriber
 from .forms import JobPostForm
 from .emails import send_job_alert, send_welcome_email
 
-# Configure Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# [KEEP EXISTING TOOL_MAPPING - Still used for search filtering]
+# [KEEP EXISTING TOOL_MAPPING]
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
@@ -32,7 +30,6 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
-    # [KEEP EXISTING FILTER LOGIC]
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -74,45 +71,55 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- UPGRADE: TOPIC CLUSTER BUBBLES ---
-    # We now fetch specific tools (name + slug) ordered by job count.
+    # --- TOPIC CLUSTERS (Existing) ---
     popular_tech_stacks = cache.get('popular_tech_stacks_v2')
     if popular_tech_stacks is None:
         popular_tech_stacks = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__screening_status='approved'
         ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:10]
-        
         cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
+
+    # --- NEW: DYNAMIC COUNTRY LIST ---
+    # Automatically finds all countries currently in the DB
+    available_countries = cache.get('available_countries_v1')
+    if available_countries is None:
+        raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
+        country_set = set()
+        for loc in raw_locs:
+            if not loc: continue
+            # Skip "Remote" entries for this list (we handle Remote separately)
+            if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']):
+                continue
+            
+            # Extract the last part of "City, Country"
+            parts = loc.split(',')
+            if len(parts) >= 1:
+                country = parts[-1].strip()
+                # Filter out short state codes like "NY" or "CA" to be safe
+                if len(country) > 3: 
+                    country_set.add(country)
+        
+        available_countries = sorted(list(country_set))
+        cache.set('available_countries_v1', available_countries, 3600)
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, "query": query, "location_filter": location_query,
         "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
+        "available_countries": available_countries, # <-- Passed to template
     })
 
-# --- TOOL DETAIL (Topic Cluster Page) ---
+# --- KEEP ALL OTHER VIEWS (tool_detail, job_detail, etc.) EXACTLY AS THEY WERE ---
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
-    
-    jobs = Job.objects.filter(
-        tools=tool, 
-        is_active=True, 
-        screening_status='approved'
-    ).order_by('-is_pinned', '-created_at')
-
+    jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
     paginator = Paginator(jobs, 20)
-    page_number = request.GET.get('page')
-    jobs_page = paginator.get_page(page_number)
-
-    return render(request, 'jobs/tool_detail.html', {
-        'tool': tool,
-        'jobs': jobs_page,
-    })
+    jobs_page = paginator.get_page(request.GET.get('page'))
+    return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page})
 
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id)
-    if job.slug and job.slug != slug:
-        return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
+    if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
     return render(request, 'jobs/job_detail.html', {'job': job})
 
 def post_job(request):
@@ -125,16 +132,13 @@ def post_job(request):
             job.plan_name = plan
             job.is_featured = False; job.is_pinned = False; job.screening_status = 'pending'; job.is_active = False 
             job.tags = f"User Submission: {plan}"; job.save(); form.save_m2m()
-
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
                     tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
                     job.tools.add(tool)
-
-            cache.delete('popular_tech_stacks_v2')
-
+            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1')
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -159,7 +163,7 @@ def stripe_webhook(request):
         if job_id:
             try: 
                 job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
-                cache.delete('popular_tech_stacks_v2'); send_job_alert(job)
+                cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1'); send_job_alert(job)
             except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
@@ -187,7 +191,7 @@ def review_queue(request):
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
-    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); send_job_alert(job)
+    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
