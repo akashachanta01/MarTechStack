@@ -232,35 +232,58 @@ class Command(BaseCommand):
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str: return "On-site", 'onsite'
         
-        clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ')
+        # 1. Basic Cleanup
+        clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
         loc_lower = clean_loc.lower()
         
+        # 2. Determine Work Arrangement
         arrangement = 'onsite'
-        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh'}): arrangement = 'remote'
-        elif any(k in loc_lower for k in {'hybrid', 'flexible'}): arrangement = 'hybrid'
+        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}):
+            arrangement = 'remote'
+        elif any(k in loc_lower for k in {'hybrid', 'flexible'}):
+            arrangement = 'hybrid'
         
-        # SAME MAPPING LOGIC AS FIX_LOCATIONS.PY
-        mapping = {
-            "new york": "New York, NY, United States", "nyc": "New York, NY, United States",
-            "san francisco": "San Francisco, CA, United States", "sf": "San Francisco, CA, United States",
-            "london": "London, United Kingdom", "berlin": "Berlin, Germany", "amsterdam": "Amsterdam, Netherlands",
-            "toronto": "Toronto, Canada", "sydney": "Sydney, Australia", "bengaluru": "Bengaluru, India",
-            "bangalore": "Bengaluru, India", "gurugram": "Gurugram, India", "hyderabad": "Hyderabad, India",
-            "mumbai": "Mumbai, India", "singapore": "Singapore", "illinois": "Illinois, United States",
-            "california": "California, United States", "mexico city": "Mexico City, Mexico",
-            "va de los poblados": "Madrid, Spain"
+        # 3. USE EXACT SAME LOGIC AS FIX_LOCATIONS.PY
+        city_map = {
+            "new york": "New York, NY, United States",
+            "new york city": "New York, NY, United States", 
+            "nyc": "New York, NY, United States",
+            "new york, ny": "New York, NY, United States",
+            "new york city, new york": "New York, NY, United States",
+            "san francisco": "San Francisco, CA, United States",
+            "sf": "San Francisco, CA, United States",
+            "los angeles": "Los Angeles, CA, United States",
+            "chicago": "Chicago, IL, United States",
+            "austin": "Austin, TX, United States",
+            "boston": "Boston, MA, United States",
+            "seattle": "Seattle, WA, United States",
+            "san diego": "San Diego, CA, United States",
+            "london": "London, United Kingdom",
+            "bengaluru": "Bengaluru, India",
+            "bangalore": "Bengaluru, India",
+            "gurugram": "Gurugram, India",
+            "toronto": "Toronto, ON, Canada",
+            "vancouver": "Vancouver, BC, Canada"
         }
         
-        if loc_lower in mapping:
-            clean_loc = mapping[loc_lower]
-        
-        # Suffix Fix
-        country_corrections = {"usa": "United States", "uk": "United Kingdom"}
-        parts = clean_loc.replace(",", " ").split()
-        if parts and parts[-1].lower() in country_corrections:
-            clean_loc = " ".join(parts[:-1]).strip().rstrip(",") + ", " + country_corrections[parts[-1].lower()]
+        if loc_lower in city_map:
+            return city_map[loc_lower], arrangement
 
-        if "United States" not in clean_loc and re.search(r', [A-Z]{2}$', clean_loc):
-             clean_loc = f"{clean_loc}, United States"
+        # 4. Handle "CA" Ambiguity (Canada vs California)
+        if clean_loc.endswith(" CA") or clean_loc.endswith(", CA"):
+            canadian_cities = ["toronto", "vancouver", "montreal", "ottawa"]
+            if any(c in loc_lower for c in canadian_cities):
+                clean_loc = clean_loc.replace(" CA", ", Canada").replace(", CA", ", Canada")
+            else:
+                clean_loc = clean_loc.replace(" CA", ", CA, United States").replace(", CA", ", CA, United States")
+
+        # 5. Append US if state detected (2 chars uppercase)
+        parts = clean_loc.split(',')
+        if len(parts) >= 2:
+            last = parts[-1].strip()
+            # If it's a state code (NY, TX) and NOT a country code (US, GB)
+            if len(last) == 2 and last.isupper() and last not in ["US", "UK", "GB", "IN", "CA", "DE", "FR"]:
+                if "United States" not in clean_loc:
+                    clean_loc = f"{clean_loc}, United States"
 
         return clean_loc, arrangement
