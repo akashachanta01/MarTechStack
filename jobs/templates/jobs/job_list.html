@@ -17,11 +17,27 @@
                 <svg class="w-5 h-5 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <input type="text" name="q" value="{{ query }}" placeholder="Search by tool (e.g. Marketo), title, or company" class="w-full border-none focus:ring-0 focus:outline-none text-slate-700 placeholder-slate-400 text-base py-3 bg-transparent" />
             </div>
+            
             <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+            
             <div class="flex-grow flex items-center gap-3">
                 <svg class="w-5 h-5 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <input type="text" name="l" value="{{ location_filter }}" placeholder="City, state, or 'Remote'" class="w-full border-none focus:ring-0 focus:outline-none text-slate-700 placeholder-slate-400 text-base py-3 bg-transparent" />
+                <select name="l" class="w-full border-none focus:ring-0 focus:outline-none text-slate-700 text-base py-3 bg-transparent cursor-pointer">
+                    <option value="" {% if not location_filter %}selected{% endif %}>Location...</option>
+                    <option value="Remote" {% if location_filter == 'Remote' %}selected{% endif %}>Remote Only</option>
+                    <option disabled>──────────</option>
+                    <option value="United States" {% if location_filter == 'United States' %}selected{% endif %}>United States</option>
+                    <option value="United Kingdom" {% if location_filter == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
+                    <option value="Canada" {% if location_filter == 'Canada' %}selected{% endif %}>Canada</option>
+                    <option value="Australia" {% if location_filter == 'Australia' %}selected{% endif %}>Australia</option>
+                    <option value="India" {% if location_filter == 'India' %}selected{% endif %}>India</option>
+                    <option value="Germany" {% if location_filter == 'Germany' %}selected{% endif %}>Germany</option>
+                    <option value="France" {% if location_filter == 'France' %}selected{% endif %}>France</option>
+                    <option value="Netherlands" {% if location_filter == 'Netherlands' %}selected{% endif %}>Netherlands</option>
+                    <option value="Singapore" {% if location_filter == 'Singapore' %}selected{% endif %}>Singapore</option>
+                </select>
             </div>
+
             <div class="flex items-center gap-2 pr-1">
                 {% if query or location_filter or vendor_filter %}
                 <a href="{% url 'job_list' %}" class="px-4 py-3 rounded-xl text-slate-500 hover:text-indigo-600 font-bold text-sm transition-colors">Clear</a>
