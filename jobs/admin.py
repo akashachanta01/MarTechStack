@@ -24,7 +24,6 @@ def auto_tag_tools(modeladmin, request, queryset):
         added_count = 0
         
         for tool in all_tools:
-            # Check if tool is already added to avoid DB hits
             if tool in job.tools.all():
                 continue
             
@@ -47,7 +46,7 @@ def delete_all_rejected(modeladmin, request, queryset):
     count, _ = Job.objects.filter(screening_status='rejected').delete()
     modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs.", messages.WARNING)
 
-# --- 2. MODEL ADMINS ---
+# --- 2. HELPERS ---
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -66,7 +65,7 @@ class BaseJobAdmin(admin.ModelAdmin):
     # UI CONFIG
     list_per_page = 50
     save_on_top = True
-    list_display_links = ("job_card_header",) # Click title to edit
+    list_display_links = ("job_card_header",) 
     
     # SEARCH & FILTER
     search_fields = ("title", "company", "description", "tools__name")
@@ -108,19 +107,23 @@ class BaseJobAdmin(admin.ModelAdmin):
     # --- VISUALS ---
     def logo_preview(self, obj):
         if obj.company_logo:
-            return format_html('<img src="{}" style="width:32px; height:32px; object-fit:contain; border-radius:4px; border:1px solid #eee; background:white;" />', obj.company_logo)
+            return format_html('<img src="{}" style="width:32px; height:32px; object-fit:contain; border-radius:4px; border:1px solid #ccc; background:white;" />', obj.company_logo)
         return "No Logo"
     logo_preview.short_description = "Img"
 
     def job_card_header(self, obj):
+        # FIX 1: Removed hardcoded dark colors. Now uses default text color (works in Dark Mode).
         return format_html(
-            '<div style="line-height:1.2;"><div style="font-weight:600; color:#1f2937;">{}</div><div style="font-size:12px; color:#6b7280;">{}</div></div>',
+            '<div style="line-height:1.2;">'
+            '<div style="font-weight:600; font-size:14px;">{}</div>'
+            '<div style="font-size:12px; opacity:0.7;">{}</div>'
+            '</div>',
             obj.title, obj.company
         )
     job_card_header.short_description = "Job Details"
+    job_card_header.admin_order_field = "title" # Allows sorting by title
 
     def score_display(self, obj):
-        # FIX: Robust Float Conversion
         try:
             val = float(obj.screening_score) if obj.screening_score is not None else 0.0
         except (ValueError, TypeError):
@@ -129,7 +132,7 @@ class BaseJobAdmin(admin.ModelAdmin):
         bg = "#d1fae5" if val >= 80 else "#fef3c7" if val >= 50 else "#fee2e2"
         text = "#065f46" if val >= 80 else "#92400e" if val >= 50 else "#b91c1c"
         
-        # FIX: Pre-format to string to prevent "SafeString" formatting crash
+        # Pre-format as string to avoid 500 errors
         score_str = "{:.0f}".format(val)
         
         return format_html(
@@ -137,12 +140,19 @@ class BaseJobAdmin(admin.ModelAdmin):
             bg, text, score_str
         )
     score_display.short_description = "AI Score"
+    score_display.admin_order_field = "screening_score" # FIX 2: Enables sorting!
 
     def tools_preview(self, obj):
-        count = obj.tools.count()
-        if count == 0:
-            return format_html('<span style="color:#d1d5db;">(empty)</span>')
-        return f"{count} Tools"
+        # FIX 3: Loop through tools and display actual names
+        tools = obj.tools.all()
+        if not tools:
+            return format_html('<span style="opacity:0.5;">-</span>')
+        
+        badges = ""
+        for t in tools:
+            badges += f'<span style="display:inline-block; border:1px solid #ccc; background:rgba(128,128,128,0.1); padding:0 4px; border-radius:3px; font-size:10px; margin-right:2px; margin-bottom:2px;">{t.name}</span>'
+        
+        return format_html(badges)
     tools_preview.short_description = "Stack"
 
     # --- ACTIONS ---
@@ -166,7 +176,8 @@ class BaseJobAdmin(admin.ModelAdmin):
 @admin.register(Job)
 class JobAdmin(BaseJobAdmin):
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(is_active=False)
+        # Added prefetch_related to speed up the new Stack column
+        return super().get_queryset(request).filter(is_active=False).prefetch_related('tools')
 
     list_display = ("logo_preview", "job_card_header", "score_display", "screening_status", "tools_preview", "created_at")
     list_editable = ("screening_status",)
@@ -175,9 +186,9 @@ class JobAdmin(BaseJobAdmin):
 @admin.register(ActiveJob)
 class ActiveJobAdmin(BaseJobAdmin):
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(is_active=True)
+        # Added prefetch_related here too
+        return super().get_queryset(request).filter(is_active=True).prefetch_related('tools')
 
-    # Added 'view_live' button
     list_display = ("logo_preview", "job_card_header", "score_display", "is_pinned", "is_featured", "tools_preview", "view_live")
     list_editable = ("is_pinned", "is_featured")
 
@@ -192,7 +203,7 @@ class ActiveJobAdmin(BaseJobAdmin):
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(BaseJobAdmin):
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(tags__icontains="User Submission")
+        return super().get_queryset(request).filter(tags__icontains="User Submission").prefetch_related('tools')
 
     list_display = ("logo_preview", "job_card_header", "score_display", "screening_status", "created_at")
 
