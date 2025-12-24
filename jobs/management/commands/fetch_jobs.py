@@ -174,26 +174,61 @@ class Command(BaseCommand):
                         })
         except: pass
 
+    # --- UPGRADED AI FETCH (Fixes cut-off & dirty HTML) ---
     def fetch_generic_ai(self, url):
         if Job.objects.filter(apply_url=url).exists(): return
-        self.stdout.write(f"   🤖 AI Scraping: {url}...")
+        
+        self.stdout.write(f"   🤖 AI Scraping (Full Context): {url}...")
         try:
-            resp = requests.get(url, headers=self.get_headers(), timeout=10)
+            resp = requests.get(url, headers=self.get_headers(), timeout=15)
             if resp.status_code != 200: return
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript"]): tag.extract()
-            text = " ".join(soup.get_text(separator=' ').split())[:12000]
             
-            prompt = f"Extract to JSON: title, company, location, is_remote (bool), description_html (full HTML). Text: {text}"
-            completion = self.client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"})
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            # Remove distractions
+            for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript", "header"]): tag.extract()
+            
+            # Increase limit to 60k chars to capture full description
+            text = " ".join(soup.get_text(separator=' ').split())[:60000]
+            
+            # Strict prompt to force clean HTML and full text
+            prompt = f"""
+            You are a Job Parser. Extract the following from the job posting text.
+            
+            URL: {url}
+            TEXT: {text}
+            
+            REQUIRED JSON OUTPUT:
+            - title: Job title.
+            - company: Company name.
+            - location: Location string.
+            - is_remote: Boolean.
+            - description_html: The FULL job description. 
+              RULES for description_html:
+              1. Use ONLY standard tags: <p>, <ul>, <li>, <h3>, <strong>.
+              2. REMOVE all 'class', 'style', and 'id' attributes.
+              3. DO NOT summarize. Include every section: Responsibilities, Requirements, Benefits.
+              4. If the text is cut off in the input, end with "... (See Apply Link)".
+            
+            Output valid JSON.
+            """
+
+            completion = self.client.chat.completions.create(
+                model="gpt-4o-mini", 
+                messages=[{"role": "user", "content": prompt}], 
+                response_format={"type": "json_object"}
+            )
             data = json.loads(completion.choices[0].message.content)
             
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
+            
+            final_desc = data.get('description_html') or data.get('description') or "See Job Link"
+
             self.screen_and_upsert({
                 "title": data.get('title'), "company": data.get('company'), "location": clean_loc,
-                "description": data.get('description_html') or "See Link", "apply_url": url, "work_arrangement": arr, "source": "AI"
+                "description": final_desc, "apply_url": url, "work_arrangement": arr, "source": "AI Scraper"
             })
-        except: pass
+        except Exception as e:
+            self.stdout.write(f"      ❌ AI Failed: {e}")
 
     def resolve_logo(self, company_name):
         if not company_name: return None
@@ -228,7 +263,7 @@ class Command(BaseCommand):
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {job.title}"))
 
-    # --- UPDATED LOCATION CLEANER ---
+    # --- LOCATION CLEANER ---
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str: return "On-site", 'onsite'
         
