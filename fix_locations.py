@@ -10,81 +10,126 @@ from jobs.models import Job
 def normalize_location(loc):
     if not loc: return None
     
-    cleaned = loc.strip()
+    cleaned = loc.strip().replace(" - ", ", ").replace(" | ", ", ")
+    lower_loc = cleaned.lower()
     
-    # 1. Fix "Remote" variations
-    if any(k in cleaned.lower() for k in ["remote", "work from home", "wfh", "anywhere"]):
+    # 1. REMOVE NOISE (Bad data that isn't a location)
+    if lower_loc in ["not specified", "on-site", "onsite", "various locations", "multiple locations"]:
+        return None
+
+    # 2. FIX REMOTE
+    if any(k in lower_loc for k in ["remote", "work from home", "wfh", "anywhere", "home based"]):
         return "Remote"
 
-    # 2. Dictionary of Specific Major Cities (City -> Full Location)
-    # Use this for cities that often appear WITHOUT a country or state
-    city_map = {
-        "New York": "New York, NY, United States",
-        "NYC": "New York, NY, United States",
-        "San Francisco": "San Francisco, CA, United States",
-        "SF": "San Francisco, CA, United States",
-        "Los Angeles": "Los Angeles, CA, United States",
-        "London": "London, United Kingdom",
-        "Berlin": "Berlin, Germany",
-        "Munich": "Munich, Germany",
-        "Paris": "Paris, France",
-        "Amsterdam": "Amsterdam, Netherlands",
-        "Toronto": "Toronto, Canada",
-        "Vancouver": "Vancouver, Canada",
-        "Sydney": "Sydney, Australia",
-        "Melbourne": "Melbourne, Australia",
-        "Bengaluru": "Bengaluru, India",
-        "Bangalore": "Bengaluru, India",
-        "Singapore": "Singapore",
-        "Dublin": "Dublin, Ireland",
-        "Zurich": "Zurich, Switzerland",
+    # 3. SMART MAPPING (City/State -> Full Country)
+    # Catches the specific issues from your screenshot
+    mapping = {
+        # US Cities & States
+        "new york": "New York, NY, United States",
+        "nyc": "New York, NY, United States",
+        "ny": "New York, NY, United States",
+        "san francisco": "San Francisco, CA, United States",
+        "sf": "San Francisco, CA, United States",
+        "california": "California, United States",
+        "ca": "California, United States",
+        "illinois": "Illinois, United States",
+        "il": "Illinois, United States",
+        "chicago": "Chicago, IL, United States",
+        "seattle": "Seattle, WA, United States",
+        "wa": "Washington, United States",
+        "austin": "Austin, TX, United States",
+        "texas": "Texas, United States",
+        "tx": "Texas, United States",
+        "boston": "Boston, MA, United States",
+        "burlingame": "Burlingame, CA, United States",
+        "atlanta": "Atlanta, GA, United States",
+        "denver": "Denver, CO, United States",
+        
+        # India
+        "india": "India",
+        "gurugram": "Gurugram, India",
+        "gurgaon": "Gurugram, India",
+        "bengaluru": "Bengaluru, India",
+        "bangalore": "Bengaluru, India",
+        "hyderabad": "Hyderabad, India",
+        "uttar pradesh": "Uttar Pradesh, India",
+        "noida": "Noida, India",
+        "mumbai": "Mumbai, India",
+        "pune": "Pune, India",
+        "delhi": "Delhi, India",
+        "new delhi": "Delhi, India",
+
+        # Europe
+        "london": "London, United Kingdom",
+        "uk": "United Kingdom",
+        "united kingdom": "United Kingdom",
+        "paris": "Paris, France",
+        "berlin": "Berlin, Germany",
+        "munich": "Munich, Germany",
+        "amsterdam": "Amsterdam, Netherlands",
+        "dublin": "Dublin, Ireland",
+        "zurich": "Zurich, Switzerland",
+        "poland": "Poland",
+        "warsaw": "Warsaw, Poland",
+        "barcelona": "Barcelona, Spain",
+        "madrid": "Madrid, Spain",
+        "va de los poblados": "Madrid, Spain", # Specific fix for your screenshot
+
+        # Americas
+        "canada": "Canada",
+        "toronto": "Toronto, Canada",
+        "vancouver": "Vancouver, Canada",
+        "mexico": "Mexico",
+        "mexico city": "Mexico City, Mexico",
+        "latin america": "Latin America", 
+        "brazil": "Brazil",
+        "sao paulo": "Sao Paulo, Brazil",
+
+        # APAC
+        "australia": "Australia",
+        "sydney": "Sydney, Australia",
+        "melbourne": "Melbourne, Australia",
+        "singapore": "Singapore",
     }
     
-    if cleaned in city_map:
-        return city_map[cleaned]
+    # Exact match check
+    if lower_loc in mapping:
+        return mapping[lower_loc]
 
-    # 3. ISO Country Codes (Catch "City, CODE" formats)
-    # This automatically fixes "Paris, FR" -> "Paris, France"
-    country_codes = {
-        "US": "United States", "USA": "United States",
-        "UK": "United Kingdom", "GB": "United Kingdom",
-        "CA": "Canada",
-        "AU": "Australia",
-        "DE": "Germany",
-        "FR": "France",
-        "NL": "Netherlands",
-        "IN": "India",
-        "SG": "Singapore",
-        "IE": "Ireland",
-        "CH": "Switzerland",
-        "ES": "Spain",
-        "IT": "Italy",
-        "SE": "Sweden",
-        "BR": "Brazil",
-        "MX": "Mexico"
+    # Suffix check (e.g. "Hyderabad, India" -> catch "India")
+    # This standardizes the country name format
+    country_corrections = {
+        "usa": "United States",
+        "us": "United States",
+        "united states of america": "United States",
+        "uk": "United Kingdom",
+        "great britain": "United Kingdom",
+        "england": "United Kingdom",
+        "deutschland": "Germany",
+        "españa": "Spain",
+        "brasil": "Brazil",
     }
 
-    # Check if the string ends with a known code (e.g. "Berlin, DE")
-    parts = cleaned.replace(',', ' ').split()
-    if len(parts) > 1:
-        last_part = parts[-1].upper().strip()
-        if last_part in country_codes:
-            full_country = country_codes[last_part]
-            # Avoid double naming like "France, France"
-            if full_country.lower() not in cleaned.lower():
-                return cleaned[:-len(last_part)].strip().strip(',') + ", " + full_country
+    # Check if the string ENDS with a known country (e.g. "City, USA")
+    parts = cleaned.replace(",", " ").split()
+    last_word = parts[-1].lower()
+    
+    if last_word in country_corrections:
+        # Replace the last word with the canonical country
+        # "Boston, USA" -> "Boston, United States"
+        prefix = " ".join(parts[:-1]).strip().rstrip(",")
+        return f"{prefix}, {country_corrections[last_word]}"
 
-    # 4. Catch-all for US States (e.g., "Atlanta, GA")
-    if "," in cleaned and "United States" not in cleaned:
-        state_part = cleaned.split(',')[-1].strip()
-        if len(state_part) == 2 and state_part.isupper() and state_part.isalpha():
-            if state_part not in country_codes: 
-                return f"{cleaned}, United States"
+    # Fallback: If it looks like "City, State", assume US
+    # Regex for ", XX" where XX is 2 uppercase letters
+    import re
+    if re.search(r', [A-Z]{2}$', cleaned) and "United States" not in cleaned:
+         return f"{cleaned}, United States"
 
     return cleaned
 
 def run():
-    print("🌍 STARTING SMART LOCATION NORMALIZATION...")
+    print("🌍 STARTING DEEP CLEAN LOCATION FIX...")
     jobs = Job.objects.all()
     count = 0
     for job in jobs:
@@ -93,6 +138,13 @@ def run():
         original = job.location
         new_loc = normalize_location(original)
         
+        # If it returns None (e.g. "Not specified"), we clear it so it doesn't clutter the UI
+        if new_loc is None and original: 
+             print(f"   🗑️ Clearing invalid location: '{original}'")
+             job.location = None
+             job.save()
+             continue
+
         if new_loc and new_loc != original:
             print(f"   ✏️ Fixing: '{original}' -> '{new_loc}'")
             job.location = new_loc
