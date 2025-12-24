@@ -71,7 +71,7 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- TOPIC CLUSTERS (Existing) ---
+    # --- TOPIC CLUSTERS ---
     popular_tech_stacks = cache.get('popular_tech_stacks_v2')
     if popular_tech_stacks is None:
         popular_tech_stacks = Tool.objects.filter(
@@ -80,36 +80,39 @@ def job_list(request):
         ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:10]
         cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
 
-    # --- NEW: DYNAMIC COUNTRY LIST ---
-    # Automatically finds all countries currently in the DB
-    available_countries = cache.get('available_countries_v1')
+    # --- DYNAMIC COUNTRY LIST (STRICT FILTER) ---
+    available_countries = cache.get('available_countries_v2')
     if available_countries is None:
         raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
         country_set = set()
+        
+        # Blocklist for garbage that shouldn't be in the dropdown
+        blocklist = ["not specified", "on-site", "latin america", "va de los poblados"]
+        
         for loc in raw_locs:
             if not loc: continue
-            # Skip "Remote" entries for this list (we handle Remote separately)
-            if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']):
-                continue
+            if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']): continue
+            if any(b in loc.lower() for b in blocklist): continue
             
-            # Extract the last part of "City, Country"
+            # Extract last part
             parts = loc.split(',')
             if len(parts) >= 1:
                 country = parts[-1].strip()
-                # Filter out short state codes like "NY" or "CA" to be safe
-                if len(country) > 3: 
+                # Strict check: Country must be > 3 chars to avoid "NY", "CA", "WA"
+                # And usually countries don't have digits
+                if len(country) > 3 and not any(char.isdigit() for char in country): 
                     country_set.add(country)
         
         available_countries = sorted(list(country_set))
-        cache.set('available_countries_v1', available_countries, 3600)
+        cache.set('available_countries_v2', available_countries, 3600)
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, "query": query, "location_filter": location_query,
         "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
-        "available_countries": available_countries, # <-- Passed to template
+        "available_countries": available_countries,
     })
 
-# --- KEEP ALL OTHER VIEWS (tool_detail, job_detail, etc.) EXACTLY AS THEY WERE ---
+# --- OTHER VIEWS (Keep exactly as is) ---
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
     jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
@@ -138,7 +141,7 @@ def post_job(request):
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
                     tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
                     job.tools.add(tool)
-            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1')
+            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -163,7 +166,7 @@ def stripe_webhook(request):
         if job_id:
             try: 
                 job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
-                cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1'); send_job_alert(job)
+                cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
             except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
@@ -191,7 +194,7 @@ def review_queue(request):
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
-    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v1'); send_job_alert(job)
+    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
