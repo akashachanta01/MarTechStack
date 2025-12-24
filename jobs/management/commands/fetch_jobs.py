@@ -84,33 +84,22 @@ class Command(BaseCommand):
 
     # --- THE BRAIN: ANALYZE URL (Region Aware) ---
     def analyze_and_fetch(self, url):
-        # 1. Greenhouse (US & EU)
         if "greenhouse.io" in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
-            
-        # 2. Lever (Global)
         elif "lever.co" in url:
             match = re.search(r'lever\.co/([^/]+)', url)
             if match: self.fetch_lever_api(match.group(1)); return
-            
-        # 3. Ashby (Global)
         elif "ashbyhq.com" in url:
             match = re.search(r'jobs\.ashbyhq\.com/([^/]+)', url)
             if match: self.fetch_ashby_api(match.group(1)); return
-            
-        # 4. Workable (Global)
         elif "workable.com" in url:
             match = re.search(r'apply\.workable\.com/([^/]+)', url) or re.search(r'([^.]+)\.workable\.com', url)
             if match: self.fetch_workable_api(match.group(1)); return
-            
-        # 5. SmartRecruiters (Global)
         elif "smartrecruiters.com" in url:
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', url) or re.search(r'([^.]+)\.smartrecruiters\.com', url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
-        # 6. Enterprise Fallback (Workday, Taleo, iCIMS, BambooHR)
-        # These sites are hard to scrape via API, so we send them to the AI Agent.
         if any(x in url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
             if any(k in url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(url)
@@ -129,7 +118,6 @@ class Command(BaseCommand):
                     if self.is_fresh(item.get('updated_at')):
                         raw_loc = item.get('location', {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
-                        # Greenhouse usually provides full HTML in 'content'
                         self.screen_and_upsert({
                             "title": item.get('title'), "company": token.capitalize(), "location": clean_loc, 
                             "description": item.get('content'), "apply_url": item.get('absolute_url'), 
@@ -147,8 +135,6 @@ class Command(BaseCommand):
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
-                        # Lever 'description' is often plain text, 'lists' contains requirements.
-                        # For now we use what we have, but Lever is usually passable.
                         self.screen_and_upsert({
                             "title": item.get('text'), "company": token.capitalize(), "location": clean_loc, 
                             "description": item.get('description'), "apply_url": item.get('hostedUrl'), 
@@ -164,9 +150,6 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('jobs', []):
                     clean_loc, arr = self._clean_location(item.get('location'), item.get('isRemote', False))
-                    # Ashby List API is thin on description. 
-                    # Improvement: If we really need rich text for Ashby, we'd need a secondary fetch here.
-                    # For now, we link to the board to avoid "Empty Page" SEO penalty manually.
                     self.screen_and_upsert({
                         "title": item.get('title'), "company": company.capitalize(), "location": clean_loc, 
                         "description": f"Full details available at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), 
@@ -198,12 +181,10 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('content', []):
                     if self.is_fresh(item.get('releasedDate')):
-                        # UPGRADE: Fetch Full Detail for SmartRecruiters
                         try:
                             detail_resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=3)
                             if detail_resp.status_code == 200:
                                 detail = detail_resp.json()
-                                # Combine sections into HTML
                                 desc_html = detail.get('jobAd', {}).get('sections', {}).get('jobDescription', {}).get('text', '')
                                 qual_html = detail.get('jobAd', {}).get('sections', {}).get('qualifications', {}).get('text', '')
                                 full_desc = f"<h3>Job Description</h3>{desc_html}<br><h3>Qualifications</h3>{qual_html}"
@@ -222,11 +203,7 @@ class Command(BaseCommand):
                         })
         except: pass
 
-    # --- GENERIC AI FALLBACK (Global Support) ---
     def fetch_generic_ai(self, url):
-        """
-        The heavy hitter. Uses OpenAI to extract structured data + FULL HTML from complex pages.
-        """
         if Job.objects.filter(apply_url=url).exists(): return
         
         self.stdout.write(f"   🤖 AI Scraping: {url}...")
@@ -234,14 +211,11 @@ class Command(BaseCommand):
             resp = requests.get(url, headers=self.get_headers(), timeout=10)
             if resp.status_code != 200: return
             
-            # Clean soup but keep structural tags
             soup = BeautifulSoup(resp.text, 'html.parser')
             for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript"]): tag.extract()
             
-            # UPGRADE: Capture more text (12k chars) to get full descriptions
             text = " ".join(soup.get_text(separator=' ').split())[:12000]
 
-            # UPGRADE: Prompt asks for 'description_html' explicitly
             prompt = f"""
             You are a Job Parser. Convert the job posting text below into structured JSON.
             
@@ -267,7 +241,6 @@ class Command(BaseCommand):
             
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
             
-            # Use the rich HTML, fallback to summary if missing
             final_desc = data.get('description_html') or data.get('description') or "See Job Link"
 
             self.screen_and_upsert({
@@ -278,7 +251,6 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(f"      ❌ AI Failed: {e}")
 
-    # --- HELPERS ---
     def resolve_logo(self, company_name):
         if not company_name: return None
         clean = company_name.lower().replace(' ', '').replace(',', '')
@@ -324,13 +296,73 @@ class Command(BaseCommand):
 
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str: return "On-site", 'onsite'
+        
+        # 1. Basic Cleanup
         clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
         loc_lower = clean_loc.lower()
-        arrangement = 'onsite'
-        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh'}): arrangement = 'remote'
-        if any(k in loc_lower for k in {'hybrid', 'flexible'}): arrangement = 'hybrid'
         
-        all_work_keywords = {'remote', 'hybrid', 'onsite', 'flexible', 'wfh', 'anywhere'}
-        location_parts = [p.strip() for p in clean_loc.split(',') if p.strip() and not any(k in p.strip().lower() for k in all_work_keywords)]
-        final_location = ", ".join(location_parts)
-        return (final_location or arrangement.capitalize()), arrangement
+        # 2. Determine Work Arrangement
+        arrangement = 'onsite'
+        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}):
+            arrangement = 'remote'
+        elif any(k in loc_lower for k in {'hybrid', 'flexible'}):
+            arrangement = 'hybrid'
+        
+        # 3. If remote, we can simplify "Remote - US" to "Remote" if desired, 
+        # or leave it to allow country detection. 
+        # We will leave it so we can extract the country.
+
+        # 4. DATA NORMALIZATION (The New Logic)
+        city_map = {
+            "new york": "New York, NY, United States",
+            "nyc": "New York, NY, United States",
+            "san francisco": "San Francisco, CA, United States",
+            "sf": "San Francisco, CA, United States",
+            "london": "London, United Kingdom",
+            "berlin": "Berlin, Germany",
+            "munich": "Munich, Germany",
+            "paris": "Paris, France",
+            "amsterdam": "Amsterdam, Netherlands",
+            "toronto": "Toronto, Canada",
+            "vancouver": "Vancouver, Canada",
+            "sydney": "Sydney, Australia",
+            "bengaluru": "Bengaluru, India",
+            "bangalore": "Bengaluru, India",
+            "singapore": "Singapore",
+            "dublin": "Dublin, Ireland",
+            "zurich": "Zurich, Switzerland",
+        }
+        
+        # Check direct city match
+        if loc_lower in city_map:
+            clean_loc = city_map[loc_lower]
+        
+        # Fix USA/UK Suffixes & ISO Codes
+        country_codes = {
+            "US": "United States", "USA": "United States",
+            "UK": "United Kingdom", "GB": "United Kingdom",
+            "CA": "Canada", "AU": "Australia", "DE": "Germany",
+            "FR": "France", "NL": "Netherlands", "IN": "India",
+            "SG": "Singapore", "IE": "Ireland", "CH": "Switzerland",
+            "ES": "Spain", "IT": "Italy", "SE": "Sweden", "BR": "Brazil", "MX": "Mexico"
+        }
+
+        # Check if ends with a code (e.g. "City, DE")
+        parts = clean_loc.replace(',', ' ').split()
+        if len(parts) > 1:
+            last_part = parts[-1].upper().strip()
+            if last_part in country_codes:
+                full_country = country_codes[last_part]
+                if full_country.lower() not in loc_lower:
+                    clean_loc = clean_loc[:-len(last_part)].strip().strip(',') + ", " + full_country
+
+        # Fix "City, ST" (US State codes) -> Add United States
+        if "united states" not in clean_loc.lower() and "," in clean_loc:
+            parts = clean_loc.split(',')
+            if len(parts) >= 2:
+                last_part = parts[-1].strip()
+                if len(last_part) == 2 and last_part.isupper() and last_part.isalpha():
+                    if last_part not in country_codes: # Avoid confusing "DE" (Germany) with "DE" (Delaware) if needed
+                        clean_loc = f"{clean_loc}, United States"
+
+        return clean_loc, arrangement
