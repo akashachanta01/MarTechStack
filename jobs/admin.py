@@ -235,6 +235,12 @@ class ActiveJobAdmin(BaseJobAdmin):
 class UserSubmissionAdmin(BaseJobAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tags__icontains="User Submission")
+    
+    # FIX: Added list_display so "list_display_links" works
+    list_display = (
+        "logo_preview", "job_card_header", "score_display", 
+        "screening_status", "location", "tools_preview", "created_at"
+    )
 
 # --- OTHER ADMINS ---
 @admin.register(Subscriber)
