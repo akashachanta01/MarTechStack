@@ -1,83 +1,93 @@
 import os
 import requests
 import time
-from django.conf import settings
 
-# 1. SETUP (Mock Django settings to read the file path easily if needed, or just use os)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# 1. CONFIGURATION
 SERPAPI_KEY = os.environ.get('SERPAPI_KEY')
+FILE_NAME = 'hunt_targets.txt'
 
 if not SERPAPI_KEY:
     print("❌ ERROR: SERPAPI_KEY not found. Cannot run test.")
     exit()
 
-# 2. LOAD TARGETS (Simulating the new logic)
-# We will just pick the "Hard" ones to prove the point.
-# In the real script, we would read the whole file.
-TEST_TARGETS = [
-    "Bloomreach",       # The one you missed
-    "MarTech",          # The generic one
-    "AEP",              # Adobe Ecosystem
-    "Tealium",          # Data Ecosystem
-    "mParticle"         # Data Ecosystem
-]
+if not os.path.exists(FILE_NAME):
+    print(f"❌ ERROR: Could not find '{FILE_NAME}' in this directory.")
+    print("   Make sure you are running this from the same folder as the text file.")
+    exit()
 
-# 3. THE STRATEGY
 def run_test():
-    print(f"🧪 TESTING 'KEYWORD LOOP' STRATEGY on {len(TEST_TARGETS)} targets...\n")
+    # 2. LOAD REAL TARGETS
+    targets = []
+    with open(FILE_NAME, 'r') as f:
+        for line in f:
+            clean = line.strip()
+            # Skip comments and empty lines
+            if clean and not clean.startswith('#'):
+                targets.append(clean)
 
-    for keyword in TEST_TARGETS:
-        print(f"🔎 Target: {keyword}")
+    print(f"📋 Loaded {len(targets)} keywords from {FILE_NAME}")
+    print(f"🧪 TESTING 'INTITLE' STRATEGY (Top 3 results per keyword)...")
+    print("="*60)
+
+    # 3. EXECUTE LOOP
+    for keyword in targets:
+        # We search specifically for the tool in the job title on ATS sites
+        query = f'(site:greenhouse.io OR site:lever.co OR site:ashbyhq.com) intitle:"{keyword}"'
         
-        # THE NEW QUERY LOGIC
-        # We look for the Keyword explicitly in the Title of the job page
-        query = f'(site:greenhouse.io OR site:lever.co) intitle:"{keyword}"'
-        
-        print(f"   Query: {query}")
+        print(f"\n🔎 Hunting: {keyword}")
         
         try:
             params = {
                 "engine": "google",
                 "q": query,
                 "api_key": SERPAPI_KEY,
-                "num": 3, # Just fetch top 3 to prove it works
+                "num": 3,  # Low number to save credits/time for test
                 "gl": "us",
                 "hl": "en"
             }
             
             resp = requests.get("https://serpapi.com/search", params=params, timeout=10)
-            results = resp.json().get("organic_results", [])
+            data = resp.json()
+            results = data.get("organic_results", [])
             
             if not results:
-                print("   ⚠️  No results found.")
+                # If Google returns nothing, it might be a rate limit or just a rare keyword
+                if "error" in data:
+                    print(f"   ⚠️ API Error: {data['error']}")
+                else:
+                    print("   ⚠️  No jobs found with this specific title.")
             
             for item in results:
-                title = item.get("title")
-                link = item.get("link")
+                title = item.get("title", "No Title")
+                link = item.get("link", "No Link")
                 
-                # Extract the "Hub" (Company Name) from the URL
+                # Extract Company Name (The "Hub")
                 company = "Unknown"
                 if "greenhouse.io" in link:
-                    # Clean URL to get company token
-                    # ex: https://boards.greenhouse.io/bloomreach/jobs/123 -> bloomreach
+                    # https://boards.greenhouse.io/bloomreach/jobs/123
                     parts = link.split('/')
-                    if 'greenhouse.io' in parts[2]:
-                        # usually part 3 or 4 depending on subdomain
-                        # simplest way: look for the part after the domain
-                        for p in parts:
-                            if p not in ['https:', '', 'boards.greenhouse.io', 'jobs', 'embed']:
-                                company = p
-                                break
+                    # Simple heuristic to grab the company slug
+                    for p in parts:
+                        if p not in ['https:', '', 'boards.greenhouse.io', 'jobs', 'embed', 'www.greenhouse.io']:
+                            company = p
+                            break
+                elif "lever.co" in link:
+                    # https://jobs.lever.co/valtech/123
+                    parts = link.split('/')
+                    if len(parts) > 3: company = parts[3]
                 
                 print(f"   ✅ FOUND: {title}")
                 print(f"      🔗 {link}")
-                print(f"      🏢 HUB DISCOVERED: {company}")
+                print(f"      🏢 HUB: {company}")
 
         except Exception as e:
-            print(f"   ❌ Error: {e}")
+            print(f"   ❌ System Error: {e}")
             
-        print("-" * 40)
-        time.sleep(1) # Be polite
+        # Sleep to avoid hitting Google's rate limit during the test
+        time.sleep(1.5) 
+
+    print("\n" + "="*60)
+    print("✨ TEST COMPLETE.")
 
 if __name__ == '__main__':
     run_test()
