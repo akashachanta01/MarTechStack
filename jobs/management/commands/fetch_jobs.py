@@ -19,10 +19,15 @@ from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'The "Direct-Apply" Hunter: Smart Deduplication + Clean URLs.'
+    help = 'The "Direct-Apply" Hunter: Smart Deduplication + Clean URLs + Auto-Cleanup + Zero-Score Filter.'
 
     def handle(self, *args, **options):
         self.stdout.write("🚀 Starting Job Hunt (Smart Deduplication Mode)...")
+
+        # --- AUTO-CLEANUP ---
+        # Wipes out old 'pending' or 'rejected' junk to keep the DB lean
+        deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
+        self.stdout.write(f"🧹 Cleaned up {deleted_count} inactive/rejected jobs from database.")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
@@ -35,7 +40,6 @@ class Command(BaseCommand):
         self.screener = MarTechScreener()
         self.total_added = 0
         
-        # Cache tools for fast tagging
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         self.cutoff_date = timezone.now() - timedelta(days=28)
         self.processed_tokens = set()
@@ -57,9 +61,7 @@ class Command(BaseCommand):
 
         for group_query in ats_groups:
             for keyword in hunt_targets:
-                # 1. INTITLE IS ON (High Quality)
                 query = f'intitle:"{keyword}" ({group_query})'
-                
                 self.stdout.write(f"\n🔎 Hunting: {keyword}...")
                 time.sleep(1.0)
                 
@@ -85,38 +87,20 @@ class Command(BaseCommand):
         return []
 
     def _clean_url(self, url):
-        """
-        URL CLEANER: Strips tracking parameters AND 'Apply' suffixes.
-        Rewrites application flow URLs to point back to the Job Description.
-        """
         if not url: return ""
-        
-        # 1. Remove '/apply', '/apply/', or '#app' from the end of the URL
-        # This handles patterns like /job/123/apply or /job/123#apply
         url = re.sub(r'/(apply|apply/|#app|#apply)/?$', '', url.strip())
-        
-        # 2. Strip tracking parameters (gh_src, utm, etc)
         parsed = urlparse(url)
-        # Reconstruct URL without query parameters
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
     def _is_duplicate(self, title, company, clean_url):
         if Job.objects.filter(apply_url=clean_url).exists():
             return True
-        
-        if Job.objects.filter(
-            title__iexact=title, 
-            company__iexact=company, 
-            created_at__gte=timezone.now() - timedelta(days=30)
-        ).exists():
+        if Job.objects.filter(title__iexact=title, company__iexact=company, created_at__gte=timezone.now() - timedelta(days=30)).exists():
             return True
-            
         return False
 
     def analyze_and_fetch(self, url):
-        # Apply the URL Cleaner immediately to ensure we are looking for the JD
         clean_url = self._clean_url(url)
-        
         if "greenhouse.io" in clean_url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', clean_url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
@@ -151,13 +135,9 @@ class Command(BaseCommand):
                         raw_loc = item.get('location', {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         self.screen_and_upsert({
-                            "title": item.get('title'),
-                            "company": token.capitalize(),
-                            "location": clean_loc, 
-                            "description": item.get('content'),
-                            "apply_url": item.get('absolute_url'),
-                            "work_arrangement": arr,
-                            "source": "Greenhouse"
+                            "title": item.get('title'), "company": token.capitalize(), "location": clean_loc, 
+                            "description": item.get('content'), "apply_url": item.get('absolute_url'), 
+                            "work_arrangement": arr, "source": "Greenhouse"
                         })
         except: pass
 
@@ -172,13 +152,9 @@ class Command(BaseCommand):
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         self.screen_and_upsert({
-                            "title": item.get('text'),
-                            "company": token.capitalize(),
-                            "location": clean_loc, 
-                            "description": item.get('description'),
-                            "apply_url": item.get('hostedUrl'),
-                            "work_arrangement": arr,
-                            "source": "Lever"
+                            "title": item.get('text'), "company": token.capitalize(), "location": clean_loc, 
+                            "description": item.get('description'), "apply_url": item.get('hostedUrl'), 
+                            "work_arrangement": arr, "source": "Lever"
                         })
         except: pass
 
@@ -191,13 +167,9 @@ class Command(BaseCommand):
                 for item in resp.json().get('jobs', []):
                     clean_loc, arr = self._clean_location(item.get('location'), item.get('isRemote', False))
                     self.screen_and_upsert({
-                        "title": item.get('title'),
-                        "company": company.capitalize(),
-                        "location": clean_loc, 
-                        "description": f"Full details at {item.get('jobUrl')}",
-                        "apply_url": item.get('jobUrl'),
-                        "work_arrangement": arr,
-                        "source": "Ashby"
+                        "title": item.get('title'), "company": company.capitalize(), "location": clean_loc, 
+                        "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), 
+                        "work_arrangement": arr, "source": "Ashby"
                     })
         except: pass
 
@@ -211,13 +183,9 @@ class Command(BaseCommand):
                     if self.is_fresh(item.get('published_on')):
                         clean_loc, arr = self._clean_location(f"{item.get('city')}, {item.get('country')}", item.get('telecommuting', False))
                         self.screen_and_upsert({
-                            "title": item.get('title'),
-                            "company": sub.capitalize(),
-                            "location": clean_loc, 
-                            "description": item.get('description'),
-                            "apply_url": item.get('url'),
-                            "work_arrangement": arr,
-                            "source": "Workable"
+                            "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc, 
+                            "description": item.get('description'), "apply_url": item.get('url'), 
+                            "work_arrangement": arr, "source": "Workable"
                         })
         except: pass
 
@@ -235,73 +203,37 @@ class Command(BaseCommand):
                         except: desc = "See Job Post"
                         clean_loc, arr = self._clean_location(item.get('location', {}).get('city'), item.get('location', {}).get('remote', False))
                         self.screen_and_upsert({
-                            "title": item.get('name'),
-                            "company": company.capitalize(),
-                            "location": clean_loc,
-                            "description": desc,
-                            "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
-                            "work_arrangement": arr,
-                            "source": "SmartRecruiters"
+                            "title": item.get('name'), "company": company.capitalize(), "location": clean_loc,
+                            "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
+                            "work_arrangement": arr, "source": "SmartRecruiters"
                         })
         except: pass
 
     def fetch_generic_ai(self, url):
         if self._is_duplicate("", "", url): return 
-        
         self.stdout.write(f"   🤖 AI Scraping: {url}...")
         try:
-            # LINK VALIDATOR & PULSE CHECK
             resp = requests.get(url, headers=self.get_headers(), timeout=15, allow_redirects=True)
-            
-            # Detect 404s or Workday 'Soft 404' redirects to search pages
             if resp.status_code != 200 or "/search" in resp.url or "/jobs" == resp.url.split('/')[-1]:
                 self.stdout.write(f"      🗑️ Skipping: Link is dead or redirected to home.")
                 return
-            
             soup = BeautifulSoup(resp.text, 'html.parser')
-
-            # ZOMBIE FILTER: Scan for 'Dead Page' phrases
-            zombie_phrases = [
-                "page you are looking for doesn't exist",
-                "job is no longer available",
-                "this position has been filled",
-                "no longer accepting applications",
-                "0 jobs matched your search",
-                "start your application" # Catches pages that are ONLY application forms
-            ]
+            zombie_phrases = ["page you are looking for doesn't exist", "job is no longer available", "this position has been filled", "no longer accepting applications", "0 jobs matched your search", "start your application"]
             page_text = soup.get_text().lower()
             if any(phrase in page_text for phrase in zombie_phrases):
-                # Extra check: if 'start your application' is found but the text is very short, it's just a login/apply screen
-                if "start your application" in page_text and len(page_text) < 1000:
+                if "start your application" in page_text and len(page_text) < 1200:
                     self.stdout.write(f"      🗑️ Skipping: Captured an apply-only screen.")
                     return
-
             for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript", "header"]): tag.extract()
             text = " ".join(soup.get_text(separator=' ').split())[:60000]
-            
-            if len(text) < 250: # Too short to be a real job description
-                return
-
-            prompt = f"""
-            You are a Job Parser. Extract the following from the job posting text.
-            URL: {url}
-            TEXT: {text}
-            Output JSON: title, company, location, is_remote, description_html (clean HTML).
-            """
-
-            completion = self.client.chat.completions.create(
-                model="gpt-4o-mini", 
-                messages=[{"role": "user", "content": prompt}], 
-                response_format={"type": "json_object"}
-            )
+            if len(text) < 250: return
+            prompt = f"Extract title, company, location, is_remote, description_html (clean HTML) as JSON from: {text[:4000]}"
+            completion = self.client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"})
             data = json.loads(completion.choices[0].message.content)
-            
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
-            final_desc = data.get('description_html') or data.get('description') or "See Job Link"
-
             self.screen_and_upsert({
                 "title": data.get('title'), "company": data.get('company'), "location": clean_loc,
-                "description": final_desc, "apply_url": url, "work_arrangement": arr, "source": "AI Scraper"
+                "description": data.get('description_html') or data.get('description'), "apply_url": url, "work_arrangement": arr, "source": "AI Scraper"
             })
         except Exception as e:
             self.stdout.write(f"      ❌ AI Failed: {e}")
@@ -320,12 +252,18 @@ class Command(BaseCommand):
     
     def screen_and_upsert(self, job_data):
         clean_url = self._clean_url(job_data.get("apply_url"))
-        
-        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url):
-            return
+        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url): return
 
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), clean_url)
         
+        # --- ZERO-SCORE FILTER ---
+        # If the AI gives it a 0, we don't save it. Period.
+        score = float(analysis.get("score", 50.0))
+        if score <= 0:
+            self.stdout.write(self.style.WARNING(f"      🚫 Dropping {job_data.get('title')}: Score is 0."))
+            return
+        # -------------------------
+
         status = analysis.get("status", "pending")
         signals = analysis.get("details", {}).get("signals", {})
         
@@ -334,7 +272,7 @@ class Command(BaseCommand):
             location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
             description=job_data.get("description"), apply_url=clean_url,
             role_type=signals.get("role_type", "full_time"), screening_status=status,
-            screening_score=analysis.get("score", 50.0), screening_reason=analysis.get("reason", ""),
+            screening_score=score, screening_reason=analysis.get("reason", ""),
             is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}"
         )
         for t in signals.get("stack", []):
@@ -346,53 +284,11 @@ class Command(BaseCommand):
 
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str: return "On-site", 'onsite'
-        
         clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
         loc_lower = clean_loc.lower()
-        
         arrangement = 'onsite'
-        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}):
-            arrangement = 'remote'
-        elif any(k in loc_lower for k in {'hybrid', 'flexible'}):
-            arrangement = 'hybrid'
-        
-        city_map = {
-            "new york": "New York, NY, United States",
-            "new york city": "New York, NY, United States", 
-            "nyc": "New York, NY, United States",
-            "new york, ny": "New York, NY, United States",
-            "new york city, new york": "New York, NY, United States",
-            "san francisco": "San Francisco, CA, United States",
-            "sf": "San Francisco, CA, United States",
-            "los angeles": "Los Angeles, CA, United States",
-            "chicago": "Chicago, IL, United States",
-            "austin": "Austin, TX, United States",
-            "boston": "Boston, MA, United States",
-            "seattle": "Seattle, WA, United States",
-            "san diego": "San Diego, CA, United States",
-            "london": "London, United Kingdom",
-            "bengaluru": "Bengaluru, India",
-            "bangalore": "Bengaluru, India",
-            "gurugram": "Gurugram, India",
-            "toronto": "Toronto, ON, Canada",
-            "vancouver": "Vancouver, BC, Canada"
-        }
-        
-        if loc_lower in city_map:
-            return city_map[loc_lower], arrangement
-
-        if clean_loc.endswith(" CA") or clean_loc.endswith(", CA"):
-            canadian_cities = ["toronto", "vancouver", "montreal", "ottawa"]
-            if any(c in loc_lower for c in canadian_cities):
-                clean_loc = clean_loc.replace(" CA", ", Canada").replace(", CA", ", Canada")
-            else:
-                clean_loc = clean_loc.replace(" CA", ", CA, United States").replace(", CA", ", CA, United States")
-
-        parts = clean_loc.split(',')
-        if len(parts) >= 2:
-            last = parts[-1].strip()
-            if len(last) == 2 and last.isupper() and last not in ["US", "UK", "GB", "IN", "CA", "DE", "FR"]:
-                if "United States" not in clean_loc:
-                    clean_loc = f"{clean_loc}, United States"
-
+        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}): arrangement = 'remote'
+        elif any(k in loc_lower for k in {'hybrid', 'flexible'}): arrangement = 'hybrid'
+        city_map = {"new york": "New York, NY, United States", "san francisco": "San Francisco, CA, United States", "london": "London, United Kingdom", "toronto": "Toronto, ON, Canada"}
+        if loc_lower in city_map: return city_map[loc_lower], arrangement
         return clean_loc, arrangement
