@@ -17,10 +17,10 @@ from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals using Strict Title Match.'
+    help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals.'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt (Strict Title Edition)...")
+        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt (Strict Title + No Date Filter)...")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
@@ -55,13 +55,12 @@ class Command(BaseCommand):
 
         for group_query in ats_groups:
             for keyword in hunt_targets:
-                # FIX 1: Use 'intitle:' to guarantee the job is relevant (e.g. "AEP Architect")
-                # This prevents finding "Java Developer" jobs that just mention the tool in the footer.
+                # 1. USE INTITLE (High Quality)
                 query = f'intitle:"{keyword}" ({group_query})'
                 
                 self.stdout.write(f"\n🔎 Hunting: {keyword}...")
                 
-                # FIX 2: Sleep to respect API rate limits
+                # 2. SLEEP (Safety)
                 time.sleep(1.0)
                 
                 links = self.search_google(query, num=50)
@@ -70,26 +69,24 @@ class Command(BaseCommand):
                 for link in links:
                     try:
                         self.analyze_and_fetch(link)
-                        time.sleep(0.5) # Short pause between individual job fetches
+                        time.sleep(0.5) 
                     except Exception:
                         pass
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} Direct-Apply jobs."))
 
-   def search_google(self, query, num=50):
-    # REMOVED "tbs": "qdr:m" to match the successful test script.
-    # We will let the API/Code determine freshness, not Google.
-    params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en" }
-    try:
-        resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
-        if resp.status_code == 200:
-            return [r.get("link") for r in resp.json().get("organic_results", [])]
-    except: pass
-    return [] 
+    def search_google(self, query, num=50):
+        # 3. REMOVED DATE FILTER (Finds the missing jobs)
+        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en" }
+        try:
+            resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
+            if resp.status_code == 200:
+                return [r.get("link") for r in resp.json().get("organic_results", [])]
+        except: pass
+        return []
 
     def analyze_and_fetch(self, url):
-        # 1. Identify the "Hub" (Company) from the URL and fetch their WHOLE board
-        # This is how we find the "Hidden Gems" (e.g. finding Valtech via one AEP job)
+        # 1. Identify the "Hub" (Company)
         if "greenhouse.io" in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
@@ -106,7 +103,7 @@ class Command(BaseCommand):
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', url) or re.search(r'([^.]+)\.smartrecruiters\.com', url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
-        # 2. Fallback: If it's a giant enterprise ATS (Workday, Taleo), just scrape that single page
+        # 2. Fallback: Enterprise ATS
         if any(x in url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
             if any(k in url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(url)
@@ -261,7 +258,6 @@ class Command(BaseCommand):
     def screen_and_upsert(self, job_data):
         if Job.objects.filter(apply_url=job_data.get("apply_url")).exists(): return
         
-        # NOTE: The Screener is now "Technical Friendly" thanks to your updates!
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), job_data.get("apply_url"))
         
         status = analysis.get("status", "pending")
