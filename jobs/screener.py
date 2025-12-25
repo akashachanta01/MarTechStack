@@ -5,6 +5,7 @@ import logging
 from typing import Optional, Dict, List, Any 
 from openai import OpenAI
 from urllib.parse import urlparse
+from django.conf import settings
 from jobs.models import BlockRule 
 
 # Setup Audit Logging
@@ -13,7 +14,7 @@ logger = logging.getLogger("screener")
 class MarTechScreener:
     """
     The Brain 🧠 (AI Agent + Auditing)
-    Diamond-Grade Edition: Tuned to reject non-MarTech roles, but accepts "MarTech Immunity" roles.
+    Diamond-Grade Edition: 100% controlled by hunt_targets.txt
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -22,17 +23,26 @@ class MarTechScreener:
         api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key) if api_key else None
         
-        # 2. Heuristic keywords (Stage 1) - ONLY used for the fast-fail check
-        self.REQUIRED_KEYWORDS = [
-            "marketo", "hubspot", "salesforce marketing cloud", "sfmc", "pardot",
-            "braze", "customer.io", "iterable", "klaviyo", "eloqua",
-            "adobe analytics", "google analytics", "ga4", "mixpanel", "amplitude",
-            "segment", "mparticle", "tealium", "cdp", "customer data platform",
-            "google tag manager", "gtm",
-            "marketing operations", "mops", "marketing technology", "martech", 
-            "growth engineer", "marketing engineer",
-            "adobe target", "adobe campaign", "journey optimizer", "ajo", "adobe experience cloud"
-        ]
+        # 2. LOAD KEYWORDS (Single Source of Truth)
+        # We start empty. We ONLY use what is in your file.
+        self.REQUIRED_KEYWORDS = []
+        
+        target_file = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
+        if os.path.exists(target_file):
+            with open(target_file, 'r') as f:
+                for line in f:
+                    clean = line.strip().lower()
+                    # Skip comments and empty lines
+                    if clean and not clean.startswith('#'):
+                        self.REQUIRED_KEYWORDS.append(clean)
+        
+        # Safety Net: If file is missing or empty, prevent logic crash
+        if not self.REQUIRED_KEYWORDS:
+            logger.warning("⚠️ hunt_targets.txt is missing or empty! Defaulting to 'martech' only.")
+            self.REQUIRED_KEYWORDS = ["martech"]
+        
+        # Deduplicate just in case
+        self.REQUIRED_KEYWORDS = list(set(self.REQUIRED_KEYWORDS))
         
     def _normalize(self, text: str) -> str:
         return (text or "").strip().lower()
@@ -94,12 +104,13 @@ class MarTechScreener:
         full_text = self._normalize(f"{title} {description}")
         
         # Stage 1: Fast Fail (Cost-Free)
+        # Checks against your hunt_targets.txt list
         has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
         if not has_keyword:
             return {
                 "status": "rejected",
                 "score": 0.0,
-                "reason": "Stage 1: No core MarTech/Stack keywords found (likely noise).",
+                "reason": "Stage 1: No core keyword from hunt_targets.txt found.",
                 "details": {"stage": "fast_fail"}
             }
         
@@ -124,42 +135,43 @@ class MarTechScreener:
             }
 
     def ask_ai(self, title, company, description, location):
-        # The prompt with all the rejection and immunity rules
+        # UPDATED PROMPT: "Technical MarTech Recruiter" Persona
         prompt = f"""
-        Act as a strict MarTech Recruiter. Screen this job for a specialized "Marketing Technology & Operations" job board.
+        Act as a "Technical MarTech Recruiter". Screen this job for a niche job board focused on **Marketing Technology, Operations, and Engineering**.
 
         JOB DETAILS:
         - Title: {title}
         - Company: {company}
-        - Location: {location}
-        - Snippet: {description[:1500]}...
+        - Snippet: {description[:2000]}...
 
         YOUR MISSION:
-        Determine if this role is explicitly for **building, administering, or managing Marketing Systems** (e.g. Marketo, Segment, Salesforce, Adobe).
+        Determine if this is a specialized role for **building, managing, or architecting Marketing Systems** (e.g. Adobe, Salesforce, CDPs, Analytics).
 
-        🚨 "MARTECH" IMMUNITY RULE (Highest Priority):
-        If the Job Title explicitly contains "MarTech", "MOPs", or "Marketing Operations" (e.g. "MarTech Product Manager", "MOPs Manager"), it is AUTOMATICALLY A MATCH. Mark as APPROVE.
+        ⭐⭐⭐ GOLDEN RULES (High Score 90-100):
+        1. **Technical Implementers:** APPROVE "Solution Architect", "Implementation Engineer", "Technical Consultant" IF the job is explicitly about implementing MarTech tools (e.g. "AEP Architect", "Marketo Consultant").
+        2. **Marketing Engineers:** APPROVE "Forward Deployed Engineer", "Marketing Data Engineer" (focusing on Segment/Reverse ETL).
+        3. **The Classics:** APPROVE "Marketing Operations Manager", "MarTech Lead", "Marketo Administrator".
 
-        🚨 STRICT REJECTION RULES (Kill these jobs if Immunity does not apply):
-        1. **REJECT "Data Analyst" / "BI" Roles:** If the title is "Data Analyst", "Business Intelligence", or "Finance Analyst" focused on SQL/Tableau/Reporting, REJECT IT.
-        2. **REJECT "GTM" (Go-To-Market):** If the title or description says "GTM Analyst" or "GTM Strategy", REJECT IT. This usually means Sales Strategy, not Tag Management.
-        3. **REJECT "Vendor Product" Roles:** If the company is an AdTech/MarTech vendor (e.g. StackAdapt, The Trade Desk) and the role is "Technical Analyst", "Support", or "Client Services" for *their own* product.
-        4. **REJECT Sales & Growth:** Reject "Account Executive", "Solutions Engineer", "Growth Manager", "Paid Media Manager".
+        🚨 STRICT REJECTION RULES (Kill these immediately):
+        1. **Generic Engineering:** REJECT "Full Stack Developer" or "Backend Engineer" if they are just building a generic React app.
+        2. **Generic Data/BI:** REJECT "Data Analyst" if they just do SQL/Tableau for Finance/Product. Only accept if they focus on **Marketing Data** (Attribution, CDPs, GA4).
+        3. **Sales/GTM:** REJECT "Account Executive", "Sales Manager", "GTM Strategy".
+        4. **Content/Social:** REJECT "Social Media Manager", "Content Writer", "SEO Specialist" (unless highly technical/technical SEO).
 
-        ✅ FINAL DECISION:
-        - If high confidence technical/operational role: APPROVE.
-        - If unsure/borderline: PENDING.
-        - If clearly violates rules: REJECT.
+        ✅ FINAL DECISION LOGIC:
+        - **APPROVE (Score 85-100):** Clearly a MarTech, MOPs, or Marketing Engineering role.
+        - **PENDING (Score 50-80):** Technical role that mentions Marketing but might be generic.
+        - **REJECT (Score 0-20):** Generic Sales, Marketing, or Software Engineering.
 
         Output valid JSON:
         {{
             "decision": "APPROVE" | "REJECT" | "PENDING",
-            "score": "0-100 score (reflecting niche fit)",
-            "reason": "Short reason for decision (e.g., 'Rejected by GTM rule.')",
+            "score": 0-100,
+            "reason": "Brief explanation",
             "signals": {{
-                "stack": ["Tool1", "Tool2"],
-                "role_type": "Marketing Operations" | "MarTech Engineer" | "Other",
-                "red_flags": ["list of negative signals/keywords if any"]
+                "stack": ["List", "Tools", "Found"],
+                "role_type": "MOPs" | "MarTech Engineering" | "Analytics" | "Other",
+                "red_flags": []
             }}
         }}
         """
