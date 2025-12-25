@@ -17,10 +17,10 @@ from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals (EU/US/APAC).'
+    help = 'The "Direct-Apply" Hunter: Finds jobs ONLY on official global ATS portals using Strict Title Match.'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt (Rich Content Edition)...")
+        self.stdout.write("🚀 Starting Global Direct-Apply Job Hunt (Strict Title Edition)...")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
@@ -42,13 +42,27 @@ class Command(BaseCommand):
             "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
         ]
 
-        #hunt_targets = ['Marketing Operations', 'MarTech', 'Salesforce Marketing Cloud', 'HubSpot', 'Marketo']
-        hunt_targets = [line.strip() for line in open(os.path.join(settings.BASE_DIR, 'hunt_targets.txt')) if line.strip() and not line.startswith('#')]
+        # LOAD KEYWORDS FROM FILE
+        hunt_targets = []
+        target_file = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
+        if os.path.exists(target_file):
+            with open(target_file, 'r') as f:
+                hunt_targets = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        
+        if not hunt_targets:
+            self.stdout.write(self.style.WARNING("⚠️ hunt_targets.txt is empty. Defaulting to 'MarTech'."))
+            hunt_targets = ['MarTech']
 
         for group_query in ats_groups:
             for keyword in hunt_targets:
-                query = f'"{keyword}" ({group_query})'
-                self.stdout.write(f"\n🔎 Hunting: {keyword} in {group_query[:30]}...")
+                # FIX 1: Use 'intitle:' to guarantee the job is relevant (e.g. "AEP Architect")
+                # This prevents finding "Java Developer" jobs that just mention the tool in the footer.
+                query = f'intitle:"{keyword}" ({group_query})'
+                
+                self.stdout.write(f"\n🔎 Hunting: {keyword}...")
+                
+                # FIX 2: Sleep to respect API rate limits
+                time.sleep(1.0)
                 
                 links = self.search_google(query, num=50)
                 self.stdout.write(f"   Found {len(links)} direct links. Processing...")
@@ -56,7 +70,7 @@ class Command(BaseCommand):
                 for link in links:
                     try:
                         self.analyze_and_fetch(link)
-                        time.sleep(0.5) 
+                        time.sleep(0.5) # Short pause between individual job fetches
                     except Exception:
                         pass
 
@@ -72,6 +86,8 @@ class Command(BaseCommand):
         return []
 
     def analyze_and_fetch(self, url):
+        # 1. Identify the "Hub" (Company) from the URL and fetch their WHOLE board
+        # This is how we find the "Hidden Gems" (e.g. finding Valtech via one AEP job)
         if "greenhouse.io" in url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
@@ -88,6 +104,7 @@ class Command(BaseCommand):
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', url) or re.search(r'([^.]+)\.smartrecruiters\.com', url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
+        # 2. Fallback: If it's a giant enterprise ATS (Workday, Taleo), just scrape that single page
         if any(x in url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
             if any(k in url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(url)
@@ -175,7 +192,6 @@ class Command(BaseCommand):
                         })
         except: pass
 
-    # --- UPGRADED AI FETCH (Fixes cut-off & dirty HTML) ---
     def fetch_generic_ai(self, url):
         if Job.objects.filter(apply_url=url).exists(): return
         
@@ -185,13 +201,10 @@ class Command(BaseCommand):
             if resp.status_code != 200: return
             
             soup = BeautifulSoup(resp.text, 'html.parser')
-            # Remove distractions
             for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript", "header"]): tag.extract()
             
-            # Increase limit to 60k chars to capture full description
             text = " ".join(soup.get_text(separator=' ').split())[:60000]
             
-            # Strict prompt to force clean HTML and full text
             prompt = f"""
             You are a Job Parser. Extract the following from the job posting text.
             
@@ -245,7 +258,10 @@ class Command(BaseCommand):
     
     def screen_and_upsert(self, job_data):
         if Job.objects.filter(apply_url=job_data.get("apply_url")).exists(): return
+        
+        # NOTE: The Screener is now "Technical Friendly" thanks to your updates!
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), job_data.get("apply_url"))
+        
         status = analysis.get("status", "pending")
         signals = analysis.get("details", {}).get("signals", {})
         
@@ -264,22 +280,18 @@ class Command(BaseCommand):
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {job.title}"))
 
-    # --- LOCATION CLEANER ---
     def _clean_location(self, location_str, is_remote_flag):
         if not location_str: return "On-site", 'onsite'
         
-        # 1. Basic Cleanup
         clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
         loc_lower = clean_loc.lower()
         
-        # 2. Determine Work Arrangement
         arrangement = 'onsite'
         if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}):
             arrangement = 'remote'
         elif any(k in loc_lower for k in {'hybrid', 'flexible'}):
             arrangement = 'hybrid'
         
-        # 3. USE EXACT SAME LOGIC AS FIX_LOCATIONS.PY
         city_map = {
             "new york": "New York, NY, United States",
             "new york city": "New York, NY, United States", 
@@ -305,7 +317,6 @@ class Command(BaseCommand):
         if loc_lower in city_map:
             return city_map[loc_lower], arrangement
 
-        # 4. Handle "CA" Ambiguity (Canada vs California)
         if clean_loc.endswith(" CA") or clean_loc.endswith(", CA"):
             canadian_cities = ["toronto", "vancouver", "montreal", "ottawa"]
             if any(c in loc_lower for c in canadian_cities):
@@ -313,11 +324,9 @@ class Command(BaseCommand):
             else:
                 clean_loc = clean_loc.replace(" CA", ", CA, United States").replace(", CA", ", CA, United States")
 
-        # 5. Append US if state detected (2 chars uppercase)
         parts = clean_loc.split(',')
         if len(parts) >= 2:
             last = parts[-1].strip()
-            # If it's a state code (NY, TX) and NOT a country code (US, GB)
             if len(last) == 2 and last.isupper() and last not in ["US", "UK", "GB", "IN", "CA", "DE", "FR"]:
                 if "United States" not in clean_loc:
                     clean_loc = f"{clean_loc}, United States"
