@@ -4,7 +4,7 @@ Adobe Marketo Engage
 Salesforce Marketing Cloud
 SFMC
 Pardot
-Adobe Experience cloud
+Adobe Experience Cloud
 HubSpot Marketing Hub
 HubSpot Operations
 Braze
@@ -16,11 +16,9 @@ Klaviyo
 ActiveCampaign
 Omnisend
 Leanplum
-Drip
 Acoustic Campaign
 
 # --- CDPs & DATA ---
-Segment
 Twilio Segment
 mParticle
 Tealium
@@ -32,7 +30,7 @@ Adobe Experience Platform
 AEP
 Real-Time CDP
 Salesforce CDP
-Data Cloud
+Salesforce Data Cloud
 BlueConic
 Treasure Data
 Hightouch
