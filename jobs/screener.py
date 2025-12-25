@@ -14,7 +14,7 @@ logger = logging.getLogger("screener")
 class MarTechScreener:
     """
     The Brain 🧠 (AI Agent + Auditing)
-    Diamond-Grade Edition: Includes "Generic Title Guard" to kill Data Scientists/SWEs.
+    Diamond-Grade Edition: Includes "AI/ML Trap" to kill generic AI roles.
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -22,7 +22,7 @@ class MarTechScreener:
         api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key) if api_key else None
         
-        # 1. LOAD KEYWORDS (Single Source of Truth)
+        # 1. LOAD KEYWORDS
         self.REQUIRED_KEYWORDS = []
         target_file = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
         if os.path.exists(target_file):
@@ -93,7 +93,6 @@ class MarTechScreener:
             return {"status": "pending", "score": 25.0, "reason": f"AI Crash: {e}", "details": {"stage": "api_error"}}
 
     def ask_ai(self, title, company, description, location):
-        # UPDATED PROMPT: Added "The Generic Title Trap"
         prompt = f"""
         Act as a "Technical MarTech Recruiter". Screen this job for a niche board (Marketing Ops & Engineering).
 
@@ -102,17 +101,20 @@ class MarTechScreener:
 
         YOUR MISSION:
         Approve ONLY roles dedicated to **Marketing Systems** (MarTech, MOPs, CDPs).
-        Reject generic data/engineering roles.
+        Reject generic AI, Data, or Engineering roles.
 
         ⭐⭐⭐ THE "GENERIC TITLE" TRAP (CRITICAL):
-        If the title is "Data Scientist", "Data Engineer", "Software Engineer", "Product Manager", or "Analyst":
-        1. **STRICT REJECTION:** You must REJECT it UNLESS the Title explicitly contains "Marketing", "MarTech", "Growth", or "Revenue" (e.g. "Marketing Data Scientist" = OK. "Data Scientist" = REJECT).
-        2. **Exception:** If the title is generic but the role is 100% focused on implementing a specific tool like Adobe Experience Platform or Salesforce (e.g. "Software Engineer - Salesforce Marketing Cloud").
+        If the title contains "Data Scientist", "Software Engineer", "AI Engineer", "Machine Learning", "ML Engineer", or "Product Manager":
+        1. **STRICT REJECTION:** You must REJECT it UNLESS the Title explicitly contains "Marketing", "MarTech", "Growth", or "Revenue".
+           - Example: "AI Engineer" -> REJECT.
+           - Example: "Marketing AI Engineer" -> APPROVE.
+        2. **Exception:** If the role is explicitly implementing a MarTech tool (e.g. "Salesforce Einstein Engineer" or "Adobe Sensei Architect").
         
         🚨 REJECT THESE IMMEDIATELY:
-        1. **Product Engineering:** Building the company's SaaS product (e.g. "Backend Engineer for our App").
-        2. **General BI:** "Data Analyst" doing Tableau/PowerBI for Finance/Sales.
-        3. **Sales:** "Account Executive", "SDR", "Solution Engineer" (Pre-sales).
+        1. **Core AI/LLM:** "Building LLMs", "Training Foundation Models", "Computer Vision" (unless for a specific MarTech use case).
+        2. **Product Engineering:** Building the SaaS product itself.
+        3. **General BI:** "Data Analyst" for Finance/HR.
+        4. **Sales:** "Account Executive", "SDR".
 
         ✅ APPROVAL CRITERIA (Score 85+):
         - Role is explicitly "Marketing Operations", "MarTech Manager", "Marketo Admin".
