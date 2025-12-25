@@ -76,7 +76,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
     def search_google(self, query, num=50):
-        # Removed date filter (qdr:m) so we find the hits, then let API check freshness
         params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en" }
         try:
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
@@ -86,19 +85,25 @@ class Command(BaseCommand):
         return []
 
     def _clean_url(self, url):
-        """Removes tracking parameters (utm_source, gh_src) to prevent duplicates"""
+        """
+        URL CLEANER: Strips tracking parameters AND 'Apply' suffixes.
+        Rewrites application flow URLs to point back to the Job Description.
+        """
         if not url: return ""
+        
+        # 1. Remove '/apply', '/apply/', or '#app' from the end of the URL
+        # This handles patterns like /job/123/apply or /job/123#apply
+        url = re.sub(r'/(apply|apply/|#app|#apply)/?$', '', url.strip())
+        
+        # 2. Strip tracking parameters (gh_src, utm, etc)
         parsed = urlparse(url)
-        # Reconstruct URL without query parameters (params after ?)
+        # Reconstruct URL without query parameters
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
     def _is_duplicate(self, title, company, clean_url):
-        """Checks if job exists by URL OR by Title+Company combo"""
-        # 1. URL Check
         if Job.objects.filter(apply_url=clean_url).exists():
             return True
         
-        # 2. Title + Company Check (Fuzzy Duplicate Protection)
         if Job.objects.filter(
             title__iexact=title, 
             company__iexact=company, 
@@ -109,7 +114,7 @@ class Command(BaseCommand):
         return False
 
     def analyze_and_fetch(self, url):
-        # Clean the URL first so we don't process "greenhouse.io?source=linkedin" as new
+        # Apply the URL Cleaner immediately to ensure we are looking for the JD
         clean_url = self._clean_url(url)
         
         if "greenhouse.io" in clean_url:
@@ -241,22 +246,45 @@ class Command(BaseCommand):
         except: pass
 
     def fetch_generic_ai(self, url):
-        clean_url = self._clean_url(url)
-        if self._is_duplicate("", "", clean_url): return 
+        if self._is_duplicate("", "", url): return 
         
-        self.stdout.write(f"   🤖 AI Scraping: {clean_url}...")
+        self.stdout.write(f"   🤖 AI Scraping: {url}...")
         try:
-            resp = requests.get(clean_url, headers=self.get_headers(), timeout=15)
-            if resp.status_code != 200: return
+            # LINK VALIDATOR & PULSE CHECK
+            resp = requests.get(url, headers=self.get_headers(), timeout=15, allow_redirects=True)
+            
+            # Detect 404s or Workday 'Soft 404' redirects to search pages
+            if resp.status_code != 200 or "/search" in resp.url or "/jobs" == resp.url.split('/')[-1]:
+                self.stdout.write(f"      🗑️ Skipping: Link is dead or redirected to home.")
+                return
             
             soup = BeautifulSoup(resp.text, 'html.parser')
+
+            # ZOMBIE FILTER: Scan for 'Dead Page' phrases
+            zombie_phrases = [
+                "page you are looking for doesn't exist",
+                "job is no longer available",
+                "this position has been filled",
+                "no longer accepting applications",
+                "0 jobs matched your search",
+                "start your application" # Catches pages that are ONLY application forms
+            ]
+            page_text = soup.get_text().lower()
+            if any(phrase in page_text for phrase in zombie_phrases):
+                # Extra check: if 'start your application' is found but the text is very short, it's just a login/apply screen
+                if "start your application" in page_text and len(page_text) < 1000:
+                    self.stdout.write(f"      🗑️ Skipping: Captured an apply-only screen.")
+                    return
+
             for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript", "header"]): tag.extract()
-            
             text = " ".join(soup.get_text(separator=' ').split())[:60000]
             
+            if len(text) < 250: # Too short to be a real job description
+                return
+
             prompt = f"""
             You are a Job Parser. Extract the following from the job posting text.
-            URL: {clean_url}
+            URL: {url}
             TEXT: {text}
             Output JSON: title, company, location, is_remote, description_html (clean HTML).
             """
@@ -273,7 +301,7 @@ class Command(BaseCommand):
 
             self.screen_and_upsert({
                 "title": data.get('title'), "company": data.get('company'), "location": clean_loc,
-                "description": final_desc, "apply_url": clean_url, "work_arrangement": arr, "source": "AI Scraper"
+                "description": final_desc, "apply_url": url, "work_arrangement": arr, "source": "AI Scraper"
             })
         except Exception as e:
             self.stdout.write(f"      ❌ AI Failed: {e}")
@@ -293,7 +321,6 @@ class Command(BaseCommand):
     def screen_and_upsert(self, job_data):
         clean_url = self._clean_url(job_data.get("apply_url"))
         
-        # KEY DUPLICATE CHECK
         if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url):
             return
 
