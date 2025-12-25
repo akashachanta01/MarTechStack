@@ -6,7 +6,7 @@ from typing import Optional, Dict, List, Any
 from openai import OpenAI
 from urllib.parse import urlparse
 from django.conf import settings
-from jobs.models import BlockRule 
+from jobs.models import BlockRule, Tool 
 
 # Setup Audit Logging
 logger = logging.getLogger("screener")
@@ -14,7 +14,10 @@ logger = logging.getLogger("screener")
 class MarTechScreener:
     """
     The Brain 🧠 (AI Agent + Auditing)
-    Diamond-Grade Edition: Includes "AI/ML Trap" to kill generic AI roles.
+    Diamond-Grade Edition: 
+    1. AI/ML Trap (Kills generic roles).
+    2. Constrained Menu (Fixes tagging names).
+    3. Adobe Auto-Tagger (Groups products under Cloud).
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -37,7 +40,15 @@ class MarTechScreener:
             self.REQUIRED_KEYWORDS = ["martech"]
         
         self.REQUIRED_KEYWORDS = list(set(self.REQUIRED_KEYWORDS))
-        
+
+        # 2. LOAD KNOWN TOOLS (The "Menu")
+        try:
+            self.known_tools = list(Tool.objects.values_list('name', flat=True))
+            self.tool_menu_str = ", ".join(self.known_tools)
+        except Exception:
+            self.known_tools = []
+            self.tool_menu_str = "Marketo, Salesforce Marketing Cloud, Adobe Experience Platform"
+
     def _normalize(self, text: str) -> str:
         return (text or "").strip().lower()
 
@@ -99,26 +110,25 @@ class MarTechScreener:
         JOB: {title} at {company}
         SNIPPET: {description[:2000]}...
 
-        YOUR MISSION:
-        Approve ONLY roles dedicated to **Marketing Systems** (MarTech, MOPs, CDPs).
-        Reject generic AI, Data, or Engineering roles.
+        ✅ KNOWN TOOLS MENU (Select ONLY from this list):
+        [{self.tool_menu_str}]
 
-        ⭐⭐⭐ THE "GENERIC TITLE" TRAP (CRITICAL):
+        YOUR MISSION:
+        1. **Detect Stack (CRITICAL):** Scan the text for tools from the MENU above.
+           - INTELLIGENT MAPPING: If the text says "AEP" or "Adobe CDP", map it to "Adobe Experience Platform".
+           - If text says "SFMC", map it to "Salesforce Marketing Cloud".
+           - **Rule:** The 'stack' output list must ONLY contain exact names from the MENU.
+
+        2. **Approve/Reject:**
+           - Approve ONLY roles dedicated to **Marketing Systems** (MarTech, MOPs, CDPs).
+           - Reject generic AI, Data, or Engineering roles.
+
+        ⭐⭐⭐ THE "GENERIC TITLE" TRAP:
         If the title contains "Data Scientist", "Software Engineer", "AI Engineer", "Machine Learning", "ML Engineer", or "Product Manager":
-        1. **STRICT REJECTION:** You must REJECT it UNLESS the Title explicitly contains "Marketing", "MarTech", "Growth", or "Revenue".
+        1. **STRICT REJECTION:** REJECT UNLESS the Title explicitly contains "Marketing", "MarTech", "Growth", or "Revenue".
            - Example: "AI Engineer" -> REJECT.
            - Example: "Marketing AI Engineer" -> APPROVE.
-        2. **Exception:** If the role is explicitly implementing a MarTech tool (e.g. "Salesforce Einstein Engineer" or "Adobe Sensei Architect").
-        
-        🚨 REJECT THESE IMMEDIATELY:
-        1. **Core AI/LLM:** "Building LLMs", "Training Foundation Models", "Computer Vision" (unless for a specific MarTech use case).
-        2. **Product Engineering:** Building the SaaS product itself.
-        3. **General BI:** "Data Analyst" for Finance/HR.
-        4. **Sales:** "Account Executive", "SDR".
-
-        ✅ APPROVAL CRITERIA (Score 85+):
-        - Role is explicitly "Marketing Operations", "MarTech Manager", "Marketo Admin".
-        - Role is "Implementation Engineer" or "Solution Architect" specifically for MarTech clients/tools.
+        2. **Exception:** If the role is explicitly implementing a MarTech tool (e.g. "Salesforce Einstein Engineer").
 
         Output JSON:
         {{
@@ -126,7 +136,7 @@ class MarTechScreener:
             "score": 0-100,
             "reason": "Why did it pass/fail the Generic Title Trap?",
             "signals": {{
-                "stack": ["Tools Found"],
+                "stack": ["Exact Tool Name from Menu 1", "Exact Tool Name from Menu 2"],
                 "role_type": "MOPs" | "MarTech Eng" | "Other"
             }}
         }}
@@ -145,6 +155,30 @@ class MarTechScreener:
         content = completion.choices[0].message.content
         result = json.loads(content)
         
+        # ---------------------------------------------------------
+        # ⚡ ADOBE AUTO-TAGGER 
+        # Logic: If ANY Adobe or Marketo tool is found, force-add "Adobe Experience Cloud"
+        # ---------------------------------------------------------
+        signals = result.get("signals", {})
+        stack = signals.get("stack", [])
+        
+        # Check if we found any Adobe tools (covers "Adobe Analytics", "Marketo", "AEP", etc.)
+        found_adobe = False
+        for tool in stack:
+            t_lower = tool.lower()
+            if "adobe" in t_lower or "marketo" in t_lower or "magento" in t_lower:
+                found_adobe = True
+                break
+        
+        if found_adobe:
+            # Add the parent cloud tag if not already present
+            # Note: "Adobe Experience Cloud" MUST exist in your Database for this to save.
+            if "Adobe Experience Cloud" not in stack:
+                stack.append("Adobe Experience Cloud")
+                signals["stack"] = stack
+                result["signals"] = signals
+        # ---------------------------------------------------------
+
         return {
             "status": str(result.get("decision", "PENDING")).lower(),
             "score": float(result.get("score", 50.0)),
