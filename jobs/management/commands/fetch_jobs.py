@@ -76,14 +76,16 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} Direct-Apply jobs."))
 
-    def search_google(self, query, num=50):
-        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en", "tbs": "qdr:m" }
-        try:
-            resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
-            if resp.status_code == 200:
-                return [r.get("link") for r in resp.json().get("organic_results", [])]
-        except: pass
-        return []
+   def search_google(self, query, num=50):
+    # REMOVED "tbs": "qdr:m" to match the successful test script.
+    # We will let the API/Code determine freshness, not Google.
+    params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en" }
+    try:
+        resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
+        if resp.status_code == 200:
+            return [r.get("link") for r in resp.json().get("organic_results", [])]
+    except: pass
+    return [] 
 
     def analyze_and_fetch(self, url):
         # 1. Identify the "Hub" (Company) from the URL and fetch their WHOLE board
