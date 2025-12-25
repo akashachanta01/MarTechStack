@@ -42,7 +42,8 @@ class Command(BaseCommand):
             "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
         ]
 
-        hunt_targets = ['Marketing Operations', 'MarTech', 'Salesforce Marketing Cloud', 'HubSpot', 'Marketo']
+        #hunt_targets = ['Marketing Operations', 'MarTech', 'Salesforce Marketing Cloud', 'HubSpot', 'Marketo']
+        hunt_targets = [line.strip() for line in open(os.path.join(settings.BASE_DIR, 'hunt_targets.txt')) if line.strip() and not line.startswith('#')]
 
         for group_query in ats_groups:
             for keyword in hunt_targets:
