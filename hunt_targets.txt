@@ -66,8 +66,6 @@ Monetate
 MarTech
 Marketing Technology
 Marketing Operations
-MOPs
 Marketing Technologist
 MarTech Architect
-Growth Engineer
 Marketing Engineer
