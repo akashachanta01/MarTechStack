@@ -15,7 +15,7 @@ from collections import defaultdict
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
-from .emails import send_job_alert, send_welcome_email
+from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -98,8 +98,6 @@ def job_list(request):
             parts = loc.split(',')
             if len(parts) >= 1:
                 country = parts[-1].strip()
-                # Strict check: Country must be > 3 chars to avoid "NY", "CA", "WA"
-                # And usually countries don't have digits
                 if len(country) > 3 and not any(char.isdigit() for char in country): 
                     country_set.add(country)
         
@@ -171,12 +169,28 @@ def stripe_webhook(request):
     return HttpResponse(status=200)
 
 def post_job_success(request): return render(request, 'jobs/post_job_success.html')
+
 def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email: 
             sub, created = Subscriber.objects.get_or_create(email=email)
-            if created: send_welcome_email(email)
+            if created: 
+                # 1. Send Welcome Email to User
+                send_welcome_email(email)
+                
+                # 2. Get User Info for Admin Alert
+                user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
+                # On Render/Heroku, the real IP is in X-Forwarded-For
+                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                if x_forwarded_for:
+                    ip = x_forwarded_for.split(',')[0]
+                else:
+                    ip = request.META.get('REMOTE_ADDR')
+                
+                # 3. Notify Admin
+                send_admin_new_subscriber_alert(email, user_agent, ip)
+
             return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
 
@@ -194,7 +208,16 @@ def review_queue(request):
 @staff_member_required
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
-    if action == "approve": job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save(); cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
+    if action == "approve": 
+        # Manual approval via /staff/ link ALSO triggers email now
+        if job.screening_status != "approved":
+            job.screening_status = "approved"
+            job.is_active = True
+            job.screened_at = timezone.now()
+            job.save()
+            cache.delete('popular_tech_stacks_v2')
+            cache.delete('available_countries_v2')
+            send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
