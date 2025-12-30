@@ -23,6 +23,9 @@ We curate for quality, so you won't get spammed with irrelevant roles—only the
 Best,
 The MarTechStack Team
 {settings.DOMAIN_URL}
+
+--------------------------------------------------
+To unsubscribe, visit: {settings.DOMAIN_URL}/unsubscribe/
             """
             
             email = EmailMessage(
@@ -106,6 +109,7 @@ View Job: {settings.DOMAIN_URL}/?q={job.title.replace(' ', '+')}
 
 --------------------------------------------------
 You are receiving this because you subscribed to MarTechStack alerts.
+To unsubscribe, visit: {settings.DOMAIN_URL}/unsubscribe/
             """
 
             # Send to self, BCC everyone else to protect privacy
