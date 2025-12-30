@@ -1,0 +1,20 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="text-align: center; color: #0f172a; margin-bottom: 10px;">{{ count }} New MarTech Roles</h2>
+<p style="text-align: center; color: #64748b; margin-bottom: 30px;">Fresh picks for your stack.</p>
+
+{% for job in jobs %}
+<div class="job-card">
+    <span class="job-title">{{ job.title }}</span>
+    <div class="job-company">{{ job.company }} • {{ job.location }}</div>
+    <div style="margin-top: 10px;">
+        <a href="https://martechstack.io/job/{{ job.id }}/{{ job.slug }}/" style="color: #4f46e5; font-weight: 700; font-size: 14px; text-decoration: none;">View Job &rarr;</a>
+    </div>
+</div>
+{% endfor %}
+
+<div style="text-align: center;">
+    <a href="https://martechstack.io" class="btn">Browse Board</a>
+</div>
+{% endblock %}
