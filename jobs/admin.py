@@ -6,8 +6,8 @@ from django.contrib import messages
 
 # Import all models
 from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob
-# NEW: Import the email sender
-from .emails import send_job_alert
+# NEW: Import the email senders
+from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
 
@@ -21,14 +21,19 @@ def auto_tag_tools(modeladmin, request, queryset):
     affected_jobs = 0
     
     for job in queryset:
+        # Normalize text for matching
         text = (job.description + " " + job.title).lower()
         added_count = 0
+        
         for tool in all_tools:
             if tool in job.tools.all():
                 continue
+            
+            # Simple check (match tool name in text)
             if tool.name.lower() in text:
                 job.tools.add(tool)
                 added_count += 1
+        
         if added_count > 0:
             affected_jobs += 1
             
@@ -36,6 +41,10 @@ def auto_tag_tools(modeladmin, request, queryset):
 
 @admin.action(description="🗑️ DELETE ALL 'Rejected' Jobs")
 def delete_all_rejected(modeladmin, request, queryset):
+    """
+    Nuclear option to clean up the database. 
+    Ignores the selection and deletes ALL jobs marked as 'rejected'.
+    """
     count, _ = Job.objects.filter(screening_status='rejected').delete()
     modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs.", messages.WARNING)
 
@@ -55,10 +64,12 @@ class ToolAdmin(admin.ModelAdmin):
 # --- 3. JOB ADMINS ---
 
 class BaseJobAdmin(admin.ModelAdmin):
+    # UI CONFIG
     list_per_page = 50
     save_on_top = True
     list_display_links = ("job_card_header",) 
     
+    # SEARCH & FILTER
     search_fields = ("title", "company", "description", "tools__name")
     list_filter = (
         "screening_status", 
@@ -67,6 +78,7 @@ class BaseJobAdmin(admin.ModelAdmin):
         ("tools", admin.EmptyFieldListFilter),
     )
 
+    # LAYOUT
     fieldsets = (
         ("Key Info", {
             "fields": ("title", "company", "company_logo", "apply_url", "location")
@@ -92,7 +104,8 @@ class BaseJobAdmin(admin.ModelAdmin):
     filter_horizontal = ("tools",)
     ordering = ("-created_at",)
     
-    actions = [auto_tag_tools, delete_all_rejected, "mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs"]
+    # UPDATED ACTIONS LIST
+    actions = [auto_tag_tools, delete_all_rejected, "send_digest", "mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs"]
 
     # --- VISUALS ---
     def logo_preview(self, obj):
@@ -110,7 +123,7 @@ class BaseJobAdmin(admin.ModelAdmin):
             obj.title, obj.company
         )
     job_card_header.short_description = "Job Details"
-    job_card_header.admin_order_field = "title"
+    job_card_header.admin_order_field = "title" 
 
     def score_display(self, obj):
         try:
@@ -120,6 +133,7 @@ class BaseJobAdmin(admin.ModelAdmin):
 
         bg = "#d1fae5" if val >= 80 else "#fef3c7" if val >= 50 else "#fee2e2"
         text = "#065f46" if val >= 80 else "#92400e" if val >= 50 else "#b91c1c"
+        
         score_str = "{:.0f}".format(val)
         
         return format_html(
@@ -133,29 +147,52 @@ class BaseJobAdmin(admin.ModelAdmin):
         tools = obj.tools.all()
         if not tools:
             return format_html('<span style="opacity:0.5;">-</span>')
+        
         badges = ""
         for t in tools:
             badges += f'<span style="display:inline-block; border:1px solid #ccc; background:rgba(128,128,128,0.1); padding:0 4px; border-radius:3px; font-size:10px; margin-right:2px; margin-bottom:2px;">{t.name}</span>'
+        
         return format_html(badges)
     tools_preview.short_description = "Stack"
 
     # --- ACTIONS ---
-    @admin.action(description="✅ Approve & SEND ALERTS")
+
+    @admin.action(description="📨 Send DIGEST Email (Selected Jobs)")
+    def send_digest(self, request, qs):
+        """
+        Bundles selected jobs into ONE email.
+        """
+        jobs = list(qs.order_by('-created_at'))
+        if not jobs:
+            return
+
+        # Approve them all first (silently)
+        qs.update(screening_status="approved", is_active=True)
+        
+        # Send one email with all jobs
+        send_digest_alert(jobs)
+        
+        self.message_user(request, f"✅ Sent DIGEST with {len(jobs)} jobs to all subscribers.", messages.SUCCESS)
+
+    @admin.action(description="✅ Approve & Alert (SINGLE - Careful!)")
     def mark_approved(self, request, qs):
         """
-        Approves jobs AND sends email alerts.
+        Approves jobs AND sends email alerts ONE BY ONE.
+        Prevents accidental spam by limiting bulk selection.
         """
-        count = 0
+        count = qs.count()
+        if count > 3:
+             self.message_user(request, f"⚠️ STOP! You selected {count} jobs. Use 'Send DIGEST' instead to avoid spamming 100 emails.", messages.ERROR)
+             return
+
         for job in qs:
-            # Only send alert if it wasn't already approved
             if job.screening_status != 'approved':
                 job.screening_status = "approved"
                 job.is_active = True
-                job.save() # Save to DB
-                send_job_alert(job) # Send Email
-                count += 1
+                job.save() 
+                send_job_alert(job) 
         
-        self.message_user(request, f"✅ Approved {count} jobs and sent email alerts.", messages.SUCCESS)
+        self.message_user(request, f"✅ Approved {count} jobs and sent individual alerts.", messages.SUCCESS)
 
     @admin.action(description="❌ Reject")
     def mark_rejected(self, request, qs): qs.update(screening_status="rejected", is_active=False)
@@ -170,17 +207,23 @@ class BaseJobAdmin(admin.ModelAdmin):
     def deactivate_jobs(self, request, qs): qs.update(is_active=False)
 
 
+# A. INBOX (Pending/Rejected)
 @admin.register(Job)
 class JobAdmin(BaseJobAdmin):
     def get_queryset(self, request):
+        # Added prefetch_related to speed up the new Stack column
         return super().get_queryset(request).filter(is_active=False).prefetch_related('tools')
+
     list_display = ("logo_preview", "job_card_header", "score_display", "screening_status", "tools_preview", "created_at")
     list_editable = ("screening_status",)
 
+# B. ACTIVE JOBS (Live)
 @admin.register(ActiveJob)
 class ActiveJobAdmin(BaseJobAdmin):
     def get_queryset(self, request):
+        # Added prefetch_related here too
         return super().get_queryset(request).filter(is_active=True).prefetch_related('tools')
+
     list_display = ("logo_preview", "job_card_header", "score_display", "is_pinned", "is_featured", "tools_preview", "view_live")
     list_editable = ("is_pinned", "is_featured")
 
@@ -191,12 +234,15 @@ class ActiveJobAdmin(BaseJobAdmin):
         return "-"
     view_live.short_description = "Live Page"
 
+# C. USER SUBMISSIONS (All)
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(BaseJobAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tags__icontains="User Submission").prefetch_related('tools')
+
     list_display = ("logo_preview", "job_card_header", "score_display", "screening_status", "created_at")
 
+# --- OTHER ---
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
     list_display = ("email", "created_at")
