@@ -1,0 +1,26 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2 style="text-align: center; color: #0f172a; margin-bottom: 20px;">New Role: {{ job.title }}</h2>
+
+<p>A new opportunity just dropped on MarTechStack.</p>
+
+<div class="job-card">
+    <span class="job-title">{{ job.title }}</span>
+    <div class="job-company">{{ job.company }} • {{ job.location }}</div>
+    
+    {% if job.salary_range %}
+    <div style="margin-top: 8px; font-size: 13px; color: #059669; font-weight: 600;">
+        💰 {{ job.salary_range }}
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 12px;">
+        <a href="https://martechstack.io/job/{{ job.id }}/{{ job.slug }}/" class="btn" style="width: 100%; text-align: center; box-sizing: border-box;">View Job & Apply</a>
+    </div>
+</div>
+
+<p style="text-align: center; margin-top: 30px;">
+    <a href="https://martechstack.io" style="color: #4f46e5; text-decoration: none; font-weight: 600;">Browse all jobs &rarr;</a>
+</p>
+{% endblock %}
