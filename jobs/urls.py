@@ -5,7 +5,6 @@ urlpatterns = [
     path('', views.job_list, name='job_list'),
     
     # --- SEO: TOOL LANDING PAGES (Topic Clusters) ---
-    # Example: /stack/hubspot/ -> Shows all HubSpot jobs
     path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
     
     # --- SEO: JOB DETAIL PAGE ---
@@ -18,6 +17,10 @@ urlpatterns = [
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
     
     path('subscribe/', views.subscribe, name='subscribe'),
+    
+    # NEW: UNSUBSCRIBE
+    path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
+
     path('staff/review/', views.review_queue, name='review_queue'),
     path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
 ]
