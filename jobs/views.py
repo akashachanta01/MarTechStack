@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from collections import defaultdict
+from django.contrib import messages # <--- Added this
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
@@ -85,22 +85,16 @@ def job_list(request):
     if available_countries is None:
         raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
         country_set = set()
-        
-        # Blocklist for garbage that shouldn't be in the dropdown
         blocklist = ["not specified", "on-site", "latin america", "va de los poblados"]
-        
         for loc in raw_locs:
             if not loc: continue
             if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']): continue
             if any(b in loc.lower() for b in blocklist): continue
-            
-            # Extract last part
             parts = loc.split(',')
             if len(parts) >= 1:
                 country = parts[-1].strip()
                 if len(country) > 3 and not any(char.isdigit() for char in country): 
                     country_set.add(country)
-        
         available_countries = sorted(list(country_set))
         cache.set('available_countries_v2', available_countries, 3600)
 
@@ -110,7 +104,19 @@ def job_list(request):
         "available_countries": available_countries,
     })
 
-# --- OTHER VIEWS (Keep exactly as is) ---
+# --- NEW UNSUBSCRIBE VIEW ---
+def unsubscribe(request):
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        if email:
+            deleted_count, _ = Subscriber.objects.filter(email=email).delete()
+            if deleted_count > 0:
+                messages.success(request, f"✅ {email} has been unsubscribed.")
+            else:
+                messages.warning(request, "⚠️ That email was not found in our list.")
+    return render(request, "jobs/unsubscribe.html")
+
+# --- OTHER VIEWS ---
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
     jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
@@ -176,21 +182,12 @@ def subscribe(request):
         if email: 
             sub, created = Subscriber.objects.get_or_create(email=email)
             if created: 
-                # 1. Send Welcome Email to User
                 send_welcome_email(email)
-                
-                # 2. Get User Info for Admin Alert
                 user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
-                # On Render/Heroku, the real IP is in X-Forwarded-For
                 x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                if x_forwarded_for:
-                    ip = x_forwarded_for.split(',')[0]
-                else:
-                    ip = request.META.get('REMOTE_ADDR')
-                
-                # 3. Notify Admin
+                if x_forwarded_for: ip = x_forwarded_for.split(',')[0]
+                else: ip = request.META.get('REMOTE_ADDR')
                 send_admin_new_subscriber_alert(email, user_agent, ip)
-
             return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
 
@@ -209,7 +206,6 @@ def review_queue(request):
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
     if action == "approve": 
-        # Manual approval via /staff/ link ALSO triggers email now
         if job.screening_status != "approved":
             job.screening_status = "approved"
             job.is_active = True
