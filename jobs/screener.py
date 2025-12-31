@@ -14,10 +14,11 @@ logger = logging.getLogger("screener")
 class MarTechScreener:
     """
     The Brain 🧠 (AI Agent + Auditing)
-    Diamond-Grade Edition (Strict Mode V2.4 - VIP Boosters): 
+    Diamond-Grade Edition (Strict Mode V3.0 - Anti-Generic): 
     1. AI/ML Trap (Kills generic roles).
     2. Master Control (Loads Menu & Targets from text file).
     3. VIP Booster (Adobe/Salesforce/CDP get priority).
+    4. Anti-Fluff (Bans Events, SEO, Content, Social unless technical).
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -119,30 +120,42 @@ class MarTechScreener:
         [{self.tool_menu_str}]
 
         🔥 VIP PRIORITY STACK (Always High Importance):
-        ["Adobe Experience Cloud", "Marketo", "Salesforce Marketing Cloud", "SFMC", "Salesforce CDP", "Data Cloud", "Tealium", "Segment", "CDP"]
+        ["Adobe Experience Cloud", "AEP", "AJO", "Adobe Analytics", "Adobe Target", "Marketo", "Salesforce Marketing Cloud", "SFMC", "Salesforce CDP", "Data Cloud", "Tealium", "Segment", "CDP"]
 
         🚩 GENERIC RED FLAGS:
-        ["Product Manager", "Project Manager", "Program Manager", "Account Executive", "Sales Manager", "Software Engineer", "Data Scientist", "Marketing Manager", "Analyst"]
+        ["Product Manager", "Project Manager", "Program Manager", "Growth", "Account Executive", "Sales Manager", "Software Engineer", "Data Scientist", "Marketing Manager", "Analyst", "Consultant", "Specialist"]
+
+        ⛔ HARD REJECT KEYWORDS (If Title contains these, REJECT unless purely technical):
+        ["Event", "Social Media", "Content", "Brand", "Community", "growth", "PR", "Public Relations", "SEO", "Search Engine", "Field Marketing", "Copywriter", "Creative"]
 
         YOUR TASKS:
         1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
 
-        2. **Analyze Role (VIP LOGIC):**
-           - **STEP A: Is the Title Generic?** Check against GENERIC RED FLAGS.
+        2. **Analyze Role (STRICTER LOGIC):**
            
-           - **STEP B: Evaluate Specificity:**
-             - **Case 1 (Title Match):** Does Title contain "MarTech", "MOPs", OR any exact tool name? -> **APPROVE (90)**.
+           - **STEP A: Hard Reject Check:**
+             - If Title contains any "HARD REJECT KEYWORDS" (e.g. "Event Marketing Manager", "SEO Manager"), check description.
+             - If description does NOT specifically mention managing a MARTECH PLATFORM (like Marketo, Cvent integration, BrightEdge technical config) -> **REJECT (0)**.
+             - If it's a generic "Event Manager" who just uses tools -> **REJECT (0)**.
+
+           - **STEP B: Generic Red Flag Check:**
+             - If Title matches "GENERIC RED FLAGS" (e.g. "Product Manager") AND no VIP tools in description -> **REJECT (0)** or **PENDING (65)** if standard tools found.
+
+           - **STEP C: Evaluate Specificity:**
+             - **Case 1 (Technical Title):** Does Title contain "MarTech", "Marketing Technologist", OR an exact tool name (e.g. "Marketo Admin")? -> **APPROVE (90)**.
              
-             - **Case 2 (VIP Description Match):** If Title is Generic ("Product Manager") BUT Description is heavily focused on the **VIP PRIORITY STACK** (e.g. "PM for Adobe CDP Implementation") -> **APPROVE (85)**.
+             - **Case 2 (MOPs Title):** Does Title contain "Marketing Operations"? 
+               - If Description mentions specific tools (Marketo, HubSpot) -> **APPROVE (85)**.
+               - If Description is generic (no specific tool names) -> **PENDING (70)**.
              
-             - **Case 3 (Standard Description Match):** If Title is Generic BUT Description mentions non-VIP tools (e.g. "PM using HubSpot") -> **PENDING (65)**.
+             - **Case 3 (VIP Description Match):** Title Generic + VIP Tool in Description -> **APPROVE (85)**.
              
-             - **Case 4 (No Match):** Title Generic + No strong stack -> **REJECT (0)**.
+             - **Case 4 (Standard Match):** Title Generic + Standard Tool in Description -> **PENDING (65)**.
 
         3. **Scoring:**
-           - 0 = Reject
-           - 65 = Generic Title + Standard Stack (Pending)
-           - 85-100 = Specific Title OR Generic Title + VIP Stack (Auto-Approve)
+           - 0 = Reject (Events, SEO, Content, Generic PM)
+           - 65-75 = Pending (Generic Title + Tools, or MOPs without stack)
+           - 85-100 = High Confidence (Specific Tech Title + Stack)
 
         Output JSON:
         {{
