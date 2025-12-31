@@ -1,33 +1,28 @@
 # --- ROLES (Grouped by Intent) ---
-MarTech OR "Marketing Technology" OR "Marketing Technologist"
-"Marketing Operations" OR MOPs OR "Marketing Ops"
-"MarTech Architect" OR "Marketing Engineer" OR "Marketing Technology Architect"
-"Director of Marketing Technology" OR "Head of Marketing Technology"
+"MarTech" OR "Marketing Technology" OR "Marketing Technologist"
+"Marketing Operations" OR "MOPs" OR "Marketing Ops"
 "Tagging Specialist" OR "Web Analyst" OR "Web Analytics"
-"Experimentation Manager" OR Optimization OR Experimentation
-CDP OR "CDP Engineer" OR "Customer Data Platform"
+"Optimization" OR "Experimentation"
+"CDP" OR "CDP Engineer" OR "Customer Data Platform"
 "Identity Resolution" OR "Digital Analytics"
 
 # --- MARKETING AUTOMATION (Grouped by Competitor) ---
-Marketo OR "Adobe Marketo Engage"
+"Adobe Journey Optimizer" OR "AJO"
+"Marketo" OR "Adobe Marketo Engage"
 "Salesforce Marketing Cloud" OR SFMC OR "Marketing Cloud"
 "HubSpot Marketing Hub" OR "HubSpot Operations"
-Braze OR Iterable OR Customer.io OR Klaviyo
-Eloqua OR "Oracle Eloqua" OR Knack
+"Braze" OR "Iterable" OR "Customer.io" OR "Klaviyo"
+"Eloqua" OR "Oracle Eloqua" OR "Knack"
 
 # --- DATA & CDPs ---
-"Twilio Segment" OR Segment OR mParticle
-Tealium OR "Tealium AudienceStream" OR "Tealium iQ"
-RudderStack OR ActionIQ OR Bloomreach
-"Adobe Experience Platform" OR AEP OR "Real-Time CDP"
+"Twilio Segment"
+"Tealium" OR "Tealium AudienceStream" OR "Tealium iQ"
+"Adobe Experience Platform" OR "AEP" OR "Real-Time CDP"
 "Salesforce CDP" OR "Salesforce Data Cloud"
-BlueConic OR "Treasure Data" OR Hightouch OR Census
 
 # --- ANALYTICS & TESTING ---
-"Google Analytics 4" OR GA4 OR "Google Tag Manager"
+"Google Analytics 4" OR "GA4" OR "Google Tag Manager"
 "Adobe Analytics" OR "Customer Journey Analytics" OR "Adobe Launch"
-Mixpanel OR Amplitude OR Heap
+"Mixpanel" OR "Amplitude" OR "Heap"
 "Server-side tracking"
-"Adobe Target" OR Optimizely OR VWO
-"Dynamic Yield" OR LaunchDarkly OR Mutiny OR Monetate
-"Adobe Journey Optimizer" OR AJO
+"Adobe Target" OR "Optimizely"
