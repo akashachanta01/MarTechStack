@@ -1,10 +1,35 @@
+# --- ROLES & DISCIPLINES ---
+MarTech
+Marketing Technology
+Marketing Operations
+Marketing Technologist
+MarTech Architect
+Marketing Engineer
+Marketing Technology Architect
+Director of Marketing Technology
+Tagging Specialist
+Mobile Marketing Tech Lead
+MOPs
+Marketing Automation
+Digital Analytics
+Identity Resolution
+Experimentation Manager
+CDP
+CDP Engineer
+Customer Data Platform
+Web Analyst
+Web Analytics
+Optimization
+Experimentation
+Experiment
+
 # --- MARKETING AUTOMATION & EMAIL ---
 Marketo
 Adobe Marketo Engage
 Salesforce Marketing Cloud
 SFMC
-Pardot
 Adobe Experience Cloud
+Experience Cloud
 HubSpot Marketing Hub
 HubSpot Operations
 Braze
@@ -13,10 +38,7 @@ Customer.io
 Eloqua
 Oracle Eloqua
 Klaviyo
-ActiveCampaign
-Omnisend
-Leanplum
-Acoustic Campaign
+Knack
 
 # --- CDPs & DATA ---
 Twilio Segment
@@ -35,12 +57,12 @@ BlueConic
 Treasure Data
 Hightouch
 Census
-Reverse ETL
 
 # --- ANALYTICS & TAGS ---
 Google Analytics 4
 GA4
 Adobe Analytics
+Customer Journey Analytics
 Mixpanel
 Amplitude
 Heap
@@ -59,11 +81,3 @@ Adobe Journey Optimizer
 AJO
 Mutiny
 Monetate
-
-# --- ROLES & DISCIPLINES ---
-MarTech
-Marketing Technology
-Marketing Operations
-Marketing Technologist
-MarTech Architect
-Marketing Engineer
