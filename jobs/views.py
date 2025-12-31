@@ -217,3 +217,9 @@ def review_action(request, job_id, action):
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
+
+def about(request):
+    return render(request, 'jobs/about.html')
+
+def for_employers(request):
+    return render(request, 'jobs/for_employers.html')
