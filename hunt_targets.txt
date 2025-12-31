@@ -1,83 +1,33 @@
-# --- ROLES & DISCIPLINES ---
-MarTech
-Marketing Technology
-Marketing Operations
-Marketing Technologist
-MarTech Architect
-Marketing Engineer
-Marketing Technology Architect
-Director of Marketing Technology
-Tagging Specialist
-Mobile Marketing Tech Lead
-MOPs
-Marketing Automation
-Digital Analytics
-Identity Resolution
-Experimentation Manager
-CDP
-CDP Engineer
-Customer Data Platform
-Web Analyst
-Web Analytics
-Optimization
-Experimentation
-Experiment
+# --- ROLES (Grouped by Intent) ---
+MarTech OR "Marketing Technology" OR "Marketing Technologist"
+"Marketing Operations" OR MOPs OR "Marketing Ops"
+"MarTech Architect" OR "Marketing Engineer" OR "Marketing Technology Architect"
+"Director of Marketing Technology" OR "Head of Marketing Technology"
+"Tagging Specialist" OR "Web Analyst" OR "Web Analytics"
+"Experimentation Manager" OR Optimization OR Experimentation
+CDP OR "CDP Engineer" OR "Customer Data Platform"
+"Identity Resolution" OR "Digital Analytics"
 
-# --- MARKETING AUTOMATION & EMAIL ---
-Marketo
-Adobe Marketo Engage
-Salesforce Marketing Cloud
-SFMC
-Adobe Experience Cloud
-Experience Cloud
-HubSpot Marketing Hub
-HubSpot Operations
-Braze
-Iterable
-Customer.io
-Eloqua
-Oracle Eloqua
-Klaviyo
-Knack
+# --- MARKETING AUTOMATION (Grouped by Competitor) ---
+Marketo OR "Adobe Marketo Engage"
+"Salesforce Marketing Cloud" OR SFMC OR "Marketing Cloud"
+"HubSpot Marketing Hub" OR "HubSpot Operations"
+Braze OR Iterable OR Customer.io OR Klaviyo
+Eloqua OR "Oracle Eloqua" OR Knack
 
-# --- CDPs & DATA ---
-Twilio Segment
-mParticle
-Tealium
-Tealium AudienceStream
-RudderStack
-ActionIQ
-Bloomreach
-Adobe Experience Platform
-AEP
-Real-Time CDP
-Salesforce CDP
-Salesforce Data Cloud
-BlueConic
-Treasure Data
-Hightouch
-Census
+# --- DATA & CDPs ---
+"Twilio Segment" OR Segment OR mParticle
+Tealium OR "Tealium AudienceStream" OR "Tealium iQ"
+RudderStack OR ActionIQ OR Bloomreach
+"Adobe Experience Platform" OR AEP OR "Real-Time CDP"
+"Salesforce CDP" OR "Salesforce Data Cloud"
+BlueConic OR "Treasure Data" OR Hightouch OR Census
 
-# --- ANALYTICS & TAGS ---
-Google Analytics 4
-GA4
-Adobe Analytics
-Customer Journey Analytics
-Mixpanel
-Amplitude
-Heap
-Google Tag Manager
-Tealium iQ
-Adobe Launch
-Server-side tracking
-
-# --- PERSONALIZATION & TESTING ---
-Adobe Target
-Optimizely
-VWO
-Dynamic Yield
-LaunchDarkly
-Adobe Journey Optimizer
-AJO
-Mutiny
-Monetate
+# --- ANALYTICS & TESTING ---
+"Google Analytics 4" OR GA4 OR "Google Tag Manager"
+"Adobe Analytics" OR "Customer Journey Analytics" OR "Adobe Launch"
+Mixpanel OR Amplitude OR Heap
+"Server-side tracking"
+"Adobe Target" OR Optimizely OR VWO
+"Dynamic Yield" OR LaunchDarkly OR Mutiny OR Monetate
+"Adobe Journey Optimizer" OR AJO
