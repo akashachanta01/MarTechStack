@@ -34,6 +34,7 @@ class Command(BaseCommand):
         self.check_dead_links()
 
         # --- 2. AUTO-CLEANUP ---
+        # Remove old jobs that aren't approved to keep the DB fast
         deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
         self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} inactive/rejected jobs.")
         
@@ -59,6 +60,24 @@ class Command(BaseCommand):
             "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
         ]
 
+        # VENDOR EXCLUSION LIST (Prevents scraping the tool's own careers page)
+        vendor_domains = {
+            "Braze": "braze.com",
+            "Iterable": "iterable.com",
+            "Customer.io": "customer.io",
+            "Marketo": "adobe.com",
+            "Adobe": "adobe.com",
+            "Salesforce": "salesforce.com",
+            "HubSpot": "hubspot.com",
+            "Segment": "segment.com",
+            "Tealium": "tealium.com",
+            "Klaviyo": "klaviyo.com",
+            "mParticle": "mparticle.com",
+            "Amplitude": "amplitude.com",
+            "Mixpanel": "mixpanel.com",
+            "Optimizely": "optimizely.com"
+        }
+
         # Load Targets
         target_lines = []
         target_file = os.path.join(settings.BASE_DIR, 'hunt_targets.txt')
@@ -73,18 +92,25 @@ class Command(BaseCommand):
         for group_query in ats_groups:
             for line in target_lines:
                 # 1. Parse the OR line
-                # Example line: MarTech OR "Marketing Technology"
+                # Example line: "Braze" OR "Iterable"
                 parts = [p.strip() for p in line.split(' OR ')]
                 
-                # 2. Build Query: (intitle:"A" OR intitle:"B")
-                # We strip quotes first to avoid double quoting, then add them back cleanly
                 intitle_parts = []
+                exclude_str = ""
+                
                 for p in parts:
                     clean_p = p.replace('"', '') # Remove existing quotes
                     intitle_parts.append(f'intitle:"{clean_p}"')
+                    
+                    # CHECK VENDOR EXCLUSION
+                    # If we are searching for "Braze", add "-site:braze.com"
+                    if clean_p in vendor_domains:
+                        exclude_str += f" -site:{vendor_domains[clean_p]}"
                 
                 joined_intitle = " OR ".join(intitle_parts)
-                final_query = f'({joined_intitle}) ({group_query})'
+                
+                # FINAL QUERY: (intitle:"Braze") (site:greenhouse...) -site:braze.com
+                final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
 
                 self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
                 time.sleep(1.0) # Respect rate limits
@@ -102,8 +128,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
     def check_dead_links(self):
-        # (Keep existing dead link logic)
-        pass 
+        # Checks if existing active jobs are 404ing
+        self.stdout.write("💀 Checking for dead links...")
+        active_jobs = Job.objects.filter(is_active=True)
+        for job in active_jobs:
+            try:
+                r = requests.head(job.apply_url, timeout=5, allow_redirects=True)
+                if r.status_code >= 400:
+                    job.is_active = False
+                    job.save()
+            except:
+                pass
 
     def search_google(self, query, num=100, tbs="qdr:d14"):
         params = { 
@@ -121,10 +156,6 @@ class Command(BaseCommand):
                 return [r.get("link") for r in resp.json().get("organic_results", [])]
         except: pass
         return []
-
-    # ... (Keep all other helper functions: _clean_url, analyze_and_fetch, etc. exactly as they were)
-    # Be sure to include the FULL class logic for analyze_and_fetch, fetch_greenhouse_api etc. from previous version.
-    # I am abbreviating here for clarity, but you should keep the rest of the file identical to the previous version.
     
     def _clean_url(self, url):
         if not url: return ""
@@ -161,7 +192,6 @@ class Command(BaseCommand):
             if any(k in clean_url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(clean_url)
                  
-    # ... (Include fetch_greenhouse_api, fetch_lever_api, etc. from previous turns)
     def get_headers(self):
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 
