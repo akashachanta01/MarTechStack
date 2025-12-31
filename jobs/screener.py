@@ -8,17 +8,12 @@ from urllib.parse import urlparse
 from django.conf import settings
 from jobs.models import BlockRule, Tool 
 
-# Setup Audit Logging
 logger = logging.getLogger("screener")
 
 class MarTechScreener:
     """
-    The Brain 🧠 (AI Agent + Auditing)
-    Diamond-Grade Edition (Strict Mode V3.0 - Anti-Generic): 
-    1. AI/ML Trap (Kills generic roles).
-    2. Master Control (Loads Menu & Targets from text file).
-    3. VIP Booster (Adobe/Salesforce/CDP get priority).
-    4. Anti-Fluff (Bans Events, SEO, Content, Social unless technical).
+    Diamond-Grade Edition (Strict Mode V3.2 - Anti-Vendor/Anti-User):
+    1. Hard Reject List updated with specific roles (CSM, Sales, Social).
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -26,7 +21,6 @@ class MarTechScreener:
         api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key) if api_key else None
         
-        # 1. LOAD & PARSE HUNT TARGETS
         self.hunt_roles = []
         self.hunt_tools = []
         
@@ -44,11 +38,9 @@ class MarTechScreener:
                     parts = [p.strip().replace('"', '') for p in raw.split(' OR ')]
                     current_list.extend(parts)
         else:
-            logger.warning("⚠️ hunt_targets.txt is missing! Using defaults.")
-            self.hunt_roles = ["MarTech", "Marketing Operations"]
-            self.hunt_tools = ["Marketo", "Salesforce", "HubSpot"]
+            self.hunt_roles = ["MarTech"]
+            self.hunt_tools = ["Marketo"]
 
-        # 2. PREPARE AI LISTS
         self.REQUIRED_KEYWORDS = list(set([r.lower() for r in self.hunt_roles + self.hunt_tools]))
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
         self.targets_str = ", ".join(set(self.hunt_roles + self.hunt_tools))
@@ -93,7 +85,6 @@ class MarTechScreener:
 
         full_text = self._normalize(f"{title} {description}")
         
-        # Stage 1: Fast Fail
         has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
         if not has_keyword:
             return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No hunt_targets keyword found.", "details": {"stage": "fast_fail"}}
@@ -109,53 +100,53 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description, location):
         prompt = f"""
-        Act as a "Senior MarTech Recruiter" filtering jobs for a niche board (Marketing Ops & Engineering).
+        Act as a "Senior MarTech Recruiter". Filter out "Users" (Marketers/Sales) and keep "Builders" (Ops/Engineers).
 
         JOB CONTEXT:
         - Title: {title}
         - Company: {company}
         - Snippet: {description[:3000]}...
 
-        ✅ VALID TOOLS MENU (From hunt_targets.txt):
+        ✅ VALID TOOLS MENU:
         [{self.tool_menu_str}]
 
-        🔥 VIP PRIORITY STACK (Always High Importance):
-        ["Adobe Experience Cloud", "AEP", "AJO", "Adobe Analytics", "Adobe Target", "Marketo", "Salesforce Marketing Cloud", "SFMC", "Salesforce CDP", "Data Cloud", "Tealium", "Segment", "CDP"]
+        ⛔ HARD REJECT KEYWORDS (AUTO-FAIL):
+        [
+         "Customer Success", "CSM", "Account Manager", "Account Executive", "Sales", "SDR", "BDR",
+         "Partner Marketing", "Field Marketing", "Demand Generation", "Demand Gen", "Growth Lead",
+         "Social Media", "Content", "Brand", "Community", "PR", "SEO", "Search Engine", 
+         "Copywriter", "Creative", "Audit", "Support Analyst", "Technical Support", "Support Engineer"
+        ]
 
-        🚩 GENERIC RED FLAGS:
-        ["Product Manager", "Project Manager", "Program Manager", "Growth", "Account Executive", "Sales Manager", "Software Engineer", "Data Scientist", "Marketing Manager", "Analyst", "Consultant", "Specialist"]
-
-        ⛔ HARD REJECT KEYWORDS (If Title contains these, REJECT unless purely technical):
-        ["Event", "Social Media", "Content", "Brand", "Community", "growth", "PR", "Public Relations", "SEO", "Search Engine", "Field Marketing", "Copywriter", "Creative"]
+        🚩 GENERIC RED FLAGS (Fail unless Strong Tech Signal):
+        ["Product Manager", "Project Manager", "Program Manager", "Consultant", "Specialist", "Analyst"]
 
         YOUR TASKS:
         1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
 
-        2. **Analyze Role (STRICTER LOGIC):**
+        2. **Analyze Role:**
            
-           - **STEP A: Hard Reject Check:**
-             - If Title contains any "HARD REJECT KEYWORDS" (e.g. "Event Marketing Manager", "SEO Manager"), check description.
-             - If description does NOT specifically mention managing a MARTECH PLATFORM (like Marketo, Cvent integration, BrightEdge technical config) -> **REJECT (0)**.
-             - If it's a generic "Event Manager" who just uses tools -> **REJECT (0)**.
+           - **STEP A: Hard Reject (The "No-Go" List):**
+             - If Title contains ANY term from "HARD REJECT KEYWORDS" -> **REJECT (0)**.
+             - (e.g. "Senior Customer Success Manager", "Technical Support Engineer", "Field Marketing Manager" are ALL 0).
+             - Exception: "Marketing Operations" or "MarTech" in title overrides this.
 
            - **STEP B: Generic Red Flag Check:**
-             - If Title matches "GENERIC RED FLAGS" (e.g. "Product Manager") AND no VIP tools in description -> **REJECT (0)** or **PENDING (65)** if standard tools found.
+             - If Title matches "GENERIC RED FLAGS" (e.g. "Solutions Consultant") AND no VIP tools (Adobe/Salesforce) in description -> **REJECT (0)**.
 
            - **STEP C: Evaluate Specificity:**
-             - **Case 1 (Technical Title):** Does Title contain "MarTech", "Marketing Technologist", OR an exact tool name (e.g. "Marketo Admin")? -> **APPROVE (90)**.
+             - **Case 1 (Technical Title):** Title has "MarTech", "Marketing Technologist", or exact Tool Name (e.g. "Marketo Admin")? -> **APPROVE (90)**.
              
-             - **Case 2 (MOPs Title):** Does Title contain "Marketing Operations"? 
-               - If Description mentions specific tools (Marketo, HubSpot) -> **APPROVE (85)**.
-               - If Description is generic (no specific tool names) -> **PENDING (70)**.
+             - **Case 2 (MOPs Title):** Title has "Marketing Operations"? -> **APPROVE (85)**.
              
              - **Case 3 (VIP Description Match):** Title Generic + VIP Tool in Description -> **APPROVE (85)**.
              
-             - **Case 4 (Standard Match):** Title Generic + Standard Tool in Description -> **PENDING (65)**.
+             - **Case 4 (Standard Match):** Title Generic + Standard Tool -> **PENDING (65)**.
 
         3. **Scoring:**
-           - 0 = Reject (Events, SEO, Content, Generic PM)
-           - 65-75 = Pending (Generic Title + Tools, or MOPs without stack)
-           - 85-100 = High Confidence (Specific Tech Title + Stack)
+           - 0 = Reject (CSM, Sales, Support, Events, SEO)
+           - 65 = Pending
+           - 85-100 = Auto-Approve
 
         Output JSON:
         {{
@@ -179,7 +170,6 @@ class MarTechScreener:
         content = completion.choices[0].message.content
         result = json.loads(content)
         
-        # --- ADOBE AUTO-TAGGER ---
         signals = result.get("signals", {})
         stack = signals.get("stack", [])
         found_adobe = False
@@ -192,7 +182,6 @@ class MarTechScreener:
             stack.append("Adobe Experience Cloud")
             signals["stack"] = stack
             result["signals"] = signals
-        # -------------------------
 
         score = float(result.get("score", 0.0))
         decision = result.get("decision", "PENDING").upper()
