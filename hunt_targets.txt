@@ -5,7 +5,7 @@
 "CDP" OR "CDP Engineer" OR "Customer Data Platform"
 
 # --- MARKETING AUTOMATION (Grouped by Competitor) ---
-"Adobe Journey Optimizer" OR "AJO"
+"Adobe Journey Optimizer" OR "AJO" OR "Adobe"
 "Marketo" OR "Adobe Marketo Engage"
 "Salesforce Marketing Cloud" OR SFMC OR "Marketing Cloud"
 "HubSpot Marketing Hub" OR "HubSpot Operations"
