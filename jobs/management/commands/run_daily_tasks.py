@@ -16,8 +16,8 @@ class Command(BaseCommand):
 
         # 2. INGESTION (Get new jobs)
         # Run RSS first (Cheap & Fast)
-        self.stdout.write("\n[2/5] 📡 Fetching RSS Feeds...")
-        call_command('fetch_rss')
+        #self.stdout.write("\n[2/5] 📡 Fetching RSS Feeds...")
+        #call_command('fetch_rss')
         
         # Run Hunter (Deep Search - Costs API Credits)
         self.stdout.write("\n[3/5] 🏹 Hunting via API (Deep Search)...")
