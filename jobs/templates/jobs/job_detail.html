@@ -47,7 +47,7 @@
     <div class="bg-slate-50 border-b border-slate-200">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
             
-            <a href="/" class="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-8 transition">
+            <a href="/" id="smart-back-btn" class="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-8 transition">
                 &larr; Back to jobs
             </a>
 
@@ -119,7 +119,7 @@
                     <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Tech Stack</h3>
                     <div class="flex flex-wrap gap-2">
                         {% for tool in job.tools.all %}
-                            <span class="{{ tool.color_class }} inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border">{{ tool.name }}</span>
+                            <a href="{% url 'tool_detail' tool.slug %}" class="{{ tool.color_class }} inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border hover:opacity-80 transition">{{ tool.name }}</a>
                         {% endfor %}
                     </div>
                 </div>
@@ -186,6 +186,20 @@
         }
       }
     }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const backLink = document.getElementById('smart-back-btn');
+            // If the user came from our own site (e.g. filtered list), go back in history.
+            // If they came from Google/LinkedIn, keep the default href="/" (Home).
+            if (document.referrer && document.referrer.indexOf(window.location.hostname) !== -1) {
+                backLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.history.back();
+                });
+            }
+        });
     </script>
 </body>
 </html>
