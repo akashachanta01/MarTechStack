@@ -4,6 +4,10 @@ from . import views
 urlpatterns = [
     path('', views.job_list, name='job_list'),
     
+    # --- STATIC PAGES ---
+    path('about/', views.about, name='about'),
+    path('for-employers/', views.for_employers, name='for_employers'),
+
     # --- SEO: TOOL LANDING PAGES (Topic Clusters) ---
     path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
     
@@ -17,8 +21,6 @@ urlpatterns = [
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
     
     path('subscribe/', views.subscribe, name='subscribe'),
-    
-    # NEW: UNSUBSCRIBE
     path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
 
     path('staff/review/', views.review_queue, name='review_queue'),
