@@ -2,7 +2,6 @@
 "MarTech" OR "Marketing Technology" OR "Marketing Technologist"
 "Marketing Operations" OR "MOPs" OR "Marketing Ops"
 "Tagging Specialist" OR "Web Analyst" OR "Web Analytics"
-"Optimization" OR "Experimentation"
 "CDP" OR "CDP Engineer" OR "Customer Data Platform"
 "Identity Resolution" OR "Digital Analytics"
 
