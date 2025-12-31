@@ -1,9 +1,8 @@
 # --- ROLES (Grouped by Intent) ---
 "MarTech" OR "Marketing Technology" OR "Marketing Technologist"
 "Marketing Operations" OR "MOPs" OR "Marketing Ops"
-"Tagging Specialist" OR "Web Analyst" OR "Web Analytics"
+"Tagging Specialist" OR "Web Analyst" OR "Web Analytics" OR "Digital Analytics"
 "CDP" OR "CDP Engineer" OR "Customer Data Platform"
-"Identity Resolution" OR "Digital Analytics"
 
 # --- MARKETING AUTOMATION (Grouped by Competitor) ---
 "Adobe Journey Optimizer" OR "AJO"
@@ -14,10 +13,11 @@
 "Eloqua" OR "Oracle Eloqua" OR "Knack"
 
 # --- DATA & CDPs ---
-"Twilio Segment"
+"Twilio Segment" or "ActionIQ"
 "Tealium" OR "Tealium AudienceStream" OR "Tealium iQ"
 "Adobe Experience Platform" OR "AEP" OR "Real-Time CDP"
 "Salesforce CDP" OR "Salesforce Data Cloud"
+"AEM" or "Adobe Experience Manager"
 
 # --- ANALYTICS & TESTING ---
 "Google Analytics 4" OR "GA4" OR "Google Tag Manager"
