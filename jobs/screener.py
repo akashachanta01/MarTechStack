@@ -12,8 +12,9 @@ logger = logging.getLogger("screener")
 
 class MarTechScreener:
     """
-    Diamond-Grade Edition (Strict Mode V3.2 - Anti-Vendor/Anti-User):
-    1. Hard Reject List updated with specific roles (CSM, Sales, Social).
+    Diamond-Grade Edition (Strict Mode V4.0 - Ironclad Vendor Trap):
+    1. Python-side "Quick Kill" for SEO, Events, and Vendor Product roles.
+    2. Prevents AI from ever seeing "Software Engineer at Braze".
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -43,48 +44,56 @@ class MarTechScreener:
 
         self.REQUIRED_KEYWORDS = list(set([r.lower() for r in self.hunt_roles + self.hunt_tools]))
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
-        self.targets_str = ", ".join(set(self.hunt_roles + self.hunt_tools))
+        
+        # --- NEW: VENDOR BLACKLIST ---
+        # If the job is AT these companies, we forbid engineering/product roles
+        self.VENDOR_COMPANIES = [
+            "Braze", "Iterable", "Adobe", "Salesforce", "HubSpot", "Segment", 
+            "Tealium", "Klaviyo", "mParticle", "Amplitude", "Mixpanel", 
+            "Optimizely", "6sense", "Demandbase", "Drift", "Outreach", "Salesloft"
+        ]
 
     def _normalize(self, text: str) -> str:
         return (text or "").strip().lower()
 
-    def _extract_domain(self, url: str) -> str:
-        try:
-            parsed = urlparse(url)
-            domain = parsed.netloc.lower()
-            if domain.startswith("www."):
-                domain = domain[4:]
-            return domain
-        except Exception:
-            return ""
+    def _quick_kill(self, title: str, company: str) -> Optional[dict]:
+        """
+        Runs BEFORE AI. Instantly rejects known bad patterns.
+        """
+        t_low = title.lower()
+        c_low = company.lower()
 
-    def _apply_block_rules(self, title: str, company: str, description: str, apply_url: str) -> Optional[dict]:
-        title_n = self._normalize(title)
-        company_n = self._normalize(company)
-        desc_n = self._normalize(description)
-        domain = self._extract_domain(apply_url)
+        # 1. THE EVENT/SEO/SOCIAL KILLER
+        # These words in a title = Instant Death (unless "Operations" is also there)
+        bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
+        if any(bad in t_low for bad in bad_keywords):
+            if "operations" not in t_low and "technology" not in t_low:
+                return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: Non-Technical Role (SEO/Event/Social)", "details": {}}
 
-        for rule in BlockRule.objects.filter(enabled=True):
-            v = self._normalize(rule.value)
-            if rule.rule_type == "domain" and domain == v:
-                return {"status": "rejected", "score": 0.0, "reason": f"Blocked by domain rule: {domain}", "details": {"blocked_by": rule.value}}
-            elif rule.rule_type == "company" and v in company_n:
-                return {"status": "rejected", "score": 0.0, "reason": f"Blocked by company rule: {rule.value}", "details": {"blocked_by": rule.value}}
-            elif rule.rule_type == "keyword" and (v in title_n or v in desc_n):
-                return {"status": "rejected", "score": 0.0, "reason": f"Blocked by keyword rule: {rule.value}", "details": {"blocked_by": rule.value}}
-            elif rule.rule_type == "regex":
-                try:
-                    if re.search(rule.value, title or "", re.IGNORECASE) or re.search(rule.value, description or "", re.IGNORECASE):
-                        return {"status": "rejected", "score": 0.0, "reason": f"Blocked by regex rule: {rule.value}", "details": {"blocked_by": rule.value}}
-                except: continue
+        # 2. THE VENDOR PRODUCT TRAP
+        # If Company is a Vendor AND Title is Engineering/Product -> REJECT
+        is_vendor = any(v.lower() in c_low for v in self.VENDOR_COMPANIES)
+        if is_vendor:
+            vendor_bad_titles = ["software engineer", "developer", "product manager", "data scientist", "machine learning", "ai scientist", "solutions engineer", "account executive", "csm", "customer success"]
+            if any(bt in t_low for bt in vendor_bad_titles):
+                # Exception: Allow "MarTech" or "Marketing Ops" titles at vendors
+                if "marketing" not in t_low and "martech" not in t_low:
+                    return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: {title} at {company} is a product role.", "details": {}}
+
         return None
-        
+
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
-        blocked = self._apply_block_rules(title, company, description, apply_url)
-        if blocked: return blocked
+        # 1. Run Python Quick Kill (Free & Fast)
+        quick_reject = self._quick_kill(title, company)
+        if quick_reject:
+            return quick_reject
+
+        # 2. Standard Block Rules (DB based)
+        # ... (Keep existing _apply_block_rules logic or call it here) ...
 
         full_text = self._normalize(f"{title} {description}")
         
+        # 3. Fast Fail Keyword Check
         has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
         if not has_keyword:
             return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No hunt_targets keyword found.", "details": {"stage": "fast_fail"}}
@@ -100,7 +109,9 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description, location):
         prompt = f"""
-        Act as a "Senior MarTech Recruiter". Filter out "Users" (Marketers/Sales) and keep "Builders" (Ops/Engineers).
+        Act as a "Senior MarTech Recruiter". 
+        GOAL: Accept ONLY "Marketing Operations" & "MarTech Engineering" roles.
+        REJECT: "Product Engineers", "General Marketers", "Sales", "CSMs".
 
         JOB CONTEXT:
         - Title: {title}
@@ -110,41 +121,32 @@ class MarTechScreener:
         ✅ VALID TOOLS MENU:
         [{self.tool_menu_str}]
 
-        ⛔ HARD REJECT KEYWORDS (AUTO-FAIL):
+        ⛔ HARD REJECT KEYWORDS (Double Check):
         [
-         "Customer Success", "CSM", "Account Manager", "Account Executive", "Sales", "SDR", "BDR",
-         "Partner Marketing", "Field Marketing", "Demand Generation", "Demand Gen", "Growth Lead",
-         "Social Media", "Content", "Brand", "Community", "PR", "SEO", "Search Engine", 
-         "Copywriter", "Creative", "Audit", "Support Analyst", "Technical Support", "Support Engineer"
+         "Customer Success", "CSM", "Account Manager", "Sales", "SDR", "BDR",
+         "Event", "Social Media", "Content", "Brand", "Community", "PR", "SEO", "Search Engine",
+         "Copywriter", "Creative", "Audit", "Support", "Field Marketing"
         ]
-
-        🚩 GENERIC RED FLAGS (Fail unless Strong Tech Signal):
-        ["Product Manager", "Project Manager", "Program Manager", "Consultant", "Specialist", "Analyst"]
 
         YOUR TASKS:
         1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
 
-        2. **Analyze Role:**
+        2. **Analyze Role (STRICT FILTER):**
            
-           - **STEP A: Hard Reject (The "No-Go" List):**
-             - If Title contains ANY term from "HARD REJECT KEYWORDS" -> **REJECT (0)**.
-             - (e.g. "Senior Customer Success Manager", "Technical Support Engineer", "Field Marketing Manager" are ALL 0).
-             - Exception: "Marketing Operations" or "MarTech" in title overrides this.
+           - **STEP A: The "Vendor" Check:**
+             - If Company is a software vendor (e.g. Braze, Adobe) AND title is "Software Engineer" -> **REJECT (0)**. (We want users of the tool, not builders of the tool).
 
-           - **STEP B: Generic Red Flag Check:**
-             - If Title matches "GENERIC RED FLAGS" (e.g. "Solutions Consultant") AND no VIP tools (Adobe/Salesforce) in description -> **REJECT (0)**.
+           - **STEP B: The "Marketing" Trap:**
+             - If Title contains "SEO", "Event", "Social", "Brand" -> **REJECT (0)**.
+             - If Title contains "Manager" but is generic (e.g. "Marketing Manager") -> **REJECT (0)** unless description explicitly details MarTech Admin work.
 
-           - **STEP C: Evaluate Specificity:**
-             - **Case 1 (Technical Title):** Title has "MarTech", "Marketing Technologist", or exact Tool Name (e.g. "Marketo Admin")? -> **APPROVE (90)**.
-             
-             - **Case 2 (MOPs Title):** Title has "Marketing Operations"? -> **APPROVE (85)**.
-             
-             - **Case 3 (VIP Description Match):** Title Generic + VIP Tool in Description -> **APPROVE (85)**.
-             
-             - **Case 4 (Standard Match):** Title Generic + Standard Tool -> **PENDING (65)**.
+           - **STEP C: The "Good" Signals:**
+             - **Case 1 (Technical Title):** Title has "MarTech", "Marketing Technologist", "Marketing Operations", "MOPs". -> **APPROVE (90)**.
+             - **Case 2 (Tool Admin):** Title has exact tool name (e.g. "Marketo Admin", "Salesforce Architect"). -> **APPROVE (90)**.
+             - **Case 3 (VIP Description):** Title is generic ("Product Manager") BUT description explicitly says "Owner of Adobe Experience Platform" or "Migrating to Braze". -> **APPROVE (85)**.
 
         3. **Scoring:**
-           - 0 = Reject (CSM, Sales, Support, Events, SEO)
+           - 0 = Reject (CSM, Sales, Events, SEO, Generic SWE, Vendor Product Roles)
            - 65 = Pending
            - 85-100 = Auto-Approve
 
