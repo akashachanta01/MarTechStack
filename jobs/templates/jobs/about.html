@@ -1,0 +1,53 @@
+{% extends "jobs/base.html" %}
+{% block title %}About Us — MarTechStack{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="relative isolate px-6 pt-14 lg:px-8">
+        <div class="mx-auto max-w-2xl py-12 sm:py-20 text-center">
+            <h1 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
+                The "Zero-Noise" <span class="text-indigo-600">MarTech</span> Board
+            </h1>
+            <p class="mt-6 text-lg leading-8 text-slate-600">
+                We built MarTechStack because finding a Marketing Operations job on LinkedIn is a nightmare.
+            </p>
+        </div>
+    </div>
+
+    <div class="mx-auto max-w-3xl px-6 pb-24 lg:px-8">
+        <div class="prose prose-lg prose-indigo mx-auto text-slate-600">
+            <p>
+                If you search for "Marketing Technologist" on a generic job board, you get thousands of results for "Social Media Intern" or "SEO Writer."
+            </p>
+            <p class="font-bold text-slate-900">
+                That is noise. We are the signal.
+            </p>
+            <p>
+                MarTechStack.io is a specialized job board dedicated 100% to the Engineering side of Marketing. We track roles for the builders, the architects, and the data wranglers.
+            </p>
+
+            <h3 class="text-slate-900">What we curate:</h3>
+            <ul class="marker:text-indigo-600">
+                <li><strong>Marketing Operations (MOPs):</strong> Marketo, HubSpot, Pardot admins.</li>
+                <li><strong>MarTech Engineering:</strong> Python scripts, API integrations, AWS.</li>
+                <li><strong>Data & Analytics:</strong> Segment, Tealium, GA4, SQL.</li>
+                <li><strong>Platform Architects:</strong> Salesforce, Adobe Experience Cloud.</li>
+            </ul>
+
+            <h3 class="text-slate-900">Our Promise</h3>
+            <p>
+                We use advanced AI and manual review to filter out 99% of the fluff. If a job is on MarTechStack, it requires technical skill. No "posting on Facebook" roles allowed.
+            </p>
+        </div>
+
+        <div class="mt-12 flex justify-center gap-4">
+            <a href="/" class="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 transition">
+                Browse Jobs
+            </a>
+            <a href="{% url 'for_employers' %}" class="rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition">
+                Hiring? Post a Job
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
