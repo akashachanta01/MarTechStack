@@ -202,7 +202,8 @@ class JobAdmin(BaseJobAdmin):
             .exclude(screening_score__lte=0) \
             .prefetch_related('tools')
 
-    list_display = ("logo_preview", "job_card_header", "location", "score_display", "source_tag", "tools_preview", "source_link", "posted_date")
+    # ADDED: screening_status to list_display to match list_editable
+    list_display = ("logo_preview", "job_card_header", "location", "score_display", "source_tag", "tools_preview", "source_link", "posted_date", "screening_status")
     list_editable = ("screening_status",)
 
 # B. ACTIVE JOBS (Live on site)
@@ -213,6 +214,14 @@ class ActiveJobAdmin(BaseJobAdmin):
 
     list_display = ("logo_preview", "job_card_header", "location", "score_display", "is_pinned", "is_featured", "tools_preview", "posted_date", "view_live")
     list_editable = ("is_pinned", "is_featured")
+
+    # ADDED: view_live method
+    def view_live(self, obj):
+        if obj.slug:
+            url = f"/job/{obj.id}/{obj.slug}/"
+            return format_html('<a href="{}" target="_blank" style="color:#4f46e5; font-weight:bold;">View ↗</a>', url)
+        return "-"
+    view_live.short_description = "Live Page"
 
 # C. USER SUBMISSIONS
 @admin.register(UserSubmission)
