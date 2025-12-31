@@ -9,6 +9,8 @@ from urllib.parse import urlparse, urlunparse
 from typing import Any, Dict
 from bs4 import BeautifulSoup
 from openai import OpenAI
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -19,15 +21,22 @@ from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'The "Direct-Apply" Hunter: Smart Deduplication + Clean URLs + Auto-Cleanup + Zero-Score Filter.'
+    help = 'The "Direct-Apply" Hunter: Smart Deduplication + Geocoding + Clean URLs + Auto-Cleanup.'
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Job Hunt (Smart Deduplication Mode)...")
+        self.stdout.write("🚀 Starting Job Hunt (Safe Mode: 14-Day Window)...")
 
-        # --- AUTO-CLEANUP ---
-        # Wipes out old 'pending' or 'rejected' junk to keep the DB lean
+        # --- 0. INIT GEOCODER ---
+        # We identify our bot to OpenStreetMap to be polite
+        self.geolocator = Nominatim(user_agent="martechstack_jobs_bot_v1")
+        self.location_cache = {} # In-memory cache to prevent spamming the map API
+
+        # --- 1. DEAD LINK CHECKER ---
+        self.check_dead_links()
+
+        # --- 2. AUTO-CLEANUP ---
         deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
-        self.stdout.write(f"🧹 Cleaned up {deleted_count} inactive/rejected jobs from database.")
+        self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} inactive/rejected jobs.")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
@@ -41,7 +50,7 @@ class Command(BaseCommand):
         self.total_added = 0
         
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
-        self.cutoff_date = timezone.now() - timedelta(days=28)
+        self.cutoff_date = timezone.now() - timedelta(days=14)
         self.processed_tokens = set()
 
         ats_groups = [
@@ -62,10 +71,10 @@ class Command(BaseCommand):
         for group_query in ats_groups:
             for keyword in hunt_targets:
                 query = f'intitle:"{keyword}" ({group_query})'
-                self.stdout.write(f"\n🔎 Hunting: {keyword}...")
+                self.stdout.write(f"\n🔎 Hunting: {keyword} (Last 14 Days)...")
                 time.sleep(1.0)
                 
-                links = self.search_google(query, num=50)
+                links = self.search_google(query, num=100, tbs="qdr:d14")
                 self.stdout.write(f"   Found {len(links)} links. Processing...")
 
                 for link in links:
@@ -77,8 +86,44 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
-    def search_google(self, query, num=50):
-        params = { "engine": "google", "q": query, "api_key": self.serpapi_key, "num": num, "gl": "us", "hl": "en" }
+    def check_dead_links(self):
+        self.stdout.write("💀 Checking for dead links on active jobs...")
+        active_jobs = Job.objects.filter(is_active=True)
+        dead_count = 0
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        
+        for job in active_jobs:
+            try:
+                try:
+                    r = requests.head(job.apply_url, headers=headers, timeout=5, allow_redirects=True)
+                except requests.exceptions.RequestException:
+                    r = requests.get(job.apply_url, headers=headers, timeout=5)
+
+                if r.status_code in [404, 410]:
+                    job.screening_status = 'rejected'
+                    job.is_active = False
+                    job.screening_reason = f"Dead Link Detected (Status: {r.status_code})"
+                    job.save()
+                    self.stdout.write(f"   🚫 Deactivated {job.title} (Dead Link {r.status_code})")
+                    dead_count += 1
+            except Exception:
+                pass
+        
+        if dead_count > 0:
+            self.stdout.write(self.style.SUCCESS(f"   ⚰️ Buried {dead_count} dead jobs."))
+        else:
+            self.stdout.write("   ✨ All links look alive.")
+
+    def search_google(self, query, num=100, tbs="qdr:d14"):
+        params = { 
+            "engine": "google", 
+            "q": query, 
+            "api_key": self.serpapi_key, 
+            "num": num, 
+            "gl": "us", 
+            "hl": "en",
+            "tbs": tbs 
+        }
         try:
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
             if resp.status_code == 200:
@@ -165,7 +210,15 @@ class Command(BaseCommand):
             resp = requests.post("https://api.ashbyhq.com/posting-api/job-board/" + company, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 for item in resp.json().get('jobs', []):
-                    clean_loc, arr = self._clean_location(item.get('location'), item.get('isRemote', False))
+                    # Ashby often has structured location, we try to grab it
+                    loc_obj = item.get('location') or {}
+                    # Some Ashby endpoints return string, others return object
+                    if isinstance(loc_obj, str):
+                        raw_loc = loc_obj
+                    else:
+                        raw_loc = item.get('locationName') or "Remote"
+                    
+                    clean_loc, arr = self._clean_location(raw_loc, item.get('isRemote', False))
                     self.screen_and_upsert({
                         "title": item.get('title'), "company": company.capitalize(), "location": clean_loc, 
                         "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), 
@@ -181,7 +234,11 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('published_on')):
-                        clean_loc, arr = self._clean_location(f"{item.get('city')}, {item.get('country')}", item.get('telecommuting', False))
+                        # Grab all location parts
+                        parts = [item.get('city'), item.get('state'), item.get('country')]
+                        raw_loc = ", ".join([p for p in parts if p])
+                        clean_loc, arr = self._clean_location(raw_loc, item.get('telecommuting', False))
+                        
                         self.screen_and_upsert({
                             "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc, 
                             "description": item.get('description'), "apply_url": item.get('url'), 
@@ -201,7 +258,12 @@ class Command(BaseCommand):
                             d = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=3).json()
                             desc = d.get('jobAd',{}).get('sections',{}).get('jobDescription',{}).get('text','')
                         except: desc = "See Job Post"
-                        clean_loc, arr = self._clean_location(item.get('location', {}).get('city'), item.get('location', {}).get('remote', False))
+                        
+                        loc = item.get('location', {})
+                        parts = [loc.get('city'), loc.get('region'), loc.get('country')]
+                        raw_loc = ", ".join([p for p in parts if p])
+                        
+                        clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
                         self.screen_and_upsert({
                             "title": item.get('name'), "company": company.capitalize(), "location": clean_loc,
                             "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
@@ -227,7 +289,8 @@ class Command(BaseCommand):
             for tag in soup(["script", "style", "nav", "footer", "iframe", "noscript", "header"]): tag.extract()
             text = " ".join(soup.get_text(separator=' ').split())[:60000]
             if len(text) < 250: return
-            prompt = f"Extract title, company, location, is_remote, description_html (clean HTML) as JSON from: {text[:4000]}"
+            
+            prompt = f"Extract title, company, location (format: City, State, Country), is_remote, description_html (clean HTML) as JSON from: {text[:4000]}"
             completion = self.client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"})
             data = json.loads(completion.choices[0].message.content)
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
@@ -256,13 +319,10 @@ class Command(BaseCommand):
 
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), clean_url)
         
-        # --- ZERO-SCORE FILTER ---
-        # If the AI gives it a 0, we don't save it. Period.
         score = float(analysis.get("score", 50.0))
         if score <= 0:
             self.stdout.write(self.style.WARNING(f"      🚫 Dropping {job_data.get('title')}: Score is 0."))
             return
-        # -------------------------
 
         status = analysis.get("status", "pending")
         signals = analysis.get("details", {}).get("signals", {})
@@ -282,13 +342,57 @@ class Command(BaseCommand):
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {job.title}"))
 
+    def resolve_location_automatically(self, raw_loc):
+        """
+        Uses OpenStreetMap (via Geopy) to turn 'Berlin' into 'Berlin, Germany'.
+        Caches results in memory to save time.
+        """
+        if not raw_loc or len(raw_loc) < 3: return raw_loc
+        
+        # Check cache first
+        if raw_loc in self.location_cache: return self.location_cache[raw_loc]
+        
+        try:
+            # addressdetails=True gives us structured data (City, State, Country)
+            location = self.geolocator.geocode(raw_loc, language="en", addressdetails=True, timeout=10)
+            if location:
+                addr = location.raw.get('address', {})
+                
+                # Extract parts carefully
+                city = addr.get('city') or addr.get('town') or addr.get('village') or addr.get('county')
+                state = addr.get('state') or addr.get('region')
+                country = addr.get('country')
+                
+                # Build clean string
+                parts = [p for p in [city, state, country] if p]
+                formatted_loc = ", ".join(parts)
+                
+                self.location_cache[raw_loc] = formatted_loc
+                return formatted_loc
+        except:
+            # If map service is down or times out, just use the raw string
+            pass
+        
+        return raw_loc
+
     def _clean_location(self, location_str, is_remote_flag):
-        if not location_str: return "On-site", 'onsite'
+        if not location_str: return "Remote", 'remote'
+        
+        # 1. Clean basic junk
         clean_loc = location_str.strip().replace(' | ', ', ').replace('/', ', ').replace('(', '').replace(')', '')
+        clean_loc = re.sub(r'\s*,\s*', ', ', clean_loc) # Fix spacing
+        
         loc_lower = clean_loc.lower()
         arrangement = 'onsite'
-        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}): arrangement = 'remote'
-        elif any(k in loc_lower for k in {'hybrid', 'flexible'}): arrangement = 'hybrid'
-        city_map = {"new york": "New York, NY, United States", "san francisco": "San Francisco, CA, United States", "london": "London, United Kingdom", "toronto": "Toronto, ON, Canada"}
-        if loc_lower in city_map: return city_map[loc_lower], arrangement
+        
+        # 2. Determine Remote
+        if is_remote_flag or any(k in loc_lower for k in {'remote', 'anywhere', 'wfh', 'work from home'}): 
+            arrangement = 'remote'
+        elif any(k in loc_lower for k in {'hybrid', 'flexible'}): 
+            arrangement = 'hybrid'
+        
+        # 3. AUTOMATIC RESOLUTION (The New Magic ✨)
+        if arrangement != 'remote':
+            clean_loc = self.resolve_location_automatically(clean_loc)
+
         return clean_loc, arrangement
