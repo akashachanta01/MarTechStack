@@ -37,8 +37,9 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
 
 def send_welcome_email(to_email):
     def _send():
+        # UPDATED: Subject Branding
         send_html_email(
-            subject="Welcome to MarTechStack Alerts! 🚀",
+            subject="Welcome to MarTechJobs Alerts! 🚀",
             template_name="emails/welcome.html",
             context={},
             to_email=[to_email]
@@ -87,7 +88,8 @@ def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
     # This one can stay plain text, it's just for you.
     def _send():
         try:
-            admin_email = getattr(settings, 'EMAIL_HOST_USER', 'hello@martechstack.io')
+            # UPDATED: Admin Email fallback
+            admin_email = getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io')
             subject = f"🔔 New Subscriber: {subscriber_email}"
             body = f"""
 New subscriber: {subscriber_email}
