@@ -5,20 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>{{ job.title }} at {{ job.company }} - MarTechStack.io</title>
-    <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today on MarTechStack.io.">
+    <title>{{ job.title }} at {{ job.company }} - MarTechJobs.io</title>
+    <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today on MarTechJobs.io.">
     
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ job.title }} - {{ job.company }}">
     <meta property="og:description" content="View details and apply for this Marketing Operations role.">
-    <meta property="og:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechstack.io/static/og-image.png{% endif %}">
+    <meta property="og:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io/static/og-image.png{% endif %}">
 
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
     <meta property="twitter:title" content="{{ job.title }}">
     <meta property="twitter:description" content="Hiring now: {{ job.title }} at {{ job.company }}.">
-    <meta property="twitter:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechstack.io/static/og-image.png{% endif %}">
+    <meta property="twitter:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io/static/og-image.png{% endif %}">
 
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
                 <div class="bg-indigo-600 text-white p-1.5 rounded-lg group-hover:bg-indigo-700 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="text-lg font-bold tracking-tight text-slate-900">MarTechStack</span>
+                <span class="text-lg font-bold tracking-tight text-slate-900">MarTechJobs</span>
             </a>
             <a href="{% url 'post_job' %}" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition">Post a Job</a>
         </div>
@@ -134,7 +134,7 @@
                         </li>
                         <li class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Verified by MarTechStack AI</span>
+                            <span>Verified by MarTechJobs AI</span>
                         </li>
                     </ul>
                 </div>
