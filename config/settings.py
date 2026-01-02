@@ -18,11 +18,15 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 # ⚠️ DIAGNOSIS MODE: Forced DEBUG=True to see the 500 error details.
 # Change this back to 'False' after fixing the issue!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechstack.io,www.martechstack.io,.onrender.com').split(',')
 
-# Trusted origins for CSRF
+# UPDATED: Added martechjobs.io to allowed hosts
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com').split(',')
+
+# UPDATED: Trusted origins for CSRF
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 
+    'https://martechjobs.io',
+    'https://www.martechjobs.io',
     'https://martechstack.io',
     'https://www.martechstack.io'
 ]
@@ -129,7 +133,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f'MarTechStack <{EMAIL_HOST_USER}>'
+# UPDATED: Branding to MarTechJobs
+DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
 # STRIPE PAYMENTS
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
@@ -137,4 +142,5 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
 # DOMAIN URL
-DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechstack.io").strip()
+# UPDATED: Default domain to martechjobs.io
+DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip()
