@@ -1,0 +1,79 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}MarTech Salary Guide {% now "Y" %} — Real-time Pay Data{% endblock %}
+
+{% block meta_description %}The definitive salary guide for Marketing Operations and MarTech. Real-time data aggregated from live job postings for HubSpot, Salesforce, Marketo, and more.{% endblock %}
+
+{% block content %}
+<div class="relative bg-white border-b border-slate-100 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-20 text-center">
+        <h1 class="text-5xl md:text-7xl font-serif font-medium text-slate-900 mb-6">
+            MarTech <span class="text-martech-green">Salary Guide</span>
+        </h1>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
+            Real-time compensation data aggregated from live Marketing Operations and Technology job listings. 
+            Transparent, data-driven, and always up to date.
+        </p>
+    </div>
+</div>
+
+<div class="bg-slate-50 py-16 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4">Tech Stack</th>
+                            <th class="px-6 py-4">Avg. Range</th>
+                            <th class="px-6 py-4 text-right">Data Points</th>
+                            <th class="px-6 py-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for stat in salary_stats %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 font-bold text-slate-900">
+                                <a href="{% url 'tool_detail' stat.tool.slug %}" class="flex items-center gap-3 hover:text-martech-green">
+                                    {% if stat.tool.logo_url %}
+                                        <img src="{{ stat.tool.logo_url }}" class="w-6 h-6 object-contain">
+                                    {% else %}
+                                        <div class="w-6 h-6 bg-slate-100 rounded flex items-center justify-center text-[10px]">{{ stat.tool.name|slice:":1" }}</div>
+                                    {% endif %}
+                                    {{ stat.tool.name }}
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 font-mono font-medium text-slate-700">
+                                ${{ stat.avg_min|intcomma }} - ${{ stat.avg_max|intcomma }}
+                            </td>
+                            <td class="px-6 py-4 text-right text-slate-400 text-xs">
+                                {{ stat.count }} jobs
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{% url 'tool_detail' stat.tool.slug %}" class="text-xs font-bold text-martech-green hover:underline">
+                                    View Jobs &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                Not enough data yet. Check back soon as more jobs are approved!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-slate-400 mt-8">
+            * Data is calculated dynamically based on the salary ranges of currently active and recently approved job listings.
+        </p>
+
+    </div>
+</div>
+{% endblock %}
