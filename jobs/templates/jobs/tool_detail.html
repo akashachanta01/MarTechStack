@@ -38,30 +38,42 @@
 
 <div class="relative bg-white border-b border-slate-100 overflow-hidden">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+    
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         
-        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+        <div class="mb-10">
+            <a href="/" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-martech-green transition group">
+                <span class="mr-1.5 transition-transform group-hover:-translate-x-1">&larr;</span> View all MarTech Jobs
+            </a>
+        </div>
+
+        <div class="flex flex-col items-center text-center max-w-3xl mx-auto">
+            
             {% if tool.logo_url %}
-            <div class="flex-shrink-0 w-24 h-24 bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center shadow-sm">
+            <div class="flex-shrink-0 w-24 h-24 bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center shadow-sm mb-8">
                 <img src="{{ tool.logo_url }}" alt="{{ tool.name }} Logo" class="max-w-full max-h-full object-contain">
+            </div>
+            {% else %}
+            <div class="flex-shrink-0 w-24 h-24 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-3xl font-serif font-bold text-slate-400 shadow-inner mb-8">
+                {{ tool.name|slice:":1" }}
             </div>
             {% endif %}
 
-            <div class="text-center md:text-left">
-                <h1 class="text-4xl md:text-6xl font-serif font-medium text-slate-900 mb-6">
+            <div>
+                <h1 class="text-5xl md:text-6xl font-serif font-medium text-slate-900 mb-6 leading-tight">
                     {% if custom_header %}
                         {{ custom_header|safe }}
                     {% else %}
-                        <span class="text-martech-green">{{ tool.name }}</span> Jobs
+                        Top <span class="text-martech-green">{{ tool.name }}</span> Jobs
                     {% endif %}
                 </h1>
                 
                 {% if tool.description %}
-                    <div class="prose prose-slate max-w-2xl text-slate-500 font-light leading-relaxed mb-6">
+                    <div class="prose prose-slate max-w-2xl text-slate-600 font-light leading-relaxed mb-6 mx-auto">
                         {{ tool.description|safe }}
                     </div>
                 {% else %}
-                    <p class="text-lg text-slate-500 max-w-2xl mb-8 font-light">
+                    <p class="text-lg text-slate-600 max-w-2xl mb-8 font-light leading-relaxed mx-auto">
                         {% if custom_desc %}
                             {{ custom_desc }}
                         {% else %}
@@ -70,10 +82,6 @@
                         {% endif %}
                     </p>
                 {% endif %}
-
-                <a href="/" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-martech-green transition">
-                    &larr; View all MarTech Jobs
-                </a>
             </div>
         </div>
 
