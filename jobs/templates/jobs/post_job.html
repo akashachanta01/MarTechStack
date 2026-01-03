@@ -47,9 +47,6 @@
                                                 <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                                             {% endfor %}
                                         {% endfor %}
-                                        {% for error in form.non_field_errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
                                     </ul>
                                 </div>
                             </div>
@@ -128,7 +125,7 @@
                             <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Application Link <span class="text-red-500">*</span></label>
                             {{ form.application_url }}
                             {% if form.application_url.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.application_url.errors.0 }}</p> {% endif %}
-                            <p class="text-xs text-slate-500 mt-2">The URL where candidates will apply (e.g. your ATS or website).</p>
+                            <p class="text-xs text-slate-500 mt-2">The URL where candidates will apply.</p>
                         </div>
 
                         <div class="pt-6 border-t border-slate-100">
@@ -194,6 +191,18 @@
                                     <span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500 shadow-sm">Tech Stack</span>
                                 </div>
                             </div>
+
+                            <div class="mb-6 px-1">
+                                <h4 class="font-serif font-bold text-lg text-slate-900 mb-3 border-b border-slate-200 pb-2">About the Role</h4>
+                                <div id="preview-description" class="text-sm text-slate-600 leading-relaxed font-sans whitespace-pre-wrap">
+                                    <div class="space-y-2 opacity-30">
+                                        <div class="h-2 bg-slate-300 rounded w-full"></div>
+                                        <div class="h-2 bg-slate-300 rounded w-5/6"></div>
+                                        <div class="h-2 bg-slate-300 rounded w-4/6"></div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -208,10 +217,100 @@
         // 1. Style Inputs
         const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="url"], select, textarea');
         inputs.forEach(input => {
-            // Check if input has error
+            // Check for error state
             const hasError = input.nextElementSibling && input.nextElementSibling.classList.contains('text-red-600');
             const borderClass = hasError ? 'border-red-500' : 'border-gray-200';
             const bgClass = hasError ? 'bg-red-50' : 'bg-white';
 
             input.classList.add(
-                'w-full', 'px-
+                'w-full', 'px-4', 'py-3', 'rounded-md', 
+                'border-2', borderClass, bgClass,
+                'text-slate-900', 'text-sm', 
+                'focus:border-black', 'focus:ring-0', 'outline-none',
+                'transition-colors', 'placeholder-slate-400'
+            );
+            if(input.tagName === 'TEXTAREA') input.rows = 5;
+        });
+
+        // 2. Live Preview Logic
+        const fields = {
+            title: document.getElementById('id_title'),
+            company: document.getElementById('id_company'),
+            logo: document.getElementById('id_company_logo'),
+            location: document.getElementById('id_location'),
+            salary: document.getElementById('id_salary_range'),
+            type: document.getElementById('id_role_type'),
+            tools: document.getElementById('id_new_tools'),
+            description: document.getElementById('id_description') // Added Description
+        };
+
+        const preview = {
+            title: document.getElementById('preview-title'),
+            company: document.getElementById('preview-company'),
+            logoBox: document.getElementById('preview-logo-box'),
+            logoImg: document.getElementById('preview-logo-img'),
+            logoText: document.getElementById('preview-logo-text'),
+            location: document.getElementById('preview-location'),
+            salary: document.getElementById('preview-salary'),
+            type: document.getElementById('preview-type'),
+            tags: document.getElementById('preview-tags'),
+            description: document.getElementById('preview-description') // Added Description Preview
+        };
+
+        function updatePreview() {
+            if(fields.title.value) preview.title.textContent = fields.title.value;
+            if(fields.company.value) preview.company.textContent = fields.company.value;
+            if(fields.location.value) preview.location.textContent = fields.location.value;
+            if(fields.salary.value) preview.salary.textContent = fields.salary.value;
+            
+            // Description Logic
+            if(fields.description.value.trim() !== "") {
+                // Simple text injection (preserves newlines via CSS whitespace-pre-wrap)
+                preview.description.textContent = fields.description.value;
+            } else {
+                // Skeleton Loader if empty
+                preview.description.innerHTML = `
+                    <div class="space-y-2 opacity-30">
+                        <div class="h-2 bg-slate-300 rounded w-full"></div>
+                        <div class="h-2 bg-slate-300 rounded w-5/6"></div>
+                        <div class="h-2 bg-slate-300 rounded w-4/6"></div>
+                    </div>`;
+            }
+
+            // Logo logic
+            if(fields.logo && fields.logo.value) {
+                preview.logoImg.src = fields.logo.value;
+                preview.logoImg.classList.remove('hidden');
+                preview.logoText.classList.add('hidden');
+            } else {
+                preview.logoImg.classList.add('hidden');
+                preview.logoText.classList.remove('hidden');
+                preview.logoText.textContent = fields.company.value ? fields.company.value.charAt(0) : "L";
+            }
+
+            // Role Type
+            if(fields.type) {
+                const typeText = fields.type.options ? fields.type.options[fields.type.selectedIndex].text : fields.type.value;
+                preview.type.textContent = typeText;
+            }
+
+            // Tags Logic
+            if(fields.tools) {
+                const tools = fields.tools.value.split(',').map(t => t.trim()).filter(t => t);
+                if(tools.length > 0) {
+                    preview.tags.innerHTML = tools.map(t => 
+                        `<span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-700 shadow-sm">${t}</span>`
+                    ).join('');
+                } else {
+                    preview.tags.innerHTML = `<span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500 shadow-sm">Tech Stack</span>`;
+                }
+            }
+        }
+
+        // Attach listeners safely
+        Object.values(fields).forEach(field => {
+            if(field) field.addEventListener('input', updatePreview);
+        });
+    });
+</script>
+{% endblock %}
