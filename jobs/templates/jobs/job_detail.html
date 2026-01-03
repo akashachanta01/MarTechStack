@@ -57,13 +57,25 @@
         "name": "{{ job.company|escapejs }}",
         "value": "{{ job.id }}"
       },
+      "url": "{{ request.build_absolute_uri }}",
+      "directApply": true,
       "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
-      "validThrough": "{{ job.created_at|date:'Y-m-d' }}",
       "hiringOrganization": {
         "@type": "Organization",
         "name": "{{ job.company|escapejs }}",
         "logo": "{{ job.company_logo|default:'https://martechjobs.io/static/logo.png' }}"
       },
+      {% if job.salary_range %}
+      "baseSalary": {
+        "@type": "MonetaryAmount",
+        "currency": "USD",
+        "value": {
+          "@type": "QuantitativeValue",
+          "value": "{{ job.salary_range|escapejs }}",
+          "unitText": "YEAR"
+        }
+      },
+      {% endif %}
       {% if "remote" in job.location|lower %}
       "jobLocationType": "TELECOMMUTE",
       "applicantLocationRequirements": {
@@ -75,7 +87,8 @@
         "@type": "Place",
         "address": {
           "@type": "PostalAddress",
-          "addressLocality": "{{ job.location|escapejs }}"
+          "addressLocality": "{{ job.location|escapejs }}",
+          "addressCountry": "US"
         }
       },
       {% endif %}
