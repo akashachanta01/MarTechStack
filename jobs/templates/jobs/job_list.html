@@ -5,37 +5,37 @@
 <div class="relative bg-white border-b border-slate-100 overflow-hidden">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500 mb-8">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
             The #1 Job Board for MarTech Pros
         </div>
         
-        <h1 class="text-5xl md:text-7xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-6">
+        <h1 class="text-4xl md:text-6xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-5">
             Find your place in <br class="hidden md:block" />
             <span class="text-martech-green">Marketing Technology</span>
         </h1>
         
-        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-12 font-light">
+        <p class="text-base md:text-lg text-slate-500 max-w-2xl mx-auto mb-10 font-light">
             The specialized marketplace for Marketing Ops, CRM, Analytics, and Growth professionals. Curated roles with visible salary data.
         </p>
 
-        <div class="max-w-5xl mx-auto bg-white p-2 rounded-2xl shadow-xl border border-slate-200 relative z-20">
+        <div class="max-w-5xl mx-auto bg-white p-1.5 rounded-xl shadow-xl border border-slate-200 relative z-20">
             <form method="get" class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
                 
-                <div class="flex-grow flex items-center px-4 py-3 md:py-4">
-                    <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" name="q" value="{{ query }}" placeholder="Job title, keywords, or company" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-base p-0">
+                <div class="flex-grow flex items-center px-4 py-3">
+                    <svg class="w-4 h-4 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" name="q" value="{{ query }}" placeholder="Job title, keywords, or company" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-sm p-0">
                 </div>
 
-                <div class="flex-grow flex items-center px-4 py-3 md:py-4">
-                    <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <input type="text" name="l" value="{{ location_filter }}" placeholder="City, state, or remote" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-base p-0">
+                <div class="flex-grow flex items-center px-4 py-3">
+                    <svg class="w-4 h-4 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <input type="text" name="l" value="{{ location_filter }}" placeholder="City, state, or remote" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-sm p-0">
                 </div>
 
-                <div class="flex-grow flex items-center px-4 py-3 md:py-4">
-                    <svg class="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg>
-                    <select name="country" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 text-base p-0 cursor-pointer appearance-none">
+                <div class="flex-grow flex items-center px-4 py-3">
+                    <svg class="w-4 h-4 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg>
+                    <select name="country" class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 text-sm p-0 cursor-pointer appearance-none">
                         <option value="">Select Country</option>
                         {% for c in available_countries %}
                         <option value="{{ c }}" {% if c == selected_country %}selected{% endif %}>{{ c }}</option>
@@ -43,18 +43,18 @@
                     </select>
                 </div>
 
-                <div class="p-2">
-                    <button type="submit" class="w-full md:w-auto bg-martech-green hover:bg-green-900 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg whitespace-nowrap">
+                <div class="p-1.5">
+                    <button type="submit" class="w-full md:w-auto bg-martech-green hover:bg-green-900 text-white font-bold py-2.5 px-6 rounded-lg transition shadow-lg whitespace-nowrap text-sm">
                         Search Jobs
                     </button>
                 </div>
             </form>
         </div>
 
-        <div class="mt-8 flex flex-wrap justify-center gap-2 text-sm text-slate-500 items-center">
+        <div class="mt-6 flex flex-wrap justify-center gap-2 text-xs text-slate-500 items-center">
             <span class="font-bold text-slate-900 mr-2">Trending:</span>
             {% for stack in popular_tech_stacks|slice:":5" %}
-                <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition uppercase">{{ stack.name }}</a>
+                <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded hover:border-slate-400 transition uppercase">{{ stack.name }}</a>
             {% empty %}
                 <span class="text-xs text-slate-400">(No trending data yet)</span>
             {% endfor %}
@@ -62,112 +62,176 @@
     </div>
 </div>
 
-<div class="bg-white py-20 border-b border-slate-100">
+<div class="bg-white py-16 border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-end mb-10">
+        <div class="flex justify-between items-end mb-8">
             <div>
-                <h2 class="text-4xl font-serif font-bold text-slate-900 tracking-tight">Explore by Tech Stack</h2>
-                <p class="text-slate-500 mt-2 text-lg">Discover roles tailored to your expertise.</p>
+                <h2 class="text-3xl font-serif font-bold text-slate-900 tracking-tight">Explore by Tech Stack</h2>
+                <p class="text-slate-500 mt-2 text-base">Discover roles tailored to your expertise.</p>
             </div>
-            <a href="#" class="hidden md:inline-flex items-center font-bold text-sm hover:underline group">
+            <a href="#" class="hidden md:inline-flex items-center font-bold text-xs hover:underline group text-slate-600">
                 View all tech stacks <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
             </a>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             {% for stack in popular_tech_stacks|slice:":8" %}
-            <a href="{% url 'tool_detail' stack.slug %}" class="flex items-center justify-between p-5 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition bg-white group h-20">
-                <div class="flex items-center gap-3">
+            <a href="{% url 'tool_detail' stack.slug %}" class="flex items-center justify-between p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition bg-white group h-16">
+                <div class="flex items-center gap-2.5">
                     <div class="text-slate-700">
                         {% if "HubSpot" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>
                         {% elif "Salesforce" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 19c0-1.7-1.3-3-2.8-3-.5 0-1 .1-1.4.4-.4-2.5-2.6-4.4-5.2-4.4-2 0-3.8 1.1-4.7 2.8-.3-.1-.6-.2-.9-.2-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4h15c1.5 0 2.8-1.3 2.8-2.8 0-.3 0-.5-.1-.8z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 19c0-1.7-1.3-3-2.8-3-.5 0-1 .1-1.4.4-.4-2.5-2.6-4.4-5.2-4.4-2 0-3.8 1.1-4.7 2.8-.3-.1-.6-.2-.9-.2-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4h15c1.5 0 2.8-1.3 2.8-2.8 0-.3 0-.5-.1-.8z"/></svg>
                         {% elif "SQL" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7c0 .9 3.5 2 8 2s8-1.1 8-2M4 7c0 .9 3.5 2 8 2s8-1.1 8-2M4 7V5c0-.9 3.5-2 8-2s8 1.1 8 2v2m0 5c0 .9 3.5 2 8 2s8-1.1 8-2m0 0V7m0 5v2c0 .9-3.5 2-8 2s-8-1.1-8-2v-2m0 5c0 .9 3.5 2 8 2s8-1.1 8-2m0 0v-2"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7c0 .9 3.5 2 8 2s8-1.1 8-2M4 7c0 .9 3.5 2 8 2s8-1.1 8-2M4 7V5c0-.9 3.5-2 8-2s8 1.1 8 2v2m0 5c0 .9 3.5 2 8 2s8-1.1 8-2m0 0V7m0 5v2c0 .9-3.5 2-8 2s-8-1.1-8-2v-2m0 5c0 .9 3.5 2 8 2s8-1.1 8-2m0 0v-2"/></svg>
                         {% elif "Google" in stack.name or "Analytics" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         {% elif "Tableau" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>
                         {% elif "Looker" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         {% elif "Marketo" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                         {% elif "Pardot" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12l20-9-9 20-2-8-9-3z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12l20-9-9 20-2-8-9-3z"/></svg>
                         {% elif "Zapier" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                         {% elif "Adobe" in stack.name %}
-                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/></svg>
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/></svg>
                         {% else %}
-                            <div class="w-6 h-6 rounded bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                            <div class="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-bold">
                                 {{ stack.name|slice:":1" }}
                             </div>
                         {% endif %}
                     </div>
-                    <span class="font-bold text-slate-900 text-sm">{{ stack.name }}</span>
+                    <span class="font-semibold text-slate-900 text-sm">{{ stack.name }}</span>
                 </div>
-                <span class="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-100">{{ stack.count }} Jobs</span>
+                <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-100">{{ stack.count }} Jobs</span>
             </a>
             {% endfor %}
         </div>
     </div>
 </div>
 
-<div class="bg-slate-50 py-20">
+<div class="bg-slate-50 py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-serif font-bold text-slate-900">Top MarTech Jobs</h2>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-serif font-bold text-slate-900">Top MarTech Jobs</h2>
             
-            <div class="flex bg-white rounded-lg border border-slate-200 p-1 text-xs font-bold shadow-sm">
-                <a href="{% url 'job_list' %}" class="px-4 py-2 rounded transition {% if not current_arrangement and not current_rtype %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
+            <div class="flex bg-white rounded-lg border border-slate-200 p-1 text-[11px] font-bold shadow-sm">
+                <a href="{% url 'job_list' %}" class="px-3 py-1.5 rounded transition {% if not current_arrangement and not current_rtype %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
                     All Jobs
                 </a>
-                <a href="?arrangement=remote" class="px-4 py-2 rounded transition {% if current_arrangement == 'remote' %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
+                <a href="?arrangement=remote" class="px-3 py-1.5 rounded transition {% if current_arrangement == 'remote' %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
                     Remote
                 </a>
-                <a href="?rtype=contract" class="px-4 py-2 rounded transition {% if current_rtype == 'contract' %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
+                <a href="?rtype=contract" class="px-3 py-1.5 rounded transition {% if current_rtype == 'contract' %}bg-black text-white{% else %}text-slate-500 hover:text-black{% endif %}">
                     Contract
                 </a>
             </div>
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-4">
             {% for job in jobs %}
-            <div class="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-all duration-200 group relative">
+            <div class="bg-white border border-slate-200 rounded-lg p-5 hover:shadow-md transition-all duration-200 group relative">
                 
-                <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex flex-col md:flex-row gap-5">
                     
-                    <div class="flex-grow flex gap-6">
+                    <div class="flex-grow flex gap-5">
                         <div class="flex-shrink-0">
                             {% if job.company_logo %}
-                                <div class="w-16 h-16 border border-slate-100 rounded-lg p-2 flex items-center justify-center bg-white shadow-sm">
+                                <div class="w-14 h-14 border border-slate-100 rounded-lg p-1.5 flex items-center justify-center bg-white shadow-sm">
                                     <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
                                 </div>
                             {% else %}
-                                <div class="w-16 h-16 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl font-serif font-bold text-slate-400">
+                                <div class="w-14 h-14 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-xl font-serif font-bold text-slate-400">
                                     {{ job.company|slice:":1" }}
                                 </div>
                             {% endif %}
                         </div>
 
                         <div class="flex flex-col justify-center">
-                            <h3 class="text-2xl font-serif font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
+                            <h3 class="text-xl font-serif font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
                                 <a href="{% url 'job_detail' job.id job.slug %}" class="hover:underline decoration-2 decoration-slate-300 underline-offset-4">
                                     {{ job.title }}
                                 </a>
                                 {% if job.is_featured %}
-                                    <span class="bg-green-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
+                                    <span class="bg-green-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">New</span>
                                 {% endif %}
                             </h3>
-                            <p class="text-slate-600 font-medium mb-4">{{ job.company }}</p>
+                            <p class="text-sm text-slate-600 font-medium mb-3">{{ job.company }}</p>
                             
-                            <div class="flex flex-wrap gap-3">
-                                <div class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    <svg class="w-3 h-3 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                            <div class="flex flex-wrap gap-2">
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                                    <svg class="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
                                     {{ job.location|default:"Remote" }}
                                 </div>
 
                                 {% if job.salary_range %}
-                                <div class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                    <svg class="w-3 h-3 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                                    <svg class="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                                    {{ job.salary_range }}
+                                </div>
+                                {% endif %}
+
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 uppercase tracking-wide">
+                                    <svg class="w-3 h-3 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
+                                    {{ job.get_role_type_display|upper }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col justify-between items-end min-w-[130px]">
+                        <div class="flex gap-1.5 mb-3 md:mb-0">
+                            {% for tool in job.tools.all|slice:":2" %}
+                            <span class="{{ tool.color_class }} px-2 py-0.5 rounded text-[10px] font-bold border opacity-90 shadow-sm">
+                                {{ tool.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+
+                        <a href="{% url 'job_detail' job.id job.slug %}" class="bg-[#1f432d] hover:bg-green-900 text-white font-bold py-2 px-5 rounded shadow-sm text-xs transition-colors whitespace-nowrap">
+                            Apply Now
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-20 bg-white border border-dashed border-slate-300 rounded-xl">
+                <div class="mx-auto w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-3 text-2xl">🤷‍♂️</div>
+                <h3 class="text-base font-bold text-slate-900 font-serif">No jobs found.</h3>
+                <p class="text-slate-500 mt-1 mb-4 text-sm">Try adjusting your filters or check back later.</p>
+                <a href="{% url 'job_list' %}" class="text-martech-green font-bold hover:underline text-sm">Clear all filters</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if jobs.paginator.num_pages > 1 %}
+        <div class="mt-12 flex justify-center">
+            <div class="inline-flex rounded-md shadow-sm">
+                {% if jobs.has_previous %}
+                    <a href="?page={{ jobs.previous_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 font-medium text-sm text-gray-700">Previous</a>
+                {% endif %}
+                
+                <span class="py-2 px-4 bg-gray-50 border-t border-b border-gray-300 font-medium text-sm text-gray-700">
+                    Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+                </span>
+
+                {% if jobs.has_next %}
+                    <a href="?page={{ jobs.next_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 font-medium text-sm text-gray-700">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-12 text-center">
+            <a href="#" class="inline-flex items-center justify-center bg-black text-white font-bold py-3 px-6 rounded-xl hover:bg-slate-800 transition text-sm">
+                View all open roles &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
