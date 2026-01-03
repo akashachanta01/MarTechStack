@@ -26,11 +26,6 @@
     <meta property="og:description" content="{% block og_description %}Discover curated Marketing Technology jobs. Filter by Stack (Marketo, HubSpot, Salesforce) and join the community.{% endblock %}">
     <meta property="og:image" content="{% block og_image %}https://martechjobs.io/static/og-image.png{% endblock %}">
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}MarTechJobs — Marketing Ops Jobs{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}Find the best Marketing Operations, MarTech, and Marketing Analytics jobs.{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io/static/og-image.png{% endblock %}">
-
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -104,79 +99,108 @@
         {% endblock %}
     </main>
 
-    <div class="bg-[#111] py-14 border-t border-black">
+    <div class="bg-white py-16 border-t border-slate-100">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
-                <div class="max-w-lg">
-                    <h2 class="text-2xl md:text-3xl font-serif font-bold text-white flex items-center gap-3 mb-2">
-                        <svg class="w-6 h-6 text-[#2d5c3f]" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
-                        Advance your career in MarTech
-                    </h2>
-                    <p class="text-slate-400 text-sm">Join 15,000+ professionals receiving curated jobs every Tuesday.</p>
-                </div>
-                
-                <div class="w-full md:w-auto">
-                    <form id="footer-subscribe-form" onsubmit="submitFooterSubscription(event)" class="flex flex-col sm:flex-row">
-                        {% csrf_token %}
-                        <input type="email" name="email" required placeholder="Enter your email" class="w-full sm:w-80 px-4 py-3 bg-white text-slate-900 border-none outline-none placeholder-slate-500 rounded-none sm:rounded-l-sm h-12">
-                        <button type="submit" id="footer-sub-btn" class="bg-[#2d5c3f] hover:bg-[#234a32] text-white px-6 py-3 font-bold text-xs tracking-widest uppercase h-12 rounded-none sm:rounded-r-sm transition">
-                            Subscribe
-                        </button>
-                    </form>
-                    <p class="text-slate-600 text-[10px] mt-2 font-mono">No spam, ever. Unsubscribe at any time.</p>
-                </div>
+            <h3 class="font-serif font-bold text-sm text-slate-900 uppercase tracking-widest mb-8">Popular Tech Stacks</h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 text-xs text-slate-500 mb-10">
+                {% for stack in popular_tech_stacks|slice:":16" %}
+                    <a href="{% url 'tool_detail' stack.slug %}" class="hover:text-[#1f432d] transition flex items-center justify-between group py-1">
+                        <span>{{ stack.name }} Jobs</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">{{ stack.count }}</span>
+                    </a>
+                {% empty %}
+                    <a href="/stack/hubspot/" class="hover:text-[#1f432d] transition">HubSpot Jobs</a>
+                    <a href="/stack/salesforce/" class="hover:text-[#1f432d] transition">Salesforce Jobs</a>
+                {% endfor %}
+            </div>
+            
+            <div class="text-[10px] text-slate-400 font-mono border-t border-slate-100 pt-6">
+                <span class="font-bold text-slate-500 mr-2">Trending Locations:</span>
+                {% for country in available_countries|slice:":10" %}
+                    <a href="/?country={{ country }}" class="hover:underline hover:text-slate-600 mr-3">{{ country }}</a>
+                {% endfor %}
             </div>
         </div>
     </div>
 
-    <footer class="bg-white pt-16 pb-12">
+    <div class="bg-[#0f172a] py-16 border-t border-black text-white">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20 border-b border-slate-100 pb-16">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-10">
                 
-                <div class="col-span-1 pr-4">
+                <div class="max-w-xl text-center lg:text-left">
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold text-white flex items-center justify-center lg:justify-start gap-3 mb-3">
+                        <svg class="w-8 h-8 text-[#4ade80]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Advance your career in MarTech
+                    </h2>
+                    <p class="text-slate-400 text-base font-light">
+                        Join 15,000+ professionals receiving curated jobs every Tuesday.
+                    </p>
+                </div>
+                
+                <div class="w-full max-w-md">
+                    <form id="footer-subscribe-form" onsubmit="submitFooterSubscription(event)" class="flex flex-col sm:flex-row shadow-lg">
+                        {% csrf_token %}
+                        <input type="email" name="email" required placeholder="Enter your email" class="w-full px-5 py-4 bg-white text-slate-900 border-none outline-none placeholder-slate-400 rounded-t-sm sm:rounded-l-sm sm:rounded-tr-none h-14 text-sm font-medium focus:ring-2 focus:ring-[#1f432d] z-10">
+                        <button type="submit" id="footer-sub-btn" class="bg-[#1f432d] hover:bg-[#2a5b3f] text-white px-8 py-4 font-bold text-xs tracking-widest uppercase h-14 rounded-b-sm sm:rounded-r-sm sm:rounded-bl-none transition whitespace-nowrap">
+                            Subscribe
+                        </button>
+                    </form>
+                    <p class="text-slate-500 text-[10px] mt-3 font-mono text-center sm:text-right">
+                        No spam, ever. Unsubscribe at any time.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white pt-20 pb-12 border-t border-slate-100">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 mb-20 border-b border-slate-100 pb-16">
+                
+                <div class="md:col-span-4 lg:col-span-5">
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="bg-slate-100 p-2 rounded">
-                            <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <div class="bg-slate-100 p-2 rounded-md border border-slate-200">
+                            <svg class="w-6 h-6 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         </div>
-                        <span class="font-serif font-bold text-xl text-slate-900">MarTech Jobs</span>
+                        <span class="font-serif font-bold text-2xl text-slate-900 tracking-tight">MarTech Jobs</span>
                     </div>
-                    <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                    <p class="text-slate-500 text-sm leading-relaxed mb-8 max-w-sm">
                         The leading community and job board for marketing technology professionals. We connect talent with the brands building the future.
                     </p>
-                    <div class="flex gap-4 text-slate-400">
-                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg></a>
-                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg></a>
-                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg></a>
+                    <div class="flex gap-5 text-slate-400">
+                        <a href="#" class="hover:text-[#1f432d] transition transform hover:scale-110"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg></a>
+                        <a href="#" class="hover:text-[#1f432d] transition transform hover:scale-110"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01"></path></svg></a>
+                        <a href="#" class="hover:text-[#1f432d] transition transform hover:scale-110"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2" stroke="none"></circle></svg></a>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Candidates</h3>
-                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="/" class="hover:text-slate-900 transition">Browse Jobs</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Company Directory</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Salary Guide</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Career Advice</a></li>
+                <div class="md:col-span-2 lg:col-span-2">
+                    <h3 class="font-serif font-bold text-base text-slate-900 mb-6 uppercase tracking-wider text-xs">Candidates</h3>
+                    <ul class="space-y-3 text-sm text-slate-500 font-medium">
+                        <li><a href="/" class="hover:text-[#1f432d] hover:underline transition">Browse Jobs</a></li>
+                        <li><a href="#" class="hover:text-[#1f432d] hover:underline transition">Companies</a></li>
+                        <li><a href="#" class="hover:text-[#1f432d] hover:underline transition">Salaries</a></li>
                     </ul>
                 </div>
 
-                <div>
-                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Employers</h3>
-                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Post a Job</a></li>
-                        <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Search Resumes</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Success Stories</a></li>
+                <div class="md:col-span-3 lg:col-span-2">
+                    <h3 class="font-serif font-bold text-base text-slate-900 mb-6 uppercase tracking-wider text-xs">Employers</h3>
+                    <ul class="space-y-3 text-sm text-slate-500 font-medium">
+                        <li><a href="{% url 'post_job' %}" class="hover:text-[#1f432d] hover:underline transition">Post a Job</a></li>
+                        <li><a href="{% url 'for_employers' %}" class="hover:text-[#1f432d] hover:underline transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-[#1f432d] hover:underline transition">Success Stories</a></li>
                     </ul>
                 </div>
 
-                <div>
-                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Support</h3>
-                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="#" class="hover:text-slate-900 transition">Help Center</a></li>
-                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
+                <div class="md:col-span-3 lg:col-span-3">
+                    <h3 class="font-serif font-bold text-base text-slate-900 mb-6 uppercase tracking-wider text-xs">Support</h3>
+                    <ul class="space-y-3 text-sm text-slate-500 font-medium">
+                        <li><a href="#" class="hover:text-[#1f432d] hover:underline transition">Help Center</a></li>
+                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-[#1f432d] hover:underline transition">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-[#1f432d] hover:underline transition">Privacy Policy</a></li>
                     </ul>
                 </div>
 
@@ -184,7 +208,7 @@
             
             <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 font-mono">
                 <p>&copy; {% now "Y" %} MarTech Jobs Inc. All rights reserved.</p>
-                <div class="flex gap-8 mt-4 sm:mt-0">
+                <div class="flex gap-6 mt-4 sm:mt-0">
                     <a href="#" class="hover:text-slate-600 transition">Privacy</a>
                     <a href="#" class="hover:text-slate-600 transition">Terms</a>
                     <a href="#" class="hover:text-slate-600 transition">Sitemap</a>
