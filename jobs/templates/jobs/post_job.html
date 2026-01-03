@@ -1,400 +1,213 @@
 {% extends "jobs/base.html" %}
-{% block title %}Post a Job — Hire Top MarTech Talent{% endblock %}
+{% load static %}
+
+{% block title %}Post a Job — MarTechJobs{% endblock %}
 
 {% block content %}
-<div class="relative bg-white border-b border-slate-100 overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
-    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">
-            Post a Job
-        </h1>
-        <p class="text-lg text-slate-500 max-w-2xl mx-auto">
-            Reach a curated audience of Marketing Operations professionals, Engineers, and Architects.
-        </p>
-    </div>
-</div>
-
-<div class="bg-slate-50 min-h-screen pb-24 font-sans">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-        
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            
-            <div class="lg:col-span-7">
-                
-                <div class="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div id="plan-card-free" class="bg-white border-2 border-slate-900 rounded-xl p-6 cursor-pointer transition relative group" data-plan="free">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="text-xl font-serif font-bold text-slate-900">Standard</h3>
-                                <p class="text-slate-500 text-sm">For growing teams</p>
-                            </div>
-                            <div class="w-6 h-6 rounded-full border-2 border-slate-900 flex items-center justify-center">
-                                <div class="w-3 h-3 bg-slate-900 rounded-full" id="free-radio-dot"></div>
-                            </div>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-900 mb-4">$0</div>
-                        <ul class="text-sm text-slate-600 space-y-2">
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Live for 30 Days</li>
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Included in Newsletter</li>
-                        </ul>
-                    </div>
-
-                    <div id="plan-card-featured" class="bg-white border border-slate-200 rounded-xl p-6 cursor-pointer hover:border-amber-400 transition relative group" data-plan="featured">
-                        <div class="absolute -top-3 -right-3 bg-amber-400 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide shadow-sm">Recommended</div>
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="text-xl font-serif font-bold text-slate-900">Featured</h3>
-                                <p class="text-slate-500 text-sm">Maximum visibility</p>
-                            </div>
-                            <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-amber-400">
-                                <div class="hidden w-3 h-3 bg-amber-400 rounded-full" id="featured-radio-dot"></div>
-                            </div>
-                        </div>
-                        <div class="text-3xl font-bold text-slate-900 mb-4">$99</div>
-                        <ul class="text-sm text-slate-600 space-y-2">
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <strong>Pinned to Top</strong></li>
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Yellow Highlight</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div id="job-form-anchor" class="scroll-mt-32"></div>
-
-                <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
-                    {% csrf_token %}
-                    {{ form.plan }}
-                    
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="p-8 space-y-8">
-                            
-                            {% if form.errors %}
-                            <div id="form-errors" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                <strong class="block mb-1">Please fix the errors below:</strong>
-                                <ul class="list-disc pl-5">
-                                    {% for field, errors in form.errors.items %}
-                                        <li><strong>{{ field|title }}:</strong> {{ errors.0 }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-
-                            <div>
-                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">1. Job Details</h3>
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">Job Title</label>
-                                        {{ form.title }}
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Company Name</label>
-                                            {{ form.company }}
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">
-                                                Logo URL <span class="font-normal text-slate-400 ml-1">(Optional)</span>
-                                            </label>
-                                            {{ form.company_logo }}
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Location</label>
-                                            {{ form.location }}
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Salary Range</label>
-                                            {{ form.salary_range }}
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Job Type</label>
-                                            {{ form.role_type }}
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Work Arrangement</label>
-                                            <div class="flex gap-3">
-                                                {% for choice in form.work_arrangement %}
-                                                    <label class="cursor-pointer">
-                                                        <span class="sr-only">{{ choice.choice_label }}</span>
-                                                        <div class="work-radio-option flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm font-medium text-slate-600 peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 peer-checked:font-bold bg-white">
-                                                            {{ choice.tag }}
-                                                            <span class="ml-2">{{ choice.choice_label }}</span>
-                                                        </div>
-                                                    </label>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">2. Tech Stack</h3>
-                                <div class="space-y-4">
-                                    <label class="block text-sm font-bold text-slate-700">Select Relevant Tools</label>
-                                    <div class="h-60 overflow-y-auto p-4 border border-slate-200 rounded-lg bg-slate-50 scrollbar-thin">
-                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {% for checkbox in form.tools %}
-                                            <label class="cursor-pointer group relative">
-                                                {{ checkbox.tag }} 
-                                                <div class="px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-md text-center transition-all shadow-sm group-hover:border-slate-400 peer-checked:bg-martech-green peer-checked:text-white peer-checked:border-martech-green">
-                                                    {{ checkbox.choice_label }}
-                                                </div>
-                                            </label>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">Custom Tool <span class="font-normal text-slate-400">(Optional)</span></label>
-                                        {{ form.new_tools }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">3. Description</h3>
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">Application URL</label>
-                                        {{ form.apply_url }}
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">Job Description</label>
-                                        <div class="relative">
-                                            {{ form.description }}
-                                            <div class="absolute bottom-3 right-3 text-xs text-slate-400 pointer-events-none font-medium">Markdown Supported</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-4">
-                                <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-md hover:shadow-lg transition-all text-lg flex items-center justify-center gap-2">
-                                    Post Job Now
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <div class="hidden lg:block lg:col-span-5 sticky top-24">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Preview</span>
-                    <div class="h-px bg-slate-200 flex-grow"></div>
-                </div>
-
-                <div id="preview-card" class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm relative transition-all duration-300">
-                    
-                    <div id="p-featured-ribbon" class="hidden absolute top-4 right-4 z-10">
-                        <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Featured</span>
-                    </div>
-
-                    <div class="flex flex-col gap-6 items-start">
-                        <div class="flex-shrink-0">
-                            <img id="p-logo-img" src="" class="hidden w-16 h-16 rounded-lg border border-slate-100 object-contain p-2">
-                            <div id="p-logo-placeholder" class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-xl font-serif font-bold text-slate-400">?</div>
-                        </div>
-
-                        <div class="w-full">
-                            <h3 class="text-xl font-serif font-bold text-slate-900 mb-1 leading-tight">
-                                <span id="p-title">Job Title</span>
-                            </h3>
-                            <p class="text-slate-900 font-medium mb-3" id="p-company">Company</p>
-                            
-                            <div class="flex flex-wrap gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                                <span class="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded" id="p-location-badge">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    <span id="p-location">Remote</span>
-                                </span>
-                                <span class="hidden flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded" id="p-salary-badge">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span id="p-salary"></span>
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="w-full flex justify-between items-end border-t border-slate-100 pt-4 mt-2">
-                            <div id="p-stack" class="flex gap-2">
-                                <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100">Tool</span>
-                            </div>
-                            <button class="bg-martech-green text-white font-bold py-2 px-6 rounded-lg text-sm shadow-sm opacity-80 cursor-default">
-                                Apply Now
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+<div class="bg-white min-h-screen pb-20">
+    
+    <div class="border-b border-slate-100 bg-slate-50/50">
+        <div class="max-w-3xl mx-auto px-6 py-12">
+            <nav class="flex items-center text-xs font-mono text-slate-500 mb-6 uppercase tracking-wider">
+                <a href="/" class="hover:text-black transition">Home</a>
+                <span class="mx-2">/</span>
+                <span class="text-slate-900 font-bold">Post a Job</span>
+            </nav>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Find your next MarTech expert</h1>
+            <p class="text-lg text-slate-500 font-light">Reach 15,000+ specialized professionals in Marketing Ops, Analytics, and Engineering.</p>
         </div>
     </div>
+
+    <div class="max-w-3xl mx-auto px-6 mt-12">
+        <form method="post" enctype="multipart/form-data" class="space-y-12">
+            {% csrf_token %}
+
+            <section>
+                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-6 flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-sans font-bold">1</span>
+                    Role Details
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2">Job Title</label>
+                        {{ form.title }}
+                        <p class="text-xs text-slate-500 mt-1">e.g. Senior Marketing Ops Manager</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Company Name</label>
+                            {{ form.company }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Company Logo</label>
+                            {{ form.company_logo }} </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Location</label>
+                            {{ form.location }}
+                            <p class="text-xs text-slate-500 mt-1">e.g. New York, NY or Remote</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Work Arrangement</label>
+                            {{ form.work_arrangement }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Role Type</label>
+                            {{ form.role_type }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2">Salary Range</label>
+                            {{ form.salary_range }}
+                            <p class="text-xs text-slate-500 mt-1">e.g. $120k - $150k</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2">Tech Stack (Tools)</label>
+                        {{ form.new_tools }}
+                        <p class="text-xs text-slate-500 mt-1">Comma separated. e.g. HubSpot, Salesforce, Marketo, SQL</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2">Application Link</label>
+                        {{ form.application_url }}
+                        <p class="text-xs text-slate-500 mt-1">Where should candidates apply?</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-900 mb-2">Job Description</label>
+                        <div class="prose max-w-none">
+                            {{ form.description }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="border-slate-200">
+
+            <section>
+                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-6 flex items-center gap-3">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-sans font-bold">2</span>
+                    Select a Plan
+                </h3>
+
+                <select name="plan" id="id_plan" class="hidden">
+                    <option value="free">Free</option>
+                    <option value="featured">Featured</option>
+                </select>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="plan-card-free" onclick="selectPlan('free')" class="cursor-pointer relative border-2 border-slate-200 rounded-xl p-6 hover:border-slate-400 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="font-serif font-bold text-xl text-slate-900">Standard</h4>
+                                <p class="text-slate-500 text-sm mt-1">Good for casual hiring.</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-hover:border-slate-500" id="radio-free">
+                                <div class="w-3 h-3 rounded-full bg-black hidden" id="dot-free"></div>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-900 mb-6">$0</p>
+                        <ul class="space-y-3 text-sm text-slate-600">
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Active for 30 days</li>
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Standard listing</li>
+                        </ul>
+                    </div>
+
+                    <div id="plan-card-featured" onclick="selectPlan('featured')" class="cursor-pointer relative border-2 border-[#1f432d] bg-green-50/30 rounded-xl p-6 transition-all shadow-sm">
+                        <div class="absolute -top-3 left-6 bg-[#1f432d] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                            Recommended
+                        </div>
+                        <div class="flex justify-between items-start mb-4 mt-2">
+                            <div>
+                                <h4 class="font-serif font-bold text-xl text-slate-900">Featured</h4>
+                                <p class="text-slate-500 text-sm mt-1">Hire faster & reach more people.</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-[#1f432d] flex items-center justify-center" id="radio-featured">
+                                <div class="w-3 h-3 rounded-full bg-[#1f432d]" id="dot-featured"></div>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-900 mb-6">$99</p>
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <strong>Pinned to top</strong> for 7 days</li>
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Highlighted with badge</li>
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Included in weekly newsletter</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pt-6">
+                <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold text-lg py-4 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Post Job Now
+                </button>
+                <p class="text-center text-xs text-slate-400 mt-4">
+                    By posting, you agree to our Terms of Service and Privacy Policy.
+                </p>
+            </div>
+        </form>
+    </div>
 </div>
 
-<style>
-    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-    
-    /* Global Input Styling for Consistency */
-    input[type="text"], input[type="url"], select, textarea {
-        width: 100%;
-        border-radius: 0.5rem; 
-        border: 1px solid #cbd5e1;
-        padding: 0.75rem 1rem;
-        transition: all 0.2s ease;
-    }
-    input[type="text"]:focus, input[type="url"]:focus, select:focus, textarea:focus {
-        border-color: #000;
-        box-shadow: 0 0 0 1px #000;
-        outline: none;
-    }
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const planInput = document.querySelector('input[name="plan"]');
-    const submitBtn = document.getElementById('submit-btn');
-    
-    const freeCard = document.getElementById('plan-card-free');
-    const freeDot = document.getElementById('free-radio-dot');
-    
-    const featuredCard = document.getElementById('plan-card-featured');
-    const featuredDot = document.getElementById('featured-radio-dot');
-    
-    // Preview Elements
-    const previewCard = document.getElementById('preview-card');
-    const featuredRibbon = document.getElementById('p-featured-ribbon');
+    // 1. Plan Selection Logic
+    function selectPlan(plan) {
+        // Set hidden select value
+        const select = document.getElementById('id_plan');
+        select.value = plan;
 
-    // 1. FEATURED LOGIC
-    if (featuredCard) {
-        featuredCard.addEventListener('click', () => {
-            planInput.value = 'featured';
+        // Visual Updates
+        const freeCard = document.getElementById('plan-card-free');
+        const featCard = document.getElementById('plan-card-featured');
+        const dotFree = document.getElementById('dot-free');
+        const dotFeat = document.getElementById('dot-featured');
+
+        if(plan === 'free') {
+            freeCard.classList.add('border-black', 'bg-slate-50');
+            freeCard.classList.remove('border-slate-200');
+            featCard.classList.remove('border-[#1f432d]', 'bg-green-50/30');
+            featCard.classList.add('border-slate-200');
             
-            // Visual Updates
-            submitBtn.innerText = "Proceed to Payment ($99)";
-            
-            featuredCard.classList.replace('border-slate-200', 'border-amber-400');
-            featuredCard.classList.add('bg-amber-50');
-            featuredDot.classList.remove('hidden');
-            
-            freeCard.classList.replace('border-slate-900', 'border-slate-200');
-            freeDot.classList.remove('bg-slate-900');
-            freeDot.classList.add('hidden');
-            
-            // Preview Updates
-            featuredRibbon.classList.remove('hidden');
-        });
-    }
+            dotFree.classList.remove('hidden');
+            dotFeat.classList.add('hidden');
+        } else {
+            featCard.classList.add('border-[#1f432d]', 'bg-green-50/30');
+            featCard.classList.remove('border-slate-200');
+            freeCard.classList.remove('border-black', 'bg-slate-50');
+            freeCard.classList.add('border-slate-200');
 
-    // 2. FREE LOGIC
-    if (freeCard) {
-        freeCard.addEventListener('click', () => {
-            planInput.value = 'free';
-            
-            // Visual Updates
-            submitBtn.innerText = "Post Job Now";
-
-            freeCard.classList.replace('border-slate-200', 'border-slate-900');
-            freeDot.classList.remove('hidden');
-            freeDot.classList.add('bg-slate-900');
-            
-            featuredCard.classList.replace('border-amber-400', 'border-slate-200');
-            featuredCard.classList.remove('bg-amber-50');
-            featuredDot.classList.add('hidden');
-
-            // Preview Updates
-            featuredRibbon.classList.add('hidden');
-        });
-    }
-
-    // 3. LIVE PREVIEW SYNC
-    const inputs = {
-        title: document.getElementById('{{ form.title.id_for_label }}'),
-        company: document.getElementById('{{ form.company.id_for_label }}'),
-        location: document.getElementById('{{ form.location.id_for_label }}'),
-        salary: document.getElementById('{{ form.salary_range.id_for_label }}'),
-        logo: document.getElementById('{{ form.company_logo.id_for_label }}'),
-        newTools: document.getElementById('{{ form.new_tools.id_for_label }}')
-    };
-
-    const previews = {
-        title: document.getElementById('p-title'),
-        company: document.getElementById('p-company'),
-        location: document.getElementById('p-location'),
-        salary: document.getElementById('p-salary'),
-        salaryBadge: document.getElementById('p-salary-badge'),
-        logoImg: document.getElementById('p-logo-img'),
-        logoPlace: document.getElementById('p-logo-placeholder'),
-        stack: document.getElementById('p-stack')
-    };
-
-    const sync = (input, el, def) => { if(input) input.addEventListener('input', () => el.innerText = input.value || def); };
-    
-    sync(inputs.title, previews.title, "Job Title");
-    sync(inputs.company, previews.company, "Company");
-    sync(inputs.location, previews.location, "Remote");
-
-    if(inputs.salary) {
-        const updateSalary = () => {
-            if(inputs.salary.value) {
-                previews.salary.innerText = inputs.salary.value;
-                previews.salaryBadge.classList.remove('hidden');
-            } else {
-                previews.salaryBadge.classList.add('hidden');
-            }
-        };
-        inputs.salary.addEventListener('input', updateSalary);
-    }
-
-    if(inputs.logo) {
-        const updateLogo = () => {
-            if(inputs.logo.value) {
-                previews.logoImg.src = inputs.logo.value;
-                previews.logoImg.classList.remove('hidden');
-                previews.logoPlace.classList.add('hidden');
-            } else {
-                previews.logoImg.classList.add('hidden');
-                previews.logoPlace.classList.remove('hidden');
-            }
-        };
-        inputs.logo.addEventListener('input', updateLogo);
-    }
-
-    const toolCheckboxes = document.querySelectorAll('input[name="tools"]');
-    const updateStack = () => {
-        previews.stack.innerHTML = ''; 
-        let count = 0;
-        
-        toolCheckboxes.forEach(cb => {
-            if(cb.checked && count < 3) {
-                const span = document.createElement('span');
-                span.className = "bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100";
-                span.innerText = cb.parentElement.innerText.trim();
-                previews.stack.appendChild(span);
-                count++;
-            }
-        });
-        if (inputs.newTools && inputs.newTools.value) {
-            const customs = inputs.newTools.value.split(',');
-            customs.forEach(t => {
-                if(t.trim() && count < 3) {
-                    const span = document.createElement('span');
-                    span.className = "bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100";
-                    span.innerText = t.trim();
-                    previews.stack.appendChild(span);
-                    count++;
-                }
-            });
+            dotFeat.classList.remove('hidden');
+            dotFree.classList.add('hidden');
         }
-    };
-    toolCheckboxes.forEach(cb => cb.addEventListener('change', updateStack));
-    if(inputs.newTools) inputs.newTools.addEventListener('input', updateStack);
-});
+    }
+
+    // Initialize Featured as default (better for conversion)
+    document.addEventListener('DOMContentLoaded', function() {
+        selectPlan('featured'); 
+
+        // 2. Auto-Style Django Form Fields
+        // This script finds all standard inputs and adds Tailwind classes to them
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="url"], select, textarea');
+        inputs.forEach(input => {
+            input.classList.add(
+                'w-full', 'px-4', 'py-3', 'rounded-lg', 
+                'border-2', 'border-gray-200', 
+                'focus:border-black', 'focus:ring-0', 
+                'transition-colors', 'bg-white',
+                'placeholder-slate-400', 'text-slate-900', 'text-sm'
+            );
+            
+            if(input.tagName === 'TEXTAREA') {
+                input.rows = 6; // Make textareas taller
+            }
+        });
+    });
 </script>
 {% endblock %}
