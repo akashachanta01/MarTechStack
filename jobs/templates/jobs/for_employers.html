@@ -1,60 +1,111 @@
 {% extends "jobs/base.html" %}
-{% block title %}For Employers — Hire Top MarTech Talent on MarTechJobs{% endblock %}
+{% load static %}
+
+{% block title %}For Employers — Hire MarTech Talent{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 min-h-screen">
-    
-    <div class="bg-indigo-900 text-white py-20 px-6">
-        <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-extrabold mb-6">
-                Stop Sifting Through Unqualified Resumes.
-            </h1>
-            <p class="text-xl text-indigo-200 max-w-2xl mx-auto mb-10">
-                Reach a curated audience of Marketing Operations professionals, MarTech Engineers, and Platform Architects.
-            </p>
-            <a href="{% url 'post_job' %}" class="inline-block bg-white text-indigo-900 font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:bg-indigo-50 transition transform hover:-translate-y-1">
-                Post a Job — Free for a Limited Time
+<div class="relative bg-white border-b border-slate-200 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-8">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+            The Niche Job Board
+        </div>
+        
+        <h1 class="text-5xl md:text-7xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-6">
+            Hire the top 1% of <br class="hidden md:block" />
+            <span class="text-[#1f432d]">Marketing Technology</span> Talent
+        </h1>
+        
+        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-light">
+            Stop sorting through irrelevant resumes. Connect directly with specialized professionals in Marketing Ops, Analytics, CRM, and Growth Engineering.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'post_job' %}" class="inline-flex items-center justify-center bg-[#1f432d] hover:bg-green-900 text-white font-bold py-4 px-10 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5 text-sm">
+                Post a Job for Free
+            </a>
+            <a href="#features" class="inline-flex items-center justify-center bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-bold py-4 px-10 rounded-lg transition-all text-sm">
+                How it works
             </a>
         </div>
+        
+        <p class="mt-6 text-xs text-slate-400 font-mono">No credit card required. Setup in 2 minutes.</p>
     </div>
+</div>
 
-    <div class="max-w-6xl mx-auto px-6 py-16">
+<div class="bg-slate-50 border-b border-slate-200 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-slate-200">
+            <div>
+                <p class="text-3xl font-serif font-bold text-slate-900">15k+</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">MarTech Pros</p>
+            </div>
+            <div>
+                <p class="text-3xl font-serif font-bold text-slate-900">98%</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">Relevance Score</p>
+            </div>
+            <div>
+                <p class="text-3xl font-serif font-bold text-slate-900">48h</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">Avg. Time to Apply</p>
+            </div>
+            <div>
+                <p class="text-3xl font-serif font-bold text-slate-900">600+</p>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">Companies</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="features" class="bg-white py-24 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-serif font-bold text-slate-900 mb-4">Why post with us?</h2>
+            <p class="text-slate-500">General job boards bring noise. We bring experts.</p>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🎯</div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Niche Audience</h3>
-                <p class="text-slate-600">
-                    We don't have millions of visitors. We have the <i>right</i> visitors. People who know what an API is and how to configure a CDP.
+            <div class="p-8 border border-slate-200 rounded-xl hover:shadow-lg transition-all group bg-white">
+                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-6 group-hover:bg-[#1f432d] transition-colors">
+                    <svg class="w-6 h-6 text-[#1f432d] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <h3 class="text-xl font-serif font-bold text-slate-900 mb-3">Hyper-Targeted Audience</h3>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    Our audience consists strictly of professionals skilled in HubSpot, Salesforce, Marketo, SQL, Python, and Marketing Analytics.
                 </p>
             </div>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚡</div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Zero Noise</h3>
-                <p class="text-slate-600">
-                    Your job won't get buried under 5,000 "Social Media Manager" listings. It sits alongside other technical roles.
+
+            <div class="p-8 border border-slate-200 rounded-xl hover:shadow-lg transition-all group bg-white">
+                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-6 group-hover:bg-[#1f432d] transition-colors">
+                    <svg class="w-6 h-6 text-[#1f432d] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="text-xl font-serif font-bold text-slate-900 mb-3">Newsletter Feature</h3>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    New jobs are automatically included in our weekly newsletter sent to 15,000+ active job seekers every Tuesday.
                 </p>
             </div>
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔍</div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Google Indexing</h3>
-                <p class="text-slate-600">
-                    Every listing is optimized for Google Jobs schema, ensuring your role appears in search results instantly.
+
+            <div class="p-8 border border-slate-200 rounded-xl hover:shadow-lg transition-all group bg-white">
+                <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-6 group-hover:bg-[#1f432d] transition-colors">
+                    <svg class="w-6 h-6 text-[#1f432d] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-xl font-serif font-bold text-slate-900 mb-3">Google for Jobs Schema</h3>
+                <p class="text-slate-500 leading-relaxed text-sm">
+                    We automatically format your listing with structured data, ensuring it appears in Google Job Search results immediately.
                 </p>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="max-w-3xl mx-auto px-6 pb-20 text-center">
-        <div class="bg-white rounded-3xl p-10 shadow-xl border border-indigo-100">
-            <h2 class="text-3xl font-bold text-slate-900 mb-4">Ready to hire?</h2>
-            <p class="text-slate-600 mb-8">
-                Post your role today and get it in front of the MarTechJobs community.
-            </p>
-            <a href="{% url 'post_job' %}" class="block w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-black transition">
-                Start Hiring
-            </a>
-        </div>
+<div class="bg-black py-20">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl md:text-4xl font-serif font-bold text-white mb-6">Start hiring in minutes</h2>
+        <p class="text-slate-400 mb-10 text-lg">No account required to draft your post. Simple, fast, and effective.</p>
+        <a href="{% url 'post_job' %}" class="inline-flex items-center justify-center bg-[#1f432d] hover:bg-green-900 text-white font-bold py-4 px-12 rounded-lg shadow-xl transition-all transform hover:scale-105">
+            Post a Job Now &rarr;
+        </a>
     </div>
-
 </div>
 {% endblock %}
