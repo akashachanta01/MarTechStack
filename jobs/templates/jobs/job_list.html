@@ -6,7 +6,7 @@
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-black text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-6">
             <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
             The #1 Job Board for MarTech Pros
         </div>
@@ -54,7 +54,7 @@
         <div class="mt-6 flex flex-wrap justify-center gap-2 text-[10px] text-slate-500 items-center">
             <span class="font-bold text-slate-900 mr-2">Trending:</span>
             {% for stack in popular_tech_stacks|slice:":5" %}
-                <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-slate-200 px-2 py-1 rounded hover:border-slate-400 transition uppercase">{{ stack.name }}</a>
+                <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-black px-2 py-1 rounded hover:bg-slate-100 transition uppercase">{{ stack.name }}</a>
             {% empty %}
                 <span class="text-xs text-slate-400">(No trending data yet)</span>
             {% endfor %}
@@ -76,7 +76,7 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             {% for stack in popular_tech_stacks|slice:":8" %}
-            <a href="{% url 'tool_detail' stack.slug %}" class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:shadow-sm transition bg-white group h-14">
+            <a href="{% url 'tool_detail' stack.slug %}" class="flex items-center justify-between p-3 rounded-lg border border-black hover:shadow-sm transition bg-white group h-14">
                 <div class="flex items-center gap-2">
                     <div class="text-slate-700">
                         {% with name=stack.name|default:"" %}
@@ -136,7 +136,7 @@
 
         <div class="space-y-4">
             {% for job in jobs %}
-            <div class="bg-white border border-gray-300 rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
+            <div class="bg-white border border-black rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
                 
                 <div class="flex flex-col md:flex-row gap-4 items-start">
                     
