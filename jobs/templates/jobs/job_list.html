@@ -21,11 +21,21 @@
         </p>
 
         <div class="max-w-4xl mx-auto bg-white p-1.5 rounded-xl border-2 border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] relative z-20">
-            <form method="get" class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-200">
+            <form method="get" action="{% url 'job_list' %}#jobs-section" class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-200">
                 
-                <div class="flex-grow flex items-center px-4 py-3">
+                <div class="flex-grow flex items-center px-4 py-3 relative group">
                     <svg class="w-4 h-4 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Job title, keywords..." class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-sm p-0">
+                    <input type="text" id="searchInput" name="q" value="{{ query|default:'' }}" placeholder="Job title, keywords..." class="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-slate-900 placeholder-slate-400 text-sm p-0 pr-6">
+                    
+                    {% if query %}
+                        <a href="{% url 'job_list' %}#jobs-section" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-red-500" title="Clear Search">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </a>
+                    {% else %}
+                        <button type="button" onclick="document.getElementById('searchInput').value = '';" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden group-focus-within:block focus:block">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    {% endif %}
                 </div>
 
                 <div class="flex-grow flex items-center px-4 py-3">
@@ -116,7 +126,7 @@
     </div>
 </div>
 
-<div class="bg-slate-50 py-16">
+<div id="jobs-section" class="bg-slate-50 py-16">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-serif font-bold text-slate-900">Top MarTech Jobs</h2>
