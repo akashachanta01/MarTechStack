@@ -1,88 +1,76 @@
 {% extends "jobs/base.html" %}
-{% block title %}Post a Job — Reach the Best in MarTech{% endblock %}
+{% block title %}Post a Job — Hire Top MarTech Talent{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 min-h-screen pb-20 font-sans">
-    
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+<div class="relative bg-white border-b border-slate-100 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">
+            Post a Job
+        </h1>
+        <p class="text-lg text-slate-500 max-w-2xl mx-auto">
+            Reach a curated audience of Marketing Operations professionals, Engineers, and Architects.
+        </p>
+    </div>
+</div>
+
+<div class="bg-slate-50 min-h-screen pb-24 font-sans">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
         
-        <div class="mb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            <div id="plan-card-free" class="w-full bg-indigo-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden transition-all duration-300 cursor-pointer group hover:shadow-2xl hover:-translate-y-1" data-plan="free">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full opacity-50 blur-3xl pointer-events-none"></div>
+            <div class="lg:col-span-7">
                 
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Early Access</h2>
-                            <svg class="w-6 h-6 text-indigo-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                        </div>
-                        <p class="text-indigo-100 text-lg mb-6">Join us while we grow. No credit card required.</p>
-                        
-                        <div class="flex flex-wrap gap-4 md:gap-8">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                <span class="font-medium">Live for 30 Days</span>
+                <div class="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="plan-card-free" class="bg-white border-2 border-slate-900 rounded-xl p-6 cursor-pointer transition relative group" data-plan="free">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-serif font-bold text-slate-900">Standard</h3>
+                                <p class="text-slate-500 text-sm">For growing teams</p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                <span class="font-medium">Instant Google Indexing</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                <span class="font-medium">Included in Newsletter</span>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                                <div class="w-3 h-3 bg-slate-900 rounded-full" id="free-radio-dot"></div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="text-left md:text-right bg-indigo-700/30 p-4 rounded-2xl border border-indigo-500/30 backdrop-blur-sm group-hover:bg-indigo-700/50 transition">
-                        <span class="block text-5xl font-extrabold">$0</span>
-                        <span class="text-sm font-bold text-indigo-200 uppercase tracking-wide">Waived during Beta</span>
-                        <div class="mt-2 text-xs font-bold text-white bg-indigo-500 px-3 py-1 rounded-full text-center shadow-sm" id="free-selected-badge">Selected</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="plan-card-featured" class="hidden w-full bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-8 md:p-10 shadow-xl text-white relative overflow-hidden mt-6 cursor-pointer hover:scale-[1.01] transition-transform" data-plan="featured">
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Featured Boost</h2>
-                        <p class="text-amber-100 text-lg mb-6">3x more views & applicants.</p>
-                        <ul class="flex flex-wrap gap-4 md:gap-8">
-                            <li class="flex items-center gap-2 font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg> Pinned to Top</li>
-                            <li class="flex items-center gap-2 font-bold"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Yellow Highlight</li>
+                        <div class="text-3xl font-bold text-slate-900 mb-4">$0</div>
+                        <ul class="text-sm text-slate-600 space-y-2">
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Live for 30 Days</li>
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Included in Newsletter</li>
                         </ul>
                     </div>
-                    <div class="text-right">
-                        <span class="block text-5xl font-extrabold">$99</span>
-                        <button class="mt-2 bg-white text-orange-600 px-6 py-2 rounded-lg font-bold text-sm hover:bg-orange-50 transition shadow-sm">Select Plan</button>
+
+                    <div id="plan-card-featured" class="bg-white border border-slate-200 rounded-xl p-6 cursor-pointer hover:border-amber-400 transition relative group" data-plan="featured">
+                        <div class="absolute -top-3 -right-3 bg-amber-400 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide shadow-sm">Recommended</div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-serif font-bold text-slate-900">Featured</h3>
+                                <p class="text-slate-500 text-sm">Maximum visibility</p>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center group-hover:border-amber-400">
+                                <div class="hidden w-3 h-3 bg-amber-400 rounded-full" id="featured-radio-dot"></div>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-900 mb-4">$99</div>
+                        <ul class="text-sm text-slate-600 space-y-2">
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> <strong>Pinned to Top</strong></li>
+                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Yellow Highlight</li>
+                        </ul>
                     </div>
                 </div>
-            </div>
 
-        </div>
+                <div id="job-form-anchor" class="scroll-mt-32"></div>
 
-        <div id="job-form-anchor" class="scroll-mt-32"></div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <div class="lg:col-span-8">
                 <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
                     {% csrf_token %}
-                    
                     {{ form.plan }}
                     
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div class="p-8 space-y-8">
                             
-                            <div class="border-b border-slate-100 pb-4 mb-6">
-                                <h3 class="text-xl font-bold text-slate-900">1. Job Details</h3>
-                            </div>
-
                             {% if form.errors %}
-                            <div id="form-errors" class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm scroll-mt-32">
+                            <div id="form-errors" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                                 <strong class="block mb-1">Please fix the errors below:</strong>
-                                <ul class="list-disc pl-5 mt-1">
+                                <ul class="list-disc pl-5">
                                     {% for field, errors in form.errors.items %}
                                         <li><strong>{{ field|title }}:</strong> {{ errors.0 }}</li>
                                     {% endfor %}
@@ -91,102 +79,104 @@
                             {% endif %}
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Job Title</label>
-                                {{ form.title }}
+                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">1. Job Details</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Job Title</label>
+                                        {{ form.title }}
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">Company Name</label>
+                                            {{ form.company }}
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                                Logo URL <span class="font-normal text-slate-400 ml-1">(Optional)</span>
+                                            </label>
+                                            {{ form.company_logo }}
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">Location</label>
+                                            {{ form.location }}
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">Salary Range</label>
+                                            {{ form.salary_range }}
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">Job Type</label>
+                                            {{ form.role_type }}
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">Work Arrangement</label>
+                                            <div class="flex gap-3">
+                                                {% for choice in form.work_arrangement %}
+                                                    <label class="cursor-pointer">
+                                                        <span class="sr-only">{{ choice.choice_label }}</span>
+                                                        <div class="work-radio-option flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm font-medium text-slate-600 peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 peer-checked:font-bold bg-white">
+                                                            {{ choice.tag }}
+                                                            <span class="ml-2">{{ choice.choice_label }}</span>
+                                                        </div>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Company Name</label>
-                                    {{ form.company }}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                                        Logo URL <span class="font-normal text-slate-400 ml-1">(Optional)</span>
-                                    </label>
-                                    {{ form.company_logo }}
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Location</label>
-                                    {{ form.location }}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Salary Range</label>
-                                    {{ form.salary_range }}
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Job Type</label>
-                                    {{ form.role_type }}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Work Arrangement</label>
-                                    <div class="flex gap-3">
-                                        {% for choice in form.work_arrangement %}
-                                            <label class="cursor-pointer">
-                                                <span class="sr-only">{{ choice.choice_label }}</span>
-                                                <div class="work-radio-option flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm font-medium text-slate-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 peer-checked:border-indigo-500 peer-checked:font-bold bg-white">
-                                                    {{ choice.tag }}
-                                                    <span class="ml-2">{{ choice.choice_label }}</span>
+                            <div>
+                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">2. Tech Stack</h3>
+                                <div class="space-y-4">
+                                    <label class="block text-sm font-bold text-slate-700">Select Relevant Tools</label>
+                                    <div class="h-60 overflow-y-auto p-4 border border-slate-200 rounded-lg bg-slate-50 scrollbar-thin">
+                                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {% for checkbox in form.tools %}
+                                            <label class="cursor-pointer group relative">
+                                                {{ checkbox.tag }} 
+                                                <div class="px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-md text-center transition-all shadow-sm group-hover:border-slate-400 peer-checked:bg-martech-green peer-checked:text-white peer-checked:border-martech-green">
+                                                    {{ checkbox.choice_label }}
                                                 </div>
                                             </label>
-                                        {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Custom Tool <span class="font-normal text-slate-400">(Optional)</span></label>
+                                        {{ form.new_tools }}
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="border-b border-slate-100 pb-4 mb-6 pt-6">
-                                <h3 class="text-xl font-bold text-slate-900">2. Tech Stack</h3>
-                            </div>
-
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-3">Select Relevant Tools</label>
-                                <div class="h-60 overflow-y-auto p-4 border border-slate-200 rounded-xl bg-slate-50 mb-4 scrollbar-thin">
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        {% for checkbox in form.tools %}
-                                        <label class="cursor-pointer group relative">
-                                            {{ checkbox.tag }} 
-                                            <div class="px-3 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg text-center transition-all shadow-sm group-hover:border-indigo-300 peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md">
-                                                {{ checkbox.choice_label }}
-                                            </div>
-                                        </label>
-                                        {% endfor %}
+                                <h3 class="text-lg font-bold font-serif text-slate-900 mb-6 border-b border-slate-100 pb-2">3. Description</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Application URL</label>
+                                        {{ form.apply_url }}
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Job Description</label>
+                                        <div class="relative">
+                                            {{ form.description }}
+                                            <div class="absolute bottom-3 right-3 text-xs text-slate-400 pointer-events-none font-medium">Markdown Supported</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-2">Custom Tool <span class="font-normal text-slate-400">(Optional)</span></label>
-                                    {{ form.new_tools }}
-                                </div>
                             </div>
 
-                            <div class="border-b border-slate-100 pb-4 mb-6 pt-6">
-                                <h3 class="text-xl font-bold text-slate-900">3. Description</h3>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Application URL</label>
-                                {{ form.apply_url }}
-                            </div>
-                            <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Job Description</label>
-                                <div class="relative">
-                                    {{ form.description }}
-                                    <div class="absolute bottom-3 right-3 text-xs text-slate-400 pointer-events-none font-medium">Markdown Supported</div>
-                                </div>
-                            </div>
-
-                            <div class="pt-6">
-                                <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all text-lg flex items-center justify-center gap-2 transform active:scale-[0.99]">
+                            <div class="pt-4">
+                                <button type="submit" id="submit-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl shadow-md hover:shadow-lg transition-all text-lg flex items-center justify-center gap-2">
                                     Post Job Now
                                 </button>
-                                <p class="text-center text-slate-400 text-xs mt-4">
-                                    By posting, you agree to our Terms of Service.
-                                </p>
                             </div>
 
                         </div>
@@ -194,44 +184,49 @@
                 </form>
             </div>
 
-            <div class="hidden lg:block lg:col-span-4 sticky top-24">
+            <div class="hidden lg:block lg:col-span-5 sticky top-24">
                 <div class="flex items-center gap-2 mb-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Preview</span>
                     <div class="h-px bg-slate-200 flex-grow"></div>
                 </div>
 
-                <div id="preview-card" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group">
-                    <div id="p-featured-ribbon" class="hidden absolute top-0 right-0 w-16 h-16 pointer-events-none overflow-hidden">
-                        <div class="absolute top-[10px] right-[-25px] w-[100px] h-[20px] bg-amber-400/20 rotate-45 transform"></div>
+                <div id="preview-card" class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm relative transition-all duration-300">
+                    
+                    <div id="p-featured-ribbon" class="hidden absolute top-4 right-4 z-10">
+                        <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">Featured</span>
                     </div>
 
-                    <div class="flex items-start gap-4 relative z-10">
-                        <div class="flex-shrink-0 pt-1">
-                            <img id="p-logo-img" src="" class="hidden w-10 h-10 rounded-lg object-contain border border-gray-100 bg-white p-1">
-                            <div id="p-logo-placeholder" class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-400 border border-slate-200">?</div>
+                    <div class="flex flex-col gap-6 items-start">
+                        <div class="flex-shrink-0">
+                            <img id="p-logo-img" src="" class="hidden w-16 h-16 rounded-lg border border-slate-100 object-contain p-2">
+                            <div id="p-logo-placeholder" class="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center text-xl font-serif font-bold text-slate-400">?</div>
                         </div>
 
-                        <div class="flex-grow min-w-0">
-                            <h3 class="text-md font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
+                        <div class="w-full">
+                            <h3 class="text-xl font-serif font-bold text-slate-900 mb-1 leading-tight">
                                 <span id="p-title">Job Title</span>
-                                <span id="p-featured-badge" class="hidden inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide border border-amber-200">Featured</span>
                             </h3>
+                            <p class="text-slate-900 font-medium mb-3" id="p-company">Company</p>
                             
-                            <div class="text-xs text-slate-500 mb-2">
-                                <span id="p-company">Company</span> <span class="mx-1">•</span> <span class="text-slate-400">Just now</span>
-                            </div>
-                            
-                            <div class="flex flex-wrap gap-2 text-xs text-slate-600 font-medium mb-3">
-                                <span id="p-location" class="flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> 
-                                    Remote
+                            <div class="flex flex-wrap gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                <span class="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded" id="p-location-badge">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <span id="p-location">Remote</span>
                                 </span>
-                                <span id="p-salary" class="hidden text-slate-500"></span>
+                                <span class="hidden flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded" id="p-salary-badge">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span id="p-salary"></span>
+                                </span>
                             </div>
+                        </div>
 
-                            <div id="p-stack" class="flex flex-wrap gap-1.5">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Tool</span>
+                        <div class="w-full flex justify-between items-end border-t border-slate-100 pt-4 mt-2">
+                            <div id="p-stack" class="flex gap-2">
+                                <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100">Tool</span>
                             </div>
+                            <button class="bg-martech-green text-white font-bold py-2 px-6 rounded-lg text-sm shadow-sm opacity-80 cursor-default">
+                                Apply Now
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -246,16 +241,17 @@
     .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
     .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
     
+    /* Global Input Styling for Consistency */
     input[type="text"], input[type="url"], select, textarea {
         width: 100%;
-        border-radius: 0.75rem; /* rounded-xl */
-        border-color: #cbd5e1; /* border-slate-300 */
+        border-radius: 0.5rem; 
+        border: 1px solid #cbd5e1;
         padding: 0.75rem 1rem;
         transition: all 0.2s ease;
     }
     input[type="text"]:focus, input[type="url"]:focus, select:focus, textarea:focus {
-        border-color: #6366f1; /* indigo-500 */
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        border-color: #000;
+        box-shadow: 0 0 0 1px #000;
         outline: none;
     }
 </style>
@@ -264,77 +260,57 @@
 document.addEventListener('DOMContentLoaded', function() {
     const planInput = document.querySelector('input[name="plan"]');
     const submitBtn = document.getElementById('submit-btn');
-    const featuredCard = document.getElementById('plan-card-featured');
+    
     const freeCard = document.getElementById('plan-card-free');
+    const freeDot = document.getElementById('free-radio-dot');
+    
+    const featuredCard = document.getElementById('plan-card-featured');
+    const featuredDot = document.getElementById('featured-radio-dot');
     
     // Preview Elements
     const previewCard = document.getElementById('preview-card');
     const featuredRibbon = document.getElementById('p-featured-ribbon');
-    const featuredBadge = document.getElementById('p-featured-badge');
 
-    // 0. SCROLL TO ERROR (Priority)
-    // If validation failed, ignore sticky header and go straight to error
-    const errorBox = document.getElementById('form-errors');
-    if (errorBox) {
-        setTimeout(() => {
-            const yOffset = -150; 
-            const y = errorBox.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            window.scrollTo({top: y, behavior: 'smooth'});
-        }, 100);
-    }
-
-    // 1. FEATURED CARD LOGIC
+    // 1. FEATURED LOGIC
     if (featuredCard) {
-        featuredCard.addEventListener('click', (e) => {
+        featuredCard.addEventListener('click', () => {
             planInput.value = 'featured';
-            submitBtn.innerHTML = "💳 Proceed to Payment ($99)";
-            submitBtn.classList.replace('bg-slate-900', 'bg-indigo-600');
-            submitBtn.classList.replace('hover:bg-black', 'hover:bg-indigo-700');
             
-            // Dim Free Card
-            freeCard.classList.add('opacity-60', 'scale-95');
-            document.getElementById('free-selected-badge').classList.add('hidden');
+            // Visual Updates
+            submitBtn.innerText = "Proceed to Payment ($99)";
             
-            // Update Preview
-            previewCard.className = "bg-gradient-to-r from-amber-50/80 to-white border border-amber-300 rounded-xl p-5 shadow-md transition-all duration-300 relative overflow-hidden group";
+            featuredCard.classList.replace('border-slate-200', 'border-amber-400');
+            featuredCard.classList.add('bg-amber-50');
+            featuredDot.classList.remove('hidden');
+            
+            freeCard.classList.replace('border-slate-900', 'border-slate-200');
+            freeDot.classList.remove('bg-slate-900');
+            freeDot.classList.add('hidden');
+            
+            // Preview Updates
             featuredRibbon.classList.remove('hidden');
-            featuredBadge.classList.remove('hidden');
-
-            if (e.isTrusted) {
-                scrollToForm();
-            }
         });
     }
 
-    // 2. FREE CARD LOGIC
+    // 2. FREE LOGIC
     if (freeCard) {
-        freeCard.addEventListener('click', (e) => {
+        freeCard.addEventListener('click', () => {
             planInput.value = 'free';
-            submitBtn.innerHTML = "🚀 Post Job Now";
-            submitBtn.classList.replace('bg-indigo-600', 'bg-slate-900');
-            submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-black');
+            
+            // Visual Updates
+            submitBtn.innerText = "Post Job Now";
 
-            // Restore Free Card
-            freeCard.classList.remove('opacity-60', 'scale-95');
-            document.getElementById('free-selected-badge').classList.remove('hidden');
+            freeCard.classList.replace('border-slate-200', 'border-slate-900');
+            freeDot.classList.remove('hidden');
+            freeDot.classList.add('bg-slate-900');
+            
+            featuredCard.classList.replace('border-amber-400', 'border-slate-200');
+            featuredCard.classList.remove('bg-amber-50');
+            featuredDot.classList.add('hidden');
 
-            // Update Preview
-            previewCard.className = "bg-white border border-slate-200 rounded-xl p-5 shadow-sm transition-all duration-300 relative overflow-hidden group";
+            // Preview Updates
             featuredRibbon.classList.add('hidden');
-            featuredBadge.classList.add('hidden');
-
-            if (e.isTrusted) {
-                scrollToForm();
-            }
         });
-    }
-
-    // Helper: Robust Scroll Calculation
-    function scrollToForm() {
-        const anchor = document.getElementById('job-form-anchor');
-        const yOffset = -120; // Clear the sticky header
-        const y = anchor.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
     }
 
     // 3. LIVE PREVIEW SYNC
@@ -352,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         company: document.getElementById('p-company'),
         location: document.getElementById('p-location'),
         salary: document.getElementById('p-salary'),
+        salaryBadge: document.getElementById('p-salary-badge'),
         logoImg: document.getElementById('p-logo-img'),
         logoPlace: document.getElementById('p-logo-placeholder'),
         stack: document.getElementById('p-stack')
@@ -361,25 +338,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     sync(inputs.title, previews.title, "Job Title");
     sync(inputs.company, previews.company, "Company");
-    
-    if(inputs.location) {
-        inputs.location.addEventListener('input', () => {
-            const val = inputs.location.value || "Location";
-            previews.location.innerHTML = `<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> ${val}`;
-        });
-    }
+    sync(inputs.location, previews.location, "Remote");
 
     if(inputs.salary) {
         const updateSalary = () => {
             if(inputs.salary.value) {
-                previews.salary.innerText = "• " + inputs.salary.value;
-                previews.salary.classList.remove('hidden');
+                previews.salary.innerText = inputs.salary.value;
+                previews.salaryBadge.classList.remove('hidden');
             } else {
-                previews.salary.classList.add('hidden');
+                previews.salaryBadge.classList.add('hidden');
             }
         };
         inputs.salary.addEventListener('input', updateSalary);
-        updateSalary();
     }
 
     if(inputs.logo) {
@@ -394,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         inputs.logo.addEventListener('input', updateLogo);
-        updateLogo();
     }
 
     const toolCheckboxes = document.querySelectorAll('input[name="tools"]');
@@ -403,9 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let count = 0;
         
         toolCheckboxes.forEach(cb => {
-            if(cb.checked && count < 5) {
+            if(cb.checked && count < 3) {
                 const span = document.createElement('span');
-                span.className = "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200";
+                span.className = "bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100";
                 span.innerText = cb.parentElement.innerText.trim();
                 previews.stack.appendChild(span);
                 count++;
@@ -414,9 +383,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (inputs.newTools && inputs.newTools.value) {
             const customs = inputs.newTools.value.split(',');
             customs.forEach(t => {
-                if(t.trim() && count < 6) {
+                if(t.trim() && count < 3) {
                     const span = document.createElement('span');
-                    span.className = "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200";
+                    span.className = "bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100";
                     span.innerText = t.trim();
                     previews.stack.appendChild(span);
                     count++;
