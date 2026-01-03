@@ -9,7 +9,6 @@ class JobSitemap(Sitemap):
 
     def items(self):
         from .models import Job
-        # SEO WIN: Only index public, approved jobs
         return Job.objects.filter(is_active=True, screening_status='approved')
 
     def lastmod(self, obj):
@@ -25,18 +24,16 @@ class ToolSitemap(Sitemap):
     
     def items(self):
         from .models import Tool
-        # SEO WIN: Only index tools that actually have jobs
-        return Tool.objects.filter(jobs__is_active=True).distinct()
+        # FIX: Ensure we only show tools that have APPROVED jobs.
+        return Tool.objects.filter(
+            jobs__is_active=True, 
+            jobs__screening_status='approved'
+        ).distinct()
 
     def location(self, obj):
         return reverse('tool_detail', args=[obj.slug])
 
 class SEOLandingSitemap(Sitemap):
-    """
-    Generates programmatic SEO pages for:
-    1. /remote/hubspot-jobs/
-    2. /remote/jobs/
-    """
     changefreq = "weekly"
     priority = 0.6
     protocol = 'https'
@@ -44,12 +41,9 @@ class SEOLandingSitemap(Sitemap):
     def items(self):
         from .models import Tool, Job
         items = []
-        
-        # 1. Location Only pages (e.g. /remote/jobs/)
         if Job.objects.filter(is_active=True, work_arrangement='remote').exists():
             items.append(('remote', None))
-
-        # 2. Location + Tool combinations (e.g. /remote/hubspot-jobs/)
+        
         remote_tools = Tool.objects.filter(
             jobs__is_active=True, 
             jobs__work_arrangement='remote'
@@ -57,7 +51,6 @@ class SEOLandingSitemap(Sitemap):
         
         for tool in remote_tools:
             items.append(('remote', tool.slug))
-            
         return items
 
     def location(self, obj):
@@ -68,9 +61,6 @@ class SEOLandingSitemap(Sitemap):
             return reverse('seo_loc_only', args=[loc_slug])
 
 class StaticViewSitemap(Sitemap):
-    """
-    SEO WIN: Index your static pages so they appear in Google.
-    """
     priority = 0.5
     changefreq = 'monthly'
     protocol = 'https'
