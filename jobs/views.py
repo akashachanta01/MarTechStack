@@ -12,6 +12,8 @@ from django.utils.text import slugify
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
@@ -220,8 +222,13 @@ def tool_detail(request, slug):
     return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page})
 
 def job_detail(request, id, slug):
-    job = get_object_or_404(Job, id=id)
-    if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
+    # SECURITY FIX: Ensure we only show approved/active jobs
+    # This prevents users from guessing IDs to see pending/rejected roles.
+    job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
+    
+    if job.slug and job.slug != slug: 
+        return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
+    
     return render(request, 'jobs/job_detail.html', {'job': job})
 
 def post_job(request):
@@ -274,7 +281,13 @@ def post_job_success(request): return render(request, 'jobs/post_job_success.htm
 def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
-        if email: 
+        if email:
+            # VALIDATION FIX: Check strict email format before saving
+            try:
+                validate_email(email)
+            except ValidationError:
+                return JsonResponse({"success": False, "error": "Invalid email format."}, status=400)
+
             sub, created = Subscriber.objects.get_or_create(email=email)
             if created: 
                 send_welcome_email(email)
