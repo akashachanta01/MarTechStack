@@ -23,7 +23,7 @@ def normalize_location(loc):
         if f", {state}" in cleaned:
             cleaned = cleaned.replace(f", {state}", f", {code}")
 
-    # 3. CITY MAP (The "Perfect List" - Keeps data consistent)
+    # 3. CITY MAP
     lower_loc = cleaned.lower()
     city_map = {
         "new york": "New York, NY, United States",
@@ -43,9 +43,8 @@ def normalize_location(loc):
     if lower_loc in city_map:
         return city_map[lower_loc]
 
-    # 4. Standard Append (Adds 'United States' if missing)
+    # 4. Standard Append
     if "United States" not in cleaned and "Remote" not in cleaned:
-        # If it looks like "City, ST" (State code at end)
         if re.search(r', [A-Z]{2}$', cleaned):
              cleaned += ", United States"
              
@@ -54,83 +53,44 @@ def normalize_location(loc):
 # --- HELPER 2: DESCRIPTION CLEANER ---
 def clean_html_description(text):
     if not text: return ""
-    
-    # 1. Unescape & Parse
     text = html.unescape(text)
     soup = BeautifulSoup(text, 'html.parser')
-    
-    # 2. Remove Junk Tags
     for tag in soup(["script", "style", "meta", "link", "head", "title", "iframe", "input", "form", "button", "img", "svg"]):
         tag.extract()
-
-    # 3. Unwrap Structural Tags (Remove divs/spans but keep their text)
     for tag in soup.find_all(True):
-        tag.attrs = {} # Kill all classes/IDs (removes 'content-intro', etc.)
-        
-    # 4. Allow only semantic tags
+        tag.attrs = {} 
     allowed_tags = ['p', 'ul', 'li', 'ol', 'h3', 'h4', 'strong', 'b', 'em', 'i', 'br']
     for tag in soup.find_all(True):
         if tag.name not in allowed_tags:
             tag.unwrap()
-
-    # 5. Final String Cleanup
     clean_text = str(soup).strip()
-    clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text) # Remove massive gaps
-    return clean_text
+    return re.sub(r'\n\s*\n', '\n\n', clean_text)
 
 # --- MODELS ---
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
-
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name_plural = "Categories"
+    def __str__(self): return self.name
+    class Meta: verbose_name_plural = "Categories"
 
 class Tool(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="tools")
+    description = models.TextField(blank=True, default="", help_text="SEO Content: What is this tool?")
+    logo_url = models.URLField(max_length=500, blank=True, null=True)
 
-    def __str__(self):
-        return self.name
-
+    def __str__(self): return self.name
     @property
     def color_class(self):
-        colors = [
-            'bg-emerald-100 text-emerald-700 border-emerald-200',
-            'bg-amber-100 text-amber-800 border-amber-200',
-            'bg-rose-100 text-rose-700 border-rose-200',
-            'bg-sky-100 text-sky-700 border-sky-200',
-            'bg-violet-100 text-violet-700 border-violet-200',
-            'bg-indigo-100 text-indigo-700 border-indigo-200',
-        ]
-        char_sum = sum(ord(c) for c in self.name)
-        return colors[char_sum % len(colors)]
+        colors = ['bg-emerald-100 text-emerald-700 border-emerald-200','bg-amber-100 text-amber-800 border-amber-200','bg-rose-100 text-rose-700 border-rose-200','bg-sky-100 text-sky-700 border-sky-200','bg-violet-100 text-violet-700 border-violet-200','bg-indigo-100 text-indigo-700 border-indigo-200']
+        return colors[sum(ord(c) for c in self.name) % len(colors)]
 
 class Job(models.Model):
-    ROLE_TYPE_CHOICES = [
-        ('full_time', 'Full-time'),
-        ('contract', 'Contract'),
-        ('part_time', 'Part-time'),
-        ('temporary', 'Temporary'),
-        ('internship', 'Internship'),
-    ]
-
-    STATUS_CHOICES = [
-        ('pending', 'Pending Review'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    ]
-    
-    WORK_ARRANGEMENT_CHOICES = [
-        ('remote', 'Remote'),
-        ('hybrid', 'Hybrid'),
-        ('onsite', 'On-site'),
-    ]
+    ROLE_TYPE_CHOICES = [('full_time', 'Full-time'), ('contract', 'Contract'), ('part_time', 'Part-time'), ('temporary', 'Temporary'), ('internship', 'Internship')]
+    STATUS_CHOICES = [('pending', 'Pending Review'), ('approved', 'Approved'), ('rejected', 'Rejected')]
+    WORK_ARRANGEMENT_CHOICES = [('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'On-site')]
 
     title = models.CharField(max_length=200)
     company = models.CharField(max_length=200)
@@ -138,16 +98,13 @@ class Job(models.Model):
     location = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField()
     apply_url = models.URLField(max_length=500)
-    
     slug = models.SlugField(max_length=250, null=True, blank=True)
     
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
-    
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
     
-    # Screening & Status
     screening_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
@@ -157,80 +114,67 @@ class Job(models.Model):
     screening_reason = models.TextField(blank=True, default="")
     screening_details = models.JSONField(blank=True, default=dict)
 
-    # Monetization Features
     is_featured = models.BooleanField(default=False)
     is_pinned = models.BooleanField(default=False)
     plan_name = models.CharField(max_length=50, blank=True, null=True)
-    
-    # Audit & Tracking
     tags = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.title} at {self.company}"
+    def __str__(self): return f"{self.title} at {self.company}"
+
+    # NEW: Helper for Schema Salary Parsing (Fixes Compliance)
+    def get_salary_min_max(self):
+        if not self.salary_range: return None, None
+        try:
+            # Extract digits from string (e.g. "$120k - $150k" -> [120, 150])
+            txt = self.salary_range.lower().replace(',', '').replace('.', '')
+            nums = re.findall(r'\d+', txt)
+            if not nums: return None, None
+            
+            vals = []
+            for n in nums:
+                val = int(n)
+                # Handle 'k' shorthand if detected in context, but simple logic: 
+                # if val < 1000, likely 'k' notation -> multiply by 1000
+                if val < 1000: val *= 1000
+                vals.append(val)
+            
+            vals.sort()
+            if len(vals) >= 2: return vals[0], vals[-1]
+            if len(vals) == 1: return vals[0], vals[0]
+        except: pass
+        return None, None
 
     def save(self, *args, **kwargs):
-        # 1. AUTO-CLEAN LOCATION
-        if self.location:
-            self.location = normalize_location(self.location)
-
-        # 2. AUTO-CLEAN DESCRIPTION (Sanitize HTML)
-        if self.description:
-            self.description = clean_html_description(self.description)
-
-        # 3. AUTO-SLUG
-        if not self.slug:
-            self.slug = slugify(f"{self.title} at {self.company}")
-            
-        # 4. SYNC STATUS
-        if self.screening_status == 'approved':
-            self.is_active = True
-        elif self.screening_status == 'rejected':
-            self.is_active = False
-        elif self.screening_status == 'pending' and not self.pk:
-            self.is_active = False
-            
+        if self.location: self.location = normalize_location(self.location)
+        if self.description: self.description = clean_html_description(self.description)
+        if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
+        if self.screening_status == 'approved': self.is_active = True
+        elif self.screening_status == 'rejected': self.is_active = False
+        elif self.screening_status == 'pending' and not self.pk: self.is_active = False
         super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-is_pinned', '-created_at']
-        indexes = [
-            models.Index(fields=['is_active', 'screening_status']),
-            models.Index(fields=['created_at']),
-        ]
+        indexes = [models.Index(fields=['is_active', 'screening_status']), models.Index(fields=['created_at'])]
 
 class Subscriber(models.Model):
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.email
+    def __str__(self): return self.email
 
 class BlockRule(models.Model):
-    RULE_TYPES = [
-        ("domain", "Domain"),
-        ("company", "Company"),
-        ("keyword", "Keyword"),
-        ("regex", "Regex (title/description)"),
-    ]
+    RULE_TYPES = [("domain", "Domain"), ("company", "Company"), ("keyword", "Keyword"), ("regex", "Regex")]
     rule_type = models.CharField(max_length=20, choices=RULE_TYPES, db_index=True)
-    value = models.CharField(max_length=500, help_text="Value for the rule (domain/company/keyword/regex).")
+    value = models.CharField(max_length=500)
     enabled = models.BooleanField(default=True)
     notes = models.CharField(max_length=500, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.rule_type}: {self.value}"
+    def __str__(self): return f"{self.rule_type}: {self.value}"
 
 class UserSubmission(Job):
-    class Meta:
-        proxy = True
-        verbose_name = "User Submission"
-        verbose_name_plural = "User Submissions"
+    class Meta: proxy = True; verbose_name = "User Submission"
 
 class ActiveJob(Job):
-    class Meta:
-        proxy = True
-        verbose_name = "Active Job"
-        verbose_name_plural = "Active Jobs"
+    class Meta: proxy = True; verbose_name = "Active Job"
