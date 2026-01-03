@@ -16,7 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 
 # ⚠️ DIAGNOSIS MODE: Set to False for production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com,127.0.0.1,localhost').split(',')
 
