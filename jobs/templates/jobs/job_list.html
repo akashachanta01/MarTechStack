@@ -136,9 +136,9 @@
 
         <div class="space-y-4">
             {% for job in jobs %}
-            <div class="bg-white border border-gray-300 rounded-sm p-5 hover:shadow-md transition-all duration-200 group relative">
+            <div class="bg-white border border-gray-300 rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
                 
-                <div class="flex flex-col md:flex-row gap-5 items-start">
+                <div class="flex flex-col md:flex-row gap-4 items-start">
                     
                     <div class="flex-shrink-0">
                         {% if job.company_logo %}
@@ -161,7 +161,7 @@
                                 <span class="bg-[#1f432d] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">New</span>
                             {% endif %}
                         </h3>
-                        <p class="text-sm text-slate-500 font-medium mb-3">{{ job.company }}</p>
+                        <p class="text-sm text-slate-500 font-medium mb-2">{{ job.company }}</p>
                         
                         <div class="flex flex-wrap gap-2">
                             <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
@@ -183,7 +183,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col justify-between items-end gap-6 min-w-[140px] self-stretch py-1">
+                    <div class="flex flex-col justify-between items-end gap-3 min-w-[140px] self-stretch py-1">
                         <div class="flex gap-1.5">
                             {% for tool in job.tools.all|slice:":2" %}
                             <span class="{{ tool.color_class }} px-2 py-0.5 rounded text-[10px] font-bold border opacity-90 shadow-sm">
@@ -192,7 +192,7 @@
                             {% endfor %}
                         </div>
 
-                        <div class="w-full border-t border-gray-200 my-2"></div>
+                        <div class="w-full border-t border-gray-200 my-1"></div>
 
                         <a href="{% url 'job_detail' job.id job.slug %}" class="bg-[#1f432d] hover:bg-green-900 text-white font-bold py-2 px-5 rounded shadow-sm text-xs transition-colors whitespace-nowrap">
                             Apply Now
