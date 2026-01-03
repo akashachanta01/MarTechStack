@@ -51,7 +51,7 @@
       "@context": "https://schema.org/",
       "@type": "JobPosting",
       "title": "{{ job.title|escapejs }}",
-      "description": "<p>{{ job.description|escapejs }}</p>",
+      "description": "{{ job.description|striptags|escapejs }}",
       "identifier": {
         "@type": "PropertyValue",
         "name": "{{ job.company|escapejs }}",
