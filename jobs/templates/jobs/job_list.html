@@ -2,6 +2,28 @@
 {% block title %}MarTechJobs — Find your place in Marketing Technology{% endblock %}
 
 {% block content %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Where can I find Marketing Operations jobs?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "MarTechJobs.io is the leading niche job board dedicated to Marketing Operations, Marketing Technology, and Analytics roles."
+    }
+  }, {
+    "@type": "Question",
+    "name": "What companies hire MarTech professionals?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Top companies hiring MarTech talent include HubSpot, Salesforce, Adobe, and thousands of enterprises using these stacks."
+    }
+  }]
+}
+</script>
+
 <div class="relative bg-white border-b border-slate-100 overflow-hidden">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
 
@@ -100,14 +122,8 @@
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                             {% elif "Tableau" in name %}
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>
-                            {% elif "Looker" in name %}
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             {% elif "Marketo" in name %}
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                            {% elif "Pardot" in name %}
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12l20-9-9 20-2-8-9-3z"/></svg>
-                            {% elif "Zapier" in name %}
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                             {% elif "Adobe" in name %}
                                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z"/></svg>
                             {% else %}
@@ -239,11 +255,20 @@
         </div>
         {% endif %}
 
-        <div class="mt-10 text-center">
-            <a href="#" class="inline-flex items-center justify-center bg-black text-white font-bold py-2.5 px-6 rounded-lg hover:bg-slate-800 transition text-xs">
-                View all open roles &rarr;
-            </a>
+        <div class="mt-20 border-t border-slate-200 pt-10">
+            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Popular Searches</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 text-xs text-slate-500">
+                <a href="/stack/hubspot/" class="hover:text-martech-green transition">HubSpot Marketing Jobs</a>
+                <a href="/stack/marketo/" class="hover:text-martech-green transition">Marketo Administrator Jobs</a>
+                <a href="/stack/salesforce/" class="hover:text-martech-green transition">Salesforce Marketing Cloud Jobs</a>
+                <a href="/stack/segment/" class="hover:text-martech-green transition">Segment CDP Jobs</a>
+                <a href="/stack/google-analytics/" class="hover:text-martech-green transition">Google Analytics 4 Jobs</a>
+                <a href="/stack/tealium/" class="hover:text-martech-green transition">Tealium Developer Jobs</a>
+                <a href="/stack/braze/" class="hover:text-martech-green transition">Braze Marketing Jobs</a>
+                <a href="/stack/mparticle/" class="hover:text-martech-green transition">mParticle Engineer Jobs</a>
+            </div>
         </div>
+        
     </div>
 </div>
 {% endblock %}
