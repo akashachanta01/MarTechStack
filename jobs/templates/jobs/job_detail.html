@@ -88,15 +88,15 @@
         "name": "{{ job.company|escapejs }}",
         "logo": "{{ job.company_logo|default:'https://martechjobs.io/static/logo.png' }}"
       },
-      {% with sal_min, sal_max=job.get_salary_min_max %}
-      {% if sal_min %}
+      {% with salary_data=job.get_salary_min_max %}
+      {% if salary_data.0 %}
       "baseSalary": {
         "@type": "MonetaryAmount",
         "currency": "USD",
         "value": {
           "@type": "QuantitativeValue",
-          "minValue": {{ sal_min }},
-          "maxValue": {{ sal_max }},
+          "minValue": {{ salary_data.0 }},
+          "maxValue": {{ salary_data.1 }},
           "unitText": "YEAR"
         }
       },
