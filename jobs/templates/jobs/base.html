@@ -25,7 +25,6 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-5DL9PF78WG');
     </script>
 
@@ -33,87 +32,139 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'martech-dark': '#0f172a',
+                        'martech-green': '#064e3b',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style> 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; } 
+        body { font-family: 'Inter', sans-serif; } 
+        h1, h2, h3, .font-serif { font-family: 'Playfair Display', serif; }
+        
+        /* Modal Transitions */
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
+        
+        /* Grid Background Pattern */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        }
     </style>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c3aed'/%3E%3Cpath d='M60 5 L20 55 L45 55 L35 95 L80 40 L55 40 Z' fill='white'/%3E%3C/svg%3E">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231e293b'/%3E%3Cpath d='M60 5 L20 55 L45 55 L35 95 L80 40 L55 40 Z' fill='white'/%3E%3C/svg%3E">
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
+<body class="bg-white text-slate-900 font-sans antialiased selection:bg-black selection:text-white">
 
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-2 group">
-                <div class="bg-indigo-600 text-white p-1.5 rounded-lg group-hover:bg-indigo-700 transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="bg-black text-white p-1.5 rounded group-hover:bg-slate-800 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="text-lg font-bold tracking-tight text-slate-900 hidden sm:block">MarTechJobs</span>
-                <span class="text-lg font-bold tracking-tight text-slate-900 sm:hidden">MTJ</span>
+                <span class="text-xl font-serif font-bold tracking-tight text-slate-900">MarTech Jobs</span>
             </a>
 
-            <div class="flex items-center gap-2 sm:gap-3">
-                <a href="{% url 'about' %}" class="hidden sm:block bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs sm:text-sm font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition shadow-sm hover:shadow-md whitespace-nowrap">
-                    About
-                </a>
-
-                <a href="{% url 'for_employers' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition shadow-md hover:shadow-lg whitespace-nowrap">
+            <div class="hidden md:flex items-center gap-8">
+                <a href="/" class="text-sm font-medium text-slate-600 hover:text-black transition">Jobs</a>
+                <a href="{% url 'about' %}" class="text-sm font-medium text-slate-600 hover:text-black transition">About</a>
+                <button onclick="toggleModal('modal-id')" class="text-sm font-medium text-slate-600 hover:text-black transition">Get Alerts</button>
+                <div class="h-6 w-px bg-slate-200"></div>
+                <a href="{% url 'for_employers' %}" class="bg-black hover:bg-slate-800 text-white text-sm font-bold px-5 py-2.5 rounded transition shadow-sm">
                     For Employers
                 </a>
+            </div>
 
-                <button onclick="toggleModal('modal-id')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition shadow-sm whitespace-nowrap">
-                    Get Alerts
-                </button>
+            <div class="md:hidden flex items-center gap-4">
+                 <a href="{% url 'for_employers' %}" class="bg-black text-white text-xs font-bold px-3 py-2 rounded">Post Job</a>
             </div>
         </div>
     </nav>
 
-    <main class="min-h-screen pb-20">
+    <main class="min-h-screen">
         {% block content %}
         {% endblock %}
     </main>
 
-    <footer class="bg-white border-t border-slate-200 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="text-center md:text-left">
-                <p class="text-slate-900 font-bold mb-2">MarTechJobs.io</p>
-                <p class="text-slate-500 text-sm">
-                    The Zero-Noise job board for the MarTech Community.
-                </p>
+    <footer class="bg-black text-white border-t border-slate-900 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-16">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="bg-white text-black p-1 rounded">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <span class="font-serif font-bold text-xl">MarTech Jobs</span>
+                    </div>
+                    <p class="text-slate-400 text-sm max-w-xs leading-relaxed">
+                        The leading community and job board for marketing technology professionals. We connect talent with the brands building the future.
+                    </p>
+                    <div class="flex gap-4 mt-6">
+                        <a href="#" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 4.084-6.13 6.13-10.592 5.167 2.043 1.31 4.47 2.074 7.078 2.074 8.527 0 13.193-7.065 12.986-13.38 2.261-2.09 4.846-5.467 4.549-9.11z"/></svg></a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-12 sm:gap-24 text-sm">
+                    <div>
+                        <h4 class="font-bold mb-4 text-white">Candidates</h4>
+                        <ul class="space-y-3 text-slate-400">
+                            <li><a href="/" class="hover:text-white transition">Browse Jobs</a></li>
+                            <li><a href="#" class="hover:text-white transition">Company Directory</a></li>
+                            <li><a href="#" class="hover:text-white transition">Salary Guide</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-4 text-white">Employers</h4>
+                        <ul class="space-y-3 text-slate-400">
+                            <li><a href="{% url 'post_job' %}" class="hover:text-white transition">Post a Job</a></li>
+                            <li><a href="#" class="hover:text-white transition">Pricing</a></li>
+                            <li><a href="#" class="hover:text-white transition">Success Stories</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             
-            <div class="flex gap-6 text-sm font-medium text-slate-600">
-                <a href="{% url 'about' %}" class="hover:text-indigo-600 transition">About</a>
-                <a href="{% url 'for_employers' %}" class="hover:text-indigo-600 transition">For Employers</a>
-                <a href="{% url 'post_job' %}" class="hover:text-indigo-600 transition">Post a Job</a>
-            </div>
-
-            <div class="text-slate-400 text-sm">
-                &copy; {% now "Y" %}
+            <div class="border-t border-slate-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500">
+                <p>&copy; {% now "Y" %} MarTech Jobs Inc. All rights reserved.</p>
+                <div class="flex gap-6 mt-4 sm:mt-0">
+                    <a href="#" class="hover:text-white">Privacy</a>
+                    <a href="#" class="hover:text-white">Terms</a>
+                    <a href="#" class="hover:text-white">Sitemap</a>
+                </div>
             </div>
         </div>
     </footer>
 
     <div class="modal hidden opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50" id="modal-id">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-50" onclick="toggleModal('modal-id')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-2xl shadow-2xl z-50 overflow-y-auto transform scale-95 transition-transform duration-300">
+        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-60 backdrop-blur-sm" onclick="toggleModal('modal-id')"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto transform scale-95 transition-transform duration-300">
             <div class="relative py-8 px-8 text-left">
                 <div class="absolute top-4 right-4 cursor-pointer z-50 p-2 rounded-full hover:bg-slate-100 transition" onclick="toggleModal('modal-id')">
                     <svg class="fill-current text-slate-400 hover:text-slate-600" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
                 </div>
                 <div id="modal-content">
-                    <div class="mx-auto w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-2 text-center">Get Job Alerts</h3>
+                    <h3 class="text-2xl font-serif font-bold text-slate-900 mb-2 text-center">Get Job Alerts</h3>
                     <p class="text-slate-500 mb-6 text-sm text-center">Be the first to know about new Marketing Ops & Tech roles.</p>
                     <form id="subscribe-form" onsubmit="submitSubscription(event)">
                         {% csrf_token %}
                         <div class="space-y-3">
-                            <input type="email" name="email" required placeholder="name@company.com" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all outline-none">
-                            <button type="submit" id="sub-btn" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-md transition-all">Subscribe Free</button>
+                            <input type="email" name="email" required placeholder="name@company.com" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black transition-all outline-none">
+                            <button type="submit" id="sub-btn" class="w-full bg-black hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md transition-all">Subscribe Free</button>
                         </div>
                     </form>
                 </div>
@@ -123,7 +174,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 mb-2">You're on the list!</h3>
                     <p class="text-slate-500 text-sm mb-6">We'll email you when fresh jobs drop.</p>
-                    <button onclick="toggleModal('modal-id')" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl">Close</button>
+                    <button onclick="toggleModal('modal-id')" class="w-full bg-black text-white font-bold py-3 rounded-lg">Close</button>
                 </div>
             </div>
         </div>
