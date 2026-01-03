@@ -140,7 +140,7 @@
                             {% endif %}
                             <span class="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {{ job.role_type|default:"Full-Time"|replace:"_,-"|title }}
+                                {{ job.get_role_type_display }}
                             </span>
                         </div>
                     </div>
@@ -148,4 +148,48 @@
                     <div class="flex-shrink-0 flex flex-col items-end gap-4 relative z-20">
                         <div class="flex gap-2">
                             {% for tool in job.tools.all|slice:":2" %}
-                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-1
+                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded border border-indigo-100">
+                                {{ tool.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <button class="bg-martech-green hover:bg-green-900 text-white font-bold py-2 px-6 rounded-lg text-sm transition shadow-sm">
+                            Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-20 border border-dashed border-slate-300 rounded-xl">
+                <p class="text-slate-500 text-lg">No jobs found matching your criteria.</p>
+                <a href="{% url 'job_list' %}" class="text-martech-green font-bold hover:underline mt-2 inline-block">Clear Filters</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if jobs.paginator.num_pages > 1 %}
+        <div class="mt-12 flex justify-center">
+            <div class="inline-flex rounded-md shadow-sm">
+                {% if jobs.has_previous %}
+                    <a href="?page={{ jobs.previous_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 font-medium text-gray-700">Previous</a>
+                {% endif %}
+                
+                <span class="py-2 px-4 bg-gray-50 border-t border-b border-gray-300 font-medium text-gray-700">
+                    Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+                </span>
+
+                {% if jobs.has_next %}
+                    <a href="?page={{ jobs.next_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 font-medium text-gray-700">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-12 text-center">
+            <a href="#" class="inline-flex items-center justify-center bg-black text-white font-bold py-4 px-8 rounded-xl hover:bg-slate-800 transition">
+                View all open roles &rarr;
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
