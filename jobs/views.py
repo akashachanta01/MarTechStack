@@ -31,7 +31,6 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
-    # 1. Get Params
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
@@ -41,7 +40,6 @@ def job_list(request):
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
-    # 2. Filter by Vendor
     if vendor_query:
         if vendor_query == "General":
             jobs = jobs.filter(tools__isnull=True)
@@ -52,7 +50,6 @@ def job_list(request):
                     matching_tool_ids.append(tool.id)
             jobs = jobs.filter(tools__id__in=matching_tool_ids)
     
-    # 3. Filter by Search Query
     elif query:
         search_q = Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
         jobs = jobs.filter(search_q).annotate(
@@ -64,33 +61,26 @@ def job_list(request):
             )
         )
     
-    # Sorting
     if query:
         jobs = jobs.order_by('-is_pinned', '-relevance', '-created_at')
     else:
         jobs = jobs.order_by('-is_pinned', '-created_at')
 
-    # 4. Filter by Location & Country
     if location_query:
         jobs = jobs.filter(location__icontains=location_query)
     
     if country_query:
         jobs = jobs.filter(location__icontains=country_query)
 
-    # 5. Tab Filters
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
     
     if role_type_filter:
         jobs = jobs.filter(role_type__iexact=role_type_filter)
 
-    # Pagination
     paginator = Paginator(jobs.distinct(), 25)
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
-
-    # NOTE: 'popular_tech_stacks' and 'available_countries' are now handled 
-    # by the global_seo_data Context Processor. We don't need to calculate them here.
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, 
@@ -104,53 +94,32 @@ def job_list(request):
 
 # --- SEO: LANDING PAGE GENERATOR ---
 def seo_landing_page(request, location_slug=None, tool_slug=None):
-    """
-    Programmatic SEO Page:
-    Matches /<location>/<tool>-jobs/ OR /<location>/jobs/
-    """
-    
-    # 1. Resolve Tool (if present)
     tool = None
     if tool_slug:
-        # We strip '-jobs' from the URL to find the tool slug
         clean_tool_slug = tool_slug.replace("-jobs", "")
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
-    # 2. Resolve Location
-    location_name = "Remote" # Default
+    location_name = "Remote"
     if location_slug:
-        if location_slug == "remote":
-            location_name = "Remote"
-        elif location_slug == "new-york":
-            location_name = "New York"
-        elif location_slug == "london":
-            location_name = "London"
-        elif location_slug == "san-francisco":
-            location_name = "San Francisco"
-        else:
-            # Fallback: Try to use the slug as the name (e.g. "Chicago")
-            location_name = location_slug.replace("-", " ").title()
+        if location_slug == "remote": location_name = "Remote"
+        elif location_slug == "new-york": location_name = "New York"
+        elif location_slug == "london": location_name = "London"
+        elif location_slug == "san-francisco": location_name = "San Francisco"
+        else: location_name = location_slug.replace("-", " ").title()
 
-    # 3. Filter Jobs
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     
-    if tool:
-        jobs = jobs.filter(tools=tool)
+    if tool: jobs = jobs.filter(tools=tool)
     
-    if location_name == "Remote":
-        jobs = jobs.filter(work_arrangement="remote")
-    else:
-        # Fuzzy match for location
-        jobs = jobs.filter(location__icontains=location_name)
+    if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
+    else: jobs = jobs.filter(location__icontains=location_name)
 
-    # 4. THIN CONTENT PROTECTION
     if jobs.count() == 0:
         base_url = "/?q="
         if tool: base_url += tool.name
         if location_name: base_url += f"&l={location_name}"
         return redirect(base_url)
 
-    # 5. Dynamic SEO Metadata
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
         meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
@@ -172,6 +141,42 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         'custom_desc': meta_desc,
         'is_seo_landing': True
     })
+
+# --- SEO: SALARY GUIDE ---
+def salary_guide(request):
+    data = cache.get('salary_guide_data')
+    
+    if not data:
+        tools = Tool.objects.annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).filter(job_count__gt=2).order_by('-job_count')
+        salary_stats = []
+        
+        for tool in tools:
+            jobs = tool.jobs.filter(is_active=True, screening_status='approved')
+            min_sum, max_sum, count = 0, 0, 0
+            
+            for job in jobs:
+                s_min, s_max = job.get_salary_min_max()
+                if s_min and s_max:
+                    min_sum += s_min
+                    max_sum += s_max
+                    count += 1
+            
+            if count > 0:
+                avg_min = int(min_sum / count)
+                avg_max = int(max_sum / count)
+                salary_stats.append({
+                    'tool': tool,
+                    'avg_min': avg_min,
+                    'avg_max': avg_max,
+                    'count': count
+                })
+        
+        # Sort by highest max salary
+        salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
+        data = salary_stats
+        cache.set('salary_guide_data', data, 86400) # Cache for 24 hours
+
+    return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
 
 def unsubscribe(request):
     if request.method == "POST":
@@ -213,9 +218,7 @@ def post_job(request):
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
                     tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
                     job.tools.add(tool)
-            # Cache clearing is less critical now as we use auto-expiring cache, but good practice
             cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
-            
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -250,11 +253,8 @@ def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email:
-            try:
-                validate_email(email)
-            except ValidationError:
-                return JsonResponse({"success": False, "error": "Invalid email format."}, status=400)
-
+            try: validate_email(email)
+            except ValidationError: return JsonResponse({"success": False, "error": "Invalid email format."}, status=400)
             sub, created = Subscriber.objects.get_or_create(email=email)
             if created: 
                 send_welcome_email(email)
@@ -282,19 +282,11 @@ def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
     if action == "approve": 
         if job.screening_status != "approved":
-            job.screening_status = "approved"
-            job.is_active = True
-            job.screened_at = timezone.now()
-            job.save()
-            cache.delete('popular_tech_stacks_v2')
-            cache.delete('available_countries_v2')
-            send_job_alert(job)
+            job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save()
+            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
 
-def about(request):
-    return render(request, 'jobs/about.html')
-
-def for_employers(request):
-    return render(request, 'jobs/for_employers.html')
+def about(request): return render(request, 'jobs/about.html')
+def for_employers(request): return render(request, 'jobs/for_employers.html')
