@@ -44,7 +44,7 @@
                     },
                     colors: {
                         'martech-dark': '#0f172a',
-                        'martech-green': '#064e3b',
+                        'martech-green': '#1f432d', // Dark forest green for buttons
                     }
                 }
             }
@@ -69,7 +69,7 @@
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231e293b'/%3E%3Cpath d='M60 5 L20 55 L45 55 L35 95 L80 40 L55 40 Z' fill='white'/%3E%3C/svg%3E">
 </head>
-<body class="bg-white text-slate-900 font-sans antialiased selection:bg-black selection:text-white">
+<body class="bg-white text-slate-900 font-sans antialiased selection:bg-black selection:text-white flex flex-col min-h-screen">
 
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
@@ -96,55 +96,95 @@
         </div>
     </nav>
 
-    <main class="min-h-screen">
+    <main class="flex-grow">
         {% block content %}
         {% endblock %}
     </main>
 
-    <footer class="bg-black text-white border-t border-slate-900 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 py-16">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                <div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="bg-white text-black p-1 rounded">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <div class="bg-[#111] py-14 border-t border-black">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="max-w-lg">
+                    <h2 class="text-2xl md:text-3xl font-serif font-bold text-white flex items-center gap-3 mb-2">
+                        <svg class="w-6 h-6 text-[#2d5c3f]" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+                        Advance your career in MarTech
+                    </h2>
+                    <p class="text-slate-400 text-sm">Join 15,000+ professionals receiving curated jobs every Tuesday.</p>
+                </div>
+                
+                <div class="w-full md:w-auto">
+                    <form id="footer-subscribe-form" onsubmit="submitFooterSubscription(event)" class="flex flex-col sm:flex-row">
+                        {% csrf_token %}
+                        <input type="email" name="email" required placeholder="Enter your email" class="w-full sm:w-80 px-4 py-3 bg-white text-slate-900 border-none outline-none placeholder-slate-500 rounded-none sm:rounded-l-sm h-12">
+                        <button type="submit" id="footer-sub-btn" class="bg-[#2d5c3f] hover:bg-[#234a32] text-white px-6 py-3 font-bold text-xs tracking-widest uppercase h-12 rounded-none sm:rounded-r-sm transition">
+                            Subscribe
+                        </button>
+                    </form>
+                    <p class="text-slate-600 text-[10px] mt-2 font-mono">No spam, ever. Unsubscribe at any time.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white pt-16 pb-12">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20 border-b border-slate-100 pb-16">
+                
+                <div class="col-span-1 pr-4">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="bg-slate-100 p-2 rounded">
+                            <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                         </div>
-                        <span class="font-serif font-bold text-xl">MarTech Jobs</span>
+                        <span class="font-serif font-bold text-xl text-slate-900">MarTech Jobs</span>
                     </div>
-                    <p class="text-slate-400 text-sm max-w-xs leading-relaxed">
+                    <p class="text-slate-500 text-sm leading-relaxed mb-6">
                         The leading community and job board for marketing technology professionals. We connect talent with the brands building the future.
                     </p>
-                    <div class="flex gap-4 mt-6">
-                        <a href="#" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 4.084-6.13 6.13-10.592 5.167 2.043 1.31 4.47 2.074 7.078 2.074 8.527 0 13.193-7.065 12.986-13.38 2.261-2.09 4.846-5.467 4.549-9.11z"/></svg></a>
+                    <div class="flex gap-4 text-slate-400">
+                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path></svg></a>
+                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg></a>
+                        <a href="#" class="hover:text-slate-600 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg></a>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-12 sm:gap-24 text-sm">
-                    <div>
-                        <h4 class="font-bold mb-4 text-white">Candidates</h4>
-                        <ul class="space-y-3 text-slate-400">
-                            <li><a href="/" class="hover:text-white transition">Browse Jobs</a></li>
-                            <li><a href="#" class="hover:text-white transition">Company Directory</a></li>
-                            <li><a href="#" class="hover:text-white transition">Salary Guide</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-bold mb-4 text-white">Employers</h4>
-                        <ul class="space-y-3 text-slate-400">
-                            <li><a href="{% url 'post_job' %}" class="hover:text-white transition">Post a Job</a></li>
-                            <li><a href="#" class="hover:text-white transition">Pricing</a></li>
-                            <li><a href="#" class="hover:text-white transition">Success Stories</a></li>
-                        </ul>
-                    </div>
+                <div>
+                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Candidates</h3>
+                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                        <li><a href="/" class="hover:text-slate-900 transition">Browse Jobs</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Company Directory</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Salary Guide</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Career Advice</a></li>
+                    </ul>
                 </div>
+
+                <div>
+                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Employers</h3>
+                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                        <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Post a Job</a></li>
+                        <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Search Resumes</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Success Stories</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Support</h3>
+                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
+                        <li><a href="#" class="hover:text-slate-900 transition">Help Center</a></li>
+                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+
             </div>
             
-            <div class="border-t border-slate-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500">
+            <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 font-mono">
                 <p>&copy; {% now "Y" %} MarTech Jobs Inc. All rights reserved.</p>
-                <div class="flex gap-6 mt-4 sm:mt-0">
-                    <a href="#" class="hover:text-white">Privacy</a>
-                    <a href="#" class="hover:text-white">Terms</a>
-                    <a href="#" class="hover:text-white">Sitemap</a>
+                <div class="flex gap-8 mt-4 sm:mt-0">
+                    <a href="#" class="hover:text-slate-600 transition">Privacy</a>
+                    <a href="#" class="hover:text-slate-600 transition">Terms</a>
+                    <a href="#" class="hover:text-slate-600 transition">Sitemap</a>
                 </div>
             </div>
         </div>
@@ -195,6 +235,7 @@
                 }, 300);
             }
         }
+        
         async function submitSubscription(e) {
             e.preventDefault();
             const btn = document.getElementById('sub-btn');
@@ -214,6 +255,29 @@
                 console.error('Error:', error);
                 alert("Something went wrong. Please try again.");
             } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function submitFooterSubscription(e) {
+            e.preventDefault();
+            const btn = document.getElementById('footer-sub-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "...";
+            btn.disabled = true;
+            const formData = new FormData(document.getElementById('footer-subscribe-form'));
+            try {
+                await fetch("{% url 'subscribe' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                btn.innerText = "Subscribed!";
+                btn.classList.add('bg-green-700');
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Something went wrong.");
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
