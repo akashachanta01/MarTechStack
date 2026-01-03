@@ -8,7 +8,7 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('for-employers/', views.for_employers, name='for_employers'),
 
-    # --- SEO: TOOL LANDING PAGES (Topic Clusters) ---
+    # --- STANDARD SEO: TOOL LANDING PAGES ---
     path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
     
     # --- SEO: JOB DETAIL PAGE ---
@@ -25,4 +25,11 @@ urlpatterns = [
 
     path('staff/review/', views.review_queue, name='review_queue'),
     path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
+
+    # --- PROGRAMMATIC SEO (Must be last) ---
+    # Matches: /remote/hubspot-jobs/ or /new-york/salesforce-jobs/
+    path('<str:location_slug>/<slug:tool_slug>-jobs/', views.seo_landing_page, name='seo_tool_loc'),
+    
+    # Matches: /remote/jobs/ or /london/jobs/
+    path('<str:location_slug>/jobs/', views.seo_landing_page, name='seo_loc_only'),
 ]
