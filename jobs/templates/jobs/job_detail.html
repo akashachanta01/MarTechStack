@@ -27,8 +27,8 @@
                         serif: ['Playfair Display', 'serif'],
                     },
                     colors: {
-                        'martech-green': '#1f432d', // Dark forest green from screenshot
-                        'martech-accent': '#eefcf6', // Light green pill bg
+                        'martech-green': '#1f432d',
+                        'martech-accent': '#eefcf6',
                     }
                 }
             }
@@ -38,13 +38,47 @@
     <style> 
         body { font-family: 'Inter', sans-serif; } 
         h1, h2, h3 { font-family: 'Playfair Display', serif; }
-        
-        /* Custom Prose Styling to match the clean document look */
         .prose h2, .prose h3 { font-family: 'Playfair Display', serif; color: #111827; margin-top: 2em; margin-bottom: 0.8em; }
         .prose ul { list-style-type: disc; padding-left: 1.2em; }
         .prose li { margin-bottom: 0.5em; color: #374151; }
         .prose p { margin-bottom: 1.2em; color: #374151; line-height: 1.7; }
     </style>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org/",
+      "@type": "JobPosting",
+      "title": "{{ job.title|escapejs }}",
+      "description": "<p>{{ job.description|escapejs }}</p>",
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "{{ job.company|escapejs }}",
+        "value": "{{ job.id }}"
+      },
+      "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
+      "hiringOrganization": {
+        "@type": "Organization",
+        "name": "{{ job.company|escapejs }}",
+        "logo": "{{ job.company_logo|default:'https://martechjobs.io/static/logo.png' }}"
+      },
+      {% if "remote" in job.location|lower %}
+      "jobLocationType": "TELECOMMUTE",
+      "applicantLocationRequirements": {
+        "@type": "Country",
+        "name": "United States"
+      },
+      {% else %}
+      "jobLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "{{ job.location|escapejs }}"
+        }
+      },
+      {% endif %}
+      "employmentType": "{% if job.role_type == 'contract' %}CONTRACTOR{% elif job.role_type == 'part_time' %}PART_TIME{% else %}FULL_TIME{% endif %}"
+    }
+    </script>
 </head>
 <body class="bg-white text-slate-900 antialiased selection:bg-martech-green selection:text-white">
 
@@ -100,9 +134,6 @@
                         <button class="w-10 h-10 border border-slate-200 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-400 transition">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
                         </button>
-                        <button class="w-10 h-10 border border-slate-200 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-400 transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-                        </button>
                     </div>
                 </div>
 
@@ -120,10 +151,6 @@
                     <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         {{ job.get_role_type_display }}
-                    </div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        Posted {{ job.created_at|timesince }} ago
                     </div>
                 </div>
 
@@ -165,22 +192,17 @@
                          </div>
                          <div>
                              <h4 class="font-bold text-slate-900 text-lg">{{ job.company }}</h4>
-                             <a href="#" class="text-xs text-slate-500 hover:text-martech-green font-medium">View Profile</a>
                          </div>
                     </div>
                     
                     <p class="text-sm text-slate-500 mb-6 leading-relaxed">
-                        {{ job.company }} is hiring for this role. Check out their profile to learn more about their mission and culture.
+                        {{ job.company }} is hiring for this role.
                     </p>
 
                     <div class="space-y-3 pt-4 border-t border-slate-100">
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500">Headquarters</span>
                             <span class="font-medium text-slate-900">{{ job.location|default:"Remote" }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Website</span>
-                            <a href="#" class="font-medium text-martech-green hover:underline">Visit Website</a>
                         </div>
                     </div>
                 </div>
