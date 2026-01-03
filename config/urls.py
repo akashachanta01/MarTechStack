@@ -2,16 +2,16 @@ from django.contrib import admin
 from django.urls import path, include, reverse
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.sitemaps import Sitemap
 from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
-from jobs.sitemaps import JobSitemap, ToolSitemap, SEOLandingSitemap # <--- Added Import
+from jobs.sitemaps import JobSitemap, ToolSitemap, SEOLandingSitemap, StaticViewSitemap # <--- Updated Import
 
 # --- DEFINITIONS ---
 sitemaps = {
     'jobs': JobSitemap,
     'tools': ToolSitemap, 
-    'seo_landing': SEOLandingSitemap, # <--- Added
+    'seo_landing': SEOLandingSitemap,
+    'static': StaticViewSitemap, # <--- Added
 }
 
 # --- ROBOTS.TXT ---
@@ -19,6 +19,7 @@ def robots_txt(request):
     content = f"""User-agent: *
 Disallow: /admin/
 Disallow: /staff/
+Disallow: /webhook/
 
 Sitemap: {settings.DOMAIN_URL}/sitemap.xml
 """
