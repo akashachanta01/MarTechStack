@@ -1,24 +1,70 @@
 {% extends "jobs/base.html" %}
-{% block title %}Top {{ tool.name }} Jobs in {% now "Y" %} — MarTechJobs{% endblock %}
+
+{% block title %}
+    {% if custom_title %}{{ custom_title }} | MarTechJobs{% else %}Top {{ tool.name }} Jobs & Career Guide {% now "Y" %} — MarTechJobs{% endif %}
+{% endblock %}
+
+{% block meta_description %}
+    {% if custom_desc %}
+        {{ custom_desc }}
+    {% else %}
+        Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. We curate {{ tool.name }} jobs from top companies.
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="relative bg-white border-b border-slate-100 overflow-hidden">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h1 class="text-4xl md:text-6xl font-serif font-medium text-slate-900 mb-6">
-            Top <span class="text-martech-green">{{ tool.name }}</span> Jobs
-        </h1>
-        <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-8 font-light">
-            Browse the best Marketing Operations and MarTech roles requiring <strong>{{ tool.name }}</strong> expertise. Curated for quality.
-        </p>
-        <a href="/" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-martech-green transition">
-            &larr; View all MarTech Jobs
-        </a>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+            {% if tool.logo_url %}
+            <div class="flex-shrink-0 w-24 h-24 bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center shadow-sm">
+                <img src="{{ tool.logo_url }}" alt="{{ tool.name }} Logo" class="max-w-full max-h-full object-contain">
+            </div>
+            {% endif %}
+
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl md:text-6xl font-serif font-medium text-slate-900 mb-6">
+                    {% if custom_header %}
+                        {{ custom_header|safe }}
+                    {% else %}
+                        <span class="text-martech-green">{{ tool.name }}</span> Jobs
+                    {% endif %}
+                </h1>
+                
+                {% if tool.description %}
+                    <div class="prose prose-slate max-w-2xl text-slate-500 font-light leading-relaxed mb-6">
+                        {{ tool.description|safe }}
+                    </div>
+                {% else %}
+                    <p class="text-lg text-slate-500 max-w-2xl mb-8 font-light">
+                        {% if custom_desc %}
+                            {{ custom_desc }}
+                        {% else %}
+                            Browse the best Marketing Operations and MarTech roles requiring <strong>{{ tool.name }}</strong> expertise. 
+                            We curate {{ tool.name }} jobs from top companies to help you find your next career move.
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <a href="/" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-martech-green transition">
+                    &larr; View all MarTech Jobs
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <div class="bg-slate-50 py-16">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-serif font-bold text-slate-900">Active Roles</h2>
+            <span class="text-xs font-bold bg-white border border-slate-200 px-2 py-1 rounded text-slate-500">{{ jobs.paginator.count }} Found</span>
+        </div>
+
         {% for job in jobs %}
             <div class="bg-white border border-black rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
                 
@@ -69,9 +115,9 @@
 
                     <div class="flex flex-col justify-between items-end gap-3 min-w-[140px] self-stretch py-1">
                         <div class="flex gap-1.5">
-                            {% for tool in job.tools.all|slice:":2" %}
-                            <span class="{{ tool.color_class }} px-2 py-0.5 rounded text-[10px] font-bold border opacity-90 shadow-sm">
-                                {{ tool.name }}
+                            {% for t in job.tools.all|slice:":2" %}
+                            <span class="{{ t.color_class }} px-2 py-0.5 rounded text-[10px] font-bold border opacity-90 shadow-sm">
+                                {{ t.name }}
                             </span>
                             {% endfor %}
                         </div>
