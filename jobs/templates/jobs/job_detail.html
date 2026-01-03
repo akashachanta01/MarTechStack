@@ -77,11 +77,11 @@
         <div class="flex flex-col md:flex-row gap-6 md:items-start">
             <div class="flex-shrink-0">
                 {% if job.company_logo %}
-                    <div class="w-24 h-24 border border-slate-200 rounded-sm bg-white p-4 flex items-center justify-center">
+                    <div class="w-24 h-24 border border-black rounded-sm bg-white p-4 flex items-center justify-center">
                         <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
                     </div>
                 {% else %}
-                    <div class="w-24 h-24 border border-slate-200 rounded-sm bg-slate-50 flex items-center justify-center text-3xl font-serif text-slate-400">
+                    <div class="w-24 h-24 border border-black rounded-sm bg-slate-50 flex items-center justify-center text-3xl font-serif text-slate-400">
                         {{ job.company|slice:":1" }}
                     </div>
                 {% endif %}
@@ -154,7 +154,7 @@
 
             <div class="space-y-8">
                 
-                <div class="border border-slate-200 rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                <div class="border border-black rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
                     <div class="flex items-center gap-4 mb-4">
                          <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center font-serif font-bold text-slate-400">
                             {% if job.company_logo %}
@@ -186,7 +186,7 @@
                 </div>
 
                 {% if job.tools.exists %}
-                <div class="border border-slate-200 rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                <div class="border border-black rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
                     <h4 class="font-bold text-slate-900 mb-4">Tech Stack</h4>
                     <div class="flex flex-wrap gap-2">
                         {% for tool in job.tools.all %}
