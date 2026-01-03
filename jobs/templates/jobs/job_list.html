@@ -257,30 +257,6 @@
             </div>
         </div>
         {% endif %}
-
-        <div class="mt-20 border-t border-slate-200 pt-10">
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Popular Tech Stacks</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8 text-xs text-slate-500">
-                {% for stack in popular_tech_stacks|slice:":12" %}
-                    <a href="{% url 'tool_detail' stack.slug %}" class="hover:text-martech-green transition flex items-center justify-between group">
-                        <span>{{ stack.name }} Jobs</span>
-                        <span class="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-slate-100 px-1.5 rounded">{{ stack.count }}</span>
-                    </a>
-                {% empty %}
-                    <a href="/stack/hubspot/" class="hover:text-martech-green transition">HubSpot Jobs</a>
-                    <a href="/stack/salesforce/" class="hover:text-martech-green transition">Salesforce Jobs</a>
-                {% endfor %}
-            </div>
-            
-            <div class="mt-8 text-[10px] text-slate-400 font-mono">
-                <p>Trending Locations: 
-                {% for country in available_countries|slice:":8" %}
-                    <a href="/?country={{ country }}" class="hover:underline hover:text-slate-600 mr-2">{{ country }}</a>
-                {% endfor %}
-                </p>
-            </div>
-        </div>
-        
     </div>
 </div>
 {% endblock %}
