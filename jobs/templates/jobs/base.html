@@ -14,6 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
     <script>
         tailwind.config = {
@@ -22,11 +23,18 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         serif: ['Playfair Display', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        // Kept your green just for the logo accent, but the footer uses standard slates
                         'martech-green': '#1f432d',
+                        'martech-accent': '#eefcf6',
                     },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)",
+                    },
+                    backgroundSize: {
+                        'grid-pattern': '40px 40px',
+                    }
                 }
             }
         }
@@ -34,11 +42,9 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; } 
-        /* Optional: uncomment if you want serif headers elsewhere on the site */
-        /* h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; } */
     </style>
 </head>
-<body class="bg-white text-slate-900 antialiased flex flex-col min-h-screen">
+<body class="bg-white text-slate-900 antialiased selection:bg-martech-green selection:text-white flex flex-col min-h-screen">
 
     <nav class="border-b border-slate-100 sticky top-0 bg-white z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -46,7 +52,7 @@
                  <div class="bg-martech-green text-white p-1 rounded-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="font-bold text-lg text-slate-900">MarTechJobs</span>
+                <span class="font-serif font-bold text-lg text-slate-900">MarTechJobs</span>
             </a>
             <div class="flex items-center gap-6">
                 <a href="/" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Find Jobs</a>
@@ -70,7 +76,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-slate-50 pt-16 pb-12 text-slate-600 font-sans">
+    <footer class="bg-slate-50 pt-16 pb-12 text-slate-600 font-sans border-t border-slate-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
@@ -79,7 +85,7 @@
                         <div class="bg-martech-green text-white p-1 rounded-sm">
                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                        </div>
-                       <span class="font-bold text-lg text-slate-900">MarTechJobs</span>
+                       <span class="font-bold text-lg text-slate-900 font-serif">MarTechJobs</span>
                    </a>
                    <p class="text-sm leading-relaxed mb-6 text-slate-500">
                        Connecting the best talent in Marketing Operations, Technology, and Analytics with forward-thinking companies.
@@ -87,49 +93,62 @@
                    <div class="flex gap-4 text-slate-400">
                        <a href="#" class="hover:text-slate-600 transition">
                            <span class="sr-only">Twitter</span>
-                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
+                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
                        </a>
                        <a href="#" class="hover:text-slate-600 transition">
-                           <span class="sr-only">GitHub</span>
-                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+                           <span class="sr-only">LinkedIn</span>
+                           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12c-1.104 0-2-.896-2-2s.896-2 2-2 2 .896 2 2-.896 2-2 2zm13.5 12h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"></path></svg>
                        </a>
                    </div>
                 </div>
 
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Product</h3>
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Tech Stacks</h3>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="hover:text-slate-900 transition">Features</a></li>
-                        <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Pricing (Post a Job)</a></li>
+                        {% for stack in popular_tech_stacks|slice:":6" %}
+                        <li>
+                            <a href="{% url 'tool_detail' stack.slug %}" class="hover:text-martech-green hover:underline transition">
+                                {{ stack.name }} Jobs
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li><a href="/" class="hover:text-slate-900 transition">All Jobs</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
 
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Resources</h3>
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Locations</h3>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="hover:text-slate-900 transition">Blog</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Newsletter</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Support</a></li>
+                        <li><a href="{% url 'seo_loc_only' 'remote' %}" class="hover:text-martech-green hover:underline transition font-semibold">Remote Jobs</a></li>
+                        {% for country in available_countries|slice:":5" %}
+                        <li>
+                            <a href="{% url 'seo_loc_only' country|slugify %}" class="hover:text-martech-green hover:underline transition">
+                                Jobs in {{ country }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Company</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="{% url 'about' %}" class="hover:text-slate-900 transition">About</a></li>
+                        <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
                         <li><a href="{% url 'salary_guide' %}" class="hover:text-slate-900 transition">Salary Guide</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4">Company</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="hover:text-slate-900 transition">About us</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Contact</a></li>
+                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact</a></li>
                     </ul>
                 </div>
             </div>
 
-            <div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
-                <p class="mb-4 md:mb-0">&copy; {{ now|date:"Y" }} MarTechJobs. All rights reserved.</p>
-                <ul class="flex gap-6">
-                    <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
-                    <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
-                    <li><a href="#" class="hover:text-slate-900 transition">Cookies Settings</a></li>
-                </ul>
+            <div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between text-sm text-slate-400">
+                <p class="mb-4 md:mb-0">&copy; {% now "Y" %} MarTechJobs. All rights reserved.</p>
+                <div class="flex gap-6">
+                    <a href="#" class="hover:text-slate-600 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-600 transition">Terms</a>
+                    <a href="#" class="hover:text-slate-600 transition">Sitemap</a>
+                </div>
             </div>
         </div>
     </footer>
