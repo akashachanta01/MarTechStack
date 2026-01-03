@@ -1,87 +1,159 @@
 {% extends "jobs/base.html" %}
+{% load static %}
+
 {% block title %}About Us — MarTechJobs{% endblock %}
 
 {% block content %}
-<div class="bg-white overflow-hidden">
-    
-    <div class="relative isolate px-6 pt-14 lg:px-8">
-        <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-            <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+    .font-mono-tag { font-family: 'JetBrains Mono', monospace; }
+</style>
+
+<section class="relative w-full py-20 md:py-32 bg-white overflow-hidden border-b border-slate-200">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+    <div class="relative w-full max-w-4xl mx-auto px-4 lg:px-8 text-center z-10">
+        <div class="mb-8 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+            <span class="flex size-2 rounded-full bg-[#1f432d]"></span>
+            <span class="text-xs font-medium text-slate-500 font-mono-tag tracking-tight">Established 2025</span>
         </div>
-        
-        <div class="mx-auto max-w-2xl py-12 sm:py-20 text-center">
-            <div class="hidden sm:mb-8 sm:flex sm:justify-center">
-                <div class="relative rounded-full px-3 py-1 text-sm leading-6 text-slate-600 ring-1 ring-slate-900/10 hover:ring-slate-900/20">
-                    The Home of the MarTech Community 🚀
+        <h1 class="text-5xl md:text-7xl font-bold font-serif tracking-tight text-slate-900 mb-8 leading-[1.1]">
+            Bridging the gap between <br/>
+            <span class="text-[#1f432d] relative inline-block">
+                Marketing & Technology
+                <svg class="absolute w-full h-3 -bottom-1 left-0 text-[#1f432d] opacity-20" fill="none" viewBox="0 0 200 9" xmlns="http://www.w3.org/2000/svg"><path d="M2.00025 6.99992C18.5002 2.49992 48.5002 5.49992 89.5003 3.99992C167 1.16104 179 0.49992 197.5 1.49992" stroke="currentColor" stroke-width="3"></path></svg>
+            </span>
+        </h1>
+        <p class="text-xl md:text-2xl text-slate-500 font-light leading-relaxed">
+            We're building the definitive ecosystem for the professionals who power modern marketing operations.
+        </p>
+    </div>
+</section>
+
+<section class="py-20 bg-white border-b border-slate-200">
+    <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-4xl font-bold font-serif text-slate-900 mb-6 leading-tight">The intersection of creativity and data is where the future happens.</h2>
+                <div class="space-y-6 text-lg text-slate-500 font-light">
+                    <p>
+                        Marketing Technology isn't just a niche anymore; it's the backbone of every successful modern enterprise. Yet, finding the right talent—or the right role—in this specialized field has been unnecessarily complex.
+                    </p>
+                    <p>
+                        Generic job boards don't understand the difference between a HubSpot Admin and a Marketing Ops Manager. We do.
+                    </p>
+                    <p>
+                        MarTech Jobs was founded to bring clarity, community, and curated opportunities to this rapidly evolving landscape. We are obsessed with the stack, the strategy, and the people behind the platforms.
+                    </p>
                 </div>
             </div>
-            <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
-                Connecting the <span class="text-indigo-600">Builders</span> of Marketing.
-            </h1>
-            <p class="mt-6 text-lg leading-8 text-slate-600">
-                MarTechJobs exists to solve the disconnect between specialized talent and the companies that need them.
-            </p>
-        </div>
-    </div>
-
-    <div class="bg-slate-50 py-24 sm:py-32">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                
-                <div class="relative">
-                    <h3 class="text-lg font-bold text-red-600 mb-2 uppercase tracking-wide">The Challenge</h3>
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">The "Unstructured" Trap</h2>
-                    <div class="bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-                        <p class="text-slate-600 mb-4">
-                            <strong>For Talent:</strong> Finding a job is chaos. A search for "Marketing Manager" returns 10,000 results. 99% are generalist roles, but hidden in there is the 1% that requires SQL, API integration, and CRM architecture. You shouldn't have to read 500 bad descriptions to find one good role.
-                        </p>
-                        <p class="text-slate-600">
-                            <strong>For Employers:</strong> MarTech is a niche. Posting on a general board brings a flood of unqualified resumes from people who think "Tech Stack" means using Microsoft Excel.
-                        </p>
+            <div class="relative">
+                <div class="aspect-[4/3] bg-slate-50 border border-slate-900 rounded-lg shadow-[8px_8px_0px_0px_rgba(31,67,45,1)] overflow-hidden relative group">
+                    <div class="absolute inset-0 bg-[radial-gradient(#1f432d_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.1]"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="grid grid-cols-2 gap-4 p-8 w-full max-w-md">
+                            <div class="bg-white p-6 border border-slate-200 shadow-sm rounded-sm text-center transform rotate-2 transition-transform group-hover:rotate-0 duration-500">
+                                <span class="material-symbols-outlined text-4xl text-[#1f432d] mb-2">engineering</span>
+                                <div class="font-bold font-serif text-lg">Ops</div>
+                            </div>
+                            <div class="bg-white p-6 border border-slate-200 shadow-sm rounded-sm text-center transform -rotate-1 transition-transform group-hover:rotate-0 duration-500 mt-8">
+                                <span class="material-symbols-outlined text-4xl text-[#1f432d] mb-2">analytics</span>
+                                <div class="font-bold font-serif text-lg">Data</div>
+                            </div>
+                            <div class="bg-white p-6 border border-slate-200 shadow-sm rounded-sm text-center transform -rotate-3 transition-transform group-hover:rotate-0 duration-500">
+                                <span class="material-symbols-outlined text-4xl text-[#1f432d] mb-2">campaign</span>
+                                <div class="font-bold font-serif text-lg">Growth</div>
+                            </div>
+                            <div class="bg-white p-6 border border-slate-200 shadow-sm rounded-sm text-center transform rotate-1 transition-transform group-hover:rotate-0 duration-500 mt-8">
+                                <span class="material-symbols-outlined text-4xl text-[#1f432d] mb-2">code</span>
+                                <div class="font-bold font-serif text-lg">Dev</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="relative">
-                    <h3 class="text-lg font-bold text-indigo-600 mb-2 uppercase tracking-wide">The Mission</h3>
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">A Dedicated Ecosystem</h2>
-                    <div class="bg-white p-8 rounded-2xl border border-indigo-100 shadow-xl ring-1 ring-indigo-50 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-50 rounded-full blur-2xl"></div>
-                        <p class="text-slate-600 mb-4 relative z-10">
-                            We are standardizing the chaos. MarTechJobs is built exclusively for the intersection of <strong>Marketing & Engineering</strong>.
-                        </p>
-                        <ul class="space-y-3 relative z-10">
-                            <li class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span class="text-slate-900 font-medium">We standardize titles so "Analyst" actually means Analyst.</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span class="text-slate-900 font-medium">We filter by Tech Stack, not just keywords.</span>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span class="text-slate-900 font-medium">We create a direct line between experts and teams.</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
+</section>
 
-    <div class="bg-indigo-900 py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-            <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Ready to find your match?
-            </h2>
-            <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-indigo-200">
-                Whether you are building the stack or hiring the architect, this is your home.
-            </p>
-            <div class="mt-10 flex items-center justify-center gap-x-6">
-                <a href="/" class="rounded-xl bg-white px-8 py-3.5 text-sm font-bold text-indigo-900 shadow-sm hover:bg-indigo-50 transition">
-                    Browse Jobs
-                </a>
-                <a href="{% url 'for_employers' %}" class="text-sm font-semibold leading-6 text-white hover:text-indigo-200">
-                    Hiring? Post a Job <span aria-hidden="true">→</span>
-                </a>
+<section class="py-24 bg-slate-50 border-b border-slate-200">
+    <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <span class="text-[#1f432d] font-bold tracking-wider uppercase text-sm font-mono-tag mb-3 block">Our Principles</span>
+            <h2 class="text-3xl md:text-4xl font-bold font-serif text-slate-900">Built on Transparency & Specialization</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 border border-slate-200 rounded-sm shadow-sm hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-[#1f432d] text-2xl">visibility</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif">Radical Transparency</h3>
+                <p class="text-slate-500 leading-relaxed">
+                    We believe salary ranges should be visible, tech stacks should be detailed, and job descriptions should be clear. No more guessing games.
+                </p>
+            </div>
+            <div class="bg-white p-8 border border-slate-200 rounded-sm shadow-sm hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-[#1f432d] text-2xl">verified</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif">Curated Quality</h3>
+                <p class="text-slate-500 leading-relaxed">
+                    We manually review every listing. If it's not relevant to MarTech, it's not on our board. We filter out the noise so you can focus on the signal.
+                </p>
+            </div>
+            <div class="bg-white p-8 border border-slate-200 rounded-sm shadow-sm hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-[#1f432d] text-2xl">groups</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif">Community First</h3>
+                <p class="text-slate-500 leading-relaxed">
+                    We're more than a job board; we're a career partner. Through our newsletter and resources, we help our community grow and succeed.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-20 bg-[#1f432d] text-white relative overflow-hidden">
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 border border-white/10 rounded-full opacity-50"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 border border-white/10 rounded-full opacity-50"></div>
+    <div class="w-full max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/10">
+            <div class="p-4">
+                <div class="text-4xl md:text-5xl font-bold font-serif mb-2 text-white">15k+</div>
+                <div class="text-sm md:text-base text-gray-300 font-mono-tag">Weekly Readers</div>
+            </div>
+            <div class="p-4">
+                <div class="text-4xl md:text-5xl font-bold font-serif mb-2 text-white">450+</div>
+                <div class="text-sm md:text-base text-gray-300 font-mono-tag">Companies Hiring</div>
+            </div>
+            <div class="p-4">
+                <div class="text-4xl md:text-5xl font-bold font-serif mb-2 text-white">1.2k</div>
+                <div class="text-sm md:text-base text-gray-300 font-mono-tag">Jobs Posted</div>
+            </div>
+            <div class="p-4">
+                <div class="text-4xl md:text-5xl font-bold font-serif mb-2 text-white">100%</div>
+                <div class="text-sm md:text-base text-gray-300 font-mono-tag">MarTech Focused</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-24 bg-white">
+    <div class="w-full max-w-4xl mx-auto px-4 lg:px-8 text-center">
+        <h2 class="text-4xl font-bold text-slate-900 mb-6 font-serif">Ready to find your next role?</h2>
+        <p class="text-lg text-slate-500 mb-10 max-w-2xl mx-auto">
+            Join the thousands of professionals who trust MarTech Jobs to advance their careers. Your next opportunity is waiting.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'job_list' %}" class="px-8 py-3.5 bg-[#1f432d] hover:bg-green-900 text-white font-bold rounded-sm shadow-md transition-all text-base">
+                Browse Open Roles
+            </a>
+            <a href="{% url 'post_job' %}" class="px-8 py-3.5 bg-white border border-slate-900 text-slate-900 font-bold rounded-sm hover:bg-slate-50 transition-all text-base">
+                Post a Job
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
