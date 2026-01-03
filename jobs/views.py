@@ -33,8 +33,9 @@ def job_list(request):
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
-    country_query = request.GET.get("country", "").strip() # <--- NEW: Capture Country
+    country_query = request.GET.get("country", "").strip()
     work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+    role_type_filter = request.GET.get("rtype", "").strip().lower() # <--- NEW: Contract Filter
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
@@ -71,11 +72,15 @@ def job_list(request):
     if location_query:
         jobs = jobs.filter(location__icontains=location_query)
     
-    if country_query: # <--- NEW: Filter logic
+    if country_query:
         jobs = jobs.filter(location__icontains=country_query)
 
+    # 5. Tab Filters (Remote / Contract)
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+    
+    if role_type_filter: # <--- NEW: Filter logic
+        jobs = jobs.filter(role_type__iexact=role_type_filter)
 
     # Pagination
     paginator = Paginator(jobs.distinct(), 25)
@@ -113,10 +118,13 @@ def job_list(request):
         "jobs": jobs_page, 
         "query": query, 
         "location_filter": location_query,
-        "selected_country": country_query, # <--- NEW: Pass back to template
+        "selected_country": country_query,
         "popular_tech_stacks": popular_tech_stacks, 
         "vendor_filter": vendor_query,
         "available_countries": available_countries,
+        # Pass filters back for active state
+        "current_arrangement": work_arrangement_filter,
+        "current_rtype": role_type_filter,
     })
 
 # --- NEW UNSUBSCRIBE VIEW ---
