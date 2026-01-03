@@ -1,0 +1,55 @@
+import os
+import json
+import requests
+from django.core.management.base import BaseCommand
+from django.conf import settings
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+from jobs.models import Job
+
+class Command(BaseCommand):
+    help = 'Pings Google Indexing API for all active jobs (Force Indexing)'
+
+    def handle(self, *args, **options):
+        self.stdout.write("🚀 Starting Google Indexing Ping...")
+        
+        # 1. Load Credentials
+        key_file = os.path.join(settings.BASE_DIR, 'service_account.json')
+        if not os.path.exists(key_file):
+            self.stdout.write(self.style.ERROR("❌ service_account.json not found."))
+            self.stdout.write(self.style.WARNING("👉 Download it from Google Cloud Console -> IAM -> Service Accounts"))
+            return
+
+        SCOPES = ["https://www.googleapis.com/auth/indexing"]
+        try:
+            creds = service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
+            creds.refresh(Request())
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Auth Error: {e}"))
+            return
+        
+        # 2. Get Jobs (Last 24 hours only to save quota)
+        # In production, you'd filter by recently updated
+        jobs = Job.objects.filter(is_active=True, screening_status='approved')[:50] # Limit to 50/run
+        
+        for job in jobs:
+            url = f"{settings.DOMAIN_URL}/job/{job.id}/{job.slug}/"
+            
+            endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+            payload = {
+                "url": url,
+                "type": "URL_UPDATED"
+            }
+            
+            headers = {"Authorization": f"Bearer {creds.token}"}
+            try:
+                resp = requests.post(endpoint, json=payload, headers=headers)
+                
+                if resp.status_code == 200:
+                    self.stdout.write(self.style.SUCCESS(f"   ✅ Pinged: {job.title}"))
+                else:
+                    self.stdout.write(self.style.ERROR(f"   ❌ Failed ({resp.status_code}): {resp.text}"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"   ❌ Request Error: {e}"))
+
+        self.stdout.write("✨ Done.")
