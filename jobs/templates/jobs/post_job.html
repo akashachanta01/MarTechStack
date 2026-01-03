@@ -4,210 +4,157 @@
 {% block title %}Post a Job — MarTechJobs{% endblock %}
 
 {% block content %}
-<div class="bg-white min-h-screen pb-20">
+<div class="bg-background-alt min-h-screen pb-20">
     
-    <div class="border-b border-slate-100 bg-slate-50/50">
-        <div class="max-w-3xl mx-auto px-6 py-12">
-            <nav class="flex items-center text-xs font-mono text-slate-500 mb-6 uppercase tracking-wider">
-                <a href="/" class="hover:text-black transition">Home</a>
-                <span class="mx-2">/</span>
-                <span class="text-slate-900 font-bold">Post a Job</span>
-            </nav>
-            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-4">Find your next MarTech expert</h1>
-            <p class="text-lg text-slate-500 font-light">Reach 15,000+ specialized professionals in Marketing Ops, Analytics, and Engineering.</p>
+    <div class="bg-white border-b border-border-light">
+        <div class="max-w-3xl mx-auto px-4 lg:px-8 py-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-text-main mb-4 tracking-tight">
+                Find your next MarTech expert
+            </h1>
+            <p class="text-lg text-text-muted font-light max-w-2xl mx-auto">
+                Reach 15,000+ specialized professionals in Marketing Ops, Analytics, and Engineering.
+            </p>
         </div>
     </div>
 
-    <div class="max-w-3xl mx-auto px-6 mt-12">
-        <form method="post" enctype="multipart/form-data" class="space-y-12">
-            {% csrf_token %}
+    <div class="max-w-3xl mx-auto px-4 lg:px-8 -mt-8">
+        <div class="bg-white border border-border-light rounded-sm shadow-sm p-8 md:p-10">
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-10">
+                {% csrf_token %}
 
-            <section>
-                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-6 flex items-center gap-3">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-sans font-bold">1</span>
-                    Role Details
-                </h3>
-                
-                <div class="grid grid-cols-1 gap-6">
+                <input type="hidden" name="plan" value="free">
+
+                <section>
+                    <div class="flex items-center gap-4 mb-8 pb-4 border-b border-border-light">
+                        <div class="size-8 rounded-full bg-text-main text-white flex items-center justify-center font-bold font-serif">1</div>
+                        <h3 class="text-xl font-serif font-bold text-text-main">Role Details</h3>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2 font-serif">Job Title <span class="text-red-500">*</span></label>
+                            {{ form.title }}
+                            <p class="text-xs text-text-muted mt-1.5 font-mono">e.g. Senior Marketing Ops Manager</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Company Name <span class="text-red-500">*</span></label>
+                                {{ form.company }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Company Logo URL</label>
+                                {{ form.company_logo }}
+                                <p class="text-xs text-text-muted mt-1.5 font-mono">Link to a square logo image (PNG/JPG)</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Location <span class="text-red-500">*</span></label>
+                                {{ form.location }}
+                                <p class="text-xs text-text-muted mt-1.5 font-mono">e.g. New York, NY or Remote</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Work Arrangement</label>
+                                {{ form.work_arrangement }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Role Type</label>
+                                {{ form.role_type }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-text-main mb-2 font-serif">Salary Range</label>
+                                {{ form.salary_range }}
+                                <p class="text-xs text-text-muted mt-1.5 font-mono">e.g. $120k - $150k</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2 font-serif">Tech Stack <span class="text-red-500">*</span></label>
+                            {{ form.new_tools }}
+                            <div class="flex flex-wrap gap-2 mt-3" id="tech-stack-preview">
+                                </div>
+                            <p class="text-xs text-text-muted mt-1.5 font-mono">Comma separated. e.g. HubSpot, Salesforce, Marketo, SQL</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-text-main mb-2 font-serif">Application Link <span class="text-red-500">*</span></label>
+                            {{ form.application_url }}
+                            <p class="text-xs text-text-muted mt-1.5 font-mono">The URL where candidates should apply.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="flex items-center gap-4 mb-8 pb-4 border-b border-border-light">
+                        <div class="size-8 rounded-full bg-text-main text-white flex items-center justify-center font-bold font-serif">2</div>
+                        <h3 class="text-xl font-serif font-bold text-text-main">Job Description</h3>
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-bold text-slate-900 mb-2">Job Title</label>
-                        {{ form.title }}
-                        <p class="text-xs text-slate-500 mt-1">e.g. Senior Marketing Ops Manager</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Company Name</label>
-                            {{ form.company }}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Company Logo</label>
-                            {{ form.company_logo }} </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Location</label>
-                            {{ form.location }}
-                            <p class="text-xs text-slate-500 mt-1">e.g. New York, NY or Remote</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Work Arrangement</label>
-                            {{ form.work_arrangement }}
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Role Type</label>
-                            {{ form.role_type }}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2">Salary Range</label>
-                            {{ form.salary_range }}
-                            <p class="text-xs text-slate-500 mt-1">e.g. $120k - $150k</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-900 mb-2">Tech Stack (Tools)</label>
-                        {{ form.new_tools }}
-                        <p class="text-xs text-slate-500 mt-1">Comma separated. e.g. HubSpot, Salesforce, Marketo, SQL</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-900 mb-2">Application Link</label>
-                        {{ form.application_url }}
-                        <p class="text-xs text-slate-500 mt-1">Where should candidates apply?</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-900 mb-2">Job Description</label>
                         <div class="prose max-w-none">
                             {{ form.description }}
                         </div>
+                        <p class="text-xs text-text-muted mt-2 font-mono">Markdown is supported for formatting.</p>
                     </div>
+                </section>
+
+                <div class="pt-6 border-t border-border-light">
+                    <button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold text-lg py-4 rounded-sm shadow-md transition-all transform hover:-translate-y-0.5">
+                        Post Job for Free
+                    </button>
+                    <p class="text-center text-xs text-text-muted mt-4 font-mono">
+                        By posting, you agree to our Terms of Service and Privacy Policy.
+                    </p>
                 </div>
-            </section>
-
-            <hr class="border-slate-200">
-
-            <section>
-                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-6 flex items-center gap-3">
-                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-sans font-bold">2</span>
-                    Select a Plan
-                </h3>
-
-                <select name="plan" id="id_plan" class="hidden">
-                    <option value="free">Free</option>
-                    <option value="featured">Featured</option>
-                </select>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div id="plan-card-free" onclick="selectPlan('free')" class="cursor-pointer relative border-2 border-slate-200 rounded-xl p-6 hover:border-slate-400 transition-all group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h4 class="font-serif font-bold text-xl text-slate-900">Standard</h4>
-                                <p class="text-slate-500 text-sm mt-1">Good for casual hiring.</p>
-                            </div>
-                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-hover:border-slate-500" id="radio-free">
-                                <div class="w-3 h-3 rounded-full bg-black hidden" id="dot-free"></div>
-                            </div>
-                        </div>
-                        <p class="text-3xl font-bold text-slate-900 mb-6">$0</p>
-                        <ul class="space-y-3 text-sm text-slate-600">
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Active for 30 days</li>
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Standard listing</li>
-                        </ul>
-                    </div>
-
-                    <div id="plan-card-featured" onclick="selectPlan('featured')" class="cursor-pointer relative border-2 border-[#1f432d] bg-green-50/30 rounded-xl p-6 transition-all shadow-sm">
-                        <div class="absolute -top-3 left-6 bg-[#1f432d] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                            Recommended
-                        </div>
-                        <div class="flex justify-between items-start mb-4 mt-2">
-                            <div>
-                                <h4 class="font-serif font-bold text-xl text-slate-900">Featured</h4>
-                                <p class="text-slate-500 text-sm mt-1">Hire faster & reach more people.</p>
-                            </div>
-                            <div class="w-6 h-6 rounded-full border-2 border-[#1f432d] flex items-center justify-center" id="radio-featured">
-                                <div class="w-3 h-3 rounded-full bg-[#1f432d]" id="dot-featured"></div>
-                            </div>
-                        </div>
-                        <p class="text-3xl font-bold text-slate-900 mb-6">$99</p>
-                        <ul class="space-y-3 text-sm text-slate-700">
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> <strong>Pinned to top</strong> for 7 days</li>
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Highlighted with badge</li>
-                            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Included in weekly newsletter</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <div class="pt-6">
-                <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold text-lg py-4 rounded-lg shadow-lg transition-all transform hover:-translate-y-0.5">
-                    Post Job Now
-                </button>
-                <p class="text-center text-xs text-slate-400 mt-4">
-                    By posting, you agree to our Terms of Service and Privacy Policy.
-                </p>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-    // 1. Plan Selection Logic
-    function selectPlan(plan) {
-        // Set hidden select value
-        const select = document.getElementById('id_plan');
-        select.value = plan;
-
-        // Visual Updates
-        const freeCard = document.getElementById('plan-card-free');
-        const featCard = document.getElementById('plan-card-featured');
-        const dotFree = document.getElementById('dot-free');
-        const dotFeat = document.getElementById('dot-featured');
-
-        if(plan === 'free') {
-            freeCard.classList.add('border-black', 'bg-slate-50');
-            freeCard.classList.remove('border-slate-200');
-            featCard.classList.remove('border-[#1f432d]', 'bg-green-50/30');
-            featCard.classList.add('border-slate-200');
-            
-            dotFree.classList.remove('hidden');
-            dotFeat.classList.add('hidden');
-        } else {
-            featCard.classList.add('border-[#1f432d]', 'bg-green-50/30');
-            featCard.classList.remove('border-slate-200');
-            freeCard.classList.remove('border-black', 'bg-slate-50');
-            freeCard.classList.add('border-slate-200');
-
-            dotFeat.classList.remove('hidden');
-            dotFree.classList.add('hidden');
-        }
-    }
-
-    // Initialize Featured as default (better for conversion)
     document.addEventListener('DOMContentLoaded', function() {
-        selectPlan('featured'); 
-
-        // 2. Auto-Style Django Form Fields
-        // This script finds all standard inputs and adds Tailwind classes to them
+        // 1. Auto-Style Django Form Fields to match the new design
         const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="url"], select, textarea');
         inputs.forEach(input => {
-            input.classList.add(
-                'w-full', 'px-4', 'py-3', 'rounded-lg', 
-                'border-2', 'border-gray-200', 
-                'focus:border-black', 'focus:ring-0', 
-                'transition-colors', 'bg-white',
-                'placeholder-slate-400', 'text-slate-900', 'text-sm'
-            );
+            // Apply Tailwind classes
+            let classes = [
+                'w-full', 'px-4', 'py-3', 'rounded-sm', 
+                'border', 'border-border-light', 'bg-white',
+                'text-text-main', 'text-sm', 'font-medium',
+                'focus:border-primary', 'focus:ring-1', 'focus:ring-primary', 'focus:outline-none',
+                'transition-all', 'placeholder-gray-400'
+            ];
+            input.classList.add(...classes);
             
+            // Specific styling for textarea
             if(input.tagName === 'TEXTAREA') {
-                input.rows = 6; // Make textareas taller
+                input.classList.add('h-64', 'font-mono', 'text-sm');
             }
         });
+
+        // 2. Tech Stack Tag Previewer (UX enhancement)
+        const toolsInput = document.querySelector('input[name="new_tools"]');
+        const previewContainer = document.getElementById('tech-stack-preview');
+        
+        if (toolsInput && previewContainer) {
+            toolsInput.addEventListener('input', function(e) {
+                const tools = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+                
+                if (tools.length > 0) {
+                    previewContainer.innerHTML = tools.map(tool => 
+                        `<span class="inline-flex items-center px-2 py-1 rounded-sm bg-background-alt border border-border-light text-xs font-mono text-text-muted">${tool}</span>`
+                    ).join('');
+                } else {
+                    previewContainer.innerHTML = '';
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
