@@ -12,7 +12,10 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MarTechJobs — The #1 Job Board for Marketing Ops{% endblock %}</title>
+    
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
+
+    <title>{% block title %}MarTechJobs — The #1 Job Board for Marketing Tech{% endblock %}</title>
     
     <meta name="description" content="{% block meta_description %}Find the best MarTech jobs. Curated roles for Marketo, HubSpot, Salesforce, and Adobe professionals.{% endblock %}">
     
@@ -44,7 +47,7 @@
                     },
                     colors: {
                         'martech-dark': '#0f172a',
-                        'martech-green': '#1f432d', // Dark forest green for branding
+                        'martech-green': '#1f432d', 
                     }
                 }
             }
@@ -54,15 +57,10 @@
     <style> 
         body { font-family: 'Inter', sans-serif; } 
         h1, h2, h3, .font-serif { font-family: 'Playfair Display', serif; }
-        
-        /* Modal Transitions */
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow-x: hidden; overflow-y: hidden !important; }
-        
-        /* Grid Background Pattern - UPDATED OPACITY */
         .bg-grid-pattern {
             background-size: 40px 40px;
-            /* Changed opacity from 0.03 to 0.07 for better visibility */
             background-image: linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
                               linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
         }
