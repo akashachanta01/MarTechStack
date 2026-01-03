@@ -86,7 +86,15 @@
             </form>
         </div>
 
-        <div class="mt-6 flex flex-wrap justify-center gap-2 text-[10px] text-slate-500 items-center">
+        <div class="mt-6 flex flex-wrap justify-center gap-4 text-[11px] text-slate-500 items-center max-w-4xl mx-auto">
+            <span class="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Popular Remote:</span>
+            {% for stack in popular_tech_stacks|slice:":6" %}
+                <a href="{% url 'seo_tool_loc' 'remote' stack.slug %}" class="hover:text-martech-green hover:underline transition">Remote {{ stack.name }} Jobs</a>
+                <span class="text-slate-300 last:hidden">•</span>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-[10px] text-slate-500 items-center">
             <span class="font-bold text-slate-900 mr-2">Trending:</span>
             {% for stack in popular_tech_stacks|slice:":5" %}
                 <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-black px-2 py-1 rounded hover:bg-slate-100 transition uppercase">{{ stack.name }}</a>
