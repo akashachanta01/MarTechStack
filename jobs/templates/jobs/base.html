@@ -44,7 +44,7 @@
                     },
                     colors: {
                         'martech-dark': '#0f172a',
-                        'martech-green': '#1f432d', // Dark forest green for buttons
+                        'martech-green': '#1f432d', // Dark forest green for branding
                     }
                 }
             }
@@ -74,24 +74,28 @@
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
             <a href="/" class="flex items-center gap-3 group">
-                <div class="bg-black text-white p-1.5 rounded group-hover:bg-slate-800 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div class="bg-slate-100 text-martech-green p-1.5 rounded-md group-hover:bg-slate-200 transition">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
                 </div>
-                <span class="text-xl font-serif font-bold tracking-tight text-slate-900">MarTech Jobs</span>
+                <span class="text-2xl font-serif font-bold tracking-tight text-[#113b28]">MarTech Jobs</span>
             </a>
 
-            <div class="hidden md:flex items-center gap-8">
-                <a href="/" class="text-sm font-medium text-slate-600 hover:text-black transition">Jobs</a>
-                <a href="{% url 'about' %}" class="text-sm font-medium text-slate-600 hover:text-black transition">About</a>
-                <button onclick="toggleModal('modal-id')" class="text-sm font-medium text-slate-600 hover:text-black transition">Get Alerts</button>
-                <div class="h-6 w-px bg-slate-200"></div>
-                <a href="{% url 'for_employers' %}" class="bg-black hover:bg-slate-800 text-white text-sm font-bold px-5 py-2.5 rounded transition shadow-sm">
+            <div class="hidden md:flex items-center">
+                <div class="flex items-center gap-8 mr-8">
+                    <a href="/" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">Jobs</a>
+                    <a href="{% url 'about' %}" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">About</a>
+                    <button onclick="toggleModal('modal-id')" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">Get Alerts</button>
+                </div>
+                
+                <div class="h-6 w-px bg-slate-200 mr-8"></div>
+                
+                <a href="{% url 'for_employers' %}" class="bg-black hover:bg-slate-800 text-white text-sm font-bold px-6 py-3 rounded-lg transition shadow-sm">
                     For Employers
                 </a>
             </div>
 
             <div class="md:hidden flex items-center gap-4">
-                 <a href="{% url 'for_employers' %}" class="bg-black text-white text-xs font-bold px-3 py-2 rounded">Post Job</a>
+                 <a href="{% url 'for_employers' %}" class="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg">Post Job</a>
             </div>
         </div>
     </nav>
@@ -162,126 +166,4 @@
                     <ul class="space-y-4 text-sm text-slate-500 font-medium">
                         <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Post a Job</a></li>
                         <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Search Resumes</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Success Stories</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h3 class="font-serif font-bold text-lg text-slate-900 mb-6">Support</h3>
-                    <ul class="space-y-4 text-sm text-slate-500 font-medium">
-                        <li><a href="#" class="hover:text-slate-900 transition">Help Center</a></li>
-                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
-                    </ul>
-                </div>
-
-            </div>
-            
-            <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 font-mono">
-                <p>&copy; {% now "Y" %} MarTech Jobs Inc. All rights reserved.</p>
-                <div class="flex gap-8 mt-4 sm:mt-0">
-                    <a href="#" class="hover:text-slate-600 transition">Privacy</a>
-                    <a href="#" class="hover:text-slate-600 transition">Terms</a>
-                    <a href="#" class="hover:text-slate-600 transition">Sitemap</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <div class="modal hidden opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50" id="modal-id">
-        <div class="modal-overlay absolute w-full h-full bg-slate-900 opacity-60 backdrop-blur-sm" onclick="toggleModal('modal-id')"></div>
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-xl shadow-2xl z-50 overflow-y-auto transform scale-95 transition-transform duration-300">
-            <div class="relative py-8 px-8 text-left">
-                <div class="absolute top-4 right-4 cursor-pointer z-50 p-2 rounded-full hover:bg-slate-100 transition" onclick="toggleModal('modal-id')">
-                    <svg class="fill-current text-slate-400 hover:text-slate-600" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
-                </div>
-                <div id="modal-content">
-                    <h3 class="text-2xl font-serif font-bold text-slate-900 mb-2 text-center">Get Job Alerts</h3>
-                    <p class="text-slate-500 mb-6 text-sm text-center">Be the first to know about new Marketing Ops & Tech roles.</p>
-                    <form id="subscribe-form" onsubmit="submitSubscription(event)">
-                        {% csrf_token %}
-                        <div class="space-y-3">
-                            <input type="email" name="email" required placeholder="name@company.com" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black transition-all outline-none">
-                            <button type="submit" id="sub-btn" class="w-full bg-black hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md transition-all">Subscribe Free</button>
-                        </div>
-                    </form>
-                </div>
-                <div id="modal-success" class="hidden text-center py-6">
-                    <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-2">You're on the list!</h3>
-                    <p class="text-slate-500 text-sm mb-6">We'll email you when fresh jobs drop.</p>
-                    <button onclick="toggleModal('modal-id')" class="w-full bg-black text-white font-bold py-3 rounded-lg">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function toggleModal(modalID){
-            const modal = document.getElementById(modalID);
-            modal.classList.toggle("hidden");
-            modal.classList.toggle("pointer-events-none");
-            modal.classList.toggle("opacity-0");
-            document.body.classList.toggle("modal-active");
-            if (modal.classList.contains('opacity-0')) {
-                setTimeout(() => {
-                    document.getElementById('modal-content').classList.remove('hidden');
-                    document.getElementById('modal-success').classList.add('hidden');
-                    document.getElementById('subscribe-form').reset();
-                }, 300);
-            }
-        }
-        
-        async function submitSubscription(e) {
-            e.preventDefault();
-            const btn = document.getElementById('sub-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "Joining...";
-            btn.disabled = true;
-            const formData = new FormData(document.getElementById('subscribe-form'));
-            try {
-                const response = await fetch("{% url 'subscribe' %}", {
-                    method: 'POST',
-                    body: formData,
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
-                });
-                document.getElementById('modal-content').classList.add('hidden');
-                document.getElementById('modal-success').classList.remove('hidden');
-            } catch (error) {
-                console.error('Error:', error);
-                alert("Something went wrong. Please try again.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        async function submitFooterSubscription(e) {
-            e.preventDefault();
-            const btn = document.getElementById('footer-sub-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "...";
-            btn.disabled = true;
-            const formData = new FormData(document.getElementById('footer-subscribe-form'));
-            try {
-                await fetch("{% url 'subscribe' %}", {
-                    method: 'POST',
-                    body: formData,
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
-                });
-                btn.innerText = "Subscribed!";
-                btn.classList.add('bg-green-700');
-            } catch (error) {
-                console.error('Error:', error);
-                alert("Something went wrong.");
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
+                        <li><a href="#"
