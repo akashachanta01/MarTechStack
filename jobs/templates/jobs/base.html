@@ -83,7 +83,7 @@
 
             <div class="hidden md:flex items-center">
                 <div class="flex items-center gap-8 mr-8">
-                    <a href="/" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">Jobs</a>
+                    <a href="{% url 'job_list' %}#jobs-section" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">Jobs</a>
                     <a href="{% url 'about' %}" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">About</a>
                     <button onclick="toggleModal('modal-id')" class="text-[15px] font-medium text-slate-600 hover:text-slate-900 transition">Get Alerts</button>
                 </div>
