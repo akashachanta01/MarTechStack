@@ -13,6 +13,29 @@
 {% endblock %}
 
 {% block content %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem",
+    "position": 1,
+    "name": "Home",
+    "item": "{{ request.scheme }}://{{ request.get_host }}/"
+  },{
+    "@type": "ListItem",
+    "position": 2,
+    "name": "Tech Stacks",
+    "item": "{{ request.scheme }}://{{ request.get_host }}/"
+  },{
+    "@type": "ListItem",
+    "position": 3,
+    "name": "{{ tool.name }} Jobs",
+    "item": "{{ request.build_absolute_uri }}"
+  }]
+}
+</script>
+
 <div class="relative bg-white border-b border-slate-100 overflow-hidden">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
