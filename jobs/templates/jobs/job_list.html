@@ -53,10 +53,11 @@
 
         <div class="mt-8 flex flex-wrap justify-center gap-2 text-sm text-slate-500 items-center">
             <span class="font-bold text-slate-900 mr-2">Trending:</span>
-            <a href="?l=Remote" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition">REMOTE</a>
-            <a href="?q=Marketing+Ops" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition">MARKETING OPS</a>
-            <a href="?q=Salesforce" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition">SALESFORCE</a>
-            <a href="?q=Growth" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition">GROWTH LEAD</a>
+            {% for stack in popular_tech_stacks|slice:":5" %}
+                <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-md hover:border-slate-400 transition uppercase">{{ stack.name }}</a>
+            {% empty %}
+                <span class="text-xs text-slate-400">(No trending data yet)</span>
+            {% endfor %}
         </div>
     </div>
 </div>
