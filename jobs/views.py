@@ -99,20 +99,45 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         clean_tool_slug = tool_slug.replace("-jobs", "")
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
-    location_name = "Remote"
+    # EXPANDED LOCATION MAPPING
+    SEO_LOCATIONS = {
+        "remote": "Remote",
+        "new-york": "New York",
+        "nyc": "New York",
+        "san-francisco": "San Francisco",
+        "sf": "San Francisco",
+        "london": "London",
+        "chicago": "Chicago",
+        "austin": "Austin",
+        "los-angeles": "Los Angeles",
+        "toronto": "Toronto",
+        "berlin": "Berlin",
+        "singapore": "Singapore",
+        "sydney": "Sydney",
+        "bengaluru": "Bengaluru",
+        "bangalore": "Bengaluru",
+        "boston": "Boston",
+        "seattle": "Seattle",
+        "denver": "Denver",
+        "atlanta": "Atlanta",
+        "amsterdam": "Amsterdam",
+        "dublin": "Dublin"
+    }
+
+    location_name = "Remote" # Default
     if location_slug:
-        if location_slug == "remote": location_name = "Remote"
-        elif location_slug == "new-york": location_name = "New York"
-        elif location_slug == "london": location_name = "London"
-        elif location_slug == "san-francisco": location_name = "San Francisco"
-        else: location_name = location_slug.replace("-", " ").title()
+        # Check explicit map first, then fallback to title case (e.g. "san-diego" -> "San Diego")
+        location_name = SEO_LOCATIONS.get(location_slug.lower(), location_slug.replace("-", " ").title())
 
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     
-    if tool: jobs = jobs.filter(tools=tool)
+    if tool: 
+        jobs = jobs.filter(tools=tool)
     
-    if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
-    else: jobs = jobs.filter(location__icontains=location_name)
+    if location_name == "Remote": 
+        jobs = jobs.filter(work_arrangement="remote")
+    else: 
+        jobs = jobs.filter(location__icontains=location_name)
 
     if jobs.count() == 0:
         base_url = "/?q="
@@ -120,6 +145,7 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         if location_name: base_url += f"&l={location_name}"
         return redirect(base_url)
 
+    # Dynamic Headers
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
         meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
@@ -171,10 +197,9 @@ def salary_guide(request):
                     'count': count
                 })
         
-        # Sort by highest max salary
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
-        cache.set('salary_guide_data', data, 86400) # Cache for 24 hours
+        cache.set('salary_guide_data', data, 86400) # 24 hrs
 
     return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
 
