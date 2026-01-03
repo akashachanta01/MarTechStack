@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.utils.text import slugify
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages # <--- Added this
+from django.contrib import messages 
 
 from .models import Job, Tool, Category, Subscriber 
 from .forms import JobPostForm
@@ -19,7 +19,6 @@ from .emails import send_job_alert, send_welcome_email, send_admin_new_subscribe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# [KEEP EXISTING TOOL_MAPPING]
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
@@ -30,13 +29,16 @@ TOOL_MAPPING = {
 }
 
 def job_list(request):
+    # 1. Get Params
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
     location_query = request.GET.get("l", "").strip()
+    country_query = request.GET.get("country", "").strip() # <--- NEW: Capture Country
     work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
+    # 2. Filter by Vendor
     if vendor_query:
         if vendor_query == "General":
             jobs = jobs.filter(tools__isnull=True)
@@ -46,6 +48,8 @@ def job_list(request):
                 if TOOL_MAPPING.get(tool.name.lower(), tool.name) == vendor_query:
                     matching_tool_ids.append(tool.id)
             jobs = jobs.filter(tools__id__in=matching_tool_ids)
+    
+    # 3. Filter by Search Query
     elif query:
         search_q = Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
         jobs = jobs.filter(search_q).annotate(
@@ -57,21 +61,28 @@ def job_list(request):
             )
         )
     
+    # Sorting
     if query:
         jobs = jobs.order_by('-is_pinned', '-relevance', '-created_at')
     else:
         jobs = jobs.order_by('-is_pinned', '-created_at')
 
+    # 4. Filter by Location & Country
     if location_query:
         jobs = jobs.filter(location__icontains=location_query)
+    
+    if country_query: # <--- NEW: Filter logic
+        jobs = jobs.filter(location__icontains=country_query)
+
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
 
+    # Pagination
     paginator = Paginator(jobs.distinct(), 25)
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # --- TOPIC CLUSTERS ---
+    # Cache: Popular Stacks
     popular_tech_stacks = cache.get('popular_tech_stacks_v2')
     if popular_tech_stacks is None:
         popular_tech_stacks = Tool.objects.filter(
@@ -80,7 +91,7 @@ def job_list(request):
         ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:10]
         cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
 
-    # --- DYNAMIC COUNTRY LIST (STRICT FILTER) ---
+    # Cache: Countries
     available_countries = cache.get('available_countries_v2')
     if available_countries is None:
         raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
@@ -99,8 +110,12 @@ def job_list(request):
         cache.set('available_countries_v2', available_countries, 3600)
 
     return render(request, "jobs/job_list.html", {
-        "jobs": jobs_page, "query": query, "location_filter": location_query,
-        "popular_tech_stacks": popular_tech_stacks, "vendor_filter": vendor_query,
+        "jobs": jobs_page, 
+        "query": query, 
+        "location_filter": location_query,
+        "selected_country": country_query, # <--- NEW: Pass back to template
+        "popular_tech_stacks": popular_tech_stacks, 
+        "vendor_filter": vendor_query,
         "available_countries": available_countries,
     })
 
