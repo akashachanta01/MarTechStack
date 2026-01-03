@@ -15,14 +15,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 
-# ⚠️ DIAGNOSIS MODE: Forced DEBUG=True to see the 500 error details.
-# Change this back to 'False' after fixing the issue!
+# ⚠️ DIAGNOSIS MODE: Set to False for production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# UPDATED: Added martechjobs.io to allowed hosts
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com,127.0.0.1,localhost').split(',')
 
-# UPDATED: Trusted origins for CSRF
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 
     'https://martechjobs.io',
@@ -30,6 +27,20 @@ CSRF_TRUSTED_ORIGINS = [
     'https://martechstack.io',
     'https://www.martechstack.io'
 ]
+
+# --- HTTPS ENFORCEMENT (SEO & SECURITY WIN) ---
+if not DEBUG:
+    # Redirect all HTTP traffic to HTTPS
+    SECURE_SSL_REDIRECT = True
+    # Tell browsers to remember to use HTTPS for 1 year (HSTS)
+    SECURE_HSTS_SECONDS = 31536000 
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Ensure cookies are only sent over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Critical for Render/Heroku (Trusts the load balancer's SSL)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ==============================================
 # APPLICATION DEFINITION
@@ -43,7 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    # NEW: SEO Sitemap Support
+    # SEO Sitemap Support
     'django.contrib.sitemaps',
     
     # Your Apps
@@ -133,7 +144,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-# UPDATED: Branding to MarTechJobs
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
 # STRIPE PAYMENTS
@@ -142,5 +152,4 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
 # DOMAIN URL
-# UPDATED: Default domain to martechjobs.io
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip()
