@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}" />
+
     <title>{{ job.title }} at {{ job.company }} - MarTechJobs.io</title>
     <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today.">
     
@@ -56,6 +58,7 @@
         "value": "{{ job.id }}"
       },
       "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
+      "validThrough": "{{ job.created_at|date:'Y-m-d' }}",
       "hiringOrganization": {
         "@type": "Organization",
         "name": "{{ job.company|escapejs }}",
