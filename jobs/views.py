@@ -89,41 +89,15 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
-    # Cache: Popular Stacks
-    popular_tech_stacks = cache.get('popular_tech_stacks_v2')
-    if popular_tech_stacks is None:
-        popular_tech_stacks = Tool.objects.filter(
-            jobs__is_active=True, 
-            jobs__screening_status='approved'
-        ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:10]
-        cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
-
-    # Cache: Countries
-    available_countries = cache.get('available_countries_v2')
-    if available_countries is None:
-        raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
-        country_set = set()
-        blocklist = ["not specified", "on-site", "latin america", "va de los poblados"]
-        for loc in raw_locs:
-            if not loc: continue
-            if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']): continue
-            if any(b in loc.lower() for b in blocklist): continue
-            parts = loc.split(',')
-            if len(parts) >= 1:
-                country = parts[-1].strip()
-                if len(country) > 3 and not any(char.isdigit() for char in country): 
-                    country_set.add(country)
-        available_countries = sorted(list(country_set))
-        cache.set('available_countries_v2', available_countries, 3600)
+    # NOTE: 'popular_tech_stacks' and 'available_countries' are now handled 
+    # by the global_seo_data Context Processor. We don't need to calculate them here.
 
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page, 
         "query": query, 
         "location_filter": location_query,
         "selected_country": country_query,
-        "popular_tech_stacks": popular_tech_stacks, 
         "vendor_filter": vendor_query,
-        "available_countries": available_countries,
         "current_arrangement": work_arrangement_filter,
         "current_rtype": role_type_filter,
     })
@@ -143,7 +117,6 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
     # 2. Resolve Location
-    # We map common SEO slugs to database values
     location_name = "Remote" # Default
     if location_slug:
         if location_slug == "remote":
@@ -171,7 +144,6 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         jobs = jobs.filter(location__icontains=location_name)
 
     # 4. THIN CONTENT PROTECTION
-    # If we find 0 jobs, don't show an empty page. Redirect to search.
     if jobs.count() == 0:
         base_url = "/?q="
         if tool: base_url += tool.name
@@ -192,10 +164,8 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
 
-    # Reuse the 'tool_detail' template but with custom context
-    # This saves us from creating a new template file.
     return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, # Might be None, handle in template
+        'tool': tool, 
         'jobs': jobs.order_by('-is_pinned', '-created_at'),
         'custom_title': page_title,
         'custom_header': header_text,
@@ -222,13 +192,9 @@ def tool_detail(request, slug):
     return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page})
 
 def job_detail(request, id, slug):
-    # SECURITY FIX: Ensure we only show approved/active jobs
-    # This prevents users from guessing IDs to see pending/rejected roles.
     job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
-    
     if job.slug and job.slug != slug: 
         return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
-    
     return render(request, 'jobs/job_detail.html', {'job': job})
 
 def post_job(request):
@@ -247,7 +213,9 @@ def post_job(request):
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
                     tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
                     job.tools.add(tool)
+            # Cache clearing is less critical now as we use auto-expiring cache, but good practice
             cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
+            
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -282,7 +250,6 @@ def subscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email:
-            # VALIDATION FIX: Check strict email format before saving
             try:
                 validate_email(email)
             except ValidationError:
