@@ -6,200 +6,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>{{ job.title }} at {{ job.company }} - MarTechJobs.io</title>
-    <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today on MarTechJobs.io.">
+    <meta name="description" content="Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today.">
     
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ job.title }} - {{ job.company }}">
-    <meta property="og:description" content="View details and apply for this Marketing Operations role.">
     <meta property="og:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io/static/og-image.png{% endif %}">
 
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
-    <meta property="twitter:title" content="{{ job.title }}">
-    <meta property="twitter:description" content="Hiring now: {{ job.title }} at {{ job.company }}.">
-    <meta property="twitter:image" content="{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io/static/og-image.png{% endif %}">
-
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'martech-green': '#1f432d', // Dark forest green from screenshot
+                        'martech-accent': '#eefcf6', // Light green pill bg
+                    }
+                }
+            }
+        }
+    </script>
     
     <style> 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; } 
-        /* Override generic styles that might come from raw HTML imports */
-        .prose p { margin-bottom: 1rem; }
-        .prose li { margin-bottom: 0.25rem; }
+        body { font-family: 'Inter', sans-serif; } 
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        
+        /* Custom Prose Styling to match the clean document look */
+        .prose h2, .prose h3 { font-family: 'Playfair Display', serif; color: #111827; margin-top: 2em; margin-bottom: 0.8em; }
+        .prose ul { list-style-type: disc; padding-left: 1.2em; }
+        .prose li { margin-bottom: 0.5em; color: #374151; }
+        .prose p { margin-bottom: 1.2em; color: #374151; line-height: 1.7; }
     </style>
 </head>
-<body class="bg-white text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-700">
+<body class="bg-white text-slate-900 antialiased selection:bg-martech-green selection:text-white">
 
-    <nav class="border-b border-slate-100 bg-white sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <nav class="border-b border-slate-100 sticky top-0 bg-white z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="/" class="flex items-center gap-2 group">
-                <div class="bg-indigo-600 text-white p-1.5 rounded-lg group-hover:bg-indigo-700 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                 <div class="bg-martech-green text-white p-1 rounded-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="text-lg font-bold tracking-tight text-slate-900">MarTechJobs</span>
+                <span class="font-serif font-bold text-lg text-slate-900">MarTechJobs</span>
             </a>
-            <a href="{% url 'post_job' %}" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition">Post a Job</a>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm font-medium text-slate-500 hover:text-slate-900">Jobs</a>
+                <a href="{% url 'post_job' %}" class="bg-black text-white text-xs font-bold px-4 py-2 rounded transition hover:bg-slate-800">Post Job</a>
+            </div>
         </div>
     </nav>
 
-    <div class="bg-slate-50 border-b border-slate-200">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-            
-            <a href="/" id="smart-back-btn" class="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-indigo-600 mb-8 transition">
-                &larr; Back to jobs
-            </a>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+        <nav class="flex text-xs font-medium text-slate-400">
+            <a href="/" class="hover:text-slate-900 transition">Home</a>
+            <span class="mx-2">/</span>
+            <a href="/" class="hover:text-slate-900 transition">Jobs</a>
+            <span class="mx-2">/</span>
+            <span class="text-slate-900 truncate max-w-[200px]">{{ job.title }}</span>
+        </nav>
+    </div>
 
-            <div class="flex flex-col md:flex-row gap-6 md:items-start">
-                <div class="flex-shrink-0">
-                    {% if job.company_logo %}
-                        <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-20 h-20 rounded-xl border border-slate-200 bg-white p-2 object-contain shadow-sm">
-                    {% else %}
-                        <div class="w-20 h-20 rounded-xl bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-500 border border-slate-300">
-                            {{ job.company|slice:":1" }}
-                        </div>
-                    {% endif %}
-                </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row gap-6 md:items-start">
+            <div class="flex-shrink-0">
+                {% if job.company_logo %}
+                    <div class="w-24 h-24 border border-slate-200 rounded-sm bg-white p-4 flex items-center justify-center">
+                        <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
+                    </div>
+                {% else %}
+                    <div class="w-24 h-24 border border-slate-200 rounded-sm bg-slate-50 flex items-center justify-center text-3xl font-serif text-slate-400">
+                        {{ job.company|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
 
-                <div class="flex-grow">
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-3">
-                        {{ job.title }}
-                    </h1>
-                    
-                    <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-slate-600 font-medium text-sm md:text-base">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            <div class="flex-grow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-4xl font-bold text-slate-900 mb-2 leading-tight">{{ job.title }}</h1>
+                        <div class="flex items-center gap-2 text-sm font-medium text-slate-900 mb-4">
                             {{ job.company }}
-                        </span>
-                        <span class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            {{ job.location|default:"Remote" }}
-                        </span>
-                        {% if job.salary_range %}
-                        <span class="flex items-center gap-2 text-green-700 bg-green-50 px-2 py-0.5 rounded-md border border-green-100">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            {{ job.salary_range }}
-                        </span>
-                        {% endif %}
+                            <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex gap-2">
+                        <button class="w-10 h-10 border border-slate-200 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-400 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                        </button>
+                        <button class="w-10 h-10 border border-slate-200 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-400 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                        </button>
                     </div>
                 </div>
 
-                <div class="hidden md:block flex-shrink-0 pt-2">
-                    <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all transform flex items-center gap-2">
-                        Apply Now 
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ job.location|default:"Remote" }}
+                    </div>
+                    {% if job.salary_range %}
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ job.salary_range }}
+                    </div>
+                    {% endif %}
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ job.role_type|default:"Full-Time"|replace:"_,-"|title }}
+                    </div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Posted {{ job.created_at|timesince }} ago
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-martech-green hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm transition">
+                        Apply for this Position
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
             
-            <div class="lg:col-span-8">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 border-b border-slate-100 pb-2">About the Role</h3>
-                
-                <article class="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed">
+            <div class="lg:col-span-2">
+                <div class="prose prose-slate max-w-none text-slate-700">
                     {{ job.description|safe }}
-                </article>
+                </div>
 
-                <div class="mt-12 pt-8 border-t border-slate-200">
-                    <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="inline-flex items-center gap-2 text-indigo-600 font-bold hover:text-indigo-800 text-lg">
-                        Apply on company site &rarr;
+                <div class="mt-16 pt-10 border-t border-slate-200">
+                    <h3 class="text-2xl font-serif font-bold text-slate-900 mb-4">Ready to make an impact?</h3>
+                    <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-martech-green hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm transition">
+                        Apply Now
                     </a>
                 </div>
             </div>
 
-            <div class="lg:col-span-4 space-y-8">
+            <div class="space-y-8">
                 
+                <div class="border border-slate-200 rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <div class="flex items-center gap-4 mb-4">
+                         <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center font-serif font-bold text-slate-400">
+                            {% if job.company_logo %}
+                                <img src="{{ job.company_logo }}" class="w-8 h-8 object-contain">
+                            {% else %}
+                                {{ job.company|slice:":1" }}
+                            {% endif %}
+                         </div>
+                         <div>
+                             <h4 class="font-bold text-slate-900 text-lg">{{ job.company }}</h4>
+                             <a href="#" class="text-xs text-slate-500 hover:text-martech-green font-medium">View Profile</a>
+                         </div>
+                    </div>
+                    
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">
+                        {{ job.company }} is hiring for this role. Check out their profile to learn more about their mission and culture.
+                    </p>
+
+                    <div class="space-y-3 pt-4 border-t border-slate-100">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Headquarters</span>
+                            <span class="font-medium text-slate-900">{{ job.location|default:"Remote" }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Website</span>
+                            <a href="#" class="font-medium text-martech-green hover:underline">Visit Website</a>
+                        </div>
+                    </div>
+                </div>
+
                 {% if job.tools.exists %}
-                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Tech Stack</h3>
+                <div class="border border-slate-200 rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <h4 class="font-bold text-slate-900 mb-4">Tech Stack</h4>
                     <div class="flex flex-wrap gap-2">
                         {% for tool in job.tools.all %}
-                            <a href="{% url 'tool_detail' tool.slug %}" class="{{ tool.color_class }} inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border hover:opacity-80 transition">{{ tool.name }}</a>
+                        <a href="{% url 'tool_detail' tool.slug %}" class="bg-white border border-slate-200 hover:border-slate-400 text-slate-600 text-xs font-bold px-3 py-1.5 rounded transition">
+                            {{ tool.name }}
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}
 
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Job Info</h3>
-                    <ul class="space-y-3 text-sm text-slate-600">
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Posted {{ job.created_at|timesince }} ago</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-slate-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <span>Verified by MarTechJobs AI</span>
-                        </li>
-                    </ul>
-                </div>
-
             </div>
         </div>
     </div>
-
-    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 md:hidden z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <a href="{{ job.apply_url }}" target="_blank" rel="nofollow noreferrer" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center font-bold py-3.5 rounded-xl shadow-md transition">
-            Apply Now
-        </a>
-    </div>
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org/",
-      "@type": "JobPosting",
-      "title": "{{ job.title|escapejs }}",
-      "description": "{{ job.description|striptags|escapejs }}",
-      "identifier": {
-        "@type": "PropertyValue",
-        "name": "{{ job.company|escapejs }}",
-        "value": "{{ job.id }}"
-      },
-      "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
-      "validThrough": "{{ job.created_at|date:'Y-m-d' }}",
-      "employmentType": "{{ job.role_type|default:'FULL_TIME'|upper }}",
-      "hiringOrganization": {
-        "@type": "Organization",
-        "name": "{{ job.company|escapejs }}",
-        "logo": "{{ job.company_logo|default:'' }}"
-      },
-      "jobLocation": {
-        "@type": "Place",
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "{{ job.location|escapejs }}",
-          "addressCountry": "US" 
-        }
-      },
-      "baseSalary": {
-        "@type": "MonetaryAmount",
-        "currency": "USD",
-        "value": {
-          "@type": "QuantitativeValue",
-          "value": 0,
-          "unitText": "YEAR"
-        }
-      }
-    }
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const backLink = document.getElementById('smart-back-btn');
-            // If the user came from our own site (e.g. filtered list), go back in history.
-            // If they came from Google/LinkedIn, keep the default href="/" (Home).
-            if (document.referrer && document.referrer.indexOf(window.location.hostname) !== -1) {
-                backLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    window.history.back();
-                });
-            }
-        });
-    </script>
 </body>
 </html>
