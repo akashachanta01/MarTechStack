@@ -35,7 +35,7 @@ def job_list(request):
     location_query = request.GET.get("l", "").strip()
     country_query = request.GET.get("country", "").strip()
     work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
-    role_type_filter = request.GET.get("rtype", "").strip().lower() # <--- NEW: Contract Filter
+    role_type_filter = request.GET.get("rtype", "").strip().lower()
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
@@ -75,11 +75,11 @@ def job_list(request):
     if country_query:
         jobs = jobs.filter(location__icontains=country_query)
 
-    # 5. Tab Filters (Remote / Contract)
+    # 5. Tab Filters
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
     
-    if role_type_filter: # <--- NEW: Filter logic
+    if role_type_filter:
         jobs = jobs.filter(role_type__iexact=role_type_filter)
 
     # Pagination
@@ -122,12 +122,85 @@ def job_list(request):
         "popular_tech_stacks": popular_tech_stacks, 
         "vendor_filter": vendor_query,
         "available_countries": available_countries,
-        # Pass filters back for active state
         "current_arrangement": work_arrangement_filter,
         "current_rtype": role_type_filter,
     })
 
-# --- NEW UNSUBSCRIBE VIEW ---
+# --- SEO: LANDING PAGE GENERATOR ---
+def seo_landing_page(request, location_slug=None, tool_slug=None):
+    """
+    Programmatic SEO Page:
+    Matches /<location>/<tool>-jobs/ OR /<location>/jobs/
+    """
+    
+    # 1. Resolve Tool (if present)
+    tool = None
+    if tool_slug:
+        # We strip '-jobs' from the URL to find the tool slug
+        clean_tool_slug = tool_slug.replace("-jobs", "")
+        tool = get_object_or_404(Tool, slug=clean_tool_slug)
+
+    # 2. Resolve Location
+    # We map common SEO slugs to database values
+    location_name = "Remote" # Default
+    if location_slug:
+        if location_slug == "remote":
+            location_name = "Remote"
+        elif location_slug == "new-york":
+            location_name = "New York"
+        elif location_slug == "london":
+            location_name = "London"
+        elif location_slug == "san-francisco":
+            location_name = "San Francisco"
+        else:
+            # Fallback: Try to use the slug as the name (e.g. "Chicago")
+            location_name = location_slug.replace("-", " ").title()
+
+    # 3. Filter Jobs
+    jobs = Job.objects.filter(is_active=True, screening_status='approved')
+    
+    if tool:
+        jobs = jobs.filter(tools=tool)
+    
+    if location_name == "Remote":
+        jobs = jobs.filter(work_arrangement="remote")
+    else:
+        # Fuzzy match for location
+        jobs = jobs.filter(location__icontains=location_name)
+
+    # 4. THIN CONTENT PROTECTION
+    # If we find 0 jobs, don't show an empty page. Redirect to search.
+    if jobs.count() == 0:
+        base_url = "/?q="
+        if tool: base_url += tool.name
+        if location_name: base_url += f"&l={location_name}"
+        return redirect(base_url)
+
+    # 5. Dynamic SEO Metadata
+    if tool and location_name:
+        page_title = f"{location_name} {tool.name} Jobs"
+        meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
+        header_text = f"{location_name} <span class='text-martech-green'>{tool.name}</span> Jobs"
+    elif tool:
+        page_title = f"{tool.name} Jobs"
+        meta_desc = f"Find top {tool.name} roles. Marketing Automation & Ops jobs."
+        header_text = f"Top <span class='text-martech-green'>{tool.name}</span> Jobs"
+    else:
+        page_title = f"Marketing Ops Jobs in {location_name}"
+        meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
+        header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
+
+    # Reuse the 'tool_detail' template but with custom context
+    # This saves us from creating a new template file.
+    return render(request, 'jobs/tool_detail.html', {
+        'tool': tool, # Might be None, handle in template
+        'jobs': jobs.order_by('-is_pinned', '-created_at'),
+        'custom_title': page_title,
+        'custom_header': header_text,
+        'custom_desc': meta_desc,
+        'is_seo_landing': True
+    })
+
 def unsubscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
@@ -139,7 +212,6 @@ def unsubscribe(request):
                 messages.warning(request, "⚠️ That email was not found in our list.")
     return render(request, "jobs/unsubscribe.html")
 
-# --- OTHER VIEWS ---
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
     jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
