@@ -4,6 +4,15 @@
 
 {% block meta_description %}The #1 Job Board for Marketing Operations, Marketing Technology, and Analytics professionals. Find curated roles in HubSpot, Salesforce, Marketo, and more.{% endblock %}
 
+{% block rel_prev_next %}
+    {% if jobs.has_previous %}
+        <link rel="prev" href="?page={{ jobs.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if location_filter %}&l={{ location_filter }}{% endif %}" />
+    {% endif %}
+    {% if jobs.has_next %}
+        <link rel="next" href="?page={{ jobs.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if location_filter %}&l={{ location_filter }}{% endif %}" />
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 <script type="application/ld+json">
 {
