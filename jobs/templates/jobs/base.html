@@ -7,7 +7,6 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-5DL9PF78WG');
     </script>
 
@@ -19,7 +18,7 @@
 
     <link rel="canonical" href="https://martechjobs.io{{ request.path }}" />
     
-    <link rel="icon" type="image/svg+xml" href="{% static 'logo.svg' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,7 +66,7 @@
                 </div>
             </a>
             <div class="flex items-center gap-6">
-                <a href="/" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Find Jobs</a>
+                <a href="/#jobs-section" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Find Jobs</a>
                 <a href="{% url 'salary_guide' %}" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Salaries</a>
                 <a href="{% url 'post_job' %}" class="bg-black text-white text-xs font-bold px-5 py-2.5 rounded transition hover:bg-slate-800 shadow-sm">Post a Job</a>
             </div>
@@ -125,89 +124,66 @@
 
     <footer class="bg-white pt-16 pb-12 text-slate-600 font-sans border-t border-slate-100">
         <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12 mb-16">
-                
                 <div class="col-span-2 lg:col-span-1 pr-4">
                     <a href="/" class="flex items-center gap-2 mb-4 group">
                        <img src="{% static 'logo.svg' %}" alt="MarTechJobs" class="w-6 h-6 object-contain">
                        <span class="font-bold text-lg text-slate-900 font-serif">MarTechJobs</span>
                    </a>
                    <p class="text-sm leading-relaxed mb-6 text-slate-500">
-                       The leading community and job board for marketing technology professionals. We connect talent with the brands building the future.
+                       The leading community and job board for marketing technology professionals.
                    </p>
                    <div class="flex gap-4 text-slate-400">
-                       <a href="#" class="hover:text-slate-900 transition"><span class="material-symbols-outlined text-xl">public</span></a>
-                       <a href="mailto:hello@martechstack.io" class="hover:text-slate-900 transition">Contact Us</a>
+                       <a href="{% url 'contact' %}" class="hover:text-slate-900 transition">Contact Us</a>
                        <a href="{% url 'job_feed' %}" class="hover:text-slate-900 transition"><span class="material-symbols-outlined text-xl">rss_feed</span></a>
                    </div>
                 </div>
-
+                
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Popular Tech Stacks</h3>
                     <ul class="space-y-3 text-sm">
                         {% for stack in popular_tech_stacks|slice:":6" %}
-                        <li>
-                            <a href="{% url 'tool_detail' stack.slug %}" class="hover:text-martech-green hover:underline transition">
-                                {{ stack.name }}
-                            </a>
-                        </li>
+                        <li><a href="{% url 'tool_detail' stack.slug %}" class="hover:text-martech-green hover:underline transition">{{ stack.name }}</a></li>
                         {% empty %}
                         <li><a href="/" class="hover:text-slate-900 transition">Salesforce</a></li>
                         <li><a href="/" class="hover:text-slate-900 transition">HubSpot</a></li>
-                        <li><a href="/" class="hover:text-slate-900 transition">Marketo</a></li>
                         {% endfor %}
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Candidates</h3>
                     <ul class="space-y-3 text-sm">
                         <li><a href="{% url 'job_list' %}" class="hover:text-slate-900 transition">Browse Jobs</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Company Directory</a></li>
                         <li><a href="{% url 'salary_guide' %}" class="hover:text-slate-900 transition">Salary Guide</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Career Advice</a></li>
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Locations</h3>
                     <ul class="space-y-3 text-sm">
                         <li><a href="{% url 'seo_loc_only' 'remote' %}" class="hover:text-martech-green hover:underline transition">Remote</a></li>
                         {% for country in available_countries|slice:":5" %}
-                        <li>
-                            <a href="{% url 'seo_loc_only' country|slugify %}" class="hover:text-martech-green hover:underline transition">
-                                {{ country }}
-                            </a>
-                        </li>
+                        <li><a href="{% url 'seo_loc_only' country|slugify %}" class="hover:text-martech-green hover:underline transition">{{ country }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
-
                  <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Employers</h3>
                     <ul class="space-y-3 text-sm">
                         <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Post a Job</a></li>
                         <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Search Resumes</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Success Stories</a></li>
                     </ul>
                 </div>
-
                  <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Support</h3>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="hover:text-slate-900 transition">Help Center</a></li>
-                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a></li>
+                        <li><a href="{% url 'contact' %}" class="hover:text-slate-900 transition">Contact Us</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </footer>
-
     <script>
         document.getElementById('subscribe-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -215,40 +191,16 @@
             const btn = form.querySelector('button');
             const msg = document.getElementById('sub-message');
             const email = form.querySelector('input[name="email"]').value;
-            
-            // Disable button
-            btn.disabled = true;
-            btn.textContent = "Joining...";
-            
-            // Fetch Request
+            btn.disabled = true; btn.textContent = "Joining...";
             fetch("{% url 'subscribe' %}", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value
-                },
+                headers: {"Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value},
                 body: "email=" + encodeURIComponent(email)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    btn.textContent = "Subscribed!";
-                    btn.classList.replace("bg-[#244c33]", "bg-black");
-                    msg.innerHTML = '<span class="text-green-400 font-bold">✓ Welcome to the club!</span>';
-                    form.reset();
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = "Subscribe";
-                    msg.innerHTML = '<span class="text-red-400 font-bold">Error: ' + (data.error || 'Check email') + '</span>';
-                }
-            })
-            .catch(error => {
-                btn.disabled = false;
-                btn.textContent = "Subscribe";
-                msg.textContent = "Something went wrong. Try again.";
-            });
+            }).then(response => response.json()).then(data => {
+                if(data.success) { btn.textContent = "Subscribed!"; btn.classList.replace("bg-[#244c33]", "bg-black"); msg.innerHTML = '<span class="text-green-400 font-bold">✓ Welcome to the club!</span>'; form.reset(); } 
+                else { btn.disabled = false; btn.textContent = "Subscribe"; msg.innerHTML = '<span class="text-red-400 font-bold">Error: ' + (data.error || 'Check email') + '</span>'; }
+            }).catch(error => { btn.disabled = false; btn.textContent = "Subscribe"; msg.textContent = "Something went wrong. Try again."; });
         });
     </script>
-
 </body>
 </html>
