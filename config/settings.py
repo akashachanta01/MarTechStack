@@ -18,14 +18,13 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
 # ⚠️ DIAGNOSIS MODE: Set to False for production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+# We keep martechstack.io here so the server accepts the request BEFORE redirecting it.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com,127.0.0.1,localhost').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 
     'https://martechjobs.io',
-    'https://www.martechjobs.io',
-    'https://martechstack.io',
-    'https://www.martechstack.io'
+    'https://www.martechjobs.io'
 ]
 
 # --- HTTPS ENFORCEMENT ---
@@ -55,6 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # NEW: Redirect old domain to new domain immediately
+    'jobs.middleware.DomainRedirectMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,7 +78,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                # NEW: Our SEO Context Processor
                 'jobs.context_processors.global_seo_data',
             ],
         },
@@ -133,6 +133,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+# This pulls the email address you set in Render
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
@@ -141,4 +142,5 @@ STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
+# Default to the new domain
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip()
