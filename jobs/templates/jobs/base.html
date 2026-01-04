@@ -24,13 +24,13 @@
     <meta property="og:title" content="{% block og_title %}{{ block.super }}{% endblock %}" />
     <meta property="og:description" content="{% block og_desc %}{{ block.super }}{% endblock %}" />
     <meta property="og:url" content="https://martechjobs.io{{ request.path }}" />
-    <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endblock %}" />
+    <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'logo.svg' %}{% endblock %}" />
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@MarTechJobs">
     <meta name="twitter:title" content="{% block twitter_title %}{{ block.super }}{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_desc %}{{ block.super }}{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io{% static 'logo.svg' %}{% endblock %}">
 
     {% block rel_prev_next %}{% endblock %}
 
@@ -217,7 +217,7 @@
                  <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Support</h3>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a></li>
+                        <li><a href="mailto:hello@martechstack.io" class="hover:text-slate-900 transition">Contact Us</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
                     </ul>
