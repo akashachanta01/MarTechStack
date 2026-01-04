@@ -1,9 +1,55 @@
 {% extends "jobs/base.html" %}
+{% load static %}
+
 {% block title %}{{ job.title }} at {{ job.company }} | MarTechJobs{% endblock %}
 
 {% block meta_description %}Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today.{% endblock %}
 
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ job.title }} at {{ job.company }}{% endblock %}
+{% block og_desc %}We are hiring a {{ job.title }} to join our team in {{ job.location }}. Click to apply.{% endblock %}
+{% block og_image %}{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endif %}{% endblock %}
+
 {% block content %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "JobPosting",
+  "title": "{{ job.title|escapejs }}",
+  "description": "{{ job.description|escapejs }}",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "{{ job.company|escapejs }}",
+    "value": "{{ job.id }}"
+  },
+  "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
+  "validThrough": "{{ job.get_schema_valid_through }}", 
+  "employmentType": "{% if job.role_type == 'contract' %}CONTRACTOR{% elif job.role_type == 'part_time' %}PART_TIME{% else %}FULL_TIME{% endif %}",
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "{{ job.company|escapejs }}",
+    "logo": "{{ job.company_logo|default:'' }}"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "{{ job.location|escapejs }}",
+      "addressCountry": "US" 
+    }
+  },
+  "baseSalary": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": {
+      "@type": "QuantitativeValue",
+      "unitText": "YEAR",
+      "value": "{{ job.salary_range|default:'Competitive' }}" 
+    }
+  }
+}
+</script>
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
     <nav class="flex text-xs font-medium text-slate-400">
         <a href="/" class="hover:text-slate-900 transition">Home</a>
