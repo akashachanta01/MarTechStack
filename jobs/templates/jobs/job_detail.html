@@ -8,7 +8,7 @@
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ job.title }} at {{ job.company }}{% endblock %}
 {% block og_desc %}We are hiring a {{ job.title }} to join our team in {{ job.location }}. Click to apply.{% endblock %}
-{% block og_image %}{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endif %}{% endblock %}
+{% block og_image %}{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io{% static 'logo.svg' %}{% endif %}{% endblock %}
 
 {% block content %}
 <script type="application/ld+json">
