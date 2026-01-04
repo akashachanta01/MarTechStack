@@ -33,3 +33,4 @@ python-dateutil==2.9.0.post0
 Pillow==10.2.0
 stripe
 geopy
+google-auth
