@@ -89,7 +89,7 @@ def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
     def _send():
         try:
             # UPDATED: Admin Email fallback
-            admin_email = getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io')
+            admin_email = getattr(settings, 'EMAIL_HOST_USER', 'hello@martechstack.io')
             subject = f"🔔 New Subscriber: {subscriber_email}"
             body = f"""
 New subscriber: {subscriber_email}
