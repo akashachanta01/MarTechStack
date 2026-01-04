@@ -17,8 +17,49 @@
     <meta name="description" content="{% block meta_description %}Find the best Marketing Operations, Technology, and Analytics jobs.{% endblock %}">
 
     <link rel="canonical" href="https://martechjobs.io{{ request.path }}" />
-    
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    
+    <meta property="og:site_name" content="MarTechJobs" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}{{ block.super }}{% endblock %}" />
+    <meta property="og:description" content="{% block og_desc %}{{ block.super }}{% endblock %}" />
+    <meta property="og:url" content="https://martechjobs.io{{ request.path }}" />
+    <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endblock %}" />
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@MarTechJobs">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ block.super }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_desc %}{{ block.super }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io{% static 'images/social-card-default.png' %}{% endblock %}">
+
+    {% block rel_prev_next %}{% endblock %}
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MarTechJobs",
+      "url": "https://martechjobs.io",
+      "logo": "https://martechjobs.io{% static 'logo.svg' %}",
+      "sameAs": [
+        "https://www.linkedin.com/company/martechjobs",
+        "https://twitter.com/MarTechJobs"
+      ]
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "https://martechjobs.io",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://martechjobs.io/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
