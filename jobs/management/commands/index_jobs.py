@@ -12,25 +12,39 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("🚀 Starting Google Indexing Ping...")
-        
-        # 1. Load Credentials
-        key_file = os.path.join(settings.BASE_DIR, 'service_account.json')
-        if not os.path.exists(key_file):
-            self.stdout.write(self.style.ERROR("❌ service_account.json not found."))
-            self.stdout.write(self.style.WARNING("👉 Download it from Google Cloud Console -> IAM -> Service Accounts"))
-            return
 
         SCOPES = ["https://www.googleapis.com/auth/indexing"]
+        creds = None
+
+        # STRATEGY 1: Environment Variable (Best for Render)
+        json_key_string = os.environ.get('GOOGLE_JSON_KEY')
+        
+        if json_key_string:
+            try:
+                info = json.loads(json_key_string)
+                creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+            except json.JSONDecodeError:
+                self.stdout.write(self.style.ERROR("❌ Error: GOOGLE_JSON_KEY is not valid JSON."))
+                return
+
+        # STRATEGY 2: File (Best for Local Dev)
+        else:
+            key_file = os.path.join(settings.BASE_DIR, 'service_account.json')
+            if os.path.exists(key_file):
+                creds = service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
+            else:
+                self.stdout.write(self.style.ERROR("❌ Error: Could not find GOOGLE_JSON_KEY env var OR service_account.json file."))
+                return
+
+        # Authenticate
         try:
-            creds = service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
             creds.refresh(Request())
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"❌ Auth Error: {e}"))
             return
         
-        # 2. Get Jobs (Last 24 hours only to save quota)
-        # In production, you'd filter by recently updated
-        jobs = Job.objects.filter(is_active=True, screening_status='approved')[:50] # Limit to 50/run
+        # 3. Get Jobs (Last 50 approved)
+        jobs = Job.objects.filter(is_active=True, screening_status='approved')[:50]
         
         for job in jobs:
             url = f"{settings.DOMAIN_URL}/job/{job.id}/{job.slug}/"
