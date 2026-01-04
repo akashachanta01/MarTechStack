@@ -4,6 +4,7 @@ from django.utils.text import slugify
 import html
 from bs4 import BeautifulSoup
 import re
+from datetime import timedelta
 
 # --- HELPER 1: LOCATION STANDARDIZER ---
 def normalize_location(loc):
@@ -145,6 +146,11 @@ class Job(models.Model):
             if len(vals) == 1: return vals[0], vals[0]
         except: pass
         return None, None
+
+    # NEW: Helper for Google Jobs Expiry
+    def get_schema_valid_through(self):
+        # Default validity: 90 days from posting
+        return (self.created_at + timedelta(days=90)).strftime('%Y-%m-%d')
 
     def save(self, *args, **kwargs):
         if self.location: self.location = normalize_location(self.location)
