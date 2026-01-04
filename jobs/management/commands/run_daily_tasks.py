@@ -10,22 +10,24 @@ class Command(BaseCommand):
 
         # 1. CLEANUP (Clear the deck)
         self.stdout.write("\n[1/5] 🧹 Checking for Dead Links & Expired Roles...")
-        call_command('check_dead_links')   # <--- The New Janitor
-        call_command('expire_featured')    # Downgrades featured status
-        call_command('clean_stale_jobs')   # Moves 60+ day old jobs to pending
+        call_command('check_dead_links')   
+        call_command('expire_featured')    
+        call_command('clean_stale_jobs')   
 
         # 2. INGESTION (Get new jobs)
-        # Run RSS first (Cheap & Fast)
-        #self.stdout.write("\n[2/5] 📡 Fetching RSS Feeds...")
-        #call_command('fetch_rss')
-        
-        # Run Hunter (Deep Search - Costs API Credits)
-        self.stdout.write("\n[3/5] 🏹 Hunting via API (Deep Search)...")
+        self.stdout.write("\n[2/5] 🏹 Hunting via API (Deep Search)...")
         call_command('fetch_jobs')
 
         # 3. POLISH (Images)
-        # Find logos for any new companies found above
-        self.stdout.write("\n[4/5] 🎨 Backfilling Logos...")
+        self.stdout.write("\n[3/5] 🎨 Backfilling Logos...")
         call_command('update_logos')
+        
+        # 4. INDEXING (Ping Google)
+        # This forces Google to crawl the new jobs you just found in Step 2.
+        self.stdout.write("\n[4/5] 📡 Pinging Google Indexing API...")
+        try:
+            call_command('index_jobs')
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Indexing Failed: {e}"))
         
         self.stdout.write(self.style.SUCCESS("\n✨ AUTOPILOT COMPLETE. System is fresh."))
