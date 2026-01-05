@@ -6,11 +6,13 @@
 {% block meta_description %}MarTechJobs is a solo-founded project built to solve the noise problem in job searching. We curate the best Marketing Ops roles by hand.{% endblock %}
 
 {% block content %}
-<div class="bg-white border-b border-slate-100">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+<div class="relative bg-white border-b border-slate-100 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+
+    <div class="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         
         <div class="text-center mb-16">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-6 shadow-sm">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#1f432d]"></span>
                 The Origin Story
             </div>
@@ -19,7 +21,7 @@
             </h1>
         </div>
 
-        <div class="prose prose-lg prose-slate mx-auto font-light text-slate-600 leading-relaxed">
+        <div class="prose prose-lg prose-slate mx-auto font-light text-slate-600 leading-relaxed bg-white/50 backdrop-blur-sm rounded-xl p-0 md:p-6">
             <p class="text-xl font-serif text-slate-900 mb-8">
                 Hi, I'm the founder of MarTechJobs. 👋
             </p>
@@ -82,6 +84,11 @@
             <p class="font-serif font-bold text-slate-900 mt-8">
                 — The Founder
             </p>
+            
+            <div class="mt-12 pt-8 border-t border-slate-100 flex gap-4">
+                <a href="{% url 'job_list' %}" class="text-[#1f432d] font-bold hover:underline">Browse Jobs &rarr;</a>
+                <a href="{% url 'contact' %}" class="text-slate-500 font-bold hover:text-slate-900">Get in Touch &rarr;</a>
+            </div>
         </div>
 
     </div>
