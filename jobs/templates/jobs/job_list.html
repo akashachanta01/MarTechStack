@@ -105,6 +105,7 @@
 
         <div class="mt-4 flex flex-wrap justify-center gap-2 text-[10px] text-slate-500 items-center">
             <span class="font-bold text-slate-900 mr-2">Trending:</span>
+            <a href="{% url 'seo_loc_only' 'united-states' %}" class="bg-slate-50 border border-black px-2 py-1 rounded hover:bg-slate-100 transition uppercase">United States</a>
             {% for stack in popular_tech_stacks|slice:":5" %}
                 <a href="{% url 'tool_detail' stack.slug %}" class="bg-slate-50 border border-black px-2 py-1 rounded hover:bg-slate-100 transition uppercase">{{ stack.name }}</a>
             {% empty %}
