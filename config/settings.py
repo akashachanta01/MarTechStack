@@ -1,5 +1,6 @@
 """
 Django settings for config project.
+DEBUG MODE FORCED: Use this to diagnose 500 errors.
 """
 import dj_database_url
 import os
@@ -13,13 +14,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==============================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-dev-key-12345')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-debug-key-123')
 
-# ⚠️ DIAGNOSIS MODE: Set to False for production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# ⚠️ DIAGNOSIS MODE: FORCED TO TRUE
+# We are forcing this to True so you can see the error message on the site.
+DEBUG = True
 
-# We keep martechstack.io here so the server accepts the request BEFORE redirecting it.
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.io,martechstack.io,www.martechstack.io,.onrender.com,127.0.0.1,localhost').split(',')
+# We add '*' to allowed hosts so the site loads no matter what domain you are on
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 
@@ -30,6 +32,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # --- HTTPS ENFORCEMENT ---
+# We disable HTTPS enforcement while Debugging to prevent redirect loops
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000 
@@ -56,7 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # NEW: Redirect old domain to new domain immediately
+    # Redirect old domain to new domain
     'jobs.middleware.DomainRedirectMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -91,6 +94,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # ==============================================
 # DATABASE
 # ==============================================
+# Uses DATABASE_URL from Render if available, otherwise falls back to SQLite
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
@@ -136,16 +140,14 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-# FIX: Add fallback to prevent crashes if env var is missing
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'hello@martechstack.io')
+# SAFE DEFAULTS: Prevents 500 error if these variables are missing
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'noreply@martechjobs.io')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-
-# FIX: Use the variable directly
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
-# FIX: Strip trailing slash to avoid double slashes in URLs
+# Strip trailing slashes to prevent url errors
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip().rstrip('/')
