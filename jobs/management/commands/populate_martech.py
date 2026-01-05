@@ -1,68 +1,63 @@
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
 from django.utils.text import slugify
 from jobs.models import Category, Tool
 
 class Command(BaseCommand):
-    help = 'Populates the database with initial MarTech categories and tools'
+    help = 'Repairs the database: Ensures Salesforce/HubSpot exist and clears cache.'
 
     def handle(self, *args, **options):
-        # Your Taxonomy Data
-        taxonomy = {
-            "Marketing Automation": [
-                "Marketo", "HubSpot", "Salesforce Marketing Cloud", 
-                "Braze", "Iterable", "Eloqua", "Klaviyo"
-            ],
-            "Analytics & Data Platforms": [
-                "Adobe Analytics", "Google Analytics (GA4)", "Mixpanel", 
-                "Amplitude", "Heap", "Tableau", "Looker"
-            ],
-            "Customer Data & Personalization": [
-                "Segment", "Adobe Experience Platform", "Adobe Target", 
-                "Tealium", "mParticle", "Salesforce Data Cloud", "Optimizely"
-            ],
-            "E-commerce Platforms": [
-                "Shopify Plus", "Magento", "BigCommerce", 
-                "Salesforce Commerce Cloud", "WooCommerce"
-            ],
-            "CRM & Sales Enablement": [
-                "Salesforce CRM", "HubSpot CRM", "Outreach", 
-                "Salesloft", "Gong", "Pipedrive"
-            ],
-            "Content & SEO Tools": [
-                "Contentful", "WordPress", "Semrush", 
-                "Ahrefs", "Strapi", "Sanity"
-            ],
-            "Ad Tech & Media": [
-                "Google Ads", "Facebook Ads Manager", "Trade Desk", 
-                "LinkedIn Campaign Manager"
-            ]
-        }
+        self.stdout.write("🔧 Starting Database Repair...")
 
-        self.stdout.write("Starting population...")
+        # 1. Clear the cache (Fixes "Stale Data" issues)
+        cache.delete('popular_tech_stacks_v2')
+        cache.delete('available_countries_v2')
+        self.stdout.write("   ✅ Cache Cleared.")
 
-        for cat_name, tools_list in taxonomy.items():
-            # 1. Create or Get the Category (Slug is used here as the Category model has it)
-            category, created = Category.objects.get_or_create(
-                slug=slugify(cat_name),
-                defaults={'name': cat_name}
-            )
-            
-            if created:
-                self.stdout.write(f"Created Category: {cat_name}")
-            else:
-                self.stdout.write(f"Found existing Category: {cat_name}")
+        # 2. Ensure Categories Exist
+        cat_automation, _ = Category.objects.get_or_create(
+            slug='marketing-automation', 
+            defaults={'name': 'Marketing Automation'}
+        )
+        cat_analytics, _ = Category.objects.get_or_create(
+            slug='analytics', 
+            defaults={'name': 'Analytics'}
+        )
 
-            # 2. Create the Tools for this Category (FIXED: Slug reference removed)
-            for tool_name in tools_list:
-                tool, t_created = Tool.objects.get_or_create(
-                    name=tool_name, 
-                    defaults={
-                        'category': category,
-                    }
-                )
-                if t_created:
-                    self.stdout.write(f" - Added Tool: {tool_name}")
-                else:
-                    self.stdout.write(f" - Found existing Tool: {tool_name}")
+        # 3. FORCE CREATE ESSENTIAL TOOLS (The Fix for your 404)
+        # We use update_or_create to fix them even if they exist but are broken.
+        
+        # Salesforce
+        Tool.objects.update_or_create(
+            slug='salesforce',
+            defaults={
+                'name': 'Salesforce',
+                'category': cat_automation,
+                'logo_url': 'https://www.google.com/s2/favicons?domain=salesforce.com&sz=128'
+            }
+        )
+        self.stdout.write("   ✅ Tool Fixed: Salesforce")
 
-        self.stdout.write(self.style.SUCCESS('Successfully populated MarTech taxonomy!'))
+        # HubSpot
+        Tool.objects.update_or_create(
+            slug='hubspot',
+            defaults={
+                'name': 'HubSpot',
+                'category': cat_automation,
+                'logo_url': 'https://www.google.com/s2/favicons?domain=hubspot.com&sz=128'
+            }
+        )
+        self.stdout.write("   ✅ Tool Fixed: HubSpot")
+
+        # Marketo
+        Tool.objects.update_or_create(
+            slug='marketo',
+            defaults={
+                'name': 'Marketo',
+                'category': cat_automation,
+                'logo_url': 'https://www.google.com/s2/favicons?domain=adobe.com&sz=128'
+            }
+        )
+        self.stdout.write("   ✅ Tool Fixed: Marketo")
+
+        self.stdout.write(self.style.SUCCESS('\n✨ SUCCESS: Salesforce link will now work!'))
