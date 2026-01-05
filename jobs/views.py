@@ -16,7 +16,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
-from .models import Job, Tool, Category, Subscriber 
+# Add BlogPost here
+from .models import Job, Tool, Category, Subscriber, BlogPost
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
 
@@ -94,12 +95,27 @@ def job_list(request):
         "current_rtype": role_type_filter,
     })
 
-# --- BLOG VIEWS ---
+# --- BLOG VIEWS (DYNAMIC) ---
 def blog_list(request):
-    return render(request, 'jobs/blog_list.html')
+    posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')
+    featured_post = posts.first() if posts.exists() else None
+    remaining_posts = posts[1:] if posts.count() > 1 else []
+    
+    return render(request, 'jobs/blog_list.html', {
+        'featured_post': featured_post,
+        'posts': remaining_posts
+    })
 
-def post_2025_salary_guide(request):
-    return render(request, 'jobs/posts/2025_salary_guide.html')
+def post_detail(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug, is_published=True)
+    
+    # Suggest 2 other posts as "Related"
+    related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
+    
+    return render(request, 'jobs/post_detail.html', {
+        'post': post,
+        'related_posts': related_posts
+    })
 
 # --- SEO: LANDING PAGE GENERATOR ---
 def seo_landing_page(request, location_slug=None, tool_slug=None):
@@ -108,45 +124,22 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         clean_tool_slug = tool_slug.replace("-jobs", "")
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
-    # EXPANDED LOCATION MAPPING
     SEO_LOCATIONS = {
-        "remote": "Remote",
-        "new-york": "New York",
-        "nyc": "New York",
-        "san-francisco": "San Francisco",
-        "sf": "San Francisco",
-        "london": "London",
-        "chicago": "Chicago",
-        "austin": "Austin",
-        "los-angeles": "Los Angeles",
-        "toronto": "Toronto",
-        "berlin": "Berlin",
-        "singapore": "Singapore",
-        "sydney": "Sydney",
-        "bengaluru": "Bengaluru",
-        "bangalore": "Bengaluru",
-        "boston": "Boston",
-        "seattle": "Seattle",
-        "denver": "Denver",
-        "atlanta": "Atlanta",
-        "amsterdam": "Amsterdam",
-        "dublin": "Dublin"
+        "remote": "Remote", "new-york": "New York", "nyc": "New York", "san-francisco": "San Francisco",
+        "sf": "San Francisco", "london": "London", "chicago": "Chicago", "austin": "Austin",
+        "los-angeles": "Los Angeles", "toronto": "Toronto", "berlin": "Berlin", "singapore": "Singapore",
+        "sydney": "Sydney", "bengaluru": "Bengaluru", "bangalore": "Bengaluru", "boston": "Boston",
+        "seattle": "Seattle", "denver": "Denver", "atlanta": "Atlanta", "amsterdam": "Amsterdam", "dublin": "Dublin"
     }
 
-    location_name = "Remote" # Default
+    location_name = "Remote" 
     if location_slug:
-        # Check explicit map first, then fallback to title case (e.g. "san-diego" -> "San Diego")
         location_name = SEO_LOCATIONS.get(location_slug.lower(), location_slug.replace("-", " ").title())
 
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
-    
-    if tool: 
-        jobs = jobs.filter(tools=tool)
-    
-    if location_name == "Remote": 
-        jobs = jobs.filter(work_arrangement="remote")
-    else: 
-        jobs = jobs.filter(location__icontains=location_name)
+    if tool: jobs = jobs.filter(tools=tool)
+    if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
+    else: jobs = jobs.filter(location__icontains=location_name)
 
     if jobs.count() == 0:
         base_url = "/?q="
@@ -154,7 +147,6 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         if location_name: base_url += f"&l={location_name}"
         return redirect(base_url)
 
-    # Dynamic Headers
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
         meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
@@ -169,47 +161,27 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
 
     return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, 
-        'jobs': jobs.order_by('-is_pinned', '-created_at'),
-        'custom_title': page_title,
-        'custom_header': header_text,
-        'custom_desc': meta_desc,
-        'is_seo_landing': True
+        'tool': tool, 'jobs': jobs.order_by('-is_pinned', '-created_at'),
+        'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc, 'is_seo_landing': True
     })
 
 # --- SEO: SALARY GUIDE ---
 def salary_guide(request):
     data = cache.get('salary_guide_data')
-    
     if not data:
         tools = Tool.objects.annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).filter(job_count__gt=2).order_by('-job_count')
         salary_stats = []
-        
         for tool in tools:
             jobs = tool.jobs.filter(is_active=True, screening_status='approved')
             min_sum, max_sum, count = 0, 0, 0
-            
             for job in jobs:
                 s_min, s_max = job.get_salary_min_max()
-                if s_min and s_max:
-                    min_sum += s_min
-                    max_sum += s_max
-                    count += 1
-            
+                if s_min and s_max: min_sum += s_min; max_sum += s_max; count += 1
             if count > 0:
-                avg_min = int(min_sum / count)
-                avg_max = int(max_sum / count)
-                salary_stats.append({
-                    'tool': tool,
-                    'avg_min': avg_min,
-                    'avg_max': avg_max,
-                    'count': count
-                })
-        
+                salary_stats.append({'tool': tool, 'avg_min': int(min_sum / count), 'avg_max': int(max_sum / count), 'count': count})
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
         cache.set('salary_guide_data', data, 86400) # 24 hrs
-
     return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
 
 def unsubscribe(request):
@@ -217,10 +189,8 @@ def unsubscribe(request):
         email = request.POST.get("email", "").strip().lower()
         if email:
             deleted_count, _ = Subscriber.objects.filter(email=email).delete()
-            if deleted_count > 0:
-                messages.success(request, f"✅ {email} has been unsubscribed.")
-            else:
-                messages.warning(request, "⚠️ That email was not found in our list.")
+            if deleted_count > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
+            else: messages.warning(request, "⚠️ That email was not found in our list.")
     return render(request, "jobs/unsubscribe.html")
 
 def tool_detail(request, slug):
@@ -232,8 +202,7 @@ def tool_detail(request, slug):
 
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
-    if job.slug and job.slug != slug: 
-        return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
+    if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
     return render(request, 'jobs/job_detail.html', {'job': job})
 
 def post_job(request):
@@ -251,31 +220,15 @@ def post_job(request):
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
-                    # --- REPAIR LOGIC START (Fixes MultipleObjectsReturned) ---
                     target_slug = slugify(name)
-                    
-                    # 1. Try to find tool by SLUG (Best Match)
                     tool = Tool.objects.filter(slug=target_slug).first()
-
-                    # 2. If not found, try Name Case-Insensitive (Catch "HubSpot" vs "hubspot")
+                    if not tool: tool = Tool.objects.filter(name__iexact=name).first()
                     if not tool:
-                        tool = Tool.objects.filter(name__iexact=name).first()
-
-                    # 3. If still not found, CREATE it safely
-                    if not tool:
-                        try:
-                            tool = Tool.objects.create(name=name, slug=target_slug, category=category)
-                        except Exception:
-                            # If create fails (race condition or duplicate), fetch whatever exists
-                            tool = Tool.objects.filter(name__iexact=name).first()
-
-                    # 4. Add the tool if we found/created one
-                    if tool:
-                        job.tools.add(tool)
-                    # --- REPAIR LOGIC END ---
+                        try: tool = Tool.objects.create(name=name, slug=target_slug, category=category)
+                        except: tool = Tool.objects.filter(name__iexact=name).first()
+                    if tool: job.tools.add(tool)
 
             cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
-            
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -355,19 +308,8 @@ def contact(request):
             cleaned = form.cleaned_data
             reply_to = [cleaned["email"]]
             recipient = "hello@martechstack.io"
-            email = EmailMultiAlternatives(
-                subject=f"Contact form: {cleaned['subject']}",
-                body=cleaned["message"],
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[recipient],
-                reply_to=reply_to
-            )
-            try:
-                email.send(fail_silently=False)
-                messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
-                return redirect("contact")
-            except Exception:
-                messages.error(request, "We couldn't send your message right now. Please try again.")
-    else:
-        form = ContactForm()
+            email = EmailMultiAlternatives(subject=f"Contact form: {cleaned['subject']}", body=cleaned["message"], from_email=settings.DEFAULT_FROM_EMAIL, to=[recipient], reply_to=reply_to)
+            try: email.send(fail_silently=False); messages.success(request, "Thanks for reaching out! We'll get back to you soon."); return redirect("contact")
+            except: messages.error(request, "We couldn't send your message right now. Please try again.")
+    else: form = ContactForm()
     return render(request, "jobs/contact.html", {"form": form})
