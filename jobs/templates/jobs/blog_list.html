@@ -2,53 +2,44 @@
 {% load static %}
 
 {% block title %}Blog — MarTechJobs{% endblock %}
-
-{% block meta_description %}Stay ahead of the curve with expert articles on marketing operations, technology stacks, career growth, and the future of digital marketing.{% endblock %}
+{% block meta_description %}Expert articles on marketing operations, technology stacks, and career growth.{% endblock %}
 
 {% block content %}
 <section class="relative w-full pt-16 pb-16 bg-white border-b border-slate-100">
     <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
     <div class="relative w-full max-w-7xl mx-auto px-4 lg:px-8 text-center">
-        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
-            <span class="flex size-2 rounded-full bg-[#1f432d]"></span>
-            <span class="text-xs font-medium text-slate-500 font-mono tracking-tight">Industry Insights & Career Advice</span>
-        </div>
         <h1 class="text-5xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6 font-serif">
             The MarTech <span class="text-[#1f432d]">Chronicles</span>
         </h1>
         <p class="text-lg text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-            Stay ahead of the curve with expert articles on marketing operations, technology stacks, career growth, and the future of digital marketing.
+            Industry insights & Career Advice for the modern technologist.
         </p>
     </div>
 </section>
 
 <section class="py-12 bg-white">
     <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
-        <div class="relative group grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        
+        {% if featured_post %}
+        <div class="relative group grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-16">
             <div class="relative overflow-hidden rounded-md border border-slate-200 aspect-[16/9] lg:aspect-auto lg:h-[450px]">
                 <div class="w-full h-full bg-[#1f432d] flex items-center justify-center text-center p-10">
                      <div>
-                        <h2 class="text-white font-serif text-4xl md:text-5xl font-bold opacity-20 select-none !m-0 !mt-0">
-                            FEATURE<br/>ARTICLE
-                        </h2>
-                        <p class="text-white/40 font-mono text-sm mt-4 uppercase tracking-widest">2025 Salary Data</p>
+                        <h2 class="text-white font-serif text-3xl font-bold opacity-20 select-none !m-0 !mt-0 uppercase tracking-widest">Featured</h2>
                     </div>
-                </div>
-                <div class="absolute top-4 left-4 bg-white text-[#1f432d] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-sm font-mono z-10">
-                    New
                 </div>
             </div>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2 text-sm text-slate-500 mb-4 font-mono">
-                    <span class="text-[#1f432d] font-bold">Career Growth</span>
+                    <span class="text-[#1f432d] font-bold">{{ featured_post.category }}</span>
                     <span class="text-slate-300">•</span>
-                    <time datetime="2025-01-06">Jan 06, 2025</time>
+                    <time>{{ featured_post.published_at|date:"M d, Y" }}</time>
                 </div>
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 font-serif leading-tight group-hover:text-[#1f432d] transition-colors">
-                    <a href="{% url 'post_2025_salary_guide' %}">The 2025 MarTech Salary & Career Guide: Benchmarks, AI Impact, and the Rise of the Maestro</a>
+                    <a href="{% url 'post_detail' featured_post.slug %}">{{ featured_post.title }}</a>
                 </h2>
                 <p class="text-slate-500 text-lg mb-8 leading-relaxed line-clamp-3">
-                    Detailed 2025 salary benchmarks for Marketing Ops, MarTech, and RevOps roles. We analyze the technical skills premium, the gender pay gap, and the impact of AI on compensation.
+                    {{ featured_post.excerpt }}
                 </p>
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-white p-2 flex items-center justify-center">
@@ -56,102 +47,38 @@
                     </div>
                     <div>
                         <p class="text-slate-900 font-bold text-sm">MarTechJobs Team</p>
-                        <p class="text-slate-500 text-xs font-mono">Research & Data</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+        {% endif %}
 
-<section class="sticky top-[64px] z-40 bg-white border-y border-slate-200 py-4 shadow-sm">
-    <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <nav aria-label="Blog categories" class="flex overflow-x-auto pb-2 md:pb-0 gap-2 w-full md:w-auto scrollbar-hide">
-                <a class="px-4 py-1.5 rounded-full bg-slate-900 text-white text-sm font-medium whitespace-nowrap" href="#">All Posts</a>
-                <a class="px-4 py-1.5 rounded-full border border-slate-200 bg-white text-slate-500 hover:border-slate-900 hover:text-slate-900 transition-colors text-sm font-medium whitespace-nowrap" href="#">Tech Stacks</a>
-                <a class="px-4 py-1.5 rounded-full border border-slate-200 bg-white text-slate-500 hover:border-slate-900 hover:text-slate-900 transition-colors text-sm font-medium whitespace-nowrap" href="#">Career Advice</a>
-                <a class="px-4 py-1.5 rounded-full border border-slate-200 bg-white text-slate-500 hover:border-slate-900 hover:text-slate-900 transition-colors text-sm font-medium whitespace-nowrap" href="#">Salary Guides</a>
-            </nav>
-            <div class="relative w-full md:w-64">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <span class="material-symbols-outlined text-lg">search</span>
-                </span>
-                <input aria-label="Search articles" class="w-full pl-10 pr-4 py-1.5 text-sm border border-slate-200 rounded-full focus:ring-[#1f432d] focus:border-[#1f432d] placeholder:text-slate-400" placeholder="Search articles..." type="text"/>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="py-16 bg-slate-50">
-    <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
+            {% for post in posts %}
             <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
-                <div class="relative h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-4xl text-slate-300">dns</span>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">
-                        Tech Stacks
-                    </div>
+                <div class="relative h-48 bg-slate-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-4xl text-slate-300">article</span>
+                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">{{ post.category }}</div>
                 </div>
                 <div class="flex flex-col flex-grow p-6">
                     <div class="flex items-center gap-2 text-xs text-slate-500 mb-3 font-mono">
                         <span class="material-symbols-outlined text-sm">calendar_today</span>
-                        <time datetime="2025-10-18">Oct 18, 2025</time>
-                        <span class="text-slate-300">•</span>
-                        <span>5 min read</span>
+                        <time>{{ post.published_at|date:"M d, Y" }}</time>
                     </div>
                     <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
-                        The Great Debate: HubSpot vs. Salesforce for Scaling Startups
+                        <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
                     </h3>
-                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow">
-                        Choosing the right CRM is critical for early-stage growth. We break down the pros, cons, and hidden costs of the two market leaders.
-                    </p>
+                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow">{{ post.excerpt }}</p>
                     <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">AR</div>
-                            <span class="text-xs font-bold text-slate-900">Alex Rivera</span>
-                        </div>
-                        <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="#">
+                        <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="{% url 'post_detail' post.slug %}">
                             Read <span class="material-symbols-outlined text-sm ml-1 group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
                         </a>
                     </div>
                 </div>
             </article>
-
-            <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
-                <div class="relative h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-4xl text-slate-300">database</span>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">
-                        Career Advice
-                    </div>
-                </div>
-                <div class="flex flex-col flex-grow p-6">
-                    <div class="flex items-center gap-2 text-xs text-slate-500 mb-3 font-mono">
-                        <span class="material-symbols-outlined text-sm">calendar_today</span>
-                        <time datetime="2025-10-05">Oct 05, 2025</time>
-                        <span class="text-slate-300">•</span>
-                        <span>6 min read</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
-                        Must-Have SQL Skills for Marketing Analysts in 2025
-                    </h3>
-                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow">
-                        Basic SELECT statements aren't enough anymore. We cover the advanced queries and database concepts that top tech companies are testing for.
-                    </p>
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">LW</div>
-                            <span class="text-xs font-bold text-slate-900">Lisa Wong</span>
-                        </div>
-                        <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="#">
-                            Read <span class="material-symbols-outlined text-sm ml-1 group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                    </div>
-                </div>
-            </article>
-
+            {% endfor %}
         </div>
+
     </div>
 </section>
 {% endblock %}
