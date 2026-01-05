@@ -238,12 +238,33 @@ def post_job(request):
             job.plan_name = plan
             job.is_featured = False; job.is_pinned = False; job.screening_status = 'pending'; job.is_active = False 
             job.tags = f"User Submission: {plan}"; job.save(); form.save_m2m()
+            
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
-                    tool, _ = Tool.objects.get_or_create(name__iexact=name, defaults={'name': name, 'slug': slugify(name), 'category': category})
-                    job.tools.add(tool)
+                    # --- REPAIR LOGIC START ---
+                    # 1. Try to find tool by SLUG (Best Match)
+                    target_slug = slugify(name)
+                    tool = Tool.objects.filter(slug=target_slug).first()
+
+                    # 2. If not found, try Name Case-Insensitive (Catch "HubSpot" vs "hubspot")
+                    if not tool:
+                        tool = Tool.objects.filter(name__iexact=name).first()
+
+                    # 3. If still not found, CREATE it safely
+                    if not tool:
+                        try:
+                            tool = Tool.objects.create(name=name, slug=target_slug, category=category)
+                        except Exception:
+                            # If create fails (race condition), fetch whatever exists
+                            tool = Tool.objects.filter(name__iexact=name).first()
+
+                    # 4. Add the tool if we found/created one
+                    if tool:
+                        job.tools.add(tool)
+                    # --- REPAIR LOGIC END ---
+
             cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
