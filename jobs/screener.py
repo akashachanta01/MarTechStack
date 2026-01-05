@@ -45,8 +45,6 @@ class MarTechScreener:
         self.REQUIRED_KEYWORDS = list(set([r.lower() for r in self.hunt_roles + self.hunt_tools]))
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
         
-        # --- NEW: VENDOR BLACKLIST ---
-        # If the job is AT these companies, we forbid engineering/product roles
         self.VENDOR_COMPANIES = [
             "Braze", "Iterable", "Adobe", "Salesforce", "HubSpot", "Segment", 
             "Tealium", "Klaviyo", "mParticle", "Amplitude", "Mixpanel", 
@@ -57,43 +55,30 @@ class MarTechScreener:
         return (text or "").strip().lower()
 
     def _quick_kill(self, title: str, company: str) -> Optional[dict]:
-        """
-        Runs BEFORE AI. Instantly rejects known bad patterns.
-        """
         t_low = title.lower()
         c_low = company.lower()
 
-        # 1. THE EVENT/SEO/SOCIAL KILLER
-        # These words in a title = Instant Death (unless "Operations" is also there)
         bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
         if any(bad in t_low for bad in bad_keywords):
             if "operations" not in t_low and "technology" not in t_low:
                 return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: Non-Technical Role (SEO/Event/Social)", "details": {}}
 
-        # 2. THE VENDOR PRODUCT TRAP
-        # If Company is a Vendor AND Title is Engineering/Product -> REJECT
         is_vendor = any(v.lower() in c_low for v in self.VENDOR_COMPANIES)
         if is_vendor:
             vendor_bad_titles = ["software engineer", "developer", "product manager", "data scientist", "machine learning", "ai scientist", "solutions engineer", "account executive", "csm", "customer success"]
             if any(bt in t_low for bt in vendor_bad_titles):
-                # Exception: Allow "MarTech" or "Marketing Ops" titles at vendors
                 if "marketing" not in t_low and "martech" not in t_low:
                     return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: {title} at {company} is a product role.", "details": {}}
 
         return None
 
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
-        # 1. Run Python Quick Kill (Free & Fast)
         quick_reject = self._quick_kill(title, company)
         if quick_reject:
             return quick_reject
 
-        # 2. Standard Block Rules (DB based)
-        # ... (Keep existing _apply_block_rules logic or call it here) ...
-
         full_text = self._normalize(f"{title} {description}")
         
-        # 3. Fast Fail Keyword Check
         has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
         if not has_keyword:
             return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No hunt_targets keyword found.", "details": {"stage": "fast_fail"}}
@@ -132,23 +117,14 @@ class MarTechScreener:
         1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
 
         2. **Analyze Role (STRICT FILTER):**
-           
-           - **STEP A: The "Vendor" Check:**
-             - If Company is a software vendor (e.g. Braze, Adobe) AND title is "Software Engineer" -> **REJECT (0)**. (We want users of the tool, not builders of the tool).
-
-           - **STEP B: The "Marketing" Trap:**
-             - If Title contains "SEO", "Event", "Social", "Brand" -> **REJECT (0)**.
-             - If Title contains "Manager" but is generic (e.g. "Marketing Manager") -> **REJECT (0)** unless description explicitly details MarTech Admin work.
-
+           - **STEP A: The "Vendor" Check:** If Vendor company AND Engineering/Product title -> REJECT (0).
+           - **STEP B: The "Marketing" Trap:** If SEO/Social/Brand -> REJECT (0).
            - **STEP C: The "Good" Signals:**
-             - **Case 1 (Technical Title):** Title has "MarTech", "Marketing Technologist", "Marketing Operations", "MOPs". -> **APPROVE (90)**.
-             - **Case 2 (Tool Admin):** Title has exact tool name (e.g. "Marketo Admin", "Salesforce Architect"). -> **APPROVE (90)**.
-             - **Case 3 (VIP Description):** Title is generic ("Product Manager") BUT description explicitly says "Owner of Adobe Experience Platform" or "Migrating to Braze". -> **APPROVE (85)**.
+             - "Marketing Operations", "MarTech" -> APPROVE (90).
+             - Tool Admin (e.g. "Marketo Admin") -> APPROVE (90).
+             - Product Manager but explicitly for "Adobe Experience Platform" -> APPROVE (85).
 
-        3. **Scoring:**
-           - 0 = Reject (CSM, Sales, Events, SEO, Generic SWE, Vendor Product Roles)
-           - 65 = Pending
-           - 85-100 = Auto-Approve
+        3. **Scoring:** 0 = Reject, 65 = Pending, 85-100 = Auto-Approve.
 
         Output JSON:
         {{
@@ -169,8 +145,19 @@ class MarTechScreener:
             temperature=0
         )
 
-        content = completion.choices[0].message.content
-        result = json.loads(content)
+        content = completion.choices[0].message.content.strip()
+        
+        # FIX: Strip markdown code blocks if AI adds them
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.endswith("```"):
+            content = content[:-3]
+
+        try:
+            result = json.loads(content.strip())
+        except json.JSONDecodeError:
+            # Fallback if JSON is still broken
+            return {"status": "pending", "score": 50.0, "reason": "AI JSON Error", "details": {"raw": content}}
         
         signals = result.get("signals", {})
         stack = signals.get("stack", [])
