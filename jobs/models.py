@@ -124,11 +124,9 @@ class Job(models.Model):
 
     def __str__(self): return f"{self.title} at {self.company}"
 
-    # NEW: Helper for Schema Salary Parsing (Fixes Compliance)
     def get_salary_min_max(self):
         if not self.salary_range: return None, None
         try:
-            # Extract digits from string (e.g. "$120k - $150k" -> [120, 150])
             txt = self.salary_range.lower().replace(',', '').replace('.', '')
             nums = re.findall(r'\d+', txt)
             if not nums: return None, None
@@ -136,8 +134,6 @@ class Job(models.Model):
             vals = []
             for n in nums:
                 val = int(n)
-                # Handle 'k' shorthand if detected in context, but simple logic: 
-                # if val < 1000, likely 'k' notation -> multiply by 1000
                 if val < 1000: val *= 1000
                 vals.append(val)
             
@@ -147,18 +143,20 @@ class Job(models.Model):
         except: pass
         return None, None
 
-    # NEW: Helper for Google Jobs Expiry
     def get_schema_valid_through(self):
-        # Default validity: 90 days from posting
         return (self.created_at + timedelta(days=90)).strftime('%Y-%m-%d')
 
     def save(self, *args, **kwargs):
         if self.location: self.location = normalize_location(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
-        if self.screening_status == 'approved': self.is_active = True
-        elif self.screening_status == 'rejected': self.is_active = False
-        elif self.screening_status == 'pending' and not self.pk: self.is_active = False
+        
+        # FIX: Strict sync logic. Only approved jobs should be active.
+        if self.screening_status == 'approved': 
+            self.is_active = True
+        else:
+            self.is_active = False
+            
         super().save(*args, **kwargs)
 
     class Meta:
