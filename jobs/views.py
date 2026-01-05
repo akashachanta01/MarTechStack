@@ -22,6 +22,7 @@ from .emails import send_job_alert, send_welcome_email, send_admin_new_subscribe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+# Mapping to consolidate variations of tool names for filtering
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
@@ -243,9 +244,10 @@ def post_job(request):
             if new_tools_text:
                 category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
-                    # --- REPAIR LOGIC START ---
-                    # 1. Try to find tool by SLUG (Best Match)
+                    # --- REPAIR LOGIC START (Fixes MultipleObjectsReturned) ---
                     target_slug = slugify(name)
+                    
+                    # 1. Try to find tool by SLUG (Best Match)
                     tool = Tool.objects.filter(slug=target_slug).first()
 
                     # 2. If not found, try Name Case-Insensitive (Catch "HubSpot" vs "hubspot")
@@ -257,7 +259,7 @@ def post_job(request):
                         try:
                             tool = Tool.objects.create(name=name, slug=target_slug, category=category)
                         except Exception:
-                            # If create fails (race condition), fetch whatever exists
+                            # If create fails (race condition or duplicate), fetch whatever exists
                             tool = Tool.objects.filter(name__iexact=name).first()
 
                     # 4. Add the tool if we found/created one
@@ -266,6 +268,7 @@ def post_job(request):
                     # --- REPAIR LOGIC END ---
 
             cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
+            
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
