@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+from django.contrib.auth.models import User
 import html
 from bs4 import BeautifulSoup
 import re
@@ -9,11 +10,7 @@ from datetime import timedelta
 # --- HELPER 1: LOCATION STANDARDIZER ---
 def normalize_location(loc):
     if not loc: return "Remote"
-    
-    # 1. Basic Clean
     cleaned = loc.strip().replace(" - ", ", ").replace(" | ", ", ").replace("/", ", ")
-    
-    # 2. STATE SHORTENER
     state_map = {
         "California": "CA", "New York": "NY", "Texas": "TX", "Washington": "WA",
         "Illinois": "IL", "Massachusetts": "MA", "Georgia": "GA", "Colorado": "CO",
@@ -23,8 +20,6 @@ def normalize_location(loc):
     for state, code in state_map.items():
         if f", {state}" in cleaned:
             cleaned = cleaned.replace(f", {state}", f", {code}")
-
-    # 3. CITY MAP
     lower_loc = cleaned.lower()
     city_map = {
         "new york": "New York, NY, United States",
@@ -40,15 +35,9 @@ def normalize_location(loc):
         "sydney": "Sydney, Australia",
         "remote": "Remote",
     }
-    
-    if lower_loc in city_map:
-        return city_map[lower_loc]
-
-    # 4. Standard Append
+    if lower_loc in city_map: return city_map[lower_loc]
     if "United States" not in cleaned and "Remote" not in cleaned:
-        if re.search(r', [A-Z]{2}$', cleaned):
-             cleaned += ", United States"
-             
+        if re.search(r', [A-Z]{2}$', cleaned): cleaned += ", United States"
     return cleaned
 
 # --- HELPER 2: DESCRIPTION CLEANER ---
@@ -80,7 +69,7 @@ class Tool(models.Model):
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="tools")
     description = models.TextField(blank=True, default="", help_text="SEO Content: What is this tool?")
-    logo_url = models.URLField(max_length=500, blank=True, null=True)
+    logo_url = models.URLField(max_length=500, blank=True, null=True, help_text="Official logo of the tool")
 
     def __str__(self): return self.name
     @property
@@ -110,7 +99,6 @@ class Job(models.Model):
     is_active = models.BooleanField(default=False)
     screened_at = models.DateTimeField(blank=True, null=True)
     
-    # AI/Scraper Fields
     screening_score = models.FloatField(blank=True, null=True)
     screening_reason = models.TextField(blank=True, default="")
     screening_details = models.JSONField(blank=True, default=dict)
@@ -130,13 +118,11 @@ class Job(models.Model):
             txt = self.salary_range.lower().replace(',', '').replace('.', '')
             nums = re.findall(r'\d+', txt)
             if not nums: return None, None
-            
             vals = []
             for n in nums:
                 val = int(n)
                 if val < 1000: val *= 1000
                 vals.append(val)
-            
             vals.sort()
             if len(vals) >= 2: return vals[0], vals[-1]
             if len(vals) == 1: return vals[0], vals[0]
@@ -150,18 +136,41 @@ class Job(models.Model):
         if self.location: self.location = normalize_location(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
-        
-        # FIX: Strict sync logic. Only approved jobs should be active.
         if self.screening_status == 'approved': 
             self.is_active = True
         else:
             self.is_active = False
-            
         super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-is_pinned', '-created_at']
         indexes = [models.Index(fields=['is_active', 'screening_status']), models.Index(fields=['created_at'])]
+
+# --- NEW: BLOG POST MODEL ---
+class BlogPost(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, help_text="URL friendly version of title")
+    excerpt = models.TextField(help_text="Short summary for the blog card (2-3 sentences).")
+    content = models.TextField(help_text="Full HTML content of the article.")
+    
+    # SEO Fields
+    meta_title = models.CharField(max_length=255, blank=True)
+    meta_description = models.CharField(max_length=300, blank=True)
+    
+    # Metadata
+    author = models.CharField(max_length=100, default="MarTechJobs Team")
+    category = models.CharField(max_length=50, default="Career Advice")
+    read_time = models.CharField(max_length=20, default="5 min read")
+    published_at = models.DateField(default=timezone.now)
+    is_published = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self): return self.title
+    
+    class Meta:
+        ordering = ['-published_at']
 
 class Subscriber(models.Model):
     email = models.EmailField(unique=True)
