@@ -201,6 +201,7 @@
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Locations</h3>
                     <ul class="space-y-3 text-sm">
                         <li><a href="{% url 'seo_loc_only' 'remote' %}" class="hover:text-martech-green hover:underline transition">Remote</a></li>
+                        <li><a href="{% url 'seo_loc_only' 'united-states' %}" class="hover:text-martech-green hover:underline transition">United States</a></li>
                         {% for country in available_countries|slice:":5" %}
                         <li><a href="{% url 'seo_loc_only' country|slugify %}" class="hover:text-martech-green hover:underline transition">{{ country }}</a></li>
                         {% endfor %}
