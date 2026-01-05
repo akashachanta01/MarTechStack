@@ -1,6 +1,6 @@
 """
 Django settings for config project.
-DEBUG MODE FORCED: Use this to diagnose 500 errors.
+DEBUG MODE: ON
 """
 import dj_database_url
 import os
@@ -16,11 +16,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-debug-key-123')
 
-# ⚠️ DIAGNOSIS MODE: FORCED TO TRUE
-# We are forcing this to True so you can see the error message on the site.
+# ⚠️ DEBUG MODE: FORCED TO TRUE
+# Remember to set this back to False (or use os.environ.get) before going fully public.
 DEBUG = True
 
-# We add '*' to allowed hosts so the site loads no matter what domain you are on
+# Allow all hosts during debugging to prevent DisallowedHost errors
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
@@ -32,7 +32,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # --- HTTPS ENFORCEMENT ---
-# We disable HTTPS enforcement while Debugging to prevent redirect loops
+# We disable HTTPS enforcement while Debugging to prevent redirect loops on some platforms
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000 
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
+    'django.contrib.humanize', # <--- ADDED THIS LINE
     'jobs',
 ]
 
