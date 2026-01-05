@@ -24,7 +24,9 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'martechjobs.io,www.martechjobs.
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 
     'https://martechjobs.io',
-    'https://www.martechjobs.io'
+    'https://www.martechjobs.io',
+    'https://martechstack.io',
+    'https://www.martechstack.io'
 ]
 
 # --- HTTPS ENFORCEMENT ---
@@ -133,14 +135,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# This pulls the email address you set in Render
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') 
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+# FIX: Add fallback to prevent crashes if env var is missing
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'hello@martechstack.io')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# FIX: Use the variable directly
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
-# Default to the new domain
-DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip()
+# FIX: Strip trailing slash to avoid double slashes in URLs
+DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip().rstrip('/')
