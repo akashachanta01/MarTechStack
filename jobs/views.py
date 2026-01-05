@@ -14,9 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages 
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
 
 from .models import Job, Tool, Category, Subscriber 
-from .forms import JobPostForm
+from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -315,3 +316,27 @@ def review_action(request, job_id, action):
 
 def about(request): return render(request, 'jobs/about.html')
 def for_employers(request): return render(request, 'jobs/for_employers.html')
+
+def contact(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cleaned = form.cleaned_data
+            reply_to = [cleaned["email"]]
+            recipient = "hello@martechstack.io"
+            email = EmailMultiAlternatives(
+                subject=f"Contact form: {cleaned['subject']}",
+                body=cleaned["message"],
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient],
+                reply_to=reply_to
+            )
+            try:
+                email.send(fail_silently=False)
+                messages.success(request, "Thanks for reaching out! We'll get back to you soon.")
+                return redirect("contact")
+            except Exception:
+                messages.error(request, "We couldn't send your message right now. Please try again.")
+    else:
+        form = ContactForm()
+    return render(request, "jobs/contact.html", {"form": form})

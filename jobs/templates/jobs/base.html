@@ -177,7 +177,7 @@
                        The leading community and job board for marketing technology professionals.
                    </p>
                    <div class="flex gap-4 text-slate-400">
-                       <a href="mailto:hello@martechjobs.io" class="hover:text-slate-900 transition">Contact Us</a>
+                       <a href="{% url 'contact' %}" class="hover:text-slate-900 transition">Contact Us</a>
                        <a href="{% url 'job_feed' %}" class="hover:text-slate-900 transition"><span class="material-symbols-outlined text-xl">rss_feed</span></a>
                    </div>
                 </div>
@@ -219,7 +219,7 @@
                  <div>
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Support</h3>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="mailto:hello@martechstack.io" class="hover:text-slate-900 transition">Contact Us</a></li>
+                        <li><a href="{% url 'contact' %}" class="hover:text-slate-900 transition">Contact Us</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
                         <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
                     </ul>

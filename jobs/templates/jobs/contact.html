@@ -1,0 +1,95 @@
+{% extends "jobs/base.html" %}
+{% load static %}
+
+{% block title %}Contact Us — MarTechJobs{% endblock %}
+
+{% block meta_description %}Reach out to the MarTechJobs team with questions, feedback, or partnership inquiries.{% endblock %}
+
+{% block content %}
+<div class="relative bg-white border-b border-slate-200 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold font-mono uppercase tracking-wider text-slate-500 mb-8 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#1f432d]"></span>
+            Support & Partnerships
+        </div>
+        <h1 class="text-5xl md:text-6xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-6">
+            Contact the MarTechJobs Team
+        </h1>
+        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
+            Have a question about a listing, the newsletter, or partnerships? Send us a note and we will follow up.
+        </p>
+    </div>
+</div>
+
+<div class="bg-[#f8f9fa] py-12 border-t border-slate-100">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div class="lg:col-span-7">
+                <div class="bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-lg p-8 md:p-10">
+                    <div class="mb-8 border-b border-slate-100 pb-6">
+                        <h2 class="text-2xl font-serif font-bold text-slate-900">Send a message</h2>
+                        <p class="text-slate-500 text-sm mt-1">We typically respond within one business day.</p>
+                    </div>
+
+                    <form method="post" class="space-y-6" novalidate>
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Email <span class="text-red-500">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.email.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Subject <span class="text-red-500">*</span></label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.subject.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Message <span class="text-red-500">*</span></label>
+                            {{ form.message }}
+                            {% if form.message.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.message.errors.0 }}</p>{% endif %}
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold text-lg py-4 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-[#1f432d]">
+                                Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-5">
+                <div class="bg-white border border-slate-200 rounded-xl p-8">
+                    <h3 class="text-xl font-serif font-bold text-slate-900 mb-4">Other ways to connect</h3>
+                    <p class="text-sm text-slate-500 mb-6">
+                        For urgent inquiries, include as much detail as possible so we can route your message quickly.
+                    </p>
+                    <div class="space-y-4 text-sm">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-[#1f432d]">mail</span>
+                            <div>
+                                <p class="font-bold text-slate-900">Email</p>
+                                <p class="text-slate-500">hello@martechstack.io</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-[#1f432d]">schedule</span>
+                            <div>
+                                <p class="font-bold text-slate-900">Response time</p>
+                                <p class="text-slate-500">Typically within 1 business day.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-[#1f432d]">campaign</span>
+                            <div>
+                                <p class="font-bold text-slate-900">Newsletter</p>
+                                <p class="text-slate-500">Every Tuesday for MarTech pros.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
