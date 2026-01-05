@@ -26,32 +26,37 @@
     <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
         <div class="relative group grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div class="relative overflow-hidden rounded-md border border-slate-200 aspect-[16/9] lg:aspect-auto lg:h-[450px]">
-                <div class="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                    <span class="material-symbols-outlined text-6xl">image</span>
+                <div class="w-full h-full bg-[#1f432d] flex items-center justify-center text-center p-10">
+                     <div>
+                        <h2 class="text-white font-serif text-4xl md:text-5xl font-bold opacity-20 select-none !m-0 !mt-0">
+                            FEATURE<br/>ARTICLE
+                        </h2>
+                        <p class="text-white/40 font-mono text-sm mt-4 uppercase tracking-widest">2025 Salary Data</p>
+                    </div>
                 </div>
-                <div class="absolute top-4 left-4 bg-[#1f432d] text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-sm font-mono z-10">
-                    Featured
+                <div class="absolute top-4 left-4 bg-white text-[#1f432d] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-sm font-mono z-10">
+                    New
                 </div>
             </div>
             <div class="flex flex-col justify-center">
                 <div class="flex items-center gap-2 text-sm text-slate-500 mb-4 font-mono">
-                    <span>Career Growth</span>
+                    <span class="text-[#1f432d] font-bold">Career Growth</span>
                     <span class="text-slate-300">•</span>
-                    <time datetime="2025-10-24">Oct 24, 2025</time>
+                    <time datetime="2025-01-06">Jan 06, 2025</time>
                 </div>
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-6 font-serif leading-tight group-hover:text-[#1f432d] transition-colors">
-                    <a href="#">Navigating the Shift from Marketing Specialist to Marketing Operations Manager</a>
+                    <a href="{% url 'post_2025_salary_guide' %}">The 2025 MarTech Salary & Career Guide: Benchmarks, AI Impact, and the Rise of the Maestro</a>
                 </h2>
                 <p class="text-slate-500 text-lg mb-8 leading-relaxed line-clamp-3">
-                    Transitioning into a Marketing Operations role requires a unique blend of technical acumen and strategic thinking. Learn how to leverage your existing skills and what new tools you need to master to make the leap successfully.
+                    Detailed 2025 salary benchmarks for Marketing Ops, MarTech, and RevOps roles. We analyze the technical skills premium, the gender pay gap, and the impact of AI on compensation.
                 </p>
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
-                        <span class="font-serif font-bold text-slate-400">SJ</span>
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-white p-2 flex items-center justify-center">
+                        <img src="{% static 'logo.svg' %}" class="object-contain w-full h-full">
                     </div>
                     <div>
-                        <p class="text-slate-900 font-bold text-sm">Sarah Jenkins</p>
-                        <p class="text-slate-500 text-xs font-mono">Head of MOps @ TechFlow</p>
+                        <p class="text-slate-900 font-bold text-sm">MarTechJobs Team</p>
+                        <p class="text-slate-500 text-xs font-mono">Research & Data</p>
                     </div>
                 </div>
             </div>
@@ -106,38 +111,6 @@
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">AR</div>
                             <span class="text-xs font-bold text-slate-900">Alex Rivera</span>
-                        </div>
-                        <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="#">
-                            Read <span class="material-symbols-outlined text-sm ml-1 group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                    </div>
-                </div>
-            </article>
-
-            <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
-                <div class="relative h-48 overflow-hidden bg-slate-100 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-4xl text-slate-300">payments</span>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">
-                        Salary Guide
-                    </div>
-                </div>
-                <div class="flex flex-col flex-grow p-6">
-                    <div class="flex items-center gap-2 text-xs text-slate-500 mb-3 font-mono">
-                        <span class="material-symbols-outlined text-sm">calendar_today</span>
-                        <time datetime="2025-10-15">Oct 15, 2025</time>
-                        <span class="text-slate-300">•</span>
-                        <span>8 min read</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
-                        2025 MarTech Salary Report: What to Expect
-                    </h3>
-                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow">
-                        An in-depth analysis of compensation trends across Marketing Operations, Demand Generation, and Analytics roles.
-                    </p>
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">EC</div>
-                            <span class="text-xs font-bold text-slate-900">Emily Chen</span>
                         </div>
                         <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="#">
                             Read <span class="material-symbols-outlined text-sm ml-1 group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
