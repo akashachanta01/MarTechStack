@@ -8,6 +8,9 @@ urlpatterns = [
     # --- GROWTH ENGINE ---
     path('salary-guide/', views.salary_guide, name='salary_guide'),
     path('feed/', LatestJobsFeed(), name='job_feed'),
+    
+    # --- BLOG (NEW) ---
+    path('blog/', views.blog_list, name='blog_list'),
 
     # --- STATIC PAGES ---
     path('about/', views.about, name='about'),
