@@ -12,6 +12,7 @@ urlpatterns = [
     # --- STATIC PAGES ---
     path('about/', views.about, name='about'),
     path('for-employers/', views.for_employers, name='for_employers'),
+    path('contact/', views.contact, name='contact'),
 
     # --- STANDARD SEO: TOOL LANDING PAGES ---
     path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
