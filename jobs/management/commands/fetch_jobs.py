@@ -34,6 +34,7 @@ class Command(BaseCommand):
         self.check_dead_links()
 
         # --- 2. AUTO-CLEANUP ---
+        # Only remove explicitly rejected jobs. Keep pending for review.
         deleted_count = Job.objects.filter(screening_status='rejected').delete()[0]
         self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} rejected jobs.")
         
@@ -59,7 +60,7 @@ class Command(BaseCommand):
             "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
         ]
 
-        # VENDOR EXCLUSION LIST
+        # VENDOR EXCLUSION LIST (Prevents scraping the tool's own careers page if needed)
         vendor_domains = {
             "Braze": "braze.com",
             "Iterable": "iterable.com",
@@ -90,13 +91,16 @@ class Command(BaseCommand):
         # --- MAIN LOOP ---
         for group_query in ats_groups:
             for line in target_lines:
+                # 1. Parse the OR line
                 parts = [p.strip() for p in line.split(' OR ')]
+                
                 intitle_parts = []
                 exclude_str = ""
                 
                 for p in parts:
                     clean_p = p.replace('"', '') 
                     intitle_parts.append(f'intitle:"{clean_p}"')
+                    
                     if clean_p in vendor_domains:
                         exclude_str += f" -site:{vendor_domains[clean_p]}"
                 
@@ -104,7 +108,7 @@ class Command(BaseCommand):
                 final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
 
                 self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
-                time.sleep(1.0)
+                time.sleep(1.0) # Respect rate limits
                 
                 links = self.search_google(final_query, num=100, tbs="qdr:d14")
                 self.stdout.write(f"   Found {len(links)} links. Processing...")
@@ -119,6 +123,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
     def check_dead_links(self):
+        # Checks if existing active jobs are 404ing
         self.stdout.write("💀 Checking for dead links...")
         active_jobs = Job.objects.filter(is_active=True)
         for job in active_jobs:
@@ -156,9 +161,10 @@ class Command(BaseCommand):
         # 1. Remove hash fragments
         url = url.split('#')[0]
         
-        # 2. Aggressively strip trailing /apply, /login, /job/.../apply
-        # Matches /apply, /apply/, /apply/anything, /login, /autofill, /useMyLastApplication
-        # Case insensitive
+        # 2. Aggressively strip trailing /apply, /login, /autofill, /useMyLastApplication
+        # Regex explanation:
+        # /(apply|login|autofill|useMyLastApplication) -> look for these keywords starting with /
+        # .*$ -> match EVERYTHING after them until the end of the string
         url = re.sub(r'/(apply|login|autofill|useMyLastApplication).*$', '', url, flags=re.IGNORECASE)
         
         # 3. Standard Parse rebuild to ensure valid structure
@@ -168,12 +174,15 @@ class Command(BaseCommand):
     def _is_duplicate(self, title, company, clean_url):
         if Job.objects.filter(apply_url=clean_url).exists():
             return True
+        # Check against last 30 days to prevent duplicates with slight URL variations
         if Job.objects.filter(title__iexact=title, company__iexact=company, created_at__gte=timezone.now() - timedelta(days=30)).exists():
             return True
         return False
 
     def analyze_and_fetch(self, url):
         clean_url = self._clean_url(url)
+        
+        # Specialized Scrapers
         if "greenhouse.io" in clean_url:
             match = re.search(r'(?:greenhouse\.io|eu\.greenhouse\.io|job-boards\.greenhouse\.io)/([^/]+)', clean_url)
             if match: self.fetch_greenhouse_api(match.group(1)); return
@@ -190,13 +199,16 @@ class Command(BaseCommand):
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', clean_url) or re.search(r'([^.]+)\.smartrecruiters\.com', clean_url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
 
+        # Fallback AI Scraper for generic ATS (Workday, Taleo, etc.)
         if any(x in clean_url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
+            # Ensure we are not scraping a search result page
             if any(k in clean_url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(clean_url)
                  
     def get_headers(self):
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 
+    # ... (API Fetchers for Greenhouse, Lever, etc. remain the same) ...
     def fetch_greenhouse_api(self, token):
         if token in self.processed_tokens: return
         self.processed_tokens.add(token)
