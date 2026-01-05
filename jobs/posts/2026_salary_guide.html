@@ -1,0 +1,338 @@
+{% extends "jobs/base.html" %}
+{% load static %}
+
+{% block title %}The 2026 MarTech Salary & Career Guide — MarTechJobs{% endblock %}
+{% block meta_description %}Detailed 2026 salary benchmarks for Marketing Ops, MarTech, and RevOps roles. We analyze the technical skills premium, the gender pay gap, and the impact of AI on compensation.{% endblock %}
+
+{% block content %}
+<style>
+    /* Custom Styles from Design */
+    @keyframes scroll-progress {
+        from { width: 0%; }
+        to { width: 100%; }
+    }
+    .reading-progress-bar {
+        animation: scroll-progress auto linear;
+        animation-timeline: scroll(root);
+        background-color: #1f432d; /* MarTech Green */
+        height: 4px;
+        width: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+    }
+    .font-serif { font-family: 'Playfair Display', serif; }
+    .font-mono-tag { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Article Typography */
+    .article-content p {
+        margin-bottom: 1.5rem;
+        line-height: 1.8;
+        font-size: 1.125rem;
+        color: #334155;
+        font-weight: 300;
+    }
+    .article-content h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        line-height: 1.3;
+        color: #0f172a;
+    }
+    .article-content h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: #0f172a;
+    }
+    .article-content ul {
+        list-style-type: disc;
+        padding-left: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #334155;
+    }
+    .article-content li { margin-bottom: 0.5rem; line-height: 1.7; }
+    .article-content blockquote {
+        border-left: 4px solid #1f432d;
+        padding-left: 1.5rem;
+        font-style: italic;
+        font-size: 1.25rem;
+        margin: 2rem 0;
+        color: #1f432d;
+        font-family: 'Playfair Display', serif;
+    }
+</style>
+
+<div class="reading-progress-bar"></div>
+
+<article itemscope itemtype="https://schema.org/BlogPosting">
+    
+    <section class="relative w-full pt-16 pb-12 bg-slate-50 border-b border-slate-200">
+        <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-50"></div>
+        <div class="relative w-full max-w-4xl mx-auto px-4 lg:px-8 text-center">
+            
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                <a href="#" class="text-xs font-medium text-[#1f432d] font-mono-tag tracking-tight uppercase hover:underline">Career Growth</a>
+                <span class="text-slate-300 text-[10px]">|</span>
+                <span class="text-xs font-medium text-slate-500 font-mono-tag tracking-tight">8 min read</span>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-8 font-serif leading-tight" itemprop="headline">
+                The 2026 MarTech Salary & Career Guide: Benchmarks, AI Impact, and the Rise of the Maestro
+            </h1>
+
+            <div class="flex items-center justify-center gap-4">
+                <div class="flex items-center gap-3 text-left">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-white p-2">
+                        <img src="{% static 'logo.svg' %}" alt="MarTechJobs Team" class="object-contain w-full h-full">
+                    </div>
+                    <div>
+                        <p class="text-slate-900 font-bold text-sm" itemprop="author">MarTechJobs Team</p>
+                        <p class="text-slate-500 text-xs font-mono-tag">Research & Data</p>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-slate-300 mx-2"></div>
+                <div class="text-left">
+                    <p class="text-slate-500 text-xs font-mono-tag uppercase tracking-wide mb-0.5">Published</p>
+                    <time class="text-slate-900 font-medium text-sm" datetime="2026-01-06" itemprop="datePublished">Jan 6, 2026</time>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-12 bg-white">
+        <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                
+                <div class="hidden lg:block lg:col-span-1 relative">
+                    <div class="sticky top-32 flex flex-col gap-4 items-center border-r border-slate-100 h-[calc(100vh-200px)] pr-4">
+                         <span class="text-[10px] font-mono-tag text-slate-400 uppercase rotate-90 origin-center translate-y-8 mb-12 whitespace-nowrap">Share Article</span>
+                         
+                         <a href="#" class="p-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-[#0077b5] transition-colors">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                         </a>
+                         <a href="#" class="p-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-black transition-colors">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                         </a>
+                    </div>
+                </div>
+
+                <div class="col-span-1 lg:col-span-8 article-content" itemprop="articleBody">
+                    
+                    <figure class="relative w-full aspect-[16/9] mb-12 rounded-sm overflow-hidden shadow-sm bg-[#1f432d] flex items-center justify-center text-center p-10">
+                        <div>
+                            <h2 class="text-white font-serif text-4xl md:text-5xl font-bold opacity-20 select-none !m-0 !mt-0">
+                                FEATURE<br/>ARTICLE
+                            </h2>
+                            <p class="text-white/40 font-mono-tag text-sm mt-4 uppercase tracking-widest">2026 Salary Data</p>
+                        </div>
+                    </figure>
+
+                    <p class="first-letter:text-5xl first-letter:font-bold first-letter:text-[#1f432d] first-letter:font-serif first-letter:mr-2 first-letter:float-left">
+                        The role of the marketing technologist has largely moved out of the shadows. A decade ago, this profession was often jokingly referred to as the "island of misfit toys"—a place for people who didn't quite fit into traditional marketing or pure IT. Today, that island has become a continent. As of 2026, the marketing technology landscape has swelled to over <strong>15,384 distinct solutions</strong>.
+                    </p>
+                    
+                    <p>
+                        This explosion of software—what industry veterans now call the "Hypertail"—has fundamentally altered the career trajectory for thousands of professionals. You are no longer just an admin; you are a revenue architect. But does your paycheck reflect that reality?
+                    </p>
+
+                    <h2>The 2026 Market Context</h2>
+                    <p>
+                        To understand your market value, you must first understand the macro forces shaping hiring decisions in 2026. The market has moved past the frenzied hiring spree of the early 2020s and into a phase of "stabilization". Companies are hiring, but they are hiring differently.
+                    </p>
+                    <p>
+                        The primary shift is toward "Compound Marketing" and technical self-sufficiency. The shift has bifurcated the market:
+                    </p>
+                    <ul>
+                        <li><strong>The Operator:</strong> Professionals who execute campaigns within a UI. Salary growth here is stabilizing, tracking closer to inflation.</li>
+                        <li><strong>The Technologist/Architect:</strong> Professionals who build integrations, manage data schemas, and leverage AI for automation. Salary premiums for these roles are accelerating, often commanding <strong>10-15% more</strong>.</li>
+                    </ul>
+
+                    <blockquote>
+                        "You are no longer just an admin; you are a revenue architect."
+                    </blockquote>
+
+                    <h2>Salary Benchmarks by Role</h2>
+                    <p>
+                        Compensation in Marketing Operations and Technology varies significantly based on technical proficiency. The data below represents aggregated base salary ranges for the United States.
+                    </p>
+
+                    <div class="my-8 overflow-hidden border border-slate-200 rounded-lg">
+                        <table class="min-w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-slate-50 text-slate-900 font-bold border-b border-slate-200 font-serif">
+                                <tr>
+                                    <th class="px-6 py-4">Role Level</th>
+                                    <th class="px-6 py-4">Exp.</th>
+                                    <th class="px-6 py-4">Median Salary</th>
+                                    <th class="px-6 py-4">Responsibilities</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                <tr>
+                                    <td class="px-6 py-4 font-bold">MOps Coordinator</td>
+                                    <td class="px-6 py-4 text-slate-500">1–3 Yrs</td>
+                                    <td class="px-6 py-4 font-mono font-bold text-[#1f432d]">$68,000</td>
+                                    <td class="px-6 py-4 text-slate-500">Campaign setup, QA</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-bold">MOps Specialist</td>
+                                    <td class="px-6 py-4 text-slate-500">2–5 Yrs</td>
+                                    <td class="px-6 py-4 font-mono font-bold text-[#1f432d]">$85,000</td>
+                                    <td class="px-6 py-4 text-slate-500">Reporting, Troubleshooting</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-bold">MOps Manager</td>
+                                    <td class="px-6 py-4 text-slate-500">4–7 Yrs</td>
+                                    <td class="px-6 py-4 font-mono font-bold text-[#1f432d]">$130,000</td>
+                                    <td class="px-6 py-4 text-slate-500">Roadmap, SLA Mgmt</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-bold">Director / Head</td>
+                                    <td class="px-6 py-4 text-slate-500">7–10 Yrs</td>
+                                    <td class="px-6 py-4 font-mono font-bold text-[#1f432d]">$175,000</td>
+                                    <td class="px-6 py-4 text-slate-500">Strategy, Architecture</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h2>The "Skills Premium": What Pays?</h2>
+                    <h3>1. Artificial Intelligence & Prompt Engineering</h3>
+                    <p>
+                        "AI Literacy"—specifically the ability to use AI for data analysis and process automation—is now a critical skill. Employers are looking for candidates who can demonstrate applied AI knowledge.
+                    </p>
+
+                    <h3>2. Data Infrastructure (SQL & APIs)</h3>
+                    <p>
+                        With the rise of the "Hypertail," the ability to connect tools is paramount. Professionals who list SQL and API Integration on their resumes see higher interview request rates.
+                    </p>
+
+                    <div class="my-10 p-6 bg-slate-50 border border-slate-200 rounded-sm">
+                        <div class="flex items-start gap-4">
+                            <span class="material-symbols-outlined text-[#1f432d] text-3xl">psychology_alt</span>
+                            <div>
+                                <h4 class="text-lg font-bold font-serif mb-2 text-slate-900">Are you underpaid?</h4>
+                                <p class="text-sm text-slate-500 mb-4 font-sans">Check the full detailed breakdown in our salary tool.</p>
+                                <a href="{% url 'salary_guide' %}" class="text-sm font-bold text-[#1f432d] hover:underline flex items-center gap-1">
+                                    View Full Data <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Conclusion: Positioning Yourself</h2>
+                    <p>
+                        The 2026 market rewards specialization and technical depth. The era of the "Generalist Digital Marketer" who also "kind of knows Marketo" is fading.
+                    </p>
+                    <ul>
+                        <li><strong>Audit Your Skills:</strong> If you lack SQL or API knowledge, prioritize these.</li>
+                        <li><strong>Quantify Your Impact:</strong> Move your resume bullets from "Managed HubSpot" to "Reduced CAC by 15%".</li>
+                        <li><strong>Target Mature Orgs:</strong> Look for companies that understand the distinction between "Demand Gen" and "Ops".</li>
+                    </ul>
+
+                    <div class="mt-12 pt-8 border-t border-slate-100 flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-900 font-mono-tag">Tags:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-slate-50 text-xs font-mono-tag text-slate-500 rounded-sm">Salary</span>
+                            <span class="px-3 py-1 bg-slate-50 text-xs font-mono-tag text-slate-500 rounded-sm">Career Growth</span>
+                            <span class="px-3 py-1 bg-slate-50 text-xs font-mono-tag text-slate-500 rounded-sm">2026 Trends</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <aside class="hidden lg:block lg:col-span-3 pl-8 border-l border-slate-100">
+                    <div class="sticky top-28">
+                        
+                        <div class="mb-6 flex items-center justify-between">
+                            <h3 class="font-serif font-bold text-lg text-slate-900">Related Roles</h3>
+                            <a href="{% url 'job_list' %}" class="text-xs font-medium text-[#1f432d] hover:underline">View all</a>
+                        </div>
+
+                        <div class="space-y-6">
+                            <article class="group flex flex-col gap-2 p-4 rounded-md border border-slate-200 bg-white hover:border-[#1f432d]/50 hover:shadow-md transition-all">
+                                <div class="flex justify-between items-start">
+                                    <div class="w-8 h-8 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400 text-xs">TF</div>
+                                    <span class="text-[10px] font-mono-tag bg-green-50 text-[#1f432d] px-2 py-0.5 rounded-full">Remote</span>
+                                </div>
+                                <h4 class="font-bold text-sm text-slate-900 group-hover:text-[#1f432d] transition-colors mt-2">Marketing Ops Manager</h4>
+                                <p class="text-xs text-slate-500">TechFlow Inc.</p>
+                                <div class="flex gap-2 text-[10px] text-slate-400 mt-2 font-mono-tag">
+                                    <span>$90k - $120k</span> • <span>Full-time</span>
+                                </div>
+                                <a href="{% url 'job_list' %}" class="mt-3 w-full py-1.5 text-xs font-bold border border-slate-900 rounded-sm hover:bg-slate-900 hover:text-white transition-colors block text-center">Apply Now</a>
+                            </article>
+
+                            <article class="group flex flex-col gap-2 p-4 rounded-md border border-slate-200 bg-white hover:border-[#1f432d]/50 hover:shadow-md transition-all">
+                                <div class="flex justify-between items-start">
+                                    <div class="w-8 h-8 bg-indigo-50 text-indigo-700 rounded flex items-center justify-center font-bold text-xs">DS</div>
+                                    <span class="text-[10px] font-mono-tag bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">New York</span>
+                                </div>
+                                <h4 class="font-bold text-sm text-slate-900 group-hover:text-[#1f432d] transition-colors mt-2">Sr. Marketing Analyst</h4>
+                                <p class="text-xs text-slate-500">DataSphere</p>
+                                <div class="flex gap-2 text-[10px] text-slate-400 mt-2 font-mono-tag">
+                                    <span>$110k - $140k</span> • <span>Full-time</span>
+                                </div>
+                                <a href="{% url 'job_list' %}" class="mt-3 w-full py-1.5 text-xs font-bold border border-slate-900 rounded-sm hover:bg-slate-900 hover:text-white transition-colors block text-center">Apply Now</a>
+                            </article>
+                        </div>
+
+                        <div class="bg-[#1f432d] p-5 rounded-md text-white mt-8 shadow-lg">
+                            <span class="material-symbols-outlined text-2xl mb-2">mail</span>
+                            <h4 class="font-serif font-bold text-lg mb-2">Get hired faster.</h4>
+                            <p class="text-xs text-white/80 mb-4 leading-relaxed">Join 15k+ marketers getting the best jobs sent to their inbox weekly.</p>
+                            <button onclick="toggleModal('subscribe-modal')" class="w-full py-2 text-xs font-bold bg-white text-[#1f432d] hover:bg-slate-100 rounded-sm transition-colors">
+                                Subscribe Free
+                            </button>
+                        </div>
+
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-slate-50 border-t border-slate-200">
+        <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl md:text-3xl font-bold font-serif text-slate-900">Keep Reading</h2>
+                <a href="{% url 'blog_list' %}" class="text-[#1f432d] hover:text-green-800 font-medium flex items-center gap-1 group">
+                    All Articles <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
+                    <div class="relative h-48 bg-slate-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl text-slate-300">dns</span>
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag">Tech Stacks</div>
+                    </div>
+                    <div class="flex flex-col flex-grow p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">HubSpot vs. Salesforce: The 2026 Verdict</h3>
+                        <span class="text-[#1f432d] text-xs font-bold uppercase tracking-wider mt-auto pt-4 inline-block group-hover:underline">Read Article</span>
+                    </div>
+                </article>
+
+                 <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
+                    <div class="relative h-48 bg-slate-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl text-slate-300">database</span>
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag">Skills</div>
+                    </div>
+                    <div class="flex flex-col flex-grow p-6">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">Must-Have SQL Skills for Marketing Analysts</h3>
+                        <span class="text-[#1f432d] text-xs font-bold uppercase tracking-wider mt-auto pt-4 inline-block group-hover:underline">Read Article</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+</article>
+{% endblock %}
