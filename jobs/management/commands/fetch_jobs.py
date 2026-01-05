@@ -33,9 +33,7 @@ class Command(BaseCommand):
         # --- 1. DEAD LINK CHECKER ---
         self.check_dead_links()
 
-        # --- 2. AUTO-CLEANUP (FIXED) ---
-        # OLD BUGGY LINE: deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
-        # FIX: Only delete jobs that are explicitly REJECTED. Keep 'pending' jobs (user submissions/unreviewed).
+        # --- 2. AUTO-CLEANUP ---
         deleted_count = Job.objects.filter(screening_status='rejected').delete()[0]
         self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} rejected jobs.")
         
@@ -61,7 +59,7 @@ class Command(BaseCommand):
             "site:bamboohr.com OR site:recruitee.com OR site:workable.com OR site:applytojob.com"
         ]
 
-        # VENDOR EXCLUSION LIST (Prevents scraping the tool's own careers page)
+        # VENDOR EXCLUSION LIST
         vendor_domains = {
             "Braze": "braze.com",
             "Iterable": "iterable.com",
@@ -92,29 +90,21 @@ class Command(BaseCommand):
         # --- MAIN LOOP ---
         for group_query in ats_groups:
             for line in target_lines:
-                # 1. Parse the OR line
-                # Example line: "Braze" OR "Iterable"
                 parts = [p.strip() for p in line.split(' OR ')]
-                
                 intitle_parts = []
                 exclude_str = ""
                 
                 for p in parts:
-                    clean_p = p.replace('"', '') # Remove existing quotes
+                    clean_p = p.replace('"', '') 
                     intitle_parts.append(f'intitle:"{clean_p}"')
-                    
-                    # CHECK VENDOR EXCLUSION
-                    # If we are searching for "Braze", add "-site:braze.com"
                     if clean_p in vendor_domains:
                         exclude_str += f" -site:{vendor_domains[clean_p]}"
                 
                 joined_intitle = " OR ".join(intitle_parts)
-                
-                # FINAL QUERY: (intitle:"Braze") (site:greenhouse...) -site:braze.com
                 final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
 
                 self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
-                time.sleep(1.0) # Respect rate limits
+                time.sleep(1.0)
                 
                 links = self.search_google(final_query, num=100, tbs="qdr:d14")
                 self.stdout.write(f"   Found {len(links)} links. Processing...")
@@ -129,7 +119,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
     def check_dead_links(self):
-        # Checks if existing active jobs are 404ing
         self.stdout.write("💀 Checking for dead links...")
         active_jobs = Job.objects.filter(is_active=True)
         for job in active_jobs:
@@ -159,8 +148,20 @@ class Command(BaseCommand):
         return []
     
     def _clean_url(self, url):
+        """
+        Aggressively removes 'apply' endpoints to ensure we scrape the description page.
+        """
         if not url: return ""
-        url = re.sub(r'/(apply|apply/|#app|#apply)/?$', '', url.strip())
+        
+        # 1. Remove hash fragments
+        url = url.split('#')[0]
+        
+        # 2. Aggressively strip trailing /apply, /login, /job/.../apply
+        # Matches /apply, /apply/, /apply/anything, /login, /autofill, /useMyLastApplication
+        # Case insensitive
+        url = re.sub(r'/(apply|login|autofill|useMyLastApplication).*$', '', url, flags=re.IGNORECASE)
+        
+        # 3. Standard Parse rebuild to ensure valid structure
         parsed = urlparse(url)
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
