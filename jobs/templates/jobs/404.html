@@ -1,0 +1,61 @@
+{% extends "jobs/base.html" %}
+{% load static %}
+
+{% block title %}Page Not Found — MarTechJobs{% endblock %}
+
+{% block content %}
+<div class="relative bg-white border-b border-slate-100 min-h-[80vh] flex flex-col items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+
+    <section class="w-full max-w-4xl mx-auto px-4 lg:px-8 py-12 flex flex-col items-center text-center relative z-10">
+        
+        <div class="relative mb-6">
+            <h1 class="text-[140px] md:text-[220px] leading-none font-serif font-bold text-[#1f432d]/5 select-none tracking-widest">
+                404
+            </h1>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="bg-white p-4 rounded-full border border-slate-200 shadow-sm">
+                    <span class="material-symbols-outlined text-5xl md:text-6xl text-[#1f432d]">search_off</span>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-3xl md:text-5xl font-serif font-bold text-slate-900 mb-6 -mt-8 relative z-10">
+            Page Not Found
+        </h2>
+        <p class="text-lg text-slate-500 font-light max-w-lg mb-10 leading-relaxed">
+            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
+            <a href="/" class="px-8 py-3.5 bg-[#1f432d] text-white font-bold rounded-sm hover:bg-green-900 transition-colors shadow-sm flex items-center justify-center gap-2 group">
+                <span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                Back to Homepage
+            </a>
+            <a href="{% url 'job_list' %}" class="px-8 py-3.5 bg-white text-slate-900 border border-black font-bold rounded-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg">work_outline</span>
+                Browse Open Jobs
+            </a>
+        </div>
+
+        <div class="w-full max-w-lg pt-10 border-t border-slate-200">
+            <p class="text-xs font-mono text-slate-400 uppercase tracking-widest mb-6">Popular Destinations</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <a href="{% url 'salary_guide' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
+                    Salary Guide
+                </a>
+                <a href="{% url 'post_job' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
+                    Post a Job
+                </a>
+                <a href="{% url 'for_employers' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
+                    For Employers
+                </a>
+                <a href="{% url 'contact' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
+                    Contact Support
+                </a>
+            </div>
+        </div>
+
+    </section>
+</div>
+{% endblock %}
