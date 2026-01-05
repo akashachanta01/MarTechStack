@@ -33,6 +33,11 @@ class ToolSitemap(Sitemap):
         return reverse('tool_detail', args=[obj.slug])
 
 class SEOLandingSitemap(Sitemap):
+    """
+    THE GROWTH ENGINE (Safe Mode):
+    Dynamically generates "Location + Tool" pages.
+    Includes error handling to prevent 500 crashes from bad data.
+    """
     changefreq = "weekly"
     priority = 0.6
     protocol = 'https'
@@ -44,29 +49,34 @@ class SEOLandingSitemap(Sitemap):
         active_jobs = Job.objects.filter(is_active=True, screening_status='approved').prefetch_related('tools')
         
         for job in active_jobs:
-            # 1. REMOTE
-            if job.work_arrangement == 'remote':
-                seo_pages.add(('remote', '')) # Use empty string instead of None for sorting safety
-                for tool in job.tools.all():
-                    seo_pages.add(('remote', tool.slug))
-
-            # 2. LOCATIONS
-            if job.location:
-                raw_city = job.location.split(',')[0].strip()
-                city_slug = slugify(raw_city)
-
-                if city_slug and city_slug != 'remote':
-                    seo_pages.add((city_slug, '')) # Use empty string
+            try:
+                # 1. REMOTE
+                if job.work_arrangement == 'remote':
+                    seo_pages.add(('remote', '')) 
                     for tool in job.tools.all():
-                        seo_pages.add((city_slug, tool.slug))
+                        if tool.slug:
+                            seo_pages.add(('remote', tool.slug))
+
+                # 2. LOCATIONS
+                if job.location:
+                    # Heuristic: Take first part of "City, State"
+                    raw_city = job.location.split(',')[0].strip()
+                    city_slug = slugify(raw_city)
+
+                    if city_slug and city_slug != 'remote':
+                        seo_pages.add((city_slug, ''))
+                        for tool in job.tools.all():
+                            if tool.slug:
+                                seo_pages.add((city_slug, tool.slug))
+            except Exception:
+                # If a specific job has bad data, skip it so the sitemap doesn't crash
+                continue
         
-        # FIX: We convert tuples to list and sort. 
-        # Since we replaced None with '', Python can now sort this without crashing.
+        # Sort safe list
         return sorted(list(seo_pages))
 
     def location(self, obj):
         loc_slug, tool_slug = obj
-        # Check if tool_slug is not empty string
         if tool_slug:
             return reverse('seo_tool_loc', args=[loc_slug, tool_slug])
         else:
