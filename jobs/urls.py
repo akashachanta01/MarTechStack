@@ -9,9 +9,9 @@ urlpatterns = [
     path('salary-guide/', views.salary_guide, name='salary_guide'),
     path('feed/', LatestJobsFeed(), name='job_feed'),
     
-    # --- BLOG ---
+    # --- BLOG (DYNAMIC) ---
     path('blog/', views.blog_list, name='blog_list'),
-    path('blog/2025-martech-marketing-ops-salary-career-guide/', views.post_2025_salary_guide, name='post_2025_salary_guide'),
+    path('blog/<slug:slug>/', views.post_detail, name='post_detail'),
 
     # --- STATIC PAGES ---
     path('about/', views.about, name='about'),
