@@ -1,6 +1,6 @@
 # --- ROLES (Grouped by Intent) ---
 "MarTech" OR "Marketing Technology" OR "Marketing Technologist"
-"Marketing Operations" OR "MOPs" OR "Marketing Ops"
+"Marketing Operations" OR "MOPs" OR "Marketing Ops" OR "Marketing automation specialist"
 "Tagging Specialist" OR "Web Analyst" OR "Web Analytics" OR "Digital Analytics"
 "CDP" OR "CDP Engineer" OR "Customer Data Platform"
 
@@ -11,6 +11,7 @@
 "HubSpot Marketing Hub" OR "HubSpot Operations"
 "Braze" OR "Iterable" OR "Customer.io" OR "Klaviyo"
 "Eloqua" OR "Oracle Eloqua" OR "Knack"
+"Movable Ink"
 
 # --- DATA & CDPs ---
 "Twilio Segment" or "ActionIQ"
