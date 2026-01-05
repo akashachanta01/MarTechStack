@@ -33,10 +33,11 @@ class Command(BaseCommand):
         # --- 1. DEAD LINK CHECKER ---
         self.check_dead_links()
 
-        # --- 2. AUTO-CLEANUP ---
-        # Remove old jobs that aren't approved to keep the DB fast
-        deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
-        self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} inactive/rejected jobs.")
+        # --- 2. AUTO-CLEANUP (FIXED) ---
+        # OLD BUGGY LINE: deleted_count = Job.objects.exclude(screening_status='approved', is_active=True).delete()[0]
+        # FIX: Only delete jobs that are explicitly REJECTED. Keep 'pending' jobs (user submissions/unreviewed).
+        deleted_count = Job.objects.filter(screening_status='rejected').delete()[0]
+        self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} rejected jobs.")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
