@@ -106,10 +106,15 @@
                     <span class="font-serif font-bold text-xl text-slate-900 tracking-tight">MarTech<span class="text-[#1f432d]">Jobs</span></span>
                 </div>
             </a>
+            
             <div class="flex items-center gap-6">
-                <a href="/#jobs-section" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Find Jobs</a>
-                <button onclick="toggleModal('subscribe-modal')" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">Get Alerts</button>
-                <a href="{% url 'about' %}" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition hidden sm:block">About</a>
+                <a href="{% url 'job_list' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Jobs</a>
+                
+                <a href="{% url 'blog_list' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Blog</a>
+                
+                <button onclick="toggleModal('subscribe-modal')" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Get Alerts</button>
+                <a href="{% url 'about' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">About</a>
+                
                 <a href="{% url 'for_employers' %}" class="bg-black text-white text-xs font-bold px-5 py-2.5 rounded transition hover:bg-slate-800 shadow-sm">For Employers</a>
             </div>
         </div>
@@ -195,6 +200,7 @@
                     <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Candidates</h3>
                     <ul class="space-y-3 text-sm">
                         <li><a href="{% url 'job_list' %}" class="hover:text-slate-900 transition">Browse Jobs</a></li>
+                        <li><a href="{% url 'blog_list' %}" class="hover:text-slate-900 transition">Blog</a></li>
                         <li><a href="{% url 'salary_guide' %}" class="hover:text-slate-900 transition">Salary Guide</a></li>
                     </ul>
                 </div>
