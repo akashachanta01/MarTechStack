@@ -94,9 +94,12 @@ def job_list(request):
         "current_rtype": role_type_filter,
     })
 
-# --- BLOG VIEW (NEW) ---
+# --- BLOG VIEWS ---
 def blog_list(request):
     return render(request, 'jobs/blog_list.html')
+
+def post_2025_salary_guide(request):
+    return render(request, 'jobs/posts/2025_salary_guide.html')
 
 # --- SEO: LANDING PAGE GENERATOR ---
 def seo_landing_page(request, location_slug=None, tool_slug=None):
