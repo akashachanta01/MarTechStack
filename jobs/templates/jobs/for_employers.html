@@ -4,8 +4,10 @@
 {% block title %}Hire Experts — MarTechJobs{% endblock %}
 
 {% block content %}
-<div class="bg-white border-b border-slate-100">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+<div class="relative bg-white border-b border-slate-100 overflow-hidden">
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
         
         <h1 class="text-5xl md:text-7xl font-serif font-bold text-slate-900 mb-8 leading-none tracking-tight">
             Stop sorting through <br/><span class="text-slate-300">irrelevant resumes.</span>
@@ -17,7 +19,7 @@
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="{% url 'post_job' %}" class="bg-[#1f432d] hover:bg-green-900 text-white font-bold py-4 px-10 rounded-lg shadow-xl transition-all transform hover:-translate-y-1 text-lg">
-                Post a Job for Free
+                Post a Job
             </a>
             <span class="text-sm text-slate-400 font-mono">No credit card required.</span>
         </div>
@@ -77,32 +79,25 @@
 </div>
 
 <div class="bg-white py-24 text-center">
-    <h2 class="text-3xl font-bold font-serif text-slate-900 mb-10">Simple Pricing. No Sales Calls.</h2>
-    <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 px-4">
+    <div class="max-w-3xl mx-auto px-4">
+        <h2 class="text-3xl font-bold font-serif text-slate-900 mb-6">Simple, Transparent Hiring.</h2>
+        <p class="text-lg text-slate-500 mb-10 leading-relaxed">
+            We believe in removing barriers. Posting a job is completely free for a standard 30-day listing.
+            No sales calls, no contracts, no hidden fees.
+        </p>
         
-        <div class="border-2 border-slate-100 rounded-xl p-8 hover:border-slate-300 transition">
-            <h3 class="text-xl font-bold text-slate-900 mb-2">Standard Listing</h3>
-            <div class="text-4xl font-serif font-bold text-slate-900 mb-6">$0</div>
+        <div class="inline-block p-8 border-2 border-slate-100 rounded-xl hover:border-black transition-colors bg-slate-50">
+            <h3 class="text-2xl font-bold text-slate-900 mb-2">Standard Listing</h3>
+            <div class="text-5xl font-serif font-bold text-slate-900 mb-6">Free</div>
             <ul class="text-left space-y-3 text-slate-600 mb-8 text-sm">
-                <li class="flex gap-2"><span>✓</span> Live for 30 days</li>
-                <li class="flex gap-2"><span>✓</span> Included in Google Jobs</li>
-                <li class="flex gap-2"><span>✓</span> Standard support</li>
+                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Live for 30 days</li>
+                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Included in Google Jobs</li>
+                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Access to 15k+ MarTech Pros</li>
             </ul>
-            <a href="{% url 'post_job' %}" class="block w-full py-3 border border-black text-black font-bold rounded hover:bg-slate-50 transition">Post Free</a>
+            <a href="{% url 'post_job' %}" class="block w-full py-4 px-8 bg-black text-white font-bold rounded-lg hover:bg-slate-800 transition">
+                Post Your Job Now
+            </a>
         </div>
-
-        <div class="border-2 border-black rounded-xl p-8 relative overflow-hidden bg-slate-900 text-white shadow-xl">
-            <div class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 uppercase tracking-wider">Most Popular</div>
-            <h3 class="text-xl font-bold mb-2 text-white">Featured Listing</h3>
-            <div class="text-4xl font-serif font-bold mb-6 text-white">$99</div>
-            <ul class="text-left space-y-3 text-slate-300 mb-8 text-sm">
-                <li class="flex gap-2"><span class="text-green-400">✓</span> <strong>Pinned to Top</strong> (2x Views)</li>
-                <li class="flex gap-2"><span class="text-green-400">✓</span> <strong>Newsletter Blast</strong> (15k+ Subs)</li>
-                <li class="flex gap-2"><span class="text-green-400">✓</span> Highlighted Design (Yellow)</li>
-            </ul>
-            <a href="{% url 'post_job' %}?plan=featured" class="block w-full py-3 bg-[#1f432d] hover:bg-green-800 text-white font-bold rounded border border-transparent transition">Post Featured</a>
-        </div>
-
     </div>
 </div>
 {% endblock %}
