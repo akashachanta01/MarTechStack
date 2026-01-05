@@ -12,9 +12,9 @@ logger = logging.getLogger("screener")
 
 class MarTechScreener:
     """
-    Diamond-Grade Edition (Strict Mode V4.0 - Ironclad Vendor Trap):
-    1. Python-side "Quick Kill" for SEO, Events, and Vendor Product roles.
-    2. Prevents AI from ever seeing "Software Engineer at Braze".
+    Diamond-Grade Edition (Strict Mode V5.0 - Tool-First Priority):
+    1. Golden Rule: If a Tool Name is in the title, it is APPROVED.
+    2. Bypasses "Vendor Trap" if the title mentions a specific tool.
     """
 
     def __init__(self, model: str = "gpt-4o-mini"):
@@ -40,9 +40,11 @@ class MarTechScreener:
                     current_list.extend(parts)
         else:
             self.hunt_roles = ["MarTech"]
-            self.hunt_tools = ["Marketo"]
+            self.hunt_tools = ["Marketo", "Salesforce", "HubSpot", "Adobe", "Tealium", "Braze", "mParticle"]
 
         self.REQUIRED_KEYWORDS = list(set([r.lower() for r in self.hunt_roles + self.hunt_tools]))
+        # Ensure we have a clean list of just tools for the prompt and check
+        self.tool_list_clean = [t.lower() for t in self.hunt_tools if len(t) > 2]
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
         
         self.VENDOR_COMPANIES = [
@@ -58,17 +60,24 @@ class MarTechScreener:
         t_low = title.lower()
         c_low = company.lower()
 
+        # 1. SEO/Event/Social Trap (Still keep this to filter noise)
         bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
         if any(bad in t_low for bad in bad_keywords):
             if "operations" not in t_low and "technology" not in t_low:
                 return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: Non-Technical Role (SEO/Event/Social)", "details": {}}
 
+        # 2. Vendor Trap (Working AT Salesforce/Adobe)
         is_vendor = any(v.lower() in c_low for v in self.VENDOR_COMPANIES)
         if is_vendor:
-            vendor_bad_titles = ["software engineer", "developer", "product manager", "data scientist", "machine learning", "ai scientist", "solutions engineer", "account executive", "csm", "customer success"]
-            if any(bt in t_low for bt in vendor_bad_titles):
-                if "marketing" not in t_low and "martech" not in t_low:
-                    return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: {title} at {company} is a product role.", "details": {}}
+            # SAFETY BYPASS: If the title explicitly names a tool (e.g. "Salesforce Developer"), ALLOW IT.
+            has_tool_in_title = any(tool in t_low for tool in self.tool_list_clean)
+            
+            if not has_tool_in_title:
+                # Only reject if it's a generic product role AND doesn't mention a tool
+                vendor_bad_titles = ["software engineer", "product manager", "data scientist", "machine learning", "ai scientist", "account executive", "csm", "customer success"]
+                if any(bt in t_low for bt in vendor_bad_titles):
+                    if "marketing" not in t_low and "martech" not in t_low:
+                        return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: {title} at {company} is a product role (no tool mentioned).", "details": {}}
 
         return None
 
@@ -95,9 +104,7 @@ class MarTechScreener:
     def ask_ai(self, title, company, description, location):
         prompt = f"""
         Act as a "Senior MarTech Recruiter". 
-        GOAL: Accept ONLY "Marketing Operations" & "MarTech Engineering" roles.
-        REJECT: "Product Engineers", "General Marketers", "Sales", "CSMs".
-
+        
         JOB CONTEXT:
         - Title: {title}
         - Company: {company}
@@ -106,7 +113,7 @@ class MarTechScreener:
         ✅ VALID TOOLS MENU:
         [{self.tool_menu_str}]
 
-        ⛔ HARD REJECT KEYWORDS (Double Check):
+        ⛔ HARD REJECT KEYWORDS:
         [
          "Customer Success", "CSM", "Account Manager", "Sales", "SDR", "BDR",
          "Event", "Social Media", "Content", "Brand", "Community", "PR", "SEO", "Search Engine",
@@ -117,12 +124,14 @@ class MarTechScreener:
         1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
 
         2. **Analyze Role (STRICT FILTER):**
-           - **STEP A: The "Vendor" Check:** If Vendor company AND Engineering/Product title -> REJECT (0).
-           - **STEP B: The "Marketing" Trap:** If SEO/Social/Brand -> REJECT (0).
+           - **STEP A: GOLDEN RULE:** If ANY tool from the VALID TOOLS MENU appears in the Job Title -> APPROVE (95). 
+             (e.g. "Salesforce Developer", "HubSpot Admin", "Adobe Architect"). This overrides "Engineer" or "Developer" concerns.
+           
+           - **STEP B: The "Marketing" Trap:** If title contains SEO/Social/Brand -> REJECT (0).
+           
            - **STEP C: The "Good" Signals:**
              - "Marketing Operations", "MarTech" -> APPROVE (90).
-             - Tool Admin (e.g. "Marketo Admin") -> APPROVE (90).
-             - Product Manager but explicitly for "Adobe Experience Platform" -> APPROVE (85).
+             - "Solution Architect" (if MarTech related) -> APPROVE (85).
 
         3. **Scoring:** 0 = Reject, 65 = Pending, 85-100 = Auto-Approve.
 
@@ -145,10 +154,6 @@ class MarTechScreener:
             temperature=0
         )
 
-        # Defensive Check: OpenAI can rarely return None
-        if not completion or not completion.choices:
-            return {"status": "pending", "score": 50.0, "reason": "Empty AI Response", "details": {"stage": "empty_response"}}
-
         content = completion.choices[0].message.content.strip()
         
         if content.startswith("```json"):
@@ -158,8 +163,7 @@ class MarTechScreener:
 
         try:
             result = json.loads(content.strip())
-            if result is None: raise ValueError("JSON was null")
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError:
             return {"status": "pending", "score": 50.0, "reason": "AI JSON Error", "details": {"raw": content}}
         
         signals = result.get("signals", {})
