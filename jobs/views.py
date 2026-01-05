@@ -25,7 +25,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Mapping to consolidate variations of tool names for filtering
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
-    'marketo': 'Adobe', 'adobe experience platform': 'Adobe', 'aep': 'Adobe',
+    'marketo': 'Adobe', 'Adobe Experience Platform': 'Adobe', 'aep': 'Adobe',
     'hubspot': 'HubSpot', 'google analytics': 'Google', 'ga4': 'Google',
     'segment': 'Data Stack', 'tealium': 'Data Stack', 'snowflake': 'Data Stack',
     'outreach': 'Sales Tech', 'salesloft': 'Sales Tech', 'braze': 'Automation',
