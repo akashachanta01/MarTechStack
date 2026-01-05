@@ -145,9 +145,12 @@ class MarTechScreener:
             temperature=0
         )
 
+        # Defensive Check: OpenAI can rarely return None
+        if not completion or not completion.choices:
+            return {"status": "pending", "score": 50.0, "reason": "Empty AI Response", "details": {"stage": "empty_response"}}
+
         content = completion.choices[0].message.content.strip()
         
-        # FIX: Strip markdown code blocks if AI adds them
         if content.startswith("```json"):
             content = content[7:]
         if content.endswith("```"):
@@ -155,12 +158,13 @@ class MarTechScreener:
 
         try:
             result = json.loads(content.strip())
-        except json.JSONDecodeError:
-            # Fallback if JSON is still broken
+            if result is None: raise ValueError("JSON was null")
+        except (json.JSONDecodeError, ValueError):
             return {"status": "pending", "score": 50.0, "reason": "AI JSON Error", "details": {"raw": content}}
         
         signals = result.get("signals", {})
         stack = signals.get("stack", [])
+        
         found_adobe = False
         for tool in stack:
             t_lower = tool.lower()
