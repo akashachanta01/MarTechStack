@@ -1,6 +1,5 @@
 """
 Django settings for config project.
-DEBUG MODE: ON
 """
 import dj_database_url
 import os
@@ -16,11 +15,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-debug-key-123')
 
-# ⚠️ DEBUG MODE: FORCED TO TRUE
-# Remember to set this back to False (or use os.environ.get) before going fully public.
-DEBUG = True
+# SECURITY WARNING: don't run with debug turned on in production!
+# We now check the Environment Variable. If not set, it defaults to False.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Allow all hosts during debugging to prevent DisallowedHost errors
+# Allow all hosts. For strict production security, you can list specific domains here.
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
@@ -53,10 +52,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # --- REQUIRED FOR SEO SITEMAPS ---
+    'django.contrib.sites', 
     'django.contrib.sitemaps',
-    'django.contrib.humanize', # <--- ADDED THIS LINE
+    # ---------------------------------
+    'django.contrib.humanize',
     'jobs',
 ]
+
+# Required for django.contrib.sites
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
