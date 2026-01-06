@@ -1,0 +1,41 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="675" fill="#0f172a"/>
+    
+    <path d="M100 550 L1100 550" stroke="#334155" stroke-width="2"/>
+    <path d="M100 450 L1100 450" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+    <path d="M100 350 L1100 350" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+    <path d="M100 250 L1100 250" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+    <path d="M100 150 L1100 150" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+
+    <text x="80" y="555" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="end">$50k</text>
+    <text x="80" y="455" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="end">$100k</text>
+    <text x="80" y="355" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="end">$150k</text>
+    <text x="80" y="255" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="end">$200k</text>
+    <text x="80" y="155" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="end">$300k+</text>
+
+    <text x="100" y="580" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">0 Yrs</text>
+    <text x="350" y="580" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">3 Yrs</text>
+    <text x="600" y="580" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">5 Yrs</text>
+    <text x="850" y="580" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">8 Yrs</text>
+    <text x="1100" y="580" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">10+ Yrs</text>
+
+    <path d="M100 520 Q 400 500, 1100 450" fill="none" stroke="#f87171" stroke-width="4"/>
+    <circle cx="1100" cy="450" r="6" fill="#f87171"/>
+    <text x="1115" y="455" fill="#f87171" font-family="sans-serif" font-size="16" font-weight="bold">Generalist</text>
+
+    <path d="M100 500 Q 500 350, 1100 250" fill="none" stroke="#60a5fa" stroke-width="4"/>
+    <circle cx="1100" cy="250" r="6" fill="#60a5fa"/>
+    <text x="1115" y="255" fill="#60a5fa" font-family="sans-serif" font-size="16" font-weight="bold">Ops Manager</text>
+
+    <path d="M100 480 C 400 450, 700 300, 1100 100" fill="none" stroke="#4ade80" stroke-width="5"/>
+    <circle cx="1100" cy="100" r="6" fill="#4ade80"/>
+    <text x="1000" y="90" fill="#4ade80" font-family="sans-serif" font-size="18" font-weight="bold">Tech Architect</text>
+
+    <text x="600" y="80" fill="white" font-family="serif" font-size="48" font-weight="bold" text-anchor="middle">2025 MarTech Salary Guide</text>
+    <text x="600" y="120" fill="#94a3b8" font-family="monospace" font-size="20" text-anchor="middle" letter-spacing="2">BENCHMARKS & TRAJECTORIES</text>
+    
+    <rect x="50" y="50" width="220" height="100" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
+    <circle cx="75" cy="80" r="4" fill="#f87171"/> <text x="90" y="85" fill="#cbd5e1" font-family="sans-serif" font-size="12">Generalist Marketer</text>
+    <circle cx="75" cy="105" r="4" fill="#60a5fa"/> <text x="90" y="110" fill="#cbd5e1" font-family="sans-serif" font-size="12">MOps Manager</text>
+    <circle cx="75" cy="130" r="4" fill="#4ade80"/> <text x="90" y="135" fill="#cbd5e1" font-family="sans-serif" font-size="12" font-weight="bold">Technical Architect</text>
+</svg>
