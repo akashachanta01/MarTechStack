@@ -16,7 +16,6 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
-# Add BlogPost here
 from .models import Job, Tool, Category, Subscriber, BlogPost
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
@@ -95,15 +94,39 @@ def job_list(request):
         "current_rtype": role_type_filter,
     })
 
-# --- BLOG VIEWS (DYNAMIC) ---
+# --- BLOG VIEWS (UPDATED FOR SEARCH & FILTER) ---
 def blog_list(request):
+    search_query = request.GET.get('q', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+
     posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')
-    featured_post = posts.first() if posts.exists() else None
-    remaining_posts = posts[1:] if posts.count() > 1 else []
+
+    # Apply Search Filter
+    if search_query:
+        posts = posts.filter(
+            Q(title__icontains=search_query) | 
+            Q(content__icontains=search_query) |
+            Q(excerpt__icontains=search_query)
+        )
+    
+    # Apply Category Filter
+    if category_filter:
+        posts = posts.filter(category__iexact=category_filter)
+
+    # Determine Featured Post
+    # Only show featured layout if on homepage (no filters applied)
+    featured_post = None
+    remaining_posts = posts
+
+    if not search_query and not category_filter and posts.exists():
+        featured_post = posts.first()
+        remaining_posts = posts[1:]
     
     return render(request, 'jobs/blog_list.html', {
         'featured_post': featured_post,
-        'posts': remaining_posts
+        'posts': remaining_posts,
+        'search_query': search_query,
+        'current_category': category_filter
     })
 
 def post_detail(request, slug):
@@ -121,7 +144,7 @@ def post_detail(request, slug):
     return render(request, 'jobs/post_detail.html', {
         'post': post,
         'related_posts': related_posts,
-        'sidebar_jobs': sidebar_jobs, # <-- Added this
+        'sidebar_jobs': sidebar_jobs,
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---
