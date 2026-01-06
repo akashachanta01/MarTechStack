@@ -1,5 +1,6 @@
 {% extends "jobs/base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}{{ post.title }} — MarTechJobs{% endblock %}
 {% block meta_description %}{{ post.meta_description }}{% endblock %}
@@ -64,7 +65,6 @@
     </section>
 
     <section class="relative py-12 bg-white overflow-hidden">
-        
         <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-[0.6]"></div>
 
         <div class="relative w-full max-w-7xl mx-auto px-4 lg:px-8">
@@ -82,16 +82,79 @@
                 </div>
 
                 <aside class="hidden lg:block lg:col-span-3 pl-8 border-l border-slate-100 relative">
-                    <div class="sticky top-28">
-                        <div class="bg-[#1f432d] p-5 rounded-md text-white mt-8 shadow-lg relative overflow-hidden group">
-                            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity"></div>
-                            <span class="material-symbols-outlined text-2xl mb-2">rocket_launch</span>
-                            <h4 class="font-serif font-bold text-lg mb-2">Upgrade your career.</h4>
-                            <p class="text-xs text-white/80 mb-4 leading-relaxed">Join 15k+ marketers getting the best jobs sent to their inbox weekly.</p>
-                            <a href="{% url 'job_list' %}" class="block w-full py-2 text-center text-xs font-bold bg-white text-[#1f432d] hover:bg-slate-100 rounded-sm transition-colors">
-                                Browse Board
-                            </a>
+                    <div class="sticky top-28 space-y-8">
+                        
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-serif font-bold text-lg text-slate-900">Related Roles</h3>
+                                <a href="{% url 'job_list' %}" class="text-xs font-bold text-slate-400 hover:text-[#1f432d] transition-colors">View all</a>
+                            </div>
+
+                            <div class="space-y-4">
+                                {% for job in sidebar_jobs %}
+                                <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:border-[#1f432d] transition-colors group">
+                                    <div class="flex justify-between items-start mb-2">
+                                        {% if job.company_logo %}
+                                            <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="w-8 h-8 object-contain rounded-sm border border-slate-100">
+                                        {% else %}
+                                            <div class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-sm flex items-center justify-center text-xs font-bold text-slate-400">
+                                                {{ job.company|slice:":1" }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <span class="text-[10px] font-mono-tag bg-green-50 text-[#1f432d] px-2 py-0.5 rounded-full">
+                                            {% if 'remote' in job.work_arrangement %}Remote{% else %}{{ job.location|default:'On-site'|truncatechars:10 }}{% endif %}
+                                        </span>
+                                    </div>
+
+                                    <h4 class="font-bold text-sm text-slate-900 leading-tight mb-1 group-hover:text-[#1f432d] transition-colors">
+                                        <a href="{% url 'job_detail' job.id job.slug %}">{{ job.title }}</a>
+                                    </h4>
+                                    <p class="text-xs text-slate-500 mb-3">{{ job.company }}</p>
+
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono-tag mb-3">
+                                        <span>{{ job.salary_range|default:"Competitive" }}</span>
+                                        <span>•</span>
+                                        <span>{{ job.get_role_type_display }}</span>
+                                    </div>
+
+                                    <a href="{% url 'job_detail' job.id job.slug %}" class="block w-full text-center py-1.5 text-xs font-bold border border-slate-900 rounded-sm hover:bg-slate-900 hover:text-white transition-colors">
+                                        Apply Now
+                                    </a>
+                                </div>
+                                {% empty %}
+                                <div class="p-4 text-center text-slate-400 text-xs italic bg-slate-50 rounded">
+                                    No active jobs right now.
+                                </div>
+                                {% endfor %}
+                            </div>
                         </div>
+
+                        <div class="bg-[#1f432d] rounded-lg p-6 text-white shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                                <span class="material-symbols-outlined text-6xl">mail</span>
+                            </div>
+                            
+                            <div class="relative z-10">
+                                <span class="material-symbols-outlined text-2xl mb-2">mark_email_unread</span>
+                                <h4 class="font-serif font-bold text-xl mb-2">Get hired faster.</h4>
+                                <p class="text-xs text-green-100/80 mb-6 leading-relaxed">
+                                    Join 15k+ marketers getting the best jobs sent to their inbox weekly.
+                                </p>
+                                
+                                <form id="sidebar-sub-form" class="space-y-3">
+                                    {% csrf_token %}
+                                    <input type="email" name="email" required placeholder="Email address" 
+                                           class="w-full px-3 py-2 rounded text-slate-900 text-xs focus:ring-2 focus:ring-green-400 outline-none border-none placeholder-slate-400">
+                                    
+                                    <button type="submit" class="w-full py-2.5 text-xs font-bold bg-[#0f172a] hover:bg-black text-white rounded transition-colors shadow-md">
+                                        Subscribe
+                                    </button>
+                                </form>
+                                <p id="sidebar-msg" class="text-[10px] text-green-200 mt-2 min-h-[15px]"></p>
+                            </div>
+                        </div>
+
                     </div>
                 </aside>
 
@@ -113,7 +176,7 @@
                 <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
                     <div class="relative h-48 bg-slate-100 flex items-center justify-center">
                         <span class="material-symbols-outlined text-4xl text-slate-300">article</span>
-                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">{{ related.category }}</div>
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag">{{ related.category }}</div>
                     </div>
                     <div class="flex flex-col flex-grow p-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-2 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
@@ -129,4 +192,13 @@
     </section>
 
 </article>
+
+<script>
+    // Attach the shared subscribe logic to this new sidebar form
+    document.addEventListener('DOMContentLoaded', function() {
+        if(typeof handleSubscribe === 'function') {
+            handleSubscribe('sidebar-sub-form', 'sidebar-msg');
+        }
+    });
+</script>
 {% endblock %}
