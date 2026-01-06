@@ -112,9 +112,16 @@ def post_detail(request, slug):
     # Suggest 2 other posts as "Related"
     related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
     
+    # NEW: Fetch 2 "Featured" or recent jobs for the sidebar
+    sidebar_jobs = Job.objects.filter(
+        is_active=True, 
+        screening_status='approved'
+    ).order_by('-is_featured', '-created_at')[:2]
+    
     return render(request, 'jobs/post_detail.html', {
         'post': post,
-        'related_posts': related_posts
+        'related_posts': related_posts,
+        'sidebar_jobs': sidebar_jobs, # <-- Added this
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---
