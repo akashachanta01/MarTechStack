@@ -36,6 +36,13 @@
         <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-60"></div>
         <div class="relative w-full max-w-4xl mx-auto px-4 lg:px-8 text-center">
             
+            <div class="mb-8">
+                <a href="{% url 'blog_list' %}" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-[#1f432d] transition group">
+                    <span class="material-symbols-outlined text-lg mr-1 group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    Back to Blog
+                </a>
+            </div>
+
             <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
                 <span class="text-xs font-medium text-[#1f432d] font-mono-tag tracking-tight uppercase">{{ post.category }}</span>
                 <span class="text-slate-300 text-[10px]">|</span>
