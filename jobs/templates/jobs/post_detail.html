@@ -32,7 +32,7 @@
 <article itemscope itemtype="https://schema.org/BlogPosting">
     
     <section class="relative w-full pt-16 pb-12 bg-slate-50 border-b border-slate-200">
-        <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-50"></div>
+        <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-60"></div>
         <div class="relative w-full max-w-4xl mx-auto px-4 lg:px-8 text-center">
             
             <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
@@ -63,8 +63,11 @@
         </div>
     </section>
 
-    <section class="py-12 bg-white">
-        <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
+    <section class="relative py-12 bg-white overflow-hidden">
+        
+        <div class="absolute inset-0 bg-grid-pattern pointer-events-none opacity-[0.6]"></div>
+
+        <div class="relative w-full max-w-7xl mx-auto px-4 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 
                 <div class="hidden lg:block lg:col-span-1 relative">
@@ -78,9 +81,10 @@
                     {{ post.content|safe }}
                 </div>
 
-                <aside class="hidden lg:block lg:col-span-3 pl-8 border-l border-slate-100">
+                <aside class="hidden lg:block lg:col-span-3 pl-8 border-l border-slate-100 relative">
                     <div class="sticky top-28">
-                        <div class="bg-[#1f432d] p-5 rounded-md text-white mt-8 shadow-lg">
+                        <div class="bg-[#1f432d] p-5 rounded-md text-white mt-8 shadow-lg relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity"></div>
                             <span class="material-symbols-outlined text-2xl mb-2">rocket_launch</span>
                             <h4 class="font-serif font-bold text-lg mb-2">Upgrade your career.</h4>
                             <p class="text-xs text-white/80 mb-4 leading-relaxed">Join 15k+ marketers getting the best jobs sent to their inbox weekly.</p>
@@ -109,7 +113,7 @@
                 <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
                     <div class="relative h-48 bg-slate-100 flex items-center justify-center">
                         <span class="material-symbols-outlined text-4xl text-slate-300">article</span>
-                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag">{{ related.category }}</div>
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono">{{ related.category }}</div>
                     </div>
                     <div class="flex flex-col flex-grow p-6">
                         <h3 class="text-lg font-bold text-slate-900 mb-2 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
