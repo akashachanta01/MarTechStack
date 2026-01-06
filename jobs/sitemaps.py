@@ -33,11 +33,6 @@ class ToolSitemap(Sitemap):
         return reverse('tool_detail', args=[obj.slug])
 
 class SEOLandingSitemap(Sitemap):
-    """
-    THE GROWTH ENGINE (Safe Mode):
-    Dynamically generates "Location + Tool" pages.
-    Includes error handling to prevent 500 crashes from bad data.
-    """
     changefreq = "weekly"
     priority = 0.6
     protocol = 'https'
@@ -50,16 +45,13 @@ class SEOLandingSitemap(Sitemap):
         
         for job in active_jobs:
             try:
-                # 1. REMOTE
                 if job.work_arrangement == 'remote':
                     seo_pages.add(('remote', '')) 
                     for tool in job.tools.all():
                         if tool.slug:
                             seo_pages.add(('remote', tool.slug))
 
-                # 2. LOCATIONS
                 if job.location:
-                    # Heuristic: Take first part of "City, State"
                     raw_city = job.location.split(',')[0].strip()
                     city_slug = slugify(raw_city)
 
@@ -69,10 +61,8 @@ class SEOLandingSitemap(Sitemap):
                             if tool.slug:
                                 seo_pages.add((city_slug, tool.slug))
             except Exception:
-                # If a specific job has bad data, skip it so the sitemap doesn't crash
                 continue
         
-        # Sort safe list
         return sorted(list(seo_pages))
 
     def location(self, obj):
@@ -82,13 +72,29 @@ class SEOLandingSitemap(Sitemap):
         else:
             return reverse('seo_loc_only', args=[loc_slug])
 
+# --- NEW: BLOG SITEMAP ---
+class BlogSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        from .models import BlogPost
+        return BlogPost.objects.filter(is_published=True)
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return reverse('post_detail', args=[obj.slug])
+
 class StaticViewSitemap(Sitemap):
     priority = 0.5
     changefreq = 'monthly'
     protocol = 'https'
 
     def items(self):
-        return ['about', 'for_employers', 'post_job', 'job_list']
+        return ['about', 'for_employers', 'post_job', 'job_list', 'blog_list']
 
     def location(self, item):
         return reverse(item)
