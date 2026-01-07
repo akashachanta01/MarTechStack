@@ -1,0 +1,22 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="450" fill="#F8FAFC"/>
+    
+    <path d="M40 0V450M80 0V450M120 0V450M160 0V450M200 0V450M240 0V450M280 0V450M320 0V450M360 0V450M400 0V450M440 0V450M480 0V450M520 0V450M560 0V450M600 0V450M640 0V450M680 0V450M720 0V450M760 0V450" stroke="#E2E8F0" stroke-width="1"/>
+    <path d="M0 40H800M0 80H800M0 120H800M0 160H800M0 200H800M0 240H800M0 280H800M0 320H800M0 360H800M0 400H800" stroke="#E2E8F0" stroke-width="1"/>
+
+    <circle cx="400" cy="225" r="80" fill="#1F432D" fill-opacity="0.1"/>
+    <circle cx="400" cy="225" r="60" stroke="#1F432D" stroke-width="2"/>
+    <circle cx="400" cy="225" r="30" fill="#1F432D"/>
+    
+    <circle cx="200" cy="225" r="40" fill="white" stroke="#94A3B8" stroke-width="2"/>
+    <circle cx="600" cy="225" r="40" fill="white" stroke="#94A3B8" stroke-width="2"/>
+
+    <line x1="242" y1="225" x2="338" y2="225" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+    <line x1="462" y1="225" x2="558" y2="225" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+
+    <text x="200" y="230" font-family="monospace" font-weight="bold" font-size="14" fill="#64748B" text-anchor="middle">DATA</text>
+    <text x="600" y="230" font-family="monospace" font-weight="bold" font-size="14" fill="#64748B" text-anchor="middle">ACTION</text>
+    <text x="400" y="320" font-family="serif" font-weight="bold" font-size="24" fill="#1F432D" text-anchor="middle">Agentforce</text>
+    
+    <path d="M390 215L400 210L410 215V235L400 240L390 235V215Z" stroke="white" stroke-width="2" fill="none"/>
+</svg>
