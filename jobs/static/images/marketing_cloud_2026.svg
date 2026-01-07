@@ -1,0 +1,21 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="450" fill="#F8FAFC"/>
+    
+    <path d="M0 300H800" stroke="#CBD5E1" stroke-width="2"/>
+    <path d="M0 320H800" stroke="#CBD5E1" stroke-width="2"/>
+    
+    <rect x="150" y="260" width="60" height="40" rx="4" fill="white" stroke="#94A3B8" stroke-width="2"/>
+    <rect x="370" y="260" width="60" height="40" rx="4" fill="white" stroke="#94A3B8" stroke-width="2"/>
+    <rect x="590" y="260" width="60" height="40" rx="4" fill="#1F432D" stroke="#1F432D" stroke-width="2"/>
+    
+    <path d="M210 280H370" stroke="#1F432D" stroke-width="2" stroke-dasharray="6 6"/>
+    <path d="M430 280H590" stroke="#1F432D" stroke-width="2" stroke-dasharray="6 6"/>
+
+    <path d="M620 180C642.091 180 660 197.909 660 220C660 242.091 642.091 260 620 260H590V260H620Z" fill="#1F432D" fill-opacity="0.1"/>
+    <circle cx="620" cy="220" r="30" stroke="#1F432D" stroke-width="2"/>
+    <path d="M610 220L620 230L635 210" stroke="#1F432D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <text x="180" y="240" font-family="monospace" font-size="12" fill="#64748B" text-anchor="middle">GEN AI</text>
+    <text x="400" y="240" font-family="monospace" font-size="12" fill="#64748B" text-anchor="middle">APPROVAL</text>
+    <text x="620" y="160" font-family="serif" font-weight="bold" font-size="20" fill="#1F432D" text-anchor="middle">Delivery</text>
+</svg>
