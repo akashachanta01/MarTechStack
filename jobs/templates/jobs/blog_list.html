@@ -40,8 +40,18 @@
             
             <div class="relative overflow-hidden rounded-md border border-slate-200 aspect-[16/9] bg-slate-50 flex items-center justify-center group-hover:shadow-lg transition-all duration-500">
                 
-                {% if "salary" in featured_post.slug %}
+                {% if "salary" in featured_post.slug and "2026" in featured_post.slug %}
+                    <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover">
+                {% elif "salary" in featured_post.slug %}
                     <img src="{% static 'images/salary_chart_2025.svg' %}" class="w-full h-full object-cover">
+                {% elif "salesforce" in featured_post.slug or "agentforce" in featured_post.slug %}
+                    {% if "marketing-cloud" in featured_post.slug %}
+                        <img src="{% static 'images/marketing_cloud_2026.svg' %}" class="w-full h-full object-cover">
+                    {% elif "admin" in featured_post.slug %}
+                        <img src="{% static 'images/salesforce_admin_zero_copy.svg' %}" class="w-full h-full object-cover">
+                    {% else %}
+                        <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover">
+                    {% endif %}
                 {% elif "resume" in featured_post.slug or "portfolio" in featured_post.slug %}
                     <img src="{% static 'images/portfolio_graphic.svg' %}" class="w-full h-full object-cover">
                 {% elif "interview" in featured_post.slug %}
@@ -159,8 +169,18 @@
                 
                 <div class="relative aspect-[16/9] overflow-hidden bg-white border-b border-slate-100 flex items-center justify-center">
                     
-                    {% if "salary" in post.slug %}
+                    {% if "salary" in post.slug and "2026" in post.slug %}
+                        <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% elif "salary" in post.slug %}
                         <img src="{% static 'images/salary_chart_2025.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% elif "salesforce" in post.slug or "agentforce" in post.slug %}
+                        {% if "marketing-cloud" in post.slug %}
+                            <img src="{% static 'images/marketing_cloud_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% elif "admin" in post.slug %}
+                            <img src="{% static 'images/salesforce_admin_zero_copy.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                            <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% endif %}
                     {% elif "resume" in post.slug or "portfolio" in post.slug %}
                         <img src="{% static 'images/portfolio_graphic.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     {% elif "interview" in post.slug %}
