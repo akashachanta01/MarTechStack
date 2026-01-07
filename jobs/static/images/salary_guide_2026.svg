@@ -1,0 +1,16 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="450" fill="#F1F5F9"/>
+    
+    <path d="M50 50H750M50 150H750M50 250H750M50 350H750" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <path d="M100 350C200 345 400 340 700 330" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <text x="710" y="335" font-family="sans-serif" font-size="12" fill="#64748B" font-weight="bold">1.5% Growth</text>
+    
+    <path d="M100 350C250 300 400 200 700 100" stroke="#1F432D" stroke-width="4" stroke-linecap="round"/>
+    <text x="710" y="105" font-family="sans-serif" font-size="12" fill="#1F432D" font-weight="bold">15% Premium</text>
+
+    <text x="100" y="380" font-family="monospace" font-size="14" fill="#64748B">2024</text>
+    <text x="700" y="380" font-family="monospace" font-size="14" fill="#64748B">2026</text>
+    
+    <text x="400" y="50" font-family="serif" font-size="24" fill="#0F172A" text-anchor="middle" font-weight="bold">The Agentic Premium</text>
+</svg>
