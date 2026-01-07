@@ -52,6 +52,8 @@
                     {% else %}
                         <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover">
                     {% endif %}
+                {% elif "break-into" in featured_post.slug or "roadmap" in featured_post.slug %}
+                    <img src="{% static 'images/break_into_martech.svg' %}" class="w-full h-full object-cover">
                 {% elif "career-paths" in featured_post.slug or "job-titles" in featured_post.slug %}
                     <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover">
                 {% elif "resume" in featured_post.slug or "portfolio" in featured_post.slug %}
@@ -183,6 +185,8 @@
                         {% else %}
                             <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         {% endif %}
+                    {% elif "break-into" in post.slug or "roadmap" in post.slug %}
+                        <img src="{% static 'images/break_into_martech.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     {% elif "career-paths" in post.slug or "job-titles" in post.slug %}
                         <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     {% elif "resume" in post.slug or "portfolio" in post.slug %}
