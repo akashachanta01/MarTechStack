@@ -1,0 +1,20 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="450" fill="#F8FAFC"/>
+    <path d="M40 0V450M80 0V450M120 0V450M160 0V450M200 0V450M240 0V450M280 0V450M320 0V450M360 0V450M400 0V450M440 0V450M480 0V450M520 0V450M560 0V450M600 0V450M640 0V450M680 0V450M720 0V450M760 0V450" stroke="#E2E8F0"/>
+    <path d="M0 40H800M0 80H800M0 120H800M0 160H800M0 200H800M0 240H800M0 280H800M0 320H800M0 360H800M0 400H800" stroke="#E2E8F0"/>
+    
+    <path d="M100 350C250 350 250 250 400 250C550 250 550 100 700 100" stroke="#CBD5E1" stroke-width="4" stroke-dasharray="8 8"/>
+    
+    <circle cx="100" cy="350" r="10" fill="#1F432D"/>
+    <text x="100" y="380" font-family="monospace" font-size="12" fill="#64748B" text-anchor="middle">ENTRY</text>
+    
+    <circle cx="400" cy="250" r="10" fill="#1F432D"/>
+    <text x="400" y="280" font-family="monospace" font-size="12" fill="#64748B" text-anchor="middle">MID-LEVEL</text>
+    
+    <circle cx="700" cy="100" r="20" fill="#1F432D" stroke="#1F432D" stroke-width="4" fill-opacity="0.2"/>
+    <circle cx="700" cy="100" r="10" fill="#1F432D"/>
+    <text x="700" y="140" font-family="serif" font-weight="bold" font-size="14" fill="#1F432D" text-anchor="middle">LEADERSHIP</text>
+    
+    <rect x="350" y="180" width="100" height="30" rx="4" fill="white" stroke="#1F432D" stroke-width="1"/>
+    <text x="400" y="200" font-family="sans-serif" font-size="10" fill="#1F432D" text-anchor="middle" font-weight="bold">SKILLS GAP</text>
+</svg>
