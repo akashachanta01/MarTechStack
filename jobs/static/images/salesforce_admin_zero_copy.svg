@@ -1,0 +1,18 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="800" height="450" fill="#F8FAFC"/>
+    
+    <path d="M0 225H800" stroke="#E2E8F0" stroke-width="1"/>
+    <path d="M400 0V450" stroke="#E2E8F0" stroke-width="1"/>
+    
+    <circle cx="250" cy="225" r="60" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
+    <circle cx="550" cy="225" r="60" stroke="#1F432D" stroke-width="2"/>
+    
+    <path d="M310 225H490" stroke="#1F432D" stroke-width="2"/>
+    <rect x="380" y="210" width="40" height="30" rx="4" fill="#1F432D"/>
+    <path d="M390 225H410" stroke="white" stroke-width="2"/>
+
+    <text x="250" y="230" font-family="monospace" font-size="14" fill="#64748B" text-anchor="middle">REMOTE DATA</text>
+    <text x="550" y="230" font-family="monospace" font-size="14" fill="#1F432D" text-anchor="middle">SALESFORCE</text>
+    
+    <path d="M400 120L430 135V165C430 185 400 195 400 195C400 195 370 185 370 165V135L400 120Z" fill="#1F432D" stroke="white" stroke-width="2"/>
+</svg>
