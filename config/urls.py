@@ -1,17 +1,21 @@
 from django.contrib import admin
-from django.urls import path, include  # <--- Ensure 'include' is imported
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
 
 # Import your Sitemap logic
-from jobs.sitemaps import JobSitemap, ToolSitemap, SEOLandingSitemap, StaticViewSitemap, BlogSitemap
+from jobs.sitemaps import (
+    JobSitemap, ToolSitemap, SEOLandingSitemap, 
+    StaticViewSitemap, BlogSitemap, ToolsStaticSitemap # <--- Added new import
+)
 
 # --- 1. DEFINE SITEMAPS ---
 sitemaps = {
     'jobs': JobSitemap,
     'tools': ToolSitemap,
+    'tools_static': ToolsStaticSitemap, # <--- Added new sitemap
     'seo_landing': SEOLandingSitemap,
     'static': StaticViewSitemap,
     'blog': BlogSitemap,
@@ -32,11 +36,8 @@ Sitemap: https://martechjobs.io/sitemap.xml
 urlpatterns = [
     # Admin & Apps
     path('admin/', admin.site.urls),
-    
-    # --- ADD THIS LINE FOR THE NEW TOOLS APP ---
     path('tools/', include('tools.urls')), 
-    
-    path('', include('jobs.urls')),  # Delegates normal pages to your jobs app
+    path('', include('jobs.urls')),
 
     # SEO Paths
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
