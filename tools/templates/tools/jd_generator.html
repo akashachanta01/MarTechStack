@@ -1,0 +1,105 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title|default:"Free MarTech Job Description Generator" }}{% endblock %}
+{% block meta_description %}{{ seo_description|default:"Generate professional Marketing Operations job descriptions in seconds. Free tool for hiring managers." }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Job Description Generator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Stop writing from scratch. Generate a perfect <strong>{{ role_title }}</strong> JD in seconds.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
+                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-green-700">tune</span> Configuration
+                </h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role Title</label>
+                        <input type="text" id="roleInput" value="{{ role_title }}" class="w-full border border-slate-300 rounded p-2 text-sm font-bold text-slate-900">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tech Stack (Optional)</label>
+                        <input type="text" id="stackInput" placeholder="e.g. HubSpot, Salesforce" class="w-full border border-slate-300 rounded p-2 text-sm">
+                    </div>
+
+                    <button onclick="updateJD()" class="w-full bg-black text-white font-bold py-3 rounded hover:bg-slate-800 transition">
+                        ⚡ Generate Description
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl border-2 border-green-700 shadow-lg relative">
+                <div class="absolute -top-3 -right-3 bg-green-600 text-white px-3 py-1 text-xs font-bold rounded shadow-sm">
+                    Ready to Copy
+                </div>
+
+                <div id="jdOutput" class="prose prose-sm prose-slate max-w-none">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-4" id="outTitle">{{ role_title }}</h2>
+                    <p class="mb-4">
+                        We are looking for a <span class="font-bold" id="outRole">{{ role_title }}</span> to join our team. 
+                        You will own our marketing infrastructure and drive efficiency across the funnel.
+                    </p>
+                    
+                    <h4 class="font-bold text-slate-900 mb-2">Key Responsibilities</h4>
+                    <ul class="list-disc pl-5 mb-4 space-y-1">
+                        {% for resp in responsibilities %}
+                        <li>{{ resp }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h4 class="font-bold text-slate-900 mb-2">Requirements</h4>
+                    <ul class="list-disc pl-5 mb-6 space-y-1">
+                        {% for skill in skills %}
+                        <li>{{ skill }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-sm text-slate-500 mb-3">Happy with this description?</p>
+                    <a href="{% url 'post_job' %}" class="block w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3 rounded shadow-md transition">
+                        Post this Job for Free &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function updateJD() {
+        const role = document.getElementById('roleInput').value;
+        const stack = document.getElementById('stackInput').value;
+        
+        document.getElementById('outTitle').innerText = role;
+        document.getElementById('outRole').innerText = role;
+        
+        // Client-side logic to insert the tech stack line
+        if(stack) {
+            const list = document.querySelector('#jdOutput ul');
+            // Check if we already added it to avoid duplicates
+            const existingStack = document.getElementById('stackItem');
+            if(existingStack) existingStack.remove();
+
+            const newItem = document.createElement('li');
+            newItem.id = 'stackItem';
+            newItem.innerHTML = `<strong>Stack Expertise:</strong> Proven experience managing ${stack} instances.`;
+            newItem.classList.add('bg-yellow-50', 'p-1', 'rounded'); 
+            list.prepend(newItem);
+        }
+    }
+</script>
+{% endblock %}
