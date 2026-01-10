@@ -36,6 +36,10 @@ urlpatterns = [
     path('staff/review/', views.review_queue, name='review_queue'),
     path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
 
+    path('companies/', views.company_list, name='company_list'),
+    path('companies/<str:company_slug>/', views.company_detail, name='company_detail'),
+
+
     # --- PROGRAMMATIC SEO (Must be last) ---
     # Catches /remote/salesforce-jobs/ or /new-york/jobs/
     path('<str:location_slug>/<slug:tool_slug>-jobs/', views.seo_landing_page, name='seo_tool_loc'),
