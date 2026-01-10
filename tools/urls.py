@@ -16,7 +16,9 @@ urlpatterns = [
     path('utm-link-builder/', views.utm_builder, name='utm_builder'),
     path('sql-generator/', views.sql_generator, name='sql_generator'),
     path('api/generate-sql/', views.api_generate_sql, name='api_generate_sql'),
+    path('consultant-rate-calculator/', views.consultant_calculator, name='consultant_calculator'),
 
     # Dynamic Matcher (LAST)
     path('<slug:slug>/', views.jd_generator, name='tool_dynamic'),
+
 ]
