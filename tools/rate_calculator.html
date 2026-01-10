@@ -1,0 +1,28 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="text-center mb-12">
+            <span class="text-xs font-bold bg-purple-100 text-purple-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Consultant Rate Calculator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Stop guessing. See what you should charge as a MarTech freelancer.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Specialization</label>
+                        <select id="specSelect" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:border-purple-500">
+                            <option value="100">General Marketing Ops</option>
+                            <option value="125">HubSpot Implementation</option>
+                            <option value="150">Salesforce
