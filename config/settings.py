@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     # ---------------------------------
     'django.contrib.humanize',
     'jobs',
+    'tools',  # <--- ADD THIS
 ]
 
 # Required for django.contrib.sites
