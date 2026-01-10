@@ -72,7 +72,6 @@ class SEOLandingSitemap(Sitemap):
         else:
             return reverse('seo_loc_only', args=[loc_slug])
 
-# --- NEW: BLOG SITEMAP ---
 class BlogSitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.8
@@ -87,6 +86,30 @@ class BlogSitemap(Sitemap):
 
     def location(self, obj):
         return reverse('post_detail', args=[obj.slug])
+
+# --- NEW: STATIC TOOLS SITEMAP ---
+# This ensures your calculators and generators are found by Google.
+class ToolsStaticSitemap(Sitemap):
+    priority = 0.9  # High priority because these are "Link Magnets"
+    changefreq = 'monthly'
+    protocol = 'https'
+
+    def items(self):
+        return [
+            'jd_generator', 
+            'salary_calculator', 
+            'interview_generator', 
+            'signature_generator', 
+            'sf_id_converter',
+            'qr_generator',
+            'utm_builder',
+            'sql_generator',
+            'consultant_calculator',
+            'resume_scanner'
+        ]
+
+    def location(self, item):
+        return reverse(item)
 
 class StaticViewSitemap(Sitemap):
     priority = 0.5
