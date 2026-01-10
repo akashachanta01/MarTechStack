@@ -103,51 +103,77 @@ def api_generate_interview(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-# --- 4. NEW: SIGNATURE GENERATOR ---
+# --- 4. SIGNATURE GENERATOR ---
 def signature_generator(request):
     return render(request, 'tools/signature_generator.html', {
         'seo_title': "Free HubSpot Email Signature Generator | Professional Templates",
         'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros."
     })
 
-# --- 5. NEW: SALESFORCE ID CONVERTER ---
+# --- 5. SALESFORCE ID CONVERTER ---
 def sf_id_converter(request):
     return render(request, 'tools/sf_id_converter.html', {
         'seo_title': "Salesforce 15 to 18 Character ID Converter",
         'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs instantly. Essential for Admins."
     })
-    # --- 6. NEW: CONSULTANT RATE CALCULATOR ---
-def rate_calculator(request):
+
+# --- 6. CONSULTANT RATE CALCULATOR (Renamed to match URLs) ---
+def consultant_calculator(request):
     return render(request, 'tools/rate_calculator.html', {
         'seo_title': "Freelance MarTech Consultant Rate Calculator",
         'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience."
     })
 
-
-# ... (Keep your existing imports) ...
-
-# --- 6. NEW: QR CODE GENERATOR ---
+# --- 7. QR CODE GENERATOR ---
 def qr_generator(request):
     return render(request, 'tools/qr_generator.html', {
         'seo_title': "Free HubSpot QR Code Generator with UTM Tracking",
         'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking."
     })
 
-# --- 7. NEW: UTM BUILDER ---
+# --- 8. UTM BUILDER ---
 def utm_builder(request):
     return render(request, 'tools/utm_builder.html', {
         'seo_title': "Bulk UTM Link Builder for Marketers",
         'seo_description': "The fastest way to build Google Analytics tracking links. Save your presets for consistency across your team."
     })
 
-# --- 8. NEW: TEXT TO SQL ---
+# --- 9. TEXT TO SQL ---
 def sql_generator(request):
     return render(request, 'tools/sql_generator.html', {
         'seo_title': "AI Text-to-SQL Generator for Marketing Data",
         'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required."
     })
-    
-# --- NEW: RESUME SCANNER ---
+
+@require_POST
+def api_generate_sql(request):
+    try:
+        data = json.loads(request.body)
+        query = data.get('query')
+        flavor = data.get('flavor') 
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
+
+        client = OpenAI(api_key=api_key)
+        prompt = f"""
+        You are an expert Data Engineer. Convert this marketing question into a SQL query.
+        SQL Flavor: {flavor}
+        Question: "{query}"
+        
+        Return ONLY the raw SQL code block. Do not wrap it in markdown ticks.
+        Format it for readability.
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a SQL expert."}, {"role": "user", "content": prompt}]
+        )
+        return JsonResponse({"sql": completion.choices[0].message.content.strip()})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+# --- 10. RESUME SCANNER ---
 def resume_scanner(request):
     return render(request, 'tools/resume_scanner.html', {
         'seo_title': "Free ATS Resume Scanner for Marketing Ops",
@@ -166,7 +192,6 @@ def api_scan_resume(request):
 
         client = OpenAI(api_key=api_key)
         
-        # We ask AI to act as an ATS
         prompt = f"""
         Act as an ATS (Applicant Tracking System) for a {target_role} role.
         
@@ -190,33 +215,3 @@ def api_scan_resume(request):
         return JsonResponse(json.loads(completion.choices[0].message.content))
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
-
-def api_generate_sql(request):
-    try:
-        data = json.loads(request.body)
-        query = data.get('query')
-        flavor = data.get('flavor') # e.g. Postgres, Snowflake, SOQL
-
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
-
-        client = OpenAI(api_key=api_key)
-        prompt = f"""
-        You are an expert Data Engineer. Convert this marketing question into a SQL query.
-        SQL Flavor: {flavor}
-        Question: "{query}"
-        
-        Return ONLY the raw SQL code block. Do not wrap it in markdown ticks.
-        Format it for readability.
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are a SQL expert."}, {"role": "user", "content": prompt}]
-        )
-        return JsonResponse({"sql": completion.choices[0].message.content.strip()})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-        
