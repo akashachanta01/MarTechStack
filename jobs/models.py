@@ -68,8 +68,12 @@ class Tool(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="tools")
-    description = models.TextField(blank=True, default="", help_text="SEO Content: What is this tool?")
+    
+    # SEO Fields
     logo_url = models.URLField(max_length=500, blank=True, null=True, help_text="Official logo of the tool")
+    description = models.TextField(blank=True, default="", help_text="SEO Content: Appears at top of page.")
+    seo_title = models.CharField(max_length=200, blank=True, default="", help_text="Browser Title (e.g. 'HubSpot Jobs & Careers')")
+    seo_h1 = models.CharField(max_length=200, blank=True, default="", help_text="Page Heading (e.g. 'Top HubSpot Jobs')")
 
     def __str__(self): return self.name
     @property
@@ -146,31 +150,22 @@ class Job(models.Model):
         ordering = ['-is_pinned', '-created_at']
         indexes = [models.Index(fields=['is_active', 'screening_status']), models.Index(fields=['created_at'])]
 
-# --- NEW: BLOG POST MODEL ---
 class BlogPost(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, help_text="URL friendly version of title")
     excerpt = models.TextField(help_text="Short summary for the blog card (2-3 sentences).")
     content = models.TextField(help_text="Full HTML content of the article.")
-    
-    # SEO Fields
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
-    
-    # Metadata
     author = models.CharField(max_length=100, default="MarTechJobs Team")
     category = models.CharField(max_length=50, default="Career Advice")
     read_time = models.CharField(max_length=20, default="5 min read")
     published_at = models.DateField(default=timezone.now)
     is_published = models.BooleanField(default=True)
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self): return self.title
-    
-    class Meta:
-        ordering = ['-published_at']
+    class Meta: ordering = ['-published_at']
 
 class Subscriber(models.Model):
     email = models.EmailField(unique=True)
