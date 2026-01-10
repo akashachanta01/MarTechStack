@@ -1,0 +1,93 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-3xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full uppercase tracking-wide">AI Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Email Subject Line Tester
+            </h1>
+            <p class="text-lg text-slate-600">
+                Will they open it? Get an AI grade before you hit send.
+            </p>
+        </div>
+
+        <div class="bg-white p-2 rounded-xl shadow-lg border border-slate-200 flex items-center gap-2 mb-8">
+            <input type="text" id="subjectInput" class="w-full p-4 rounded-lg outline-none text-lg text-slate-900 placeholder-slate-300" placeholder="e.g. You won't believe this update...">
+            <button onclick="testSubject()" id="testBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg transition whitespace-nowrap">
+                Grade It
+            </button>
+        </div>
+
+        <div id="resultsArea" class="hidden space-y-6">
+            
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 text-center">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-1">Grade</div>
+                    <div class="text-5xl font-black text-indigo-600" id="gradeDisplay">-</div>
+                </div>
+                <div class="col-span-2 bg-white p-6 rounded-xl border border-slate-200 flex flex-col justify-center">
+                    <div class="text-xs font-bold text-slate-400 uppercase mb-1">AI Feedback</div>
+                    <div class="text-slate-800 font-medium leading-relaxed" id="feedbackDisplay">...</div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
+                <h3 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined">auto_fix_high</span> Try these instead:
+                </h3>
+                <ul class="space-y-3" id="suggestionsList">
+                    </ul>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    async function testSubject() {
+        const input = document.getElementById('subjectInput');
+        const btn = document.getElementById('testBtn');
+        const results = document.getElementById('resultsArea');
+        
+        if(!input.value) return alert("Please enter a subject line.");
+
+        btn.disabled = true;
+        btn.innerText = "Analyzing...";
+        results.classList.add('hidden');
+
+        try {
+            const res = await fetch("{% url 'api_test_subject_line' %}", {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}"},
+                body: JSON.stringify({ subject: input.value })
+            });
+            const data = await res.json();
+
+            document.getElementById('gradeDisplay').innerText = data.grade;
+            document.getElementById('feedbackDisplay').innerText = data.feedback;
+            
+            const list = document.getElementById('suggestionsList');
+            list.innerHTML = data.better_versions.map(s => 
+                `<li class="bg-white p-3 rounded border border-indigo-100 text-indigo-800 font-medium shadow-sm flex justify-between items-center group cursor-pointer hover:border-indigo-300" onclick="navigator.clipboard.writeText('${s}'); alert('Copied!')">
+                    ${s} <span class="material-symbols-outlined text-slate-300 group-hover:text-indigo-500 text-sm">content_copy</span>
+                </li>`
+            ).join('');
+
+            results.classList.remove('hidden');
+
+        } catch(e) {
+            alert("Error analyzing subject line. Please try again.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Grade It";
+        }
+    }
+</script>
+{% endblock %}
