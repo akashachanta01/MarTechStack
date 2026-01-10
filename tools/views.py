@@ -6,9 +6,8 @@ from django.views.decorators.http import require_POST
 from openai import OpenAI
 from .models import ToolPage
 
-# --- 1. THE PAGE RENDERER (SEO) ---
+# --- 1. JOB DESCRIPTION GENERATOR (Existing) ---
 def jd_generator(request, slug=None):
-    # Default SEO content (Fallback)
     context = {
         'role_title': "Marketing Operations Manager",
         'responsibilities': [
@@ -24,8 +23,6 @@ def jd_generator(request, slug=None):
             "Strong analytical skills and attention to detail"
         ]
     }
-
-    # If this is a specific SEO landing page (e.g. /tools/hubspot-admin/)
     if slug:
         tool = get_object_or_404(ToolPage, slug=slug)
         context['role_title'] = tool.role_name
@@ -33,13 +30,11 @@ def jd_generator(request, slug=None):
             context['responsibilities'] = [line.strip() for line in tool.default_responsibilities.split('\n') if line.strip()]
         if tool.default_skills:
             context['skills'] = [line.strip() for line in tool.default_skills.split('\n') if line.strip()]
-        
         context['seo_title'] = tool.seo_title
         context['seo_description'] = tool.seo_description
 
     return render(request, 'tools/jd_generator.html', context)
 
-# --- 2. THE AI GENERATOR (API) ---
 @require_POST
 def api_generate_jd(request):
     try:
@@ -50,39 +45,60 @@ def api_generate_jd(request):
         tone = data.get('tone')
 
         api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            return JsonResponse({"error": "Server configuration error (API Key missing)"}, status=500)
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-
-        prompt = f"""
-        Write a job description for a {seniority} {role}.
-        Tech Stack involved: {stack if stack else 'General MarTech Stack'}.
-        Tone: {tone}.
+        prompt = f"Write a job description for a {seniority} {role}. Tech Stack: {stack}. Tone: {tone}. Output HTML with <h3> headers."
         
-        Output format (HTML):
-        <h3>About the Role</h3>
-        <p>[2 sentences hook]</p>
-        <h3>Responsibilities</h3>
-        <ul>[5 bullet points]</ul>
-        <h3>Requirements</h3>
-        <ul>[5 bullet points]</ul>
-        """
-
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are an expert HR recruiter for Marketing Technology."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7
+            messages=[{"role": "system", "content": "You are an expert HR recruiter."}, {"role": "user", "content": prompt}]
         )
+        return JsonResponse({"html": completion.choices[0].message.content})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
-        content = completion.choices[0].message.content
-        # Strip markdown code blocks if present
-        content = content.replace("```html", "").replace("```", "")
+# --- 2. SALARY CALCULATOR (New) ---
+def salary_calculator(request):
+    return render(request, 'tools/salary_calculator.html', {
+        'seo_title': "MarTech Salary Calculator 2026 - Real-time Market Data",
+        'seo_description': "Calculate your market value in Marketing Operations. Data based on role, experience, and tech stack proficiency."
+    })
 
-        return JsonResponse({"html": content})
+# --- 3. INTERVIEW GENERATOR (New) ---
+def interview_generator(request):
+    return render(request, 'tools/interview_generator.html', {
+        'seo_title': "MarTech Interview Question Generator",
+        'seo_description': "Generate technical interview questions for Salesforce, HubSpot, and Marketo roles. Perfect for hiring managers and candidates."
+    })
 
+@require_POST
+def api_generate_interview(request):
+    try:
+        data = json.loads(request.body)
+        role = data.get('role')
+        stack = data.get('stack')
+        difficulty = data.get('difficulty')
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
+
+        client = OpenAI(api_key=api_key)
+        prompt = f"""
+        Generate 5 technical interview questions for a {role} specializing in {stack}.
+        Difficulty: {difficulty}.
+        Include 1 "Scenario-based" question.
+        Output format (HTML):
+        <ul>
+            <li><strong>Question 1:</strong> [Question text]</li>
+            ...
+        </ul>
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a technical hiring manager for Marketing Operations."}, {"role": "user", "content": prompt}]
+        )
+        return JsonResponse({"html": completion.choices[0].message.content})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
