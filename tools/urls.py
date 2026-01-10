@@ -12,9 +12,11 @@ urlpatterns = [
     path('salesforce-id-converter/', views.sf_id_converter, name='sf_id_converter'),
 
     # --- NEW TOOLS ---
-    path('consultant-rate-calculator/', views.rate_calculator, name='rate_calculator'),
-    path('utm-builder/', views.utm_builder, name='utm_builder'),
+    path('qr-code-generator/', views.qr_generator, name='qr_generator'),
+    path('utm-link-builder/', views.utm_builder, name='utm_builder'),
+    path('sql-generator/', views.sql_generator, name='sql_generator'),
+    path('api/generate-sql/', views.api_generate_sql, name='api_generate_sql'),
 
-    # --- DYNAMIC SLUG (Keep Last) ---
+    # Dynamic Matcher (LAST)
     path('<slug:slug>/', views.jd_generator, name='tool_dynamic'),
 ]
