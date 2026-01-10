@@ -19,6 +19,7 @@ from django.core.mail import EmailMultiAlternatives
 from .models import Job, Tool, Category, Subscriber, BlogPost
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
+from django.db.models import Count, Max
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -343,3 +344,38 @@ def contact(request):
             except: messages.error(request, "We couldn't send your message right now. Please try again.")
     else: form = ContactForm()
     return render(request, "jobs/contact.html", {"form": form})
+
+def company_list(request):
+    # Only show companies with at least 1 active/approved job
+    companies = Job.objects.filter(is_active=True, screening_status='approved')\
+        .values('company', 'company_logo')\
+        .annotate(job_count=Count('id'), last_posted=Max('created_at'))\
+        .order_by('-last_posted')
+    
+    return render(request, 'jobs/company_list.html', {'companies': companies})
+
+def company_detail(request, company_slug):
+    # We decodify the slug back to a name search (simple approach)
+    # Note: In a robust app, you'd make a dedicated Company model. 
+    # For now, we search case-insensitive.
+    company_name = company_slug.replace('-', ' ')
+    
+    jobs = Job.objects.filter(
+        company__iexact=company_name, 
+        is_active=True, 
+        screening_status='approved'
+    ).order_by('-created_at')
+
+    if not jobs:
+        # Fallback: fuzzy match or redirect
+        return redirect('job_list')
+
+    # Get the "canonical" company name and logo from the most recent job
+    canonical_job = jobs.first()
+    
+    return render(request, 'jobs/company_detail.html', {
+        'company_name': canonical_job.company,
+        'company_logo': canonical_job.company_logo,
+        'jobs': jobs,
+        'tech_stack': Tool.objects.filter(jobs__in=jobs).distinct()[:5]
+    })
