@@ -1,0 +1,91 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-3xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-serif font-bold text-slate-900 mb-4">UTM Link Builder</h1>
+            <p class="text-lg text-slate-600">Build trackable URLs for Google Analytics, HubSpot, and Salesforce.</p>
+        </div>
+
+        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mb-8">
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Website URL *</label>
+                    <input type="url" id="utm_base" placeholder="https://www.martechjobs.io" class="w-full border-2 border-slate-200 rounded p-3 focus:border-blue-500 outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Source (e.g. google, linkedin)</label>
+                        <input type="text" id="utm_source" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Medium (e.g. cpc, email)</label>
+                        <input type="text" id="utm_medium" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Name</label>
+                    <input type="text" id="utm_campaign" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 relative">
+            <p class="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">Your Trackable Link</p>
+            <div id="utm_result" class="font-mono text-sm text-blue-900 break-all bg-white p-4 rounded border border-blue-100 mb-4 select-all">
+                Complete the form above...
+            </div>
+            <button onclick="copyUtm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition w-full md:w-auto">
+                Copy Link
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const inputs = ['utm_base', 'utm_source', 'utm_medium', 'utm_campaign'];
+    
+    function buildLink() {
+        const base = document.getElementById('utm_base').value.trim();
+        const source = document.getElementById('utm_source').value.trim();
+        const medium = document.getElementById('utm_medium').value.trim();
+        const campaign = document.getElementById('utm_campaign').value.trim();
+
+        if(!base) {
+            document.getElementById('utm_result').innerText = "Enter a URL above...";
+            return;
+        }
+
+        try {
+            const url = new URL(base);
+            if(source) url.searchParams.set('utm_source', source);
+            if(medium) url.searchParams.set('utm_medium', medium);
+            if(campaign) url.searchParams.set('utm_campaign', campaign);
+            
+            document.getElementById('utm_result').innerText = url.toString();
+        } catch(e) {
+            document.getElementById('utm_result').innerText = "Invalid URL format.";
+        }
+    }
+
+    function copyUtm() {
+        const text = document.getElementById('utm_result').innerText;
+        if(text.startsWith("http")) {
+            navigator.clipboard.writeText(text);
+            alert("Copied to clipboard!");
+        }
+    }
+
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', buildLink);
+    });
+</script>
+{% endblock %}
