@@ -1,14 +1,20 @@
 {% extends "jobs/base.html" %}
 
 {% block title %}
-    {% if custom_title %}{{ custom_title }} | MarTechJobs{% else %}Top {{ tool.name }} Jobs & Career Guide {% now "Y" %} — MarTechJobs{% endif %}
+    {% if tool.seo_title %}
+        {{ tool.seo_title }}
+    {% elif custom_title %}
+        {{ custom_title }} | MarTechJobs
+    {% else %}
+        {{ tool.name }} Jobs & Career Opportunities {% now "Y" %} — MarTechJobs
+    {% endif %}
 {% endblock %}
 
 {% block meta_description %}
     {% if custom_desc %}
         {{ custom_desc }}
     {% else %}
-        Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. We curate {{ tool.name }} jobs from top companies.
+        Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. We curate {{ tool.name }} jobs from top companies including Consultants, Admins, and Architects.
     {% endif %}
 {% endblock %}
 
@@ -70,7 +76,9 @@
 
             <div>
                 <h1 class="text-5xl md:text-6xl font-serif font-medium text-slate-900 mb-6 leading-tight">
-                    {% if custom_header %}
+                    {% if tool.seo_h1 %}
+                        {{ tool.seo_h1 }}
+                    {% elif custom_header %}
                         {{ custom_header|safe }}
                     {% else %}
                         Top <span class="text-martech-green">{{ tool.name }}</span> Jobs
