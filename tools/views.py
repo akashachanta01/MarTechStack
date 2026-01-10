@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from openai import OpenAI
 from .models import ToolPage
 
-# --- 1. JOB DESCRIPTION GENERATOR (Existing) ---
+# --- 1. JOB DESCRIPTION GENERATOR ---
 def jd_generator(request, slug=None):
     context = {
         'role_title': "Marketing Operations Manager",
@@ -58,14 +58,14 @@ def api_generate_jd(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-# --- 2. SALARY CALCULATOR (New) ---
+# --- 2. SALARY CALCULATOR ---
 def salary_calculator(request):
     return render(request, 'tools/salary_calculator.html', {
         'seo_title': "MarTech Salary Calculator 2026 - Real-time Market Data",
         'seo_description': "Calculate your market value in Marketing Operations. Data based on role, experience, and tech stack proficiency."
     })
 
-# --- 3. INTERVIEW GENERATOR (New) ---
+# --- 3. INTERVIEW GENERATOR ---
 def interview_generator(request):
     return render(request, 'tools/interview_generator.html', {
         'seo_title': "MarTech Interview Question Generator",
@@ -102,3 +102,17 @@ def api_generate_interview(request):
         return JsonResponse({"html": completion.choices[0].message.content})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+# --- 4. NEW: SIGNATURE GENERATOR ---
+def signature_generator(request):
+    return render(request, 'tools/signature_generator.html', {
+        'seo_title': "Free HubSpot Email Signature Generator | Professional Templates",
+        'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros."
+    })
+
+# --- 5. NEW: SALESFORCE ID CONVERTER ---
+def sf_id_converter(request):
+    return render(request, 'tools/sf_id_converter.html', {
+        'seo_title': "Salesforce 15 to 18 Character ID Converter",
+        'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs instantly. Essential for Admins."
+    })
