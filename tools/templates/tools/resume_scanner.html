@@ -1,0 +1,78 @@
+{% extends "jobs/base.html" %}
+{% block title %}{{ seo_title }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-3xl mx-auto px-4">
+        <div class="text-center mb-8">
+            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase">AI Tool</span>
+            <h1 class="text-4xl font-serif font-bold text-slate-900 mt-4">ATS Resume Scanner</h1>
+            <p class="text-slate-600 mt-2">Will your resume pass the bot? Paste it below to check.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Target Role</label>
+            <input type="text" id="role" value="Marketing Operations Manager" class="w-full border p-3 rounded-lg mb-4">
+            
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Paste Resume Text</label>
+            <textarea id="resume" rows="8" class="w-full border p-3 rounded-lg text-sm" placeholder="Paste your full resume content here..."></textarea>
+            
+            <button onclick="scanResume()" id="scanBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-4 transition">
+                Scan My Resume
+            </button>
+        </div>
+
+        <div id="results" class="hidden mt-8 bg-white p-6 rounded-xl border-2 border-blue-600 shadow-lg">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <h3 class="font-bold text-slate-900">ATS Score</h3>
+                <span class="text-3xl font-black text-blue-600" id="scoreDisplay">0/100</span>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-xs font-bold text-red-500 uppercase mb-2">Missing Keywords</p>
+                <div id="missingKeywords" class="flex flex-wrap gap-2"></div>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded text-sm text-slate-700 italic" id="tipDisplay"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function scanResume() {
+        const btn = document.getElementById('scanBtn');
+        const results = document.getElementById('results');
+        const text = document.getElementById('resume').value;
+        const role = document.getElementById('role').value;
+
+        if(text.length < 50) return alert("Please paste a resume.");
+
+        btn.disabled = true;
+        btn.innerText = "Scanning...";
+        
+        try {
+            const res = await fetch("{% url 'api_scan_resume' %}", {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}"},
+                body: JSON.stringify({ resume_text: text, target_role: role })
+            });
+            const data = await res.json();
+            
+            document.getElementById('scoreDisplay').innerText = data.score + "/100";
+            document.getElementById('tipDisplay').innerText = "💡 Tip: " + data.tip;
+            
+            const kwContainer = document.getElementById('missingKeywords');
+            kwContainer.innerHTML = data.missing.map(k => 
+                `<span class="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-bold">${k}</span>`
+            ).join('');
+
+            results.classList.remove('hidden');
+        } catch(e) {
+            alert("Error scanning resume.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Scan My Resume";
+        }
+    }
+</script>
+{% endblock %}
