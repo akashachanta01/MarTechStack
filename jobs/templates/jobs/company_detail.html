@@ -1,0 +1,32 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ company_name }} Marketing Jobs & Careers | MarTechJobs{% endblock %}
+{% block meta_description %}Browse {{ jobs.count }} open Marketing Operations and Technology roles at {{ company_name }}. See salaries, tech stack requirements, and apply directly.{% endblock %}
+
+{% block content %}
+<div class="bg-white border-b border-slate-100 py-16">
+    <div class="max-w-5xl mx-auto px-4 text-center">
+        {% if company_logo %}
+        <div class="w-24 h-24 mx-auto bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center mb-6 shadow-sm">
+            <img src="{{ company_logo }}" alt="{{ company_name }}" class="max-w-full max-h-full object-contain">
+        </div>
+        {% endif %}
+        
+        <h1 class="text-4xl font-serif font-bold text-slate-900 mb-2">
+            {{ company_name }} Careers
+        </h1>
+        <p class="text-slate-500">
+            We found <strong>{{ jobs.count }}</strong> active marketing technology roles.
+        </p>
+    </div>
+</div>
+
+<div class="bg-slate-50 py-12 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 space-y-4">
+        {% for job in jobs %}
+            {% include "jobs/partials/job_card.html" with job=job %} {% empty %}
+            <p>No active jobs found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
