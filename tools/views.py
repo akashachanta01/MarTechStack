@@ -116,3 +116,16 @@ def sf_id_converter(request):
         'seo_title': "Salesforce 15 to 18 Character ID Converter",
         'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs instantly. Essential for Admins."
     })
+    # --- 6. NEW: CONSULTANT RATE CALCULATOR ---
+def rate_calculator(request):
+    return render(request, 'tools/rate_calculator.html', {
+        'seo_title': "Freelance MarTech Consultant Rate Calculator",
+        'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience."
+    })
+
+# --- 7. NEW: UTM BUILDER ---
+def utm_builder(request):
+    return render(request, 'tools/utm_builder.html', {
+        'seo_title': "Google Analytics Campaign URL Builder (UTM Generator)",
+        'seo_description': "Easily build tracking URLs for your marketing campaigns. The cleanest UTM builder for Marketing Ops pros."
+    })
