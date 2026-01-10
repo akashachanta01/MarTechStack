@@ -1,0 +1,100 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-purple-100 text-purple-800 px-3 py-1 rounded-full uppercase tracking-wide">AI Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Text-to-SQL Generator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Write marketing queries without knowing code. Supports Salesforce SOQL, Snowflake, and BigQuery.
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex gap-4 mb-4">
+                <select id="flavor" class="border border-slate-300 rounded p-2 text-sm font-bold bg-slate-50">
+                    <option value="Standard SQL">Standard SQL</option>
+                    <option value="Salesforce SOQL">Salesforce SOQL</option>
+                    <option value="Snowflake">Snowflake</option>
+                    <option value="Google BigQuery">BigQuery</option>
+                </select>
+            </div>
+            
+            <textarea id="queryInput" rows="3" class="w-full border-2 border-slate-200 rounded-lg p-4 text-base focus:border-purple-500 outline-none transition" 
+                placeholder="e.g. Find all customers from 'California' who opened an email in the last 30 days and spent over $500..."></textarea>
+            
+            <button onclick="generateSQL()" id="genBtn" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition w-full md:w-auto flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">auto_awesome</span> Generate Query
+            </button>
+        </div>
+
+        <div class="mt-8 relative">
+            <div id="loader" class="hidden absolute inset-0 bg-slate-50/80 flex items-center justify-center z-10">
+                <div class="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+            </div>
+            
+            <pre class="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm overflow-x-auto shadow-inner min-h-[150px] flex items-center" id="sqlOutput">
+-- Your generated SQL will appear here...
+            </pre>
+            
+            <button onclick="copySQL()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition">
+                <span class="material-symbols-outlined">content_copy</span>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    async function generateSQL() {
+        const query = document.getElementById('queryInput').value;
+        const flavor = document.getElementById('flavor').value;
+        const btn = document.getElementById('genBtn');
+        const output = document.getElementById('sqlOutput');
+        const loader = document.getElementById('loader');
+
+        if(!query) return alert("Please describe your query first.");
+
+        btn.disabled = true;
+        loader.classList.remove('hidden');
+
+        try {
+            const response = await fetch("{% url 'api_generate_sql' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ query, flavor })
+            });
+
+            const data = await response.json();
+            
+            if(data.sql) {
+                output.innerText = data.sql;
+            } else {
+                output.innerText = "-- Error: " + (data.error || "Could not generate SQL.");
+            }
+
+        } catch(e) {
+            output.innerText = "-- Network Error. Please try again.";
+        } finally {
+            btn.disabled = false;
+            loader.classList.add('hidden');
+        }
+    }
+
+    function copySQL() {
+        const text = document.getElementById('sqlOutput').innerText;
+        navigator.clipboard.writeText(text);
+        alert("Copied to clipboard!");
+    }
+</script>
+{% endblock %}
