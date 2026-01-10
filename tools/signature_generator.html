@@ -1,0 +1,126 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-6xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-orange-100 text-orange-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Email Signature Generator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Create a professional signature for HubSpot, Gmail, or Outlook.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
+                <h3 class="font-bold text-slate-900 mb-4">Your Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">First Name</label>
+                        <input type="text" id="firstName" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="Jane">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Last Name</label>
+                        <input type="text" id="lastName" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Job Title</label>
+                        <input type="text" id="jobTitle" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="Marketing Manager">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Company</label>
+                        <input type="text" id="company" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="Acme Corp">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone</label>
+                        <input type="text" id="phone" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="+1 (555) 000-0000">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Website</label>
+                        <input type="text" id="website" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="www.example.com">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Photo / Logo URL</label>
+                        <input type="text" id="photoUrl" class="sig-input w-full border border-slate-300 rounded p-2 text-sm" placeholder="https://...">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Theme Color</label>
+                        <input type="color" id="themeColor" value="#ff5c35" class="sig-input w-full h-10 border border-slate-300 rounded cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-lg flex flex-col justify-center relative">
+                <div class="absolute -top-3 -right-3 bg-orange-500 text-white px-3 py-1 text-xs font-bold rounded shadow-sm">Live Preview</div>
+                
+                <div id="signaturePreview" class="p-6 border border-dashed border-slate-300 rounded-lg bg-slate-50 mb-6 overflow-hidden">
+                    </div>
+
+                <button onclick="copySignature()" class="w-full bg-black text-white font-bold py-3 rounded hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">content_copy</span> Copy Signature
+                </button>
+                
+                <p class="text-xs text-center text-slate-400 mt-4">
+                    Looking for a new role? <a href="/" class="underline hover:text-black">Browse HubSpot Jobs</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function renderSignature() {
+        const data = {
+            fn: document.getElementById('firstName').value || 'Jane',
+            ln: document.getElementById('lastName').value || 'Doe',
+            title: document.getElementById('jobTitle').value || 'Marketing Manager',
+            co: document.getElementById('company').value || 'Acme Corp',
+            phone: document.getElementById('phone').value || '',
+            web: document.getElementById('website').value || 'www.example.com',
+            color: document.getElementById('themeColor').value || '#ff5c35',
+            photo: document.getElementById('photoUrl').value
+        };
+
+        const imgHtml = data.photo ? `<img src="${data.photo}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-right: 15px;" />` : '';
+
+        const html = `
+            <table cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <tr>
+                    ${data.photo ? `<td style="vertical-align: top;">${imgHtml}</td>` : ''}
+                    <td style="vertical-align: top;">
+                        <div style="font-weight: bold; font-size: 16px; color: #000;">${data.fn} ${data.ln}</div>
+                        <div style="color: #666; margin-bottom: 5px;">${data.title} | <strong>${data.co}</strong></div>
+                        <div style="height: 2px; width: 30px; background-color: ${data.color}; margin-bottom: 8px;"></div>
+                        ${data.phone ? `<div style="margin-bottom: 2px;"><a href="tel:${data.phone}" style="color: #333; text-decoration: none;">${data.phone}</a></div>` : ''}
+                        <div><a href="https://${data.web}" style="color: ${data.color}; text-decoration: none; font-weight: bold;">${data.web}</a></div>
+                    </td>
+                </tr>
+            </table>
+        `;
+        document.getElementById('signaturePreview').innerHTML = html;
+    }
+
+    function copySignature() {
+        const range = document.createRange();
+        range.selectNode(document.getElementById('signaturePreview'));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        alert("Signature copied! Paste it into your email settings.");
+    }
+
+    document.querySelectorAll('.sig-input').forEach(input => {
+        input.addEventListener('input', renderSignature);
+    });
+    
+    // Initial render
+    document.addEventListener('DOMContentLoaded', renderSignature);
+</script>
+{% endblock %}
