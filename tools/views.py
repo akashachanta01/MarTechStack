@@ -123,9 +123,54 @@ def rate_calculator(request):
         'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience."
     })
 
+
+# ... (Keep your existing imports) ...
+
+# --- 6. NEW: QR CODE GENERATOR ---
+def qr_generator(request):
+    return render(request, 'tools/qr_generator.html', {
+        'seo_title': "Free HubSpot QR Code Generator with UTM Tracking",
+        'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking."
+    })
+
 # --- 7. NEW: UTM BUILDER ---
 def utm_builder(request):
     return render(request, 'tools/utm_builder.html', {
-        'seo_title': "Google Analytics Campaign URL Builder (UTM Generator)",
-        'seo_description': "Easily build tracking URLs for your marketing campaigns. The cleanest UTM builder for Marketing Ops pros."
+        'seo_title': "Bulk UTM Link Builder for Marketers",
+        'seo_description': "The fastest way to build Google Analytics tracking links. Save your presets for consistency across your team."
     })
+
+# --- 8. NEW: TEXT TO SQL ---
+def sql_generator(request):
+    return render(request, 'tools/sql_generator.html', {
+        'seo_title': "AI Text-to-SQL Generator for Marketing Data",
+        'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required."
+    })
+
+@require_POST
+def api_generate_sql(request):
+    try:
+        data = json.loads(request.body)
+        query = data.get('query')
+        flavor = data.get('flavor') # e.g. Postgres, Snowflake, SOQL
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
+
+        client = OpenAI(api_key=api_key)
+        prompt = f"""
+        You are an expert Data Engineer. Convert this marketing question into a SQL query.
+        SQL Flavor: {flavor}
+        Question: "{query}"
+        
+        Return ONLY the raw SQL code block. Do not wrap it in markdown ticks.
+        Format it for readability.
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a SQL expert."}, {"role": "user", "content": prompt}]
+        )
+        return JsonResponse({"sql": completion.choices[0].message.content.strip()})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
