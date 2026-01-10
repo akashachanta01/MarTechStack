@@ -5,73 +5,114 @@
 
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-12">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-6xl mx-auto px-4">
         
         <div class="text-center mb-10">
             <span class="text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
             <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
-                Job Description Generator
+                AI Job Description Generator
             </h1>
             <p class="text-lg text-slate-600">
-                Stop writing from scratch. Generate a perfect <strong>{{ role_title }}</strong> JD in seconds.
+                Generate a perfectly tailored <strong>MarTech JD</strong> in seconds using AI.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
-                <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-green-700">tune</span> Configuration
-                </h3>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role Title</label>
-                        <input type="text" id="roleInput" value="{{ role_title }}" class="w-full border border-slate-300 rounded p-2 text-sm font-bold text-slate-900">
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-4">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm sticky top-24">
+                    <h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-green-700">tune</span> Configuration
+                    </h3>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role Title</label>
+                            <input type="text" id="roleInput" value="{{ role_title }}" class="w-full border border-slate-300 rounded-lg p-3 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-green-500 outline-none">
+                        </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tech Stack (Optional)</label>
-                        <input type="text" id="stackInput" placeholder="e.g. HubSpot, Salesforce" class="w-full border border-slate-300 rounded p-2 text-sm">
-                    </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Seniority Level</label>
+                            <select id="seniorityInput" class="w-full border border-slate-300 rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-green-500 outline-none">
+                                <option value="Mid-Level">Mid-Level (Standard)</option>
+                                <option value="Junior / Associate">Junior / Associate</option>
+                                <option value="Senior">Senior</option>
+                                <option value="Lead / Principal">Lead / Principal</option>
+                                <option value="Director / VP">Director / VP</option>
+                            </select>
+                        </div>
 
-                    <button onclick="updateJD()" class="w-full bg-black text-white font-bold py-3 rounded hover:bg-slate-800 transition">
-                        ⚡ Generate Description
-                    </button>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tech Stack</label>
+                            <input type="text" id="stackInput" placeholder="e.g. HubSpot, Salesforce, Snowflake" class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tone</label>
+                            <select id="toneInput" class="w-full border border-slate-300 rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-green-500 outline-none">
+                                <option value="Professional & Corporate">Professional & Corporate</option>
+                                <option value="Exciting & Startup-like">Exciting & Startup-like</option>
+                                <option value="Technical & Precise">Technical & Precise</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generateJD()" id="genBtn" class="w-full bg-black text-white font-bold py-4 rounded-lg hover:bg-slate-800 transition flex items-center justify-center gap-2 shadow-lg">
+                            <span class="material-symbols-outlined">auto_awesome</span> Generate with AI
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-xl border-2 border-green-700 shadow-lg relative">
-                <div class="absolute -top-3 -right-3 bg-green-600 text-white px-3 py-1 text-xs font-bold rounded shadow-sm">
-                    Ready to Copy
-                </div>
-
-                <div id="jdOutput" class="prose prose-sm prose-slate max-w-none">
-                    <h2 class="text-2xl font-bold text-slate-900 mb-4" id="outTitle">{{ role_title }}</h2>
-                    <p class="mb-4">
-                        We are looking for a <span class="font-bold" id="outRole">{{ role_title }}</span> to join our team. 
-                        You will own our marketing infrastructure and drive efficiency across the funnel.
-                    </p>
+            <div class="lg:col-span-8">
+                <div class="bg-white p-8 rounded-xl border-2 border-green-700 shadow-xl relative min-h-[600px] flex flex-col">
                     
-                    <h4 class="font-bold text-slate-900 mb-2">Key Responsibilities</h4>
-                    <ul class="list-disc pl-5 mb-4 space-y-1">
-                        {% for resp in responsibilities %}
-                        <li>{{ resp }}</li>
-                        {% endfor %}
-                    </ul>
+                    <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <button onclick="copyToClipboard()" class="text-xs font-bold text-slate-500 hover:text-black flex items-center gap-1 transition">
+                            <span class="material-symbols-outlined text-sm">content_copy</span> Copy Text
+                        </button>
+                    </div>
 
-                    <h4 class="font-bold text-slate-900 mb-2">Requirements</h4>
-                    <ul class="list-disc pl-5 mb-6 space-y-1">
-                        {% for skill in skills %}
-                        <li>{{ skill }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                    <div id="loadingState" class="hidden absolute inset-0 bg-white/90 z-20 flex flex-col items-center justify-center">
+                        <div class="w-12 h-12 border-4 border-green-200 border-t-green-700 rounded-full animate-spin mb-4"></div>
+                        <p class="text-slate-900 font-bold animate-pulse">Drafting description...</p>
+                    </div>
 
-                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p class="text-sm text-slate-500 mb-3">Happy with this description?</p>
-                    <a href="{% url 'post_job' %}" class="block w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3 rounded shadow-md transition">
-                        Post this Job for Free &rarr;
-                    </a>
+                    <div id="jdOutput" class="prose prose-slate max-w-none flex-grow">
+                        <h1 class="text-3xl font-bold text-slate-900 mb-2" id="outTitle">{{ role_title }}</h1>
+                        
+                        <div id="aiContent">
+                            <h3>About the Role</h3>
+                            <p class="mb-4">
+                                We are looking for a <span class="font-bold">{{ role_title }}</span> to join our team. 
+                                You will own our marketing infrastructure and drive efficiency across the funnel.
+                            </p>
+                            
+                            <h3>Responsibilities</h3>
+                            <ul class="list-disc pl-5 mb-4 space-y-1">
+                                {% for resp in responsibilities %}
+                                <li>{{ resp }}</li>
+                                {% endfor %}
+                            </ul>
+
+                            <h3>Requirements</h3>
+                            <ul class="list-disc pl-5 mb-6 space-y-1">
+                                {% for skill in skills %}
+                                <li>{{ skill }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-slate-100 text-center bg-slate-50 -mx-8 -mb-8 p-8 rounded-b-lg">
+                        <p class="text-sm text-slate-500 mb-3">Does this look good?</p>
+                        <a href="{% url 'post_job' %}" class="inline-flex items-center justify-center gap-2 w-full md:w-auto px-8 bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+                            Post this Job for Free <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -80,26 +121,57 @@
 </div>
 
 <script>
-    function updateJD() {
-        const role = document.getElementById('roleInput').value;
-        const stack = document.getElementById('stackInput').value;
-        
-        document.getElementById('outTitle').innerText = role;
-        document.getElementById('outRole').innerText = role;
-        
-        // Client-side logic to insert the tech stack line
-        if(stack) {
-            const list = document.querySelector('#jdOutput ul');
-            // Check if we already added it to avoid duplicates
-            const existingStack = document.getElementById('stackItem');
-            if(existingStack) existingStack.remove();
+    async function generateJD() {
+        const btn = document.getElementById('genBtn');
+        const loader = document.getElementById('loadingState');
+        const aiContainer = document.getElementById('aiContent');
+        const titleDisplay = document.getElementById('outTitle');
 
-            const newItem = document.createElement('li');
-            newItem.id = 'stackItem';
-            newItem.innerHTML = `<strong>Stack Expertise:</strong> Proven experience managing ${stack} instances.`;
-            newItem.classList.add('bg-yellow-50', 'p-1', 'rounded'); 
-            list.prepend(newItem);
+        // Inputs
+        const role = document.getElementById('roleInput').value;
+        const seniority = document.getElementById('seniorityInput').value;
+        const stack = document.getElementById('stackInput').value;
+        const tone = document.getElementById('toneInput').value;
+
+        // UI Updates
+        btn.disabled = true;
+        loader.classList.remove('hidden');
+        titleDisplay.innerText = `${seniority} ${role}`;
+
+        try {
+            const response = await fetch("{% url 'api_generate_jd' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ role, seniority, stack, tone })
+            });
+
+            const data = await response.json();
+
+            if (data.html) {
+                aiContainer.innerHTML = data.html;
+            } else {
+                alert("Error generating text: " + (data.error || "Unknown error"));
+            }
+
+        } catch (e) {
+            alert("Network error. Please try again.");
+        } finally {
+            btn.disabled = false;
+            loader.classList.add('hidden');
         }
+    }
+
+    function copyToClipboard() {
+        const title = document.getElementById('outTitle').innerText;
+        const body = document.getElementById('aiContent').innerText;
+        const text = `${title}\n\n${body}`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard!");
+        });
     }
 </script>
 {% endblock %}
