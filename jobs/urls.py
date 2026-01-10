@@ -18,8 +18,10 @@ urlpatterns = [
     path('for-employers/', views.for_employers, name='for_employers'),
     path('contact/', views.contact, name='contact'),
 
-    # --- STANDARD SEO: TOOL LANDING PAGES ---
-    path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
+    # --- SEO STRATEGY IMPLEMENTATION ---
+    # OLD: path('stack/<slug:slug>/', views.tool_detail, name='tool_detail'),
+    # NEW: Direct mapping for Tech Stacks (e.g. /jobs/salesforce/)
+    path('jobs/<slug:slug>/', views.tool_detail, name='tool_detail'),
     
     # --- SEO: JOB DETAIL PAGE ---
     path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
@@ -35,6 +37,7 @@ urlpatterns = [
     path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
 
     # --- PROGRAMMATIC SEO (Must be last) ---
+    # Catches /remote/salesforce-jobs/ or /new-york/jobs/
     path('<str:location_slug>/<slug:tool_slug>-jobs/', views.seo_landing_page, name='seo_tool_loc'),
     path('<str:location_slug>/jobs/', views.seo_landing_page, name='seo_loc_only'),
 ]
