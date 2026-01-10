@@ -1,0 +1,91 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-3xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Salesforce ID Converter
+            </h1>
+            <p class="text-lg text-slate-600">
+                Convert 15-character case-sensitive IDs to 18-character case-insensitive IDs.
+            </p>
+        </div>
+
+        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-900 mb-2">Enter 15-Char ID</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="inputID" class="w-full border-2 border-slate-300 rounded-lg p-4 font-mono text-lg uppercase focus:border-blue-500 outline-none" placeholder="0013000000abcde" maxlength="15">
+                        <button onclick="convertID()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded-lg transition">
+                            Convert
+                        </button>
+                    </div>
+                    <p class="text-xs text-red-500 mt-2 hidden" id="errorMsg">Please enter exactly 15 characters.</p>
+                </div>
+
+                <div class="p-6 bg-slate-100 rounded-lg text-center relative border border-slate-200">
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mb-2 font-bold">18-Character Result</p>
+                    <div class="text-3xl font-mono font-bold text-slate-900 select-all" id="outputID">...</div>
+                    <button onclick="copyOutput()" class="absolute top-4 right-4 text-slate-400 hover:text-blue-600">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center bg-blue-50 border border-blue-100 p-6 rounded-xl">
+            <h3 class="font-bold text-blue-900 mb-2">Why do I need this?</h3>
+            <p class="text-sm text-blue-800/80 leading-relaxed max-w-lg mx-auto">
+                Salesforce uses case-sensitive IDs (15-char) internally, but tools like Excel often corrupt them by treating "001A..." and "001a..." as the same. The 18-char ID adds a 3-character checksum to prevent data loss.
+            </p>
+            <div class="mt-4 pt-4 border-t border-blue-200">
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-blue-700 hover:underline">Find a Salesforce Admin Job &rarr;</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function convertID() {
+        const input = document.getElementById('inputID').value.trim();
+        const output = document.getElementById('outputID');
+        const error = document.getElementById('errorMsg');
+
+        if (input.length !== 15) {
+            error.classList.remove('hidden');
+            output.innerText = "...";
+            return;
+        }
+        error.classList.add('hidden');
+
+        let suffix = "";
+        for (let i = 0; i < 3; i++) {
+            let flags = 0;
+            for (let j = 0; j < 5; j++) {
+                const char = input.charAt(i * 5 + j);
+                if (char >= 'A' && char <= 'Z') {
+                    flags += (1 << j);
+                }
+            }
+            suffix += "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345".charAt(flags);
+        }
+
+        output.innerText = input + suffix;
+    }
+
+    function copyOutput() {
+        const text = document.getElementById('outputID').innerText;
+        if(text === "...") return;
+        navigator.clipboard.writeText(text);
+        alert("Copied 18-char ID!");
+    }
+</script>
+{% endblock %}
