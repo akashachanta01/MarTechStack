@@ -146,8 +146,52 @@ def sql_generator(request):
         'seo_title': "AI Text-to-SQL Generator for Marketing Data",
         'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required."
     })
+    
+# --- NEW: RESUME SCANNER ---
+def resume_scanner(request):
+    return render(request, 'tools/resume_scanner.html', {
+        'seo_title': "Free ATS Resume Scanner for Marketing Ops",
+        'seo_description': "Check your resume against MarTech job descriptions. Find missing keywords like SQL, Marketo, and API integration."
+    })
 
 @require_POST
+def api_scan_resume(request):
+    try:
+        data = json.loads(request.body)
+        resume_text = data.get('resume_text', '')
+        target_role = data.get('target_role', 'Marketing Operations Manager')
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
+
+        client = OpenAI(api_key=api_key)
+        
+        # We ask AI to act as an ATS
+        prompt = f"""
+        Act as an ATS (Applicant Tracking System) for a {target_role} role.
+        
+        Analyze this resume text:
+        "{resume_text[:3000]}"
+        
+        Identify:
+        1. A Match Score (0-100)
+        2. 3 Critical Missing Keywords (Technical skills only, e.g. SQL, Marketo, Python)
+        3. 1 Actionable Improvement Tip
+        
+        Output JSON: {{ "score": 85, "missing": ["SQL", "Looker"], "tip": "..." }}
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        
+        return JsonResponse(json.loads(completion.choices[0].message.content))
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 def api_generate_sql(request):
     try:
         data = json.loads(request.body)
@@ -174,3 +218,5 @@ def api_generate_sql(request):
         return JsonResponse({"sql": completion.choices[0].message.content.strip()})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+        
