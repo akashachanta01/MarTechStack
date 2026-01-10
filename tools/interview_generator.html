@@ -1,0 +1,113 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-5xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Interview Question Generator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Preparing for an interview? Generate tailored technical questions instantly.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 md:p-8 bg-slate-900 text-white">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Target Role</label>
+                        <input type="text" id="roleInput" value="Marketing Operations Manager" class="w-full bg-slate-800 border border-slate-700 rounded p-2.5 text-sm text-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Tech Stack</label>
+                        <input type="text" id="stackInput" value="Salesforce Marketing Cloud" class="w-full bg-slate-800 border border-slate-700 rounded p-2.5 text-sm text-white focus:border-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Difficulty</label>
+                        <select id="diffInput" class="w-full bg-slate-800 border border-slate-700 rounded p-2.5 text-sm text-white focus:border-indigo-500 outline-none">
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Expert / Architect">Expert / Architect</option>
+                            <option value="Entry Level">Entry Level</option>
+                        </select>
+                    </div>
+                    <button onclick="generateQuestions()" id="genBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded transition shadow-lg w-full">
+                        Generate
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-8 min-h-[400px] relative">
+                <div id="loading" class="hidden absolute inset-0 bg-white flex flex-col items-center justify-center z-10">
+                    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-indigo-600 font-bold animate-pulse">Generating technical questions...</p>
+                </div>
+
+                <div id="output" class="prose prose-slate max-w-none">
+                    <div class="text-center text-slate-400 py-12">
+                        <span class="material-symbols-outlined text-4xl mb-2">quiz</span>
+                        <p>Configure the settings above and click <strong>Generate</strong> to see questions.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 border-t border-slate-100 p-4 text-center">
+                <p class="text-sm text-slate-500">
+                    Hiring for this role? <a href="{% url 'post_job' %}" class="text-indigo-600 font-bold hover:underline">Post a job on MarTechJobs &rarr;</a>
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    async function generateQuestions() {
+        const btn = document.getElementById('genBtn');
+        const output = document.getElementById('output');
+        const loader = document.getElementById('loading');
+
+        const role = document.getElementById('roleInput').value;
+        const stack = document.getElementById('stackInput').value;
+        const difficulty = document.getElementById('diffInput').value;
+
+        btn.disabled = true;
+        btn.classList.add('opacity-50');
+        loader.classList.remove('hidden');
+
+        try {
+            const response = await fetch("{% url 'api_generate_interview' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ role, stack, difficulty })
+            });
+
+            const data = await response.json();
+            
+            if(data.html) {
+                output.innerHTML = `
+                    <h3 class="text-2xl font-bold text-slate-900 mb-6">Interview Guide: ${stack}</h3>
+                    ${data.html}
+                `;
+            } else {
+                output.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+            }
+
+        } catch(e) {
+            alert("Network error.");
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+            loader.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}
