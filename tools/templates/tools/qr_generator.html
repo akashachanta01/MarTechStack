@@ -1,0 +1,120 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ seo_title }}{% endblock %}
+{% block meta_description %}{{ seo_description }}{% endblock %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<div class="bg-slate-50 min-h-screen py-12">
+    <div class="max-w-5xl mx-auto px-4">
+        
+        <div class="text-center mb-10">
+            <span class="text-xs font-bold bg-orange-100 text-orange-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Trackable QR Generator
+            </h1>
+            <p class="text-lg text-slate-600">
+                Create QR codes with built-in attribution for HubSpot & GA4.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm h-fit">
+                <h3 class="font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">1. Destination & Tracking</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Website URL</label>
+                        <input type="url" id="base_url" placeholder="https://yoursite.com" class="w-full border-2 border-slate-200 rounded p-3 text-sm focus:border-orange-500 outline-none" oninput="updateQR()">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Source</label>
+                            <input type="text" id="utm_source" placeholder="flyer_qr" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Medium</label>
+                            <input type="text" id="utm_medium" value="qr_code" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Name</label>
+                        <input type="text" id="utm_campaign" placeholder="spring_event_2026" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl border-2 border-orange-500 shadow-lg flex flex-col items-center justify-center text-center">
+                <div id="qrcode" class="mb-6 p-4 bg-white"></div>
+                <div id="finalLink" class="text-xs text-slate-400 font-mono break-all mb-6 max-w-xs"></div>
+                
+                <button onclick="downloadQR()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition flex items-center gap-2">
+                    <span class="material-symbols-outlined">download</span> Download Image
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-12 text-center">
+            <p class="text-sm text-slate-500">
+                Need someone to manage your offline campaigns? <a href="{% url 'job_list' %}" class="text-orange-600 font-bold hover:underline">Hire a Marketing Manager</a>
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let qrcodeObj = null;
+
+    function updateQR() {
+        const base = document.getElementById('base_url').value;
+        if(!base) return;
+
+        const source = document.getElementById('utm_source').value;
+        const medium = document.getElementById('utm_medium').value;
+        const campaign = document.getElementById('utm_campaign').value;
+
+        let finalUrl = base;
+        const params = [];
+        if(source) params.push(`utm_source=${encodeURIComponent(source)}`);
+        if(medium) params.push(`utm_medium=${encodeURIComponent(medium)}`);
+        if(campaign) params.push(`utm_campaign=${encodeURIComponent(campaign)}`);
+
+        if(params.length > 0) {
+            finalUrl += (base.includes('?') ? '&' : '?') + params.join('&');
+        }
+
+        document.getElementById('finalLink').innerText = finalUrl;
+
+        // Clear and Redraw
+        const container = document.getElementById('qrcode');
+        container.innerHTML = "";
+        
+        qrcodeObj = new QRCode(container, {
+            text: finalUrl,
+            width: 200,
+            height: 200,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    }
+
+    function downloadQR() {
+        const img = document.querySelector('#qrcode img');
+        if(img) {
+            const link = document.createElement('a');
+            link.download = 'hubspot-campaign-qr.png';
+            link.href = img.src;
+            link.click();
+        } else {
+            alert("Please enter a URL first.");
+        }
+    }
+    
+    // Init
+    updateQR();
+</script>
+{% endblock %}
