@@ -19,6 +19,9 @@ urlpatterns = [
     path('consultant-rate-calculator/', views.consultant_calculator, name='consultant_calculator'),
     path('resume-keyword-scanner/', views.resume_scanner, name='resume_scanner'),
     path('api/scan-resume/', views.api_scan_resume, name='api_scan_resume'),
+    path('roas-calculator/', views.roas_calculator, name='roas_calculator'),
+    path('email-subject-line-tester/', views.subject_line_tester, name='subject_line_tester'),
+    path('api/test-subject-line/', views.api_test_subject_line, name='api_test_subject_line'),
 
     # Dynamic Matcher (LAST)
     path('<slug:slug>/', views.jd_generator, name='tool_dynamic'),
