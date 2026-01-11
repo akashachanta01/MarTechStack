@@ -8,47 +8,151 @@
     <div class="max-w-3xl mx-auto px-4">
         
         <div class="text-center mb-10">
-            <h1 class="text-4xl font-serif font-bold text-slate-900 mb-4">UTM Link Builder</h1>
-            <p class="text-lg text-slate-600">Build trackable URLs for Google Analytics, HubSpot, and Salesforce.</p>
+            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
+            <h1 class="text-4xl font-serif font-bold text-slate-900 mt-4 mb-4">
+                Bulk UTM Link Builder
+            </h1>
+            <p class="text-lg text-slate-600">
+                Build trackable URLs for Google Analytics, HubSpot, and Salesforce.
+            </p>
         </div>
 
-        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mb-8">
+        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mb-16">
             <div class="space-y-5">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Website URL *</label>
-                    <input type="url" id="utm_base" placeholder="https://www.martechjobs.io" class="w-full border-2 border-slate-200 rounded p-3 focus:border-blue-500 outline-none">
+                    <input type="url" id="utm_base" placeholder="https://www.martechjobs.io" class="w-full border-2 border-slate-200 rounded p-3 focus:border-blue-500 outline-none transition">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Source (e.g. google, linkedin)</label>
-                        <input type="text" id="utm_source" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                        <input type="text" id="utm_source" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Medium (e.g. cpc, email)</label>
-                        <input type="text" id="utm_medium" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                        <input type="text" id="utm_medium" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none transition">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Name</label>
-                    <input type="text" id="utm_campaign" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none">
+                    <input type="text" id="utm_campaign" class="w-full border border-slate-200 rounded p-3 text-sm focus:border-blue-500 outline-none transition">
                 </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 relative mt-8">
+                <p class="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">Your Trackable Link</p>
+                <div id="utm_result" class="font-mono text-sm text-blue-900 break-all bg-white p-4 rounded border border-blue-100 mb-4 select-all">
+                    Complete the form above...
+                </div>
+                <button onclick="copyUtm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition w-full md:w-auto flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">content_copy</span> Copy Link
+                </button>
             </div>
         </div>
 
-        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 relative">
-            <p class="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">Your Trackable Link</p>
-            <div id="utm_result" class="font-mono text-sm text-blue-900 break-all bg-white p-4 rounded border border-blue-100 mb-4 select-all">
-                Complete the form above...
+        <article class="prose prose-slate max-w-none">
+            
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">What are UTM Parameters?</h2>
+            <p>
+                UTM (Urchin Tracking Module) parameters are simple tags that you add to the end of a URL. When a user clicks that URL, the tags are sent back to your analytics platform (like Google Analytics 4, HubSpot, or Adobe Analytics) to tell you exactly where that user came from.
+            </p>
+            <p>
+                Without UTMs, your analytics will likely dump a significant portion of your traffic into the dreaded "Direct" bucket, making it impossible to prove the ROI of your email, social, or paid ad campaigns.
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">The 5 Standard UTM Tags</h3>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>utm_source:</strong> The referrer (e.g., <code>google</code>, <code>newsletter</code>, <code>linkedin</code>).</li>
+                <li><strong>utm_medium:</strong> The marketing medium (e.g., <code>cpc</code>, <code>email</code>, <code>social</code>).</li>
+                <li><strong>utm_campaign:</strong> The specific campaign name (e.g., <code>summer_sale</code>, <code>webinar_launch</code>).</li>
+                <li><strong>utm_term:</strong> (Optional) Identify paid search keywords.</li>
+                <li><strong>utm_content:</strong> (Optional) Differentiate links that point to the same URL (e.g., <code>header_link</code> vs <code>footer_link</code>).</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Best Practices for Campaign Tagging</h2>
+            <p>
+                Data hygiene is critical in Marketing Operations. Inconsistent tagging is the #1 reason for broken attribution reports.
+            </p>
+            <ol class="list-decimal pl-5 mb-6">
+                <li><strong>Use Lowercase Only:</strong> Analytics tools are often case-sensitive. <code>Email</code> and <code>email</code> will show up as two different rows. Stick to lowercase to avoid fragmentation.</li>
+                <li><strong>Use Underscores, Not Spaces:</strong> Spaces in URLs become <code>%20</code>, which looks messy and can break tracking scripts. Use <code>summer_sale</code> instead of <code>summer sale</code>.</li>
+                <li><strong>Be Consistent:</strong> Don't switch between <code>facebook</code> and <code>facebook-ads</code>. Pick a taxonomy and stick to it.</li>
+            </ol>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Do UTM parameters affect SEO?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">No, Google ignores UTM parameters when crawling your site for ranking purposes. However, it is best practice to use a canonical tag on your page to ensure the "clean" URL is the one indexed.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Can I use UTMs on internal links?</summary>
+                    <p class="mt-2 text-slate-600 text-sm"><strong>Never use UTMs on internal links.</strong> Doing so overwrites the original session source. For example, if a user comes from Google, and then clicks an internal banner with UTMs, their session will reset, and the credit for the sale will go to the internal banner instead of Google.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Will this work with GA4?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Yes, Google Analytics 4 (GA4) uses the exact same standard UTM parameters as Universal Analytics.</p>
+                </details>
             </div>
-            <button onclick="copyUtm()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition w-full md:w-auto">
-                Copy Link
-            </button>
+
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-blue-50 border border-blue-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Marketing Analytics Jobs</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-blue-700 hover:underline">View all roles &rarr;</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" class="w-10 h-10 object-contain rounded border border-slate-100">
+                        {% else %}
+                            <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400">{{ job.company|slice:":1" }}</div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-blue-600 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
 
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Do UTM parameters affect SEO?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No, Google ignores UTM parameters when crawling your site. However, always use a self-referencing canonical tag on your pages to prevent duplicate content issues."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Can I use UTMs on internal links?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. Never use UTM parameters on internal links (e.g., from your homepage to your pricing page). This overwrites the original traffic source and destroys your attribution data."
+    }
+  }]
+}
+</script>
 
 <script>
     const inputs = ['utm_base', 'utm_source', 'utm_medium', 'utm_campaign'];
@@ -66,9 +170,9 @@
 
         try {
             const url = new URL(base);
-            if(source) url.searchParams.set('utm_source', source);
-            if(medium) url.searchParams.set('utm_medium', medium);
-            if(campaign) url.searchParams.set('utm_campaign', campaign);
+            if(source) url.searchParams.set('utm_source', source.toLowerCase().replace(/ /g, '_'));
+            if(medium) url.searchParams.set('utm_medium', medium.toLowerCase().replace(/ /g, '_'));
+            if(campaign) url.searchParams.set('utm_campaign', campaign.toLowerCase().replace(/ /g, '_'));
             
             document.getElementById('utm_result').innerText = url.toString();
         } catch(e) {
