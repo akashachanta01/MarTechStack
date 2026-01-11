@@ -6,11 +6,8 @@
 
 {% block content %}
 <style>
-    /* Custom Design Tokens */
     .font-serif { font-family: 'Playfair Display', serif; }
     .font-mono-tag { font-family: 'JetBrains Mono', monospace; }
-    
-    /* Subtle Grid Background */
     .bg-grid-slate {
         background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
         background-size: 40px 40px;
@@ -41,27 +38,27 @@
             <div class="relative overflow-hidden rounded-md border border-slate-200 aspect-[16/9] bg-slate-50 flex items-center justify-center group-hover:shadow-lg transition-all duration-500">
                 
                 {% if "salary" in featured_post.slug and "2026" in featured_post.slug %}
-                    <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover" alt="MarTech Salary Guide 2026 Chart">
                 {% elif "salary" in featured_post.slug %}
-                    <img src="{% static 'images/salary_chart_2025.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/salary_chart_2025.svg' %}" class="w-full h-full object-cover" alt="Marketing Operations Salary Trends">
                 {% elif "salesforce" in featured_post.slug or "agentforce" in featured_post.slug %}
                     {% if "marketing-cloud" in featured_post.slug %}
-                        <img src="{% static 'images/marketing_cloud_2026.svg' %}" class="w-full h-full object-cover">
+                        <img src="{% static 'images/marketing_cloud_2026.svg' %}" class="w-full h-full object-cover" alt="Salesforce Marketing Cloud Diagram">
                     {% elif "admin" in featured_post.slug %}
-                        <img src="{% static 'images/salesforce_admin_zero_copy.svg' %}" class="w-full h-full object-cover">
+                        <img src="{% static 'images/salesforce_admin_zero_copy.svg' %}" class="w-full h-full object-cover" alt="Salesforce Admin Dashboard">
                     {% else %}
-                        <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover">
+                        <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover" alt="Salesforce Agentforce AI">
                     {% endif %}
                 {% elif "break-into" in featured_post.slug or "roadmap" in featured_post.slug %}
-                    <img src="{% static 'images/break_into_martech.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/break_into_martech.svg' %}" class="w-full h-full object-cover" alt="MarTech Career Roadmap">
                 {% elif "career-paths" in featured_post.slug or "job-titles" in featured_post.slug %}
-                    <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover" alt="Career Paths Hierarchy">
                 {% elif "resume" in featured_post.slug or "portfolio" in featured_post.slug %}
-                    <img src="{% static 'images/portfolio_graphic.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/portfolio_graphic.svg' %}" class="w-full h-full object-cover" alt="Marketing Portfolio Example">
                 {% elif "interview" in featured_post.slug %}
-                    <img src="{% static 'images/interview_strategy.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/interview_strategy.svg' %}" class="w-full h-full object-cover" alt="Interview Strategy Guide">
                 {% elif "sql" in featured_post.slug or "technical" in featured_post.slug %}
-                    <img src="{% static 'images/tech_skills_matrix.svg' %}" class="w-full h-full object-cover">
+                    <img src="{% static 'images/tech_skills_matrix.svg' %}" class="w-full h-full object-cover" alt="Technical Skills Matrix">
                 {% else %}
                     <div class="text-center opacity-20">
                         <span class="material-symbols-outlined text-black text-8xl mb-4">auto_stories</span>
@@ -88,7 +85,7 @@
                 
                 <div class="flex items-center gap-4">
                     <div class="size-12 rounded-full overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center p-2">
-                        <img src="{% static 'logo.svg' %}" alt="MarTechJobs" class="w-full h-full object-contain opacity-80">
+                        <img src="{% static 'logo.svg' %}" alt="MarTechJobs Logo" class="w-full h-full object-contain opacity-80">
                     </div>
                     <div>
                         <p class="text-slate-900 font-bold text-sm">{{ featured_post.author }}</p>
@@ -106,36 +103,11 @@
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             
             <nav aria-label="Blog categories" class="flex overflow-x-auto pb-2 md:pb-0 gap-2 w-full md:w-auto scrollbar-hide">
-                
-                <a href="{% url 'blog_list' %}" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if not current_category %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   All Posts
-                </a>
-
-                <a href="?category=Tech Stacks" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Tech Stacks' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   Tech Stacks
-                </a>
-
-                <a href="?category=Career Advice" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Career Advice' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   Career Advice
-                </a>
-
-                <a href="?category=Interview Guides" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Interview Guides' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   Interview Guides
-                </a>
-
-                <a href="?category=Salary Guides" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Salary Guides' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   Salary Guides
-                </a>
-
-                <a href="?category=Industry News" 
-                   class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Industry News' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">
-                   Industry News
-                </a>
+                <a href="{% url 'blog_list' %}" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if not current_category %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">All Posts</a>
+                <a href="?category=Tech Stacks" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Tech Stacks' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">Tech Stacks</a>
+                <a href="?category=Career Advice" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Career Advice' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">Career Advice</a>
+                <a href="?category=Interview Guides" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Interview Guides' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">Interview Guides</a>
+                <a href="?category=Salary Guides" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors border {% if current_category == 'Salary Guides' %}bg-[#1f432d] text-white border-transparent{% else %}bg-white text-slate-500 border-slate-200 hover:border-[#1f432d] hover:text-[#1f432d]{% endif %}">Salary Guides</a>
             </nav>
 
             <form method="get" action="{% url 'blog_list' %}" class="relative w-full md:w-64">
@@ -152,88 +124,29 @@
 
 <section class="py-16 bg-slate-50 min-h-[60vh]">
     <div class="w-full max-w-7xl mx-auto px-4 lg:px-8">
-        
-        {% if search_query or current_category %}
-            <div class="mb-8 text-center">
-                <h3 class="text-xl font-bold text-slate-900">
-                    Showing results for 
-                    <span class="text-[#1f432d]">
-                        {% if search_query %}"{{ search_query }}"{% endif %}
-                        {% if current_category %}[{{ current_category }}]{% endif %}
-                    </span>
-                </h3>
-                <a href="{% url 'blog_list' %}" class="text-sm text-slate-500 hover:underline">Clear Filters</a>
-            </div>
-        {% endif %}
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
             {% for post in posts %}
             <article class="group flex flex-col bg-white border border-slate-200 rounded-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full">
-                
                 <div class="relative aspect-[16/9] overflow-hidden bg-white border-b border-slate-100 flex items-center justify-center">
-                    
                     {% if "salary" in post.slug and "2026" in post.slug %}
-                        <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "salary" in post.slug %}
-                        <img src="{% static 'images/salary_chart_2025.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "salesforce" in post.slug or "agentforce" in post.slug %}
-                        {% if "marketing-cloud" in post.slug %}
-                            <img src="{% static 'images/marketing_cloud_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        {% elif "admin" in post.slug %}
-                            <img src="{% static 'images/salesforce_admin_zero_copy.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        {% else %}
-                            <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                        {% endif %}
-                    {% elif "break-into" in post.slug or "roadmap" in post.slug %}
-                        <img src="{% static 'images/break_into_martech.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "career-paths" in post.slug or "job-titles" in post.slug %}
-                        <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "resume" in post.slug or "portfolio" in post.slug %}
-                        <img src="{% static 'images/portfolio_graphic.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "interview" in post.slug %}
-                        <img src="{% static 'images/interview_strategy.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    {% elif "sql" in post.slug or "technical" in post.slug %}
-                        <img src="{% static 'images/tech_skills_matrix.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <img src="{% static 'images/salary_guide_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Salary Guide 2026">
+                    {% elif "salesforce" in post.slug %}
+                        <img src="{% static 'images/salesforce_agentforce.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Salesforce Topic">
+                    {% elif "career" in post.slug %}
+                        <img src="{% static 'images/martech_career_paths_2026.svg' %}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Career Paths">
                     {% else %}
                         <div class="absolute inset-0 bg-slate-50 group-hover:bg-slate-100 transition-colors"></div>
-                        <span class="material-symbols-outlined text-5xl text-slate-300 group-hover:text-[#1f432d] transition-colors duration-500 relative z-10">
-                            {% if 'sql' in post.title|lower %}database
-                            {% elif 'hubspot' in post.title|lower %}dns
-                            {% else %}article{% endif %}
-                        </span>
+                        <span class="material-symbols-outlined text-5xl text-slate-300 group-hover:text-[#1f432d] transition-colors duration-500 relative z-10">article</span>
                     {% endif %}
-
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag shadow-sm z-20">
-                        {{ post.category }}
-                    </div>
+                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide text-slate-900 font-mono-tag shadow-sm z-20">{{ post.category }}</div>
                 </div>
-
                 <div class="flex flex-col flex-grow p-6">
-                    <div class="flex items-center gap-2 text-xs text-slate-500 mb-3 font-mono-tag">
-                        <span class="material-symbols-outlined text-sm">calendar_today</span>
-                        <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time>
-                        <span class="text-slate-300">•</span>
-                        <span>{{ post.read_time }}</span>
-                    </div>
-                    
                     <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors line-clamp-2">
-                        <a href="{% url 'post_detail' post.slug %}">
-                            {{ post.title }}
-                        </a>
+                        <a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a>
                     </h3>
-                    
-                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow leading-relaxed">
-                        {{ post.excerpt }}
-                    </p>
-                    
+                    <p class="text-slate-500 text-sm mb-6 line-clamp-3 flex-grow leading-relaxed">{{ post.excerpt }}</p>
                     <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
-                        <div class="flex items-center gap-2">
-                            <div class="size-6 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden">
-                                <span class="text-[10px] font-bold text-slate-400">{{ post.author|slice:":1" }}</span>
-                            </div>
-                            <span class="text-xs font-bold text-slate-900">{{ post.author }}</span>
-                        </div>
+                        <span class="text-xs font-bold text-slate-900">{{ post.author }}</span>
                         <a class="text-[#1f432d] hover:text-green-800 text-sm font-medium flex items-center group/link" href="{% url 'post_detail' post.slug %}">
                             Read <span class="material-symbols-outlined text-sm ml-1 group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
                         </a>
@@ -241,14 +154,10 @@
                 </div>
             </article>
             {% empty %}
-                {% if search_query or current_category %}
                 <div class="col-span-full text-center py-12">
                     <p class="text-slate-500 text-lg">No posts found matching your criteria.</p>
-                    <a href="{% url 'blog_list' %}" class="text-[#1f432d] font-bold hover:underline mt-2 inline-block">View all posts</a>
                 </div>
-                {% endif %}
             {% endfor %}
-
         </div>
     </div>
 </section>
