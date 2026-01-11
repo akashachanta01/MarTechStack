@@ -9,8 +9,17 @@ from .models import ToolPage
 # Import Job model to fetch listings
 from jobs.models import Job 
 
-# --- 1. JOB DESCRIPTION GENERATOR ---
+# --- 1. JOB DESCRIPTION GENERATOR (OPTIMIZED) ---
 def jd_generator(request, slug=None):
+    # Fetch General MOPs Jobs
+    jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved'
+    ).filter(
+        Q(title__icontains='Operations') | 
+        Q(title__icontains='Manager')
+    ).order_by('-created_at')[:5]
+
     context = {
         'role_title': "Marketing Operations Manager",
         'responsibilities': [
@@ -24,7 +33,8 @@ def jd_generator(request, slug=None):
             "Proficiency in SQL and Data Visualization (Tableau/Looker)",
             "Experience with CRM integration (Salesforce/HubSpot)",
             "Strong analytical skills and attention to detail"
-        ]
+        ],
+        'jobs': jobs
     }
     if slug:
         tool = get_object_or_404(ToolPage, slug=slug)
@@ -63,7 +73,6 @@ def api_generate_jd(request):
 
 # --- 2. SALARY CALCULATOR (OPTIMIZED) ---
 def salary_calculator(request):
-    # Fetch high-paying roles for the bottom of the calculator
     high_paying_jobs = Job.objects.filter(
         is_active=True,
         screening_status='approved'
@@ -79,11 +88,22 @@ def salary_calculator(request):
         'jobs': high_paying_jobs
     })
 
-# --- 3. INTERVIEW GENERATOR ---
+# --- 3. INTERVIEW GENERATOR (OPTIMIZED) ---
 def interview_generator(request):
+    # Fetch Hiring Manager / Lead roles (people who interview others)
+    jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved'
+    ).filter(
+        Q(title__icontains='Lead') | 
+        Q(title__icontains='Principal') | 
+        Q(title__icontains='Manager')
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/interview_generator.html', {
-        'seo_title': "MarTech Interview Question Generator",
-        'seo_description': "Generate technical interview questions for Salesforce, HubSpot, and Marketo roles. Perfect for hiring managers and candidates."
+        'seo_title': "MarTech Interview Question Generator | For Hiring Managers",
+        'seo_description': "Generate technical interview questions for Salesforce, HubSpot, and Marketo roles. Perfect for hiring managers and candidates.",
+        'jobs': jobs
     })
 
 @require_POST
@@ -117,11 +137,19 @@ def api_generate_interview(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-# --- 4. SIGNATURE GENERATOR ---
+# --- 4. SIGNATURE GENERATOR (OPTIMIZED) ---
 def signature_generator(request):
+    # Fetch HubSpot jobs (since it's a HubSpot tool)
+    hubspot_jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved',
+        title__icontains='HubSpot'
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/signature_generator.html', {
         'seo_title': "Free HubSpot Email Signature Generator | Professional Templates",
-        'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros."
+        'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros.",
+        'jobs': hubspot_jobs
     })
 
 # --- 5. SALESFORCE ID CONVERTER (OPTIMIZED) ---
@@ -138,23 +166,33 @@ def sf_id_converter(request):
         'jobs': salesforce_jobs
     })
 
-# --- 6. CONSULTANT RATE CALCULATOR ---
+# --- 6. CONSULTANT RATE CALCULATOR (OPTIMIZED) ---
 def consultant_calculator(request):
+    # Fetch Contract roles
+    contract_jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved',
+        role_type='contract'
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/rate_calculator.html', {
         'seo_title': "Freelance MarTech Consultant Rate Calculator",
-        'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience."
+        'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience.",
+        'jobs': contract_jobs
     })
 
 # --- 7. QR CODE GENERATOR ---
 def qr_generator(request):
+    # Fetch Marketing Manager roles
+    jobs = Job.objects.filter(is_active=True, screening_status='approved', title__icontains='Manager').order_by('-created_at')[:5]
     return render(request, 'tools/qr_generator.html', {
         'seo_title': "Free HubSpot QR Code Generator with UTM Tracking",
-        'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking."
+        'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking.",
+        'jobs': jobs
     })
 
 # --- 8. UTM BUILDER (OPTIMIZED) ---
 def utm_builder(request):
-    # Fetch Data/Analytics related jobs
     analytics_jobs = Job.objects.filter(
         is_active=True,
         screening_status='approved'
@@ -172,9 +210,12 @@ def utm_builder(request):
 
 # --- 9. TEXT TO SQL ---
 def sql_generator(request):
+    # Fetch SQL/Data roles
+    jobs = Job.objects.filter(is_active=True, screening_status='approved', title__icontains='SQL').order_by('-created_at')[:5]
     return render(request, 'tools/sql_generator.html', {
         'seo_title': "AI Text-to-SQL Generator for Marketing Data",
-        'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required."
+        'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required.",
+        'jobs': jobs
     })
 
 @require_POST
