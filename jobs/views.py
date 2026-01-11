@@ -4,7 +4,7 @@ import os
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Case, When, Value, IntegerField, Count
+from django.db.models import Q, Case, When, Value, IntegerField, Count, Max
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
@@ -19,7 +19,6 @@ from django.core.mail import EmailMultiAlternatives
 from .models import Job, Tool, Category, Subscriber, BlogPost
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
-from django.db.models import Count, Max
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -393,4 +392,12 @@ def directory(request):
         # Extract City/State or Country
         parts = loc.split(',')
         if len(parts) > 0:
-            locations.add(parts
+            locations.add(parts[0].strip())
+            
+    sorted_locs = sorted(list(locations))
+    
+    return render(request, 'jobs/directory.html', {
+        'tools': tools,
+        'locations': sorted_locs,
+        'seo_title': "MarTech Jobs Directory - Browse by Tech Stack & Location"
+    })
