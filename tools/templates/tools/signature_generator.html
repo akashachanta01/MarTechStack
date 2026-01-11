@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm h-fit">
                 <h3 class="font-bold text-slate-900 mb-4">Your Details</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -71,8 +71,83 @@
                 </p>
             </div>
         </div>
+
+        <article class="prose prose-slate max-w-none">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Why Email Signatures Matter in HubSpot</h2>
+            <p>
+                Your email signature is often the most overlooked piece of marketing real estate. For HubSpot users, a well-coded signature is crucial because it ensures that your emails (sent via the CRM) look consistent and professional across all devices.
+            </p>
+            <p>
+                This generator creates clean, HTML-based signatures that are specifically tested for:
+            </p>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>HubSpot CRM:</strong> Paste directly into your profile settings.</li>
+                <li><strong>Gmail & Outlook:</strong> Ensures images don't break or look distorted.</li>
+                <li><strong>Mobile Responsiveness:</strong> Scales correctly on iPhone and Android mail apps.</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">How to Install in HubSpot</h2>
+            <ol class="list-decimal pl-5 mb-6">
+                <li>Generate your signature using the tool above.</li>
+                <li>Click <strong>Copy Signature</strong>.</li>
+                <li>Log in to HubSpot and go to <strong>Settings > General > Email > Signature</strong>.</li>
+                <li>Paste the code into the editor and click Save.</li>
+            </ol>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-orange-50 border border-orange-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Latest HubSpot Jobs</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-orange-700 hover:underline">View all roles &rarr;</a>
+            </div>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-orange-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" class="w-10 h-10 object-contain rounded border border-slate-100">
+                        {% else %}
+                            <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400">{{ job.company|slice:":1" }}</div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-orange-600 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "How do I add this signature to HubSpot?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Copy the generated signature, go to HubSpot Settings > General > Email > Signature, and paste it into the editor."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Will images show up in Outlook?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, but you must use a publicly hosted URL for your image (e.g., hosted on your website or LinkedIn profile). Do not paste an image from your local computer."
+    }
+  }]
+}
+</script>
 
 <script>
     function renderSignature() {
