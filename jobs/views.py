@@ -379,3 +379,18 @@ def company_detail(request, company_slug):
         'jobs': jobs,
         'tech_stack': Tool.objects.filter(jobs__in=jobs).distinct()[:5]
     })
+
+# --- SEO: DIRECTORY (Fixes Orphan Pages) ---
+def directory(request):
+    tools = Tool.objects.filter(jobs__is_active=True).annotate(job_count=Count('jobs')).order_by('name')
+    
+    # Get all unique locations that are active
+    raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
+    locations = set()
+    for loc in raw_locs:
+        if not loc: continue
+        if "remote" in loc.lower(): continue
+        # Extract City/State or Country
+        parts = loc.split(',')
+        if len(parts) > 0:
+            locations.add(parts
