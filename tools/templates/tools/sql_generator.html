@@ -17,37 +17,90 @@
             </p>
         </div>
 
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-16">
             <div class="flex gap-4 mb-4">
-                <select id="flavor" class="border border-slate-300 rounded p-2 text-sm font-bold bg-slate-50">
+                <select id="flavor" class="border border-slate-300 rounded p-2 text-sm font-bold bg-slate-50 focus:border-purple-500 outline-none">
                     <option value="Standard SQL">Standard SQL</option>
                     <option value="Salesforce SOQL">Salesforce SOQL</option>
                     <option value="Snowflake">Snowflake</option>
-                    <option value="Google BigQuery">BigQuery</option>
+                    <option value="Google BigQuery">Google BigQuery</option>
                 </select>
             </div>
             
             <textarea id="queryInput" rows="3" class="w-full border-2 border-slate-200 rounded-lg p-4 text-base focus:border-purple-500 outline-none transition" 
-                placeholder="e.g. Find all customers from 'California' who opened an email in the last 30 days and spent over $500..."></textarea>
+                placeholder="e.g. Find all contacts from 'California' who opened an email in the last 30 days and have a Lead Score > 50..."></textarea>
             
             <button onclick="generateSQL()" id="genBtn" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition w-full md:w-auto flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined">auto_awesome</span> Generate Query
             </button>
+
+            <div class="mt-8 relative">
+                <div id="loader" class="hidden absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                    <div class="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                </div>
+                
+                <pre class="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm overflow-x-auto shadow-inner min-h-[100px] flex items-center relative" id="sqlOutput">
+-- Your generated SQL will appear here...
+                </pre>
+                
+                <button onclick="copySQL()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition">
+                    <span class="material-symbols-outlined">content_copy</span>
+                </button>
+            </div>
         </div>
 
-        <div class="mt-8 relative">
-            <div id="loader" class="hidden absolute inset-0 bg-slate-50/80 flex items-center justify-center z-10">
-                <div class="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+        <article class="prose prose-slate max-w-none">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Why Marketers Need SQL</h2>
+            <p>
+                The days of relying solely on drag-and-drop report builders are fading. As marketing data moves into cloud data warehouses like <strong>Snowflake</strong>, <strong>BigQuery</strong>, and <strong>Databricks</strong>, the ability to write SQL (Structured Query Language) has become a superpower for Marketing Operations professionals.
+            </p>
+            <p>
+                SQL allows you to bypass the limitations of your CRM's native reporting. You can join tables from different sources (e.g., ad spend from Facebook merged with revenue data from Stripe) to get a true picture of ROAS.
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">Common Use Cases</h3>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>Segmentation:</strong> Creating complex audience lists that are impossible to build in standard UI filters.</li>
+                <li><strong>Data Hygiene:</strong> Finding duplicate records or normalizing inconsistent state codes (e.g., converting "Calif." to "CA").</li>
+                <li><strong>Attribution:</strong> Querying event logs to see every touchpoint a user had before converting.</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Salesforce SOQL vs. Standard SQL</h2>
+            <p>
+                If you work in Salesforce, you use <strong>SOQL</strong> (Salesforce Object Query Language). While similar to standard SQL, it has key differences:
+            </p>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>No `SELECT *`:</strong> In SOQL, you must specify every field you want to retrieve. You cannot just ask for "all columns."</li>
+                <li><strong>Relationship Queries:</strong> SOQL uses dot notation (e.g., <code>Account.Name</code>) to traverse objects, whereas standard SQL typically requires `JOIN` statements.</li>
+            </ul>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-slate-100 border border-slate-200 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Marketing Data & SQL Roles</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-slate-600 hover:underline">View all &rarr;</a>
             </div>
-            
-            <pre class="bg-slate-900 text-green-400 p-6 rounded-xl font-mono text-sm overflow-x-auto shadow-inner min-h-[150px] flex items-center" id="sqlOutput">
--- Your generated SQL will appear here...
-            </pre>
-            
-            <button onclick="copySQL()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition">
-                <span class="material-symbols-outlined">content_copy</span>
-            </button>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="w-10 h-10 bg-slate-50 rounded flex items-center justify-center font-bold text-slate-400 flex-shrink-0">
+                            {{ job.company|slice:":1" }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-black transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
 
     </div>
 </div>
