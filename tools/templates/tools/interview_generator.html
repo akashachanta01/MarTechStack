@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-16">
             <div class="p-6 md:p-8 bg-slate-900 text-white">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
@@ -62,6 +62,57 @@
                 </p>
             </div>
         </div>
+
+        <article class="prose prose-slate max-w-none">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">How to Interview MarTech Candidates</h2>
+            <p>
+                Hiring for Marketing Operations is notoriously difficult because resumes often look identical. A candidate might list "Marketo" as a skill, but do they know how to build a scalable scoring model, or did they just send email blasts?
+            </p>
+            <p>
+                Effective interviews must move beyond "trivia" questions. Asking "Where is the admin menu?" proves nothing. Instead, focus on <strong>Scenario-Based Questions</strong> that reveal problem-solving skills.
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">3 Categories of Questions</h3>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>Architectural:</strong> "How would you structure our lead lifecycle if we have both B2B and B2C product lines?"</li>
+                <li><strong>Troubleshooting:</strong> "Sales is complaining that leads aren't syncing to Salesforce. Walk me through how you debug this."</li>
+                <li><strong>Business Impact:</strong> "Describe a time you used data to change a marketing strategy."</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Common Interview Pitfalls</h2>
+            <p>
+                The biggest mistake hiring managers make is over-indexing on a specific tool. Tools change. If a candidate is a Salesforce Marketing Cloud expert, they can likely learn Braze quickly. Look for <strong>aptitude</strong> and <strong>data literacy</strong> over simple tool proficiency.
+            </p>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-indigo-50 border border-indigo-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Lead & Manager Roles</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-indigo-700 hover:underline">View all roles &rarr;</a>
+            </div>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" class="w-10 h-10 object-contain rounded border border-slate-100">
+                        {% else %}
+                            <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400">{{ job.company|slice:":1" }}</div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-indigo-600 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
     </div>
 </div>
