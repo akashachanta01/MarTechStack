@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from openai import OpenAI
 from .models import ToolPage
+# ADDED: Import Job model to fetch listings
+from jobs.models import Job 
 
 # --- 1. JOB DESCRIPTION GENERATOR ---
 def jd_generator(request, slug=None):
@@ -110,14 +112,22 @@ def signature_generator(request):
         'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros."
     })
 
-# --- 5. SALESFORCE ID CONVERTER ---
+# --- 5. SALESFORCE ID CONVERTER (UPDATED) ---
 def sf_id_converter(request):
+    # FETCH 5 LATEST SALESFORCE JOBS
+    salesforce_jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved',
+        title__icontains='Salesforce'
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/sf_id_converter.html', {
-        'seo_title': "Salesforce 15 to 18 Character ID Converter",
-        'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs instantly. Essential for Admins."
+        'seo_title': "Salesforce 15 to 18 Character ID Converter | MarTechJobs",
+        'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs. Essential for Admins doing data migration or VLOOKUPs.",
+        'jobs': salesforce_jobs
     })
 
-# --- 6. CONSULTANT RATE CALCULATOR (Renamed to match URLs) ---
+# --- 6. CONSULTANT RATE CALCULATOR ---
 def consultant_calculator(request):
     return render(request, 'tools/rate_calculator.html', {
         'seo_title': "Freelance MarTech Consultant Rate Calculator",
@@ -145,55 +155,6 @@ def sql_generator(request):
         'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required."
     })
 
-# --- 11. ROAS CALCULATOR ---
-def roas_calculator(request):
-    return render(request, 'tools/roas_calculator.html', {
-        'seo_title': "Free ROAS Calculator (Return on Ad Spend)",
-        'seo_description': "Calculate your Return on Ad Spend (ROAS) instantly. Essential tool for Paid Search, Social, and Performance Marketers."
-    })
-
-# --- 12. EMAIL SUBJECT LINE TESTER ---
-def subject_line_tester(request):
-    return render(request, 'tools/subject_line_tester.html', {
-        'seo_title': "AI Email Subject Line Tester & Grader",
-        'seo_description': "Will your email get opened? Test your subject line against millions of data points using AI. Get a score and improvement tips."
-    })
-
-@require_POST
-def api_test_subject_line(request):
-    try:
-        data = json.loads(request.body)
-        subject = data.get('subject', '')
-
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
-
-        client = OpenAI(api_key=api_key)
-        
-        # Expert Email Marketing Persona
-        prompt = f"""
-        Act as a World-Class Email Marketing Copywriter (like Chase Dimond or Drayton Bird).
-        Analyze this email subject line: "{subject}"
-        
-        Provide a JSON response with:
-        1. "score": 0-100 integer.
-        2. "grade": "A", "B", "C", "D", or "F".
-        3. "feedback": One concise sentence on why it's good or bad.
-        4. "better_versions": A list of 3 alternative, higher-converting variations.
-        
-        Strict JSON format.
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
-        )
-        
-        return JsonResponse(json.loads(completion.choices[0].message.content))
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-        
 @require_POST
 def api_generate_sql(request):
     try:
@@ -253,6 +214,54 @@ def api_scan_resume(request):
         3. 1 Actionable Improvement Tip
         
         Output JSON: {{ "score": 85, "missing": ["SQL", "Looker"], "tip": "..." }}
+        """
+        
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        
+        return JsonResponse(json.loads(completion.choices[0].message.content))
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+# --- 11. ROAS CALCULATOR ---
+def roas_calculator(request):
+    return render(request, 'tools/roas_calculator.html', {
+        'seo_title': "Free ROAS Calculator (Return on Ad Spend)",
+        'seo_description': "Calculate your Return on Ad Spend (ROAS) instantly. Essential tool for Paid Search, Social, and Performance Marketers."
+    })
+
+# --- 12. EMAIL SUBJECT LINE TESTER ---
+def subject_line_tester(request):
+    return render(request, 'tools/subject_line_tester.html', {
+        'seo_title': "AI Email Subject Line Tester & Grader",
+        'seo_description': "Will your email get opened? Test your subject line against millions of data points using AI. Get a score and improvement tips."
+    })
+
+@require_POST
+def api_test_subject_line(request):
+    try:
+        data = json.loads(request.body)
+        subject = data.get('subject', '')
+
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
+
+        client = OpenAI(api_key=api_key)
+        
+        prompt = f"""
+        Act as a World-Class Email Marketing Copywriter (like Chase Dimond or Drayton Bird).
+        Analyze this email subject line: "{subject}"
+        
+        Provide a JSON response with:
+        1. "score": 0-100 integer.
+        2. "grade": "A", "B", "C", "D", or "F".
+        3. "feedback": One concise sentence on why it's good or bad.
+        4. "better_versions": A list of 3 alternative, higher-converting variations.
+        
+        Strict JSON format.
         """
         
         completion = client.chat.completions.create(
