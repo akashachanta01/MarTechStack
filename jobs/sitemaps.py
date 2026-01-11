@@ -87,10 +87,9 @@ class BlogSitemap(Sitemap):
     def location(self, obj):
         return reverse('post_detail', args=[obj.slug])
 
-# --- NEW: STATIC TOOLS SITEMAP ---
-# This ensures your calculators and generators are found by Google.
+# --- STATIC TOOLS SITEMAP (UPDATED) ---
 class ToolsStaticSitemap(Sitemap):
-    priority = 0.9  # High priority because these are "Link Magnets"
+    priority = 0.9  # Highest priority assets
     changefreq = 'monthly'
     protocol = 'https'
 
@@ -105,19 +104,31 @@ class ToolsStaticSitemap(Sitemap):
             'utm_builder',
             'sql_generator',
             'consultant_calculator',
-            'resume_scanner'
+            'resume_scanner',
+            'roas_calculator',      # ADDED
+            'subject_line_tester',  # ADDED
         ]
 
     def location(self, item):
         return reverse(item)
 
+# --- STATIC VIEWS SITEMAP (UPDATED) ---
 class StaticViewSitemap(Sitemap):
-    priority = 0.5
+    priority = 0.6
     changefreq = 'monthly'
     protocol = 'https'
 
     def items(self):
-        return ['about', 'for_employers', 'post_job', 'job_list', 'blog_list']
+        return [
+            'about', 
+            'for_employers', 
+            'post_job', 
+            'job_list', 
+            'blog_list',
+            'salary_guide',  # ADDED - High traffic potential
+            'directory',     # ADDED - Important for navigation
+            'company_list'   # ADDED
+        ]
 
     def location(self, item):
         return reverse(item)
