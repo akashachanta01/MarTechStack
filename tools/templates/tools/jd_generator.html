@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
             <div class="lg:col-span-4">
                 <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm sticky top-24">
                     <h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -117,8 +117,88 @@
             </div>
         </div>
 
+        <article class="prose prose-slate max-w-none mx-auto">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Why the Right Job Description Matters</h2>
+            <p>
+                In the niche world of Marketing Operations (MOPs), generic job descriptions attract generic candidates. If you copy-paste a "Digital Marketing Manager" JD but actually need a "Marketo Architect," you will be flooded with resumes from social media managers and content writers who lack the technical skills you need.
+            </p>
+            <p>
+                A high-quality MOPs job description serves as a filter. It signals to senior talent that you understand the complexity of the role. It explicitly lists the tech stack (e.g., Salesforce, HubSpot, Snowflake) to attract specialists and deter generalists.
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">Key Sections of a MOPs JD</h3>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>The Tech Stack:</strong> Be specific. Don't just say "CRM experience." Say "Salesforce Admin Certification preferred" or "Experience with Marketo Engagement Programs."</li>
+                <li><strong>The Data Responsibility:</strong> Clarify if this role owns data hygiene, enrichment, or governance.</li>
+                <li><strong>The Outcomes:</strong> Shift from "managing lists" to "improving lead-to-opportunity velocity" or "reducing CAC."</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">What is the difference between Marketing Ops and Demand Gen?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Demand Gen focuses on <em>getting</em> the leads (campaigns, ads, content). Marketing Ops focuses on <em>processing</em> the leads (scoring, routing, data, attribution). They are partners, but distinct roles.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Should I require SQL for a Marketing Ops role?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">For Senior Manager or Analytics-focused roles, yes. SQL is becoming a standard requirement for querying data warehouses like Snowflake or BigQuery. For entry-level roles, it is a "nice to have."</p>
+                </details>
+            </div>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-slate-100 border border-slate-200 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Recent MOPs Openings</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-slate-600 hover:underline">View all roles &rarr;</a>
+            </div>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" class="w-10 h-10 object-contain rounded border border-slate-100">
+                        {% else %}
+                            <div class="w-10 h-10 bg-slate-50 rounded flex items-center justify-center font-bold text-slate-400">{{ job.company|slice:":1" }}</div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-slate-700 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "What is the difference between Marketing Ops and Demand Gen?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Demand Gen focuses on acquiring leads through campaigns and content, while Marketing Operations focuses on the infrastructure, data, and processes that manage those leads."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Should I require SQL for a Marketing Ops role?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "SQL is increasingly important for senior MOPs roles involving data warehouses (Snowflake, BigQuery). For junior roles, it is optional."
+    }
+  }]
+}
+</script>
 
 <script>
     async function generateJD() {
