@@ -15,11 +15,11 @@
                 Trackable QR Generator
             </h1>
             <p class="text-lg text-slate-600">
-                Create QR codes with built-in attribution for HubSpot & GA4.
+                Create QR codes with built-in attribution for HubSpot, GA4, and Salesforce.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm h-fit">
                 <h3 class="font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">1. Destination & Tracking</h3>
                 <div class="space-y-4">
@@ -30,18 +30,18 @@
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Source</label>
-                            <input type="text" id="utm_source" placeholder="flyer_qr" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Source</label>
+                            <input type="text" id="utm_source" placeholder="flyer" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Medium</label>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Medium</label>
                             <input type="text" id="utm_medium" value="qr_code" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
                         </div>
                     </div>
                     
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign Name</label>
-                        <input type="text" id="utm_campaign" placeholder="spring_event_2026" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campaign</label>
+                        <input type="text" id="utm_campaign" placeholder="spring_event" class="w-full border border-slate-200 rounded p-2 text-sm" oninput="updateQR()">
                     </div>
                 </div>
             </div>
@@ -56,11 +56,49 @@
             </div>
         </div>
         
-        <div class="mt-12 text-center">
-            <p class="text-sm text-slate-500">
-                Need someone to manage your offline campaigns? <a href="{% url 'job_list' %}" class="text-orange-600 font-bold hover:underline">Hire a Marketing Manager</a>
+        <article class="prose prose-slate max-w-none">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Bridging the Offline-to-Online Gap</h2>
+            <p>
+                Marketing Operations often struggles with "Dark Social" or offline attribution. When someone scans a QR code at a trade show booth, a billboard, or a direct mail piece, that traffic usually shows up as "Direct" in Google Analytics—stripping you of credit for the campaign.
             </p>
+            <p>
+                This tool solves that by baking <strong>UTM parameters</strong> directly into the QR code. When the user scans, they aren't just going to your homepage; they are going to a specific URL that tells your CRM: <em>"This user came from the Q1 Flyer."</em>
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">Best Practices for QR Codes</h3>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>Mobile Optimization:</strong> Ensure the landing page is mobile-friendly. 100% of QR scans happen on a phone.</li>
+                <li><strong>Size Matters:</strong> If printing, ensure the QR code is at least 1x1 inch. Any smaller and older phones may struggle to focus.</li>
+                <li><strong>Call to Action:</strong> Don't just put a code. Put text like "Scan for 20% Off" to drive incentive.</li>
+            </ul>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-orange-50 border border-orange-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Marketing Manager Roles</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-orange-700 hover:underline">View all &rarr;</a>
+            </div>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-orange-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400 flex-shrink-0">
+                            {{ job.company|slice:":1" }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-orange-600 text-white text-xs font-bold rounded hover:bg-orange-800 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
 
     </div>
 </div>
