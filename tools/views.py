@@ -3,9 +3,10 @@ import os
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Q
 from openai import OpenAI
 from .models import ToolPage
-# ADDED: Import Job model to fetch listings
+# Import Job model to fetch listings
 from jobs.models import Job 
 
 # --- 1. JOB DESCRIPTION GENERATOR ---
@@ -60,11 +61,22 @@ def api_generate_jd(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-# --- 2. SALARY CALCULATOR ---
+# --- 2. SALARY CALCULATOR (OPTIMIZED) ---
 def salary_calculator(request):
+    # Fetch high-paying roles for the bottom of the calculator
+    high_paying_jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved'
+    ).filter(
+        Q(title__icontains='Director') | 
+        Q(title__icontains='Head') | 
+        Q(title__icontains='Manager')
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/salary_calculator.html', {
         'seo_title': "MarTech Salary Calculator 2026 - Real-time Market Data",
-        'seo_description': "Calculate your market value in Marketing Operations. Data based on role, experience, and tech stack proficiency."
+        'seo_description': "Calculate your market value in Marketing Operations. Data based on role, experience, and tech stack proficiency.",
+        'jobs': high_paying_jobs
     })
 
 # --- 3. INTERVIEW GENERATOR ---
@@ -112,9 +124,8 @@ def signature_generator(request):
         'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros."
     })
 
-# --- 5. SALESFORCE ID CONVERTER (UPDATED) ---
+# --- 5. SALESFORCE ID CONVERTER (OPTIMIZED) ---
 def sf_id_converter(request):
-    # FETCH 5 LATEST SALESFORCE JOBS
     salesforce_jobs = Job.objects.filter(
         is_active=True,
         screening_status='approved',
@@ -141,11 +152,22 @@ def qr_generator(request):
         'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking."
     })
 
-# --- 8. UTM BUILDER ---
+# --- 8. UTM BUILDER (OPTIMIZED) ---
 def utm_builder(request):
+    # Fetch Data/Analytics related jobs
+    analytics_jobs = Job.objects.filter(
+        is_active=True,
+        screening_status='approved'
+    ).filter(
+        Q(title__icontains='Analytics') | 
+        Q(title__icontains='Data') | 
+        Q(title__icontains='Operations')
+    ).order_by('-created_at')[:5]
+
     return render(request, 'tools/utm_builder.html', {
-        'seo_title': "Bulk UTM Link Builder for Marketers",
-        'seo_description': "The fastest way to build Google Analytics tracking links. Save your presets for consistency across your team."
+        'seo_title': "Bulk UTM Link Builder for Marketers (Google Analytics 4 Compatible)",
+        'seo_description': "The fastest way to build Google Analytics tracking links. Save your presets for consistency across your team.",
+        'jobs': analytics_jobs
     })
 
 # --- 9. TEXT TO SQL ---
