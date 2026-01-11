@@ -10,19 +10,160 @@
         <div class="text-center mb-12">
             <span class="text-xs font-bold bg-purple-100 text-purple-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
             <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
-                Consultant Rate Calculator
+                MarTech Consultant Rate Calculator
             </h1>
             <p class="text-lg text-slate-600">
-                Stop guessing. See what you should charge as a MarTech freelancer.
+                Stop guessing. Calculate your hourly rate based on specialization and market demand.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                 <div class="space-y-5">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Specialization</label>
                         <select id="specSelect" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:border-purple-500">
                             <option value="100">General Marketing Ops</option>
-                            <option value="125">HubSpot Implementation</option>
-                            <option value="150">Salesforce
+                            <option value="135">HubSpot Implementation</option>
+                            <option value="165">Salesforce Admin / Architect</option>
+                            <option value="190">Marketo Architect</option>
+                            <option value="225">Data Engineer (Snowflake/SQL)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Experience Level</label>
+                        <select id="expSelect" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:border-purple-500">
+                            <option value="1.0">Mid-Level (3-5 Years)</option>
+                            <option value="1.3">Senior (5-8 Years)</option>
+                            <option value="1.6">Expert / Principal (8+ Years)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Project Type</label>
+                        <select id="typeSelect" class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:border-purple-500">
+                            <option value="1.0">Long-term Retainer (>3mo)</option>
+                            <option value="1.25">Short-term Project (<3mo)</option>
+                            <option value="1.5">Emergency / Audit</option>
+                        </select>
+                    </div>
+
+                    <button onclick="calculateRate()" class="w-full bg-purple-900 text-white font-bold py-4 rounded-lg hover:bg-purple-800 transition shadow-lg mt-4">
+                        Calculate Rate
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-purple-900 p-8 rounded-xl shadow-xl text-white flex flex-col justify-center items-center text-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                
+                <p class="text-purple-200 text-sm font-bold uppercase tracking-wider mb-2">Recommended Hourly Rate</p>
+                <div class="text-6xl font-serif font-bold mb-6" id="resultDisplay">$0/hr</div>
+                
+                <p class="text-purple-200 text-xs mb-8 px-4 opacity-80">
+                    *Based on 2026 contractor rates for US-based technology companies.
+                </p>
+
+                <a href="{% url 'job_list' %}?rtype=contract" class="bg-white text-purple-900 font-bold py-3 px-8 rounded-full hover:bg-purple-50 transition transform hover:-translate-y-1 shadow-md w-full md:w-auto">
+                    Find Contract Roles &rarr;
+                </a>
+            </div>
+        </div>
+
+        <article class="prose prose-slate max-w-none">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Setting Your Rate as a MarTech Consultant</h2>
+            <p>
+                One of the hardest parts of freelancing in Marketing Operations is pricing. Charge too little, and clients assume you are inexperienced. Charge too much, and you lose the bid. 
+            </p>
+            <p>
+                The "Generalist" era is over. In 2026, rates are dictated by <strong>Platform Specialization</strong> and <strong>Technical Depth</strong>. A general "Digital Marketer" might cap out at $85/hr, whereas a "Salesforce Marketing Cloud Architect" often starts at $185/hr.
+            </p>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2 mt-6">Hourly vs. Retainer vs. Project</h3>
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 border border-slate-200 rounded">
+                    <h4 class="font-bold text-purple-900">Hourly</h4>
+                    <p class="text-xs text-slate-600 mt-1">Best for ad-hoc troubleshooting or "Emergency" fixes. Charge your highest premium here.</p>
+                </div>
+                <div class="bg-white p-4 border border-slate-200 rounded">
+                    <h4 class="font-bold text-purple-900">Retainer</h4>
+                    <p class="text-xs text-slate-600 mt-1">Best for stability. Offer a 10-15% discount in exchange for a guaranteed 6-month contract.</p>
+                </div>
+                <div class="bg-white p-4 border border-slate-200 rounded">
+                    <h4 class="font-bold text-purple-900">Project</h4>
+                    <p class="text-xs text-slate-600 mt-1">Value-based pricing. E.g., "Migration to HubSpot" is a flat $15k fee, regardless of hours.</p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">The "Technical Premium"</h2>
+            <p>
+                If you can write code (SQL, Python, JavaScript) or manage APIs, you are no longer just a marketer; you are a <strong>Marketing Engineer</strong>. This distinction typically justifies a 30% to 50% rate increase over standard operational roles.
+            </p>
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-purple-50 border border-purple-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Active Contract Roles</h2>
+                <a href="{% url 'job_list' %}?rtype=contract" class="text-xs font-bold text-purple-700 hover:underline">View all &rarr;</a>
+            </div>
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-purple-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400 flex-shrink-0">
+                            {{ job.company|slice:":1" }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.salary_range|default:"Contract" }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-purple-900 text-white text-xs font-bold rounded hover:bg-purple-700 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    function calculateRate() {
+        const spec = parseFloat(document.getElementById('specSelect').value);
+        const exp = parseFloat(document.getElementById('expSelect').value);
+        const type = parseFloat(document.getElementById('typeSelect').value);
+
+        const rate = spec * exp * type;
+        document.getElementById('resultDisplay').innerText = "$" + Math.round(rate) + "/hr";
+    }
+    // Init
+    document.addEventListener('DOMContentLoaded', calculateRate);
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "How much should I charge for HubSpot consulting?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "For 2026, standard HubSpot implementation specialists charge between $120 and $160 per hour. Senior architects or those handling custom API integrations charge $180+."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Should I charge hourly or flat rate?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "For defined projects (e.g., 'Audit', 'Implementation'), flat rates are better as they reward your efficiency. For ongoing maintenance or undefined scopes, hourly or retainer models protect you from scope creep."
+    }
+  }]
+}
+</script>
+{% endblock %}
