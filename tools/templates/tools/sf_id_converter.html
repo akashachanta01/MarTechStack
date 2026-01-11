@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-12">
-    <div class="max-w-3xl mx-auto px-4">
+    <div class="max-w-4xl mx-auto px-4">
         
         <div class="text-center mb-10">
             <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
@@ -17,7 +17,7 @@
             </p>
         </div>
 
-        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
+        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm mb-16">
             <div class="space-y-6">
                 <div>
                     <label class="block text-sm font-bold text-slate-900 mb-2">Enter 15-Char ID</label>
@@ -40,18 +40,135 @@
             </div>
         </div>
 
-        <div class="mt-8 text-center bg-blue-50 border border-blue-100 p-6 rounded-xl">
-            <h3 class="font-bold text-blue-900 mb-2">Why do I need this?</h3>
-            <p class="text-sm text-blue-800/80 leading-relaxed max-w-lg mx-auto">
-                Salesforce uses case-sensitive IDs (15-char) internally, but tools like Excel often corrupt them by treating "001A..." and "001a..." as the same. The 18-char ID adds a 3-character checksum to prevent data loss.
+        <article class="prose prose-slate max-w-none">
+            
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">What is a Salesforce ID?</h2>
+            <p>
+                Every record in Salesforce—whether it's an Account, Contact, Lead, or Custom Object—is assigned a unique identifier known as a <strong>Record ID</strong>. These IDs are the backbone of the Salesforce database schema, allowing you to link data tables and perform operations like updates, deletes, and upserts via the API.
             </p>
-            <div class="mt-4 pt-4 border-t border-blue-200">
-                <a href="{% url 'job_list' %}" class="text-xs font-bold text-blue-700 hover:underline">Find a Salesforce Admin Job &rarr;</a>
+            <p>
+                However, Salesforce actually uses two different versions of this ID, which often confuses Admins and Developers:
+            </p>
+            <ul class="list-disc pl-5 mb-4">
+                <li><strong>15-Character ID (Case-Sensitive):</strong> This is the internal "base-62" ID that you typically see in the browser URL bar (in Salesforce Classic) or in certain reports. In this format, <code>001ABC...</code> is a different record from <code>001abc...</code>.</li>
+                <li><strong>18-Character ID (Case-Insensitive):</strong> This is the API-safe version. It takes the original 15 characters and adds a 3-character "checksum" suffix to the end. This ensures that legacy systems (like older versions of Excel or Access) that do not respect case sensitivity can still distinguish between records.</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Why Convert Salesforce IDs?</h2>
+            <p>
+                The primary reason to use a <strong>Salesforce ID Converter</strong> is data safety during migrations and reporting.
+            </p>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">1. The "Excel VLOOKUP" Problem</h3>
+            <p>
+                Microsoft Excel's <code>VLOOKUP</code> and <code>MATCH</code> functions are case-insensitive by default. If you export a list of 15-digit IDs from Salesforce, Excel effectively sees "001xx000003Dabc" and "001xx000003DABC" as the same text string. This leads to:
+            </p>
+            <ul class="list-disc pl-5 mb-4">
+                <li>Duplicate rows being flagged incorrectly.</li>
+                <li>Data being mapped to the wrong record during a migration.</li>
+                <li>Critial errors when using Data Loader to update records.</li>
+            </ul>
+            <p>
+                By converting to the <strong>18-character ID</strong>, you add a unique suffix that makes the string unique even in case-insensitive environments.
+            </p>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">How the Conversion Works</h2>
+            <p>
+                The conversion process isn't random; it uses a specific checksum algorithm. The tool takes the original 15-character string and splits it into three chunks of 5 characters.
+            </p>
+            <p>
+                It then analyzes the capitalization of each character in the chunk to generate a binary bitmap (1 for uppercase, 0 for lowercase). This binary number is converted into a single character (A-Z, 0-5) which is appended as the suffix. This guarantees that any variation in casing results in a different suffix.
+            </p>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">What is the difference between 15 and 18 digit Salesforce IDs?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">The 15-digit ID is case-sensitive and typically seen in the UI. The 18-digit ID is case-insensitive and includes a 3-character checksum suffix, making it safer for API integrations and data exports.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Is this tool safe for sensitive data?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Yes. This conversion happens entirely in your web browser using JavaScript. No data is sent to our servers or stored.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Can I use 18-character IDs in Data Loader?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Yes, Salesforce Data Loader accepts both formats. However, it is best practice to use 18-character IDs to prevent any risk of record mismatching.</p>
+                </details>
+            </div>
+
+        </article>
+
+        <div class="mt-16 pt-10 border-t border-slate-200">
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-6">More Tools for Salesforce Admins</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="{% url 'salary_calculator' %}" class="bg-white border border-slate-200 p-4 rounded-lg hover:border-blue-500 transition group">
+                    <div class="font-bold text-slate-900 group-hover:text-blue-700">Salary Calculator</div>
+                    <p class="text-xs text-slate-500 mt-1">Check your market value.</p>
+                </a>
+                <a href="{% url 'sql_generator' %}" class="bg-white border border-slate-200 p-4 rounded-lg hover:border-blue-500 transition group">
+                    <div class="font-bold text-slate-900 group-hover:text-blue-700">SOQL Generator</div>
+                    <p class="text-xs text-slate-500 mt-1">Write queries for Salesforce.</p>
+                </a>
+                <a href="{% url 'interview_generator' %}" class="bg-white border border-slate-200 p-4 rounded-lg hover:border-blue-500 transition group">
+                    <div class="font-bold text-slate-900 group-hover:text-blue-700">Interview Prep</div>
+                    <p class="text-xs text-slate-500 mt-1">Generate admin questions.</p>
+                </a>
             </div>
         </div>
 
+        {% if jobs %}
+        <div class="mt-16 bg-blue-50 border border-blue-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Latest Salesforce Jobs</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-blue-700 hover:underline">View all roles &rarr;</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div>
+                        <h3 class="font-bold text-slate-900">{{ job.title }}</h3>
+                        <p class="text-sm text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-blue-600 transition whitespace-nowrap">
+                        Apply Now
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "What is the difference between 15 and 18 digit Salesforce IDs?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "The 15-digit ID is case-sensitive (base-62) and typically seen in the Salesforce UI/URL. The 18-digit ID is case-insensitive and includes a 3-character checksum suffix, making it safer for API integrations, Excel VLOOKUPs, and data exports."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Is this tool safe for sensitive data?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. This conversion happens entirely in your web browser using client-side JavaScript. No data is sent to any server or stored."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Can I use 18-character IDs in Data Loader?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes, Salesforce Data Loader accepts both formats. However, it is best practice to use 18-character IDs to prevent any risk of record mismatching or duplicate errors."
+    }
+  }]
+}
+</script>
 
 <script>
     function convertID() {
