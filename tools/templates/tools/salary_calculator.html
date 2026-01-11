@@ -10,14 +10,14 @@
         <div class="text-center mb-12">
             <span class="text-xs font-bold bg-green-100 text-green-800 px-3 py-1 rounded-full uppercase tracking-wide">Free Tool</span>
             <h1 class="text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4 mb-4">
-                MarTech Salary Calculator
+                MarTech Salary Calculator 2026
             </h1>
             <p class="text-lg text-slate-600">
-                Estimate your market value based on 2026 data trends.
+                Estimate your market value based on current real-time data trends.
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
                 <h3 class="font-bold text-slate-900 mb-6 text-lg">Your Profile</h3>
                 
@@ -75,8 +75,109 @@
             </div>
         </div>
 
+        <article class="prose prose-slate max-w-none">
+            
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4">Methodology: How We Calculate Compensation</h2>
+            <p>
+                Unlike generic salary aggregators that lump "Marketing Managers" together with "Marketing Operations Managers," our calculator is purpose-built for the MarTech industry. We analyze three critical vectors:
+            </p>
+            <ul class="list-disc pl-5 mb-6">
+                <li><strong>Role Hierarchy:</strong> We distinguish between "Operators" (campaign execution) and "Architects" (system design). Architects typically command a 20-30% premium.</li>
+                <li><strong>Tech Stack Premium:</strong> Not all tools pay the same. Enterprise platforms like <strong>Salesforce Marketing Cloud</strong> and <strong>Marketo</strong> generally offer higher compensation floors than SMB tools due to the complexity of implementation.</li>
+                <li><strong>Technical Skills:</strong> The "Engineer Marketer"—someone who knows SQL, Python, or API integration—is the highest-paid segment in the market today.</li>
+            </ul>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Factors Influencing MarTech Salaries in 2026</h2>
+            <p>
+                The market has shifted from "growth at all costs" to "efficient growth." This has changed which skills get paid the most.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6 my-6">
+                <div class="bg-white p-4 border border-slate-200 rounded-lg">
+                    <h4 class="font-bold text-slate-900 mb-2">⬆️ Values Drivers</h4>
+                    <ul class="text-sm text-slate-600 list-disc pl-4 space-y-1">
+                        <li>Data Warehouse proficiency (Snowflake/BigQuery)</li>
+                        <li>Marketing Attribution modeling</li>
+                        <li>Platform Migration experience</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-4 border border-slate-200 rounded-lg">
+                    <h4 class="font-bold text-slate-900 mb-2">⬇️ Commoditized Skills</h4>
+                    <ul class="text-sm text-slate-600 list-disc pl-4 space-y-1">
+                        <li>Basic Email deployment</li>
+                        <li>Landing page creation</li>
+                        <li>Social media scheduling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-serif font-bold text-slate-900 mb-4 mt-8">Frequently Asked Questions</h2>
+            <div class="space-y-4">
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Are these salaries for remote roles?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Yes, our baseline data is weighted towards Remote and Hybrid roles in the United States technology sector. Adjust downward ~15% for non-tech industries.</p>
+                </details>
+                <details class="bg-white border border-slate-200 rounded-lg p-4 cursor-pointer">
+                    <summary class="font-bold text-slate-900">Do certifications increase salary?</summary>
+                    <p class="mt-2 text-slate-600 text-sm">Yes. Specific certifications like the <strong>Marketo Certified Expert (MCE)</strong> or <strong>Salesforce Marketing Cloud Consultant</strong> correlate with a $10k-$15k salary increase for mid-level roles.</p>
+                </details>
+            </div>
+
+        </article>
+
+        {% if jobs %}
+        <div class="mt-16 bg-green-50 border border-green-100 rounded-xl p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-serif font-bold text-slate-900">High-Paying Opportunities</h2>
+                <a href="{% url 'job_list' %}" class="text-xs font-bold text-green-800 hover:underline">View all roles &rarr;</a>
+            </div>
+            
+            <div class="space-y-4">
+                {% for job in jobs %}
+                <div class="bg-white p-4 rounded-lg border border-green-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        {% if job.company_logo %}
+                            <img src="{{ job.company_logo }}" class="w-10 h-10 object-contain rounded border border-slate-100">
+                        {% else %}
+                            <div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center font-bold text-slate-400">{{ job.company|slice:":1" }}</div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">{{ job.title }}</h3>
+                            <p class="text-xs text-slate-500">{{ job.company }} • {{ job.location }}</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'job_detail' job.id job.slug %}" class="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded hover:bg-green-700 transition whitespace-nowrap">
+                        Apply
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 </div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Do certifications increase marketing operations salary?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Data shows that specialized certifications like Marketo Certified Expert or Salesforce Marketing Cloud Consultant can increase base salary by $10,000 to $15,000 per year."
+    }
+  }, {
+    "@type": "Question",
+    "name": "What is the highest paying marketing operations skill?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Technical skills bridge the gap between marketing and engineering command the highest pay. Specifically, proficiency in SQL, Python, and API integrations (iPaaS) are top earners in 2026."
+    }
+  }]
+}
+</script>
 
 <script>
     function calculateSalary() {
