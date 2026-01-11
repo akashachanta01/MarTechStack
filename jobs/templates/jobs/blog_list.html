@@ -243,4 +243,17 @@
             {% empty %}
                 {% if search_query or current_category %}
                 <div class="col-span-full text-center py-12">
-                    <p class="text
+                    <p class="text-lg text-slate-500">We couldn't find any articles matching your search.</p>
+                    <a href="{% url 'blog_list' %}" class="mt-4 inline-block text-[#1f432d] font-bold hover:underline">Clear Filters</a>
+                </div>
+                {% else %}
+                <div class="col-span-full text-center py-20 opacity-50">
+                    <span class="material-symbols-outlined text-6xl text-slate-300 mb-4">history_edu</span>
+                    <p class="text-lg text-slate-500">Check back soon for new insights.</p>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
