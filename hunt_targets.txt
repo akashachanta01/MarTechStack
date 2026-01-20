@@ -1,28 +1,16 @@
 # --- ROLES (Grouped by Intent) ---
-"MarTech" OR "Marketing Technology" OR "Marketing Technologist"
-"Marketing Operations" OR "MOPs" OR "Marketing Ops" OR "Marketing automation specialist"
-"Tagging Specialist" OR "Web Analyst" OR "Web Analytics" OR "Digital Analytics"
+"MarTech" OR "Marketing Technology" OR "Marketing Technologist" OR "Marketing Operations" OR "MOPs" OR "Marketing Ops" OR "Marketing automation specialist"
 "CDP" OR "CDP Engineer" OR "Customer Data Platform"
 
 # --- MARKETING AUTOMATION (Grouped by Competitor) ---
-"Adobe Journey Optimizer" OR "AJO" OR "Adobe"
-"Marketo" OR "Adobe Marketo Engage"
-"Salesforce Marketing Cloud" OR "SFMC" OR "Marketing Cloud" OR "Salesforce Admin" OR "Salesforce" OR "Salesforce developer"
-"HubSpot Marketing Hub" OR "HubSpot Operations"
-"Braze" OR "Iterable" OR "Customer.io" OR "Klaviyo"
-"Eloqua" OR "Oracle Eloqua" OR "Knack"
-"Movable Ink"
+"Adobe Journey Optimizer" OR "AJO" OR "Adobe" OR "Marketo" OR "Adobe Marketo Engage"
+"HubSpot Marketing Hub" OR "HubSpot Operations" OR "Braze" OR "Iterable" OR "Customer.io" OR "Klaviyo" OR "Eloqua" OR "Oracle Eloqua" OR "Knack" OR "Movable Ink"
 
 # --- DATA & CDPs ---
-"Twilio Segment" or "ActionIQ"
-"Tealium" OR "Tealium AudienceStream" OR "Tealium iQ"
-"Adobe Experience Platform" OR "AEP" OR "Real-Time CDP"
-"Salesforce CDP" OR "Salesforce Data Cloud"
-"AEM" or "Adobe Experience Manager"
+"Twilio Segment" OR "ActionIQ" OR "Tealium" OR "Tealium AudienceStream" OR "Tealium iQ"
+"Adobe Experience Platform" OR "AEP" OR "Real-Time CDP" OR "AEM" OR "Adobe Experience Manager"
+"Salesforce CDP" OR "Salesforce Data Cloud" OR "Salesforce Marketing Cloud" OR "SFMC" OR "Marketing Cloud" OR "Salesforce Admin" OR "Salesforce" OR "Salesforce developer"
 
 # --- ANALYTICS & TESTING ---
-"Google Analytics 4" OR "GA4" OR "Google Tag Manager"
-"Adobe Analytics" OR "Customer Journey Analytics" OR "Adobe Launch"
-"Mixpanel" OR "Amplitude" OR "Heap"
-"Server-side tracking"
-"Adobe Target" OR "Optimizely"
+"Google Analytics 4" OR "GA4" OR "Google Tag Manager" OR "Adobe Analytics" OR "Customer Journey Analytics" OR "Adobe Launch" OR "Tagging Specialist" OR "Web Analyst" OR "Web Analytics" OR "Digital Analytics"
+"Mixpanel" OR "Amplitude" OR "Heap" OR "Server-side tracking" OR "Adobe Target" OR "Optimizely"
