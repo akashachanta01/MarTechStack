@@ -2,14 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P5B8FN4C');</script>
-<!-- End Google Tag Manager -->
-
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P5B8FN4C');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
@@ -62,29 +59,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1" rel="stylesheet" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Lato', 'sans-serif'],
                         serif: ['Playfair Display', 'serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
+                        mono: ['Courier Prime', 'monospace'],
                     },
                     colors: {
-                        'martech-green': '#1f432d',
-                        'martech-dark': '#0f172a',
-                    },
-                    backgroundImage: {
-                        'grid-pattern': "linear-gradient(to right, #f1f5f9 1px, transparent 1px), linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)",
-                    },
-                    backgroundSize: {
-                        'grid-pattern': '40px 40px',
+                        paper: '#f6f3ee',
+                        navy: '#1b2e4b',
+                        amber: '#bf5420',
+                        ink: '#1a1714',
+                        rule: '#cdc8be'
                     }
                 }
             }
@@ -92,43 +86,112 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     
     <style>
-        body { font-family: 'Inter', sans-serif; } 
+        :root{
+          --paper:#f6f3ee;
+          --paper2:#eeeae2;
+          --paper3:#e5e0d6;
+          --ink:#1a1714;
+          --ink2:#42403b;
+          --ink3:#857e75;
+          --ink4:#b5aea4;
+          --rule:#cdc8be;
+          --white:#fff;
+          --navy:#1b2e4b;
+          --navy2:#152540;
+          --navy3:#0e1c30;
+          --amber:#bf5420;
+          --amber2:#d96025;
+          --amber-light:#faeee5;
+          --green:#2d6a4f;
+          --green-light:#e8f5ee;
+        }
+
+        /* Nav specific styling */
+        .martech-nav {background:var(--navy3);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.07)}
+        .nav-inner {max-width:1160px;margin:0 auto;padding:0 32px;height:58px;display:flex;align-items:center;gap:32px}
+        .logo {display:flex;align-items:center;flex-shrink:0;line-height:0}
+        .nav-links {display:flex;align-items:center;gap:2px;flex:1;list-style:none;margin:0;padding:0;}
+        .nav-links li {display:flex;align-items:center}
+        .nav-links a {font-family:'Lato',sans-serif;font-size:13px;font-weight:400;color:rgba(255,255,255,.55);padding:7px 12px;border-radius:5px;transition:all .15s;line-height:1;display:flex;align-items:center;white-space:nowrap;text-decoration:none;}
+        .nav-links a:hover {color:white;background:rgba(255,255,255,.09)}
+        .nav-right {display:flex;align-items:center;gap:9px;flex-shrink:0}
+        
+        /* Global Button styling */
+        .btn-brand {display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 20px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.05em;line-height:1;white-space:nowrap;text-decoration:none;}
+        .btn-brand-ghost {background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75)}
+        .btn-brand-ghost:hover {border-color:rgba(255,255,255,.6);color:white}
+        .btn-brand-amber {background:var(--amber);color:white}
+        .btn-brand-amber:hover {background:var(--amber2)}
+        
+        /* Footer styling */
+        .martech-footer {background:var(--ink);color:rgba(255,255,255,.65);padding:64px 0 32px}
+        .martech-footer .wrap {max-width:1160px;margin:0 auto;padding:0 32px}
+        .ft {display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:44px;padding-bottom:52px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:28px}
+        .flogo {margin-bottom:12px;line-height:0}
+        .ftag {font-family:'Lato',sans-serif;font-size:13px;color:rgba(255,255,255,.4);line-height:1.65;margin-bottom:22px;max-width:240px;font-weight:300}
+        .fnl {display:flex;gap:7px;margin-bottom:7px}
+        .fnl input {flex:1;height:40px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:4px;padding:0 12px;font-size:13px;color:white;font-family:'Lato',sans-serif;outline:none}
+        .fnl input::placeholder {color:rgba(255,255,255,.28)}
+        .fnl button {height:40px;padding:0 14px;background:var(--amber);color:white;border:none;border-radius:4px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:background .15s}
+        .fnl button:hover {background:var(--amber2)}
+        .fct {font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
+        .fl {list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;padding:0;}
+        .fl a {font-family:'Lato',sans-serif;font-size:13px;color:rgba(255,255,255,.48);transition:color .12s;font-weight:300;text-decoration:none;}
+        .fl a:hover {color:white}
+        .fb {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+        .fleg {font-family:'Lato',sans-serif;font-size:12px;color:rgba(255,255,255,.25);display:flex;gap:20px;flex-wrap:wrap}
+        .fleg a {color:rgba(255,255,255,.25);transition:color .12s;text-decoration:none;}
+        .fleg a:hover {color:rgba(255,255,255,.6)}
+
+        @media(max-width:1024px){
+          .nav-links {display:none}
+          .ft {grid-template-columns:1fr 1fr 1fr}
+        }
+        @media(max-width:640px){
+          .ft {grid-template-columns:1fr 1fr}
+        }
     </style>
 </head>
-<body class="bg-white text-slate-900 antialiased selection:bg-martech-green selection:text-white flex flex-col min-h-screen">
-    <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <nav class="border-b border-slate-100 sticky top-0 bg-white z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <a href="/" class="flex items-center gap-2.5 group hover:opacity-90 transition-opacity">
-                <img src="{% static 'logo.svg' %}" alt="MarTechJobs Logo" class="w-8 h-8 object-contain">
-                
-                <div class="flex flex-col leading-none">
-                    <span class="font-serif font-bold text-xl text-slate-900 tracking-tight">MarTech<span class="text-[#1f432d]">Jobs</span></span>
-                </div>
-            </a>
-            
-            <div class="flex items-center gap-6">
-                <a href="{% url 'job_list' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Jobs</a>
-                
-                <a href="{% url 'blog_list' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Blog</a>
-                
-                <button onclick="toggleModal('subscribe-modal')" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">Get Alerts</button>
-                <a href="{% url 'about' %}" class="text-sm font-bold text-slate-900 hover:text-[#1f432d] transition hidden sm:block">About</a>
-                
-                <a href="{% url 'for_employers' %}" class="bg-black text-white text-xs font-bold px-5 py-2.5 rounded transition hover:bg-slate-800 shadow-sm">For Employers</a>
-            </div>
+<body class="bg-paper text-ink font-sans antialiased selection:bg-amber selection:text-white flex flex-col min-h-screen">
+    
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <nav class="martech-nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <a href="{% url 'job_list' %}" class="logo" aria-label="MarTechJobs home">
+          <svg width="196" height="36" viewBox="0 0 260 48" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="6" width="28" height="7" rx="2" fill="white"/>
+            <rect x="0" y="17" width="20" height="7" rx="2" fill="#f0a06a"/>
+            <rect x="0" y="28" width="24" height="7" rx="2" fill="white" opacity=".35"/>
+            <circle cx="36" cy="9.5" r="2.5" fill="white" opacity=".3"/>
+            <circle cx="36" cy="20.5" r="2.5" fill="#f0a06a" opacity=".65"/>
+            <circle cx="36" cy="31.5" r="2.5" fill="white" opacity=".18"/>
+            <text x="46" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="white" letter-spacing="-.3">MarTech</text>
+            <text x="171" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="#f0a06a" letter-spacing="-.3">Jobs</text>
+            <text x="46" y="36" font-family="'Courier Prime','Courier New',monospace" font-weight="700" font-size="9.5" fill="rgba(255,255,255,.38)" letter-spacing=".16em">MARTECHJOBS.IO</text>
+          </svg>
+        </a>
+        <ul class="nav-links" role="list">
+          <li><a href="{% url 'job_list' %}">MarTech Jobs</a></li>
+          <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
+          <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
+          <li><a href="{% url 'directory' %}">Job Directory</a></li>
+          <li><a href="{% url 'blog_list' %}">Blog</a></li>
+          <li><a href="{% url 'post_job' %}">Post a Job</a></li>
+          <li><a href="{% url 'about' %}">About</a></li>
+        </ul>
+        <div class="nav-right">
+          <button onclick="toggleModal('subscribe-modal')" class="btn-brand btn-brand-ghost">🔔 Get Alerts</button>
+          <a href="{% url 'post_job' %}" class="btn-brand btn-brand-amber">Post a Job</a>
         </div>
+      </div>
     </nav>
 
     <main class="flex-grow">
         {% if messages %}
             <div class="max-w-7xl mx-auto px-4 pt-4">
                 {% for message in messages %}
-                    <div class="p-4 rounded-lg mb-4 text-sm font-bold {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %}">
+                    <div class="p-4 border rounded-lg mb-4 text-sm font-bold font-sans {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -138,132 +201,110 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         {% block content %}{% endblock %}
     </main>
 
-    <div class="bg-[#0f1110] border-t border-black text-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
-                
-                <div class="flex items-start gap-4 max-w-xl">
-                    <div class="text-[#1f432d]">
-                         <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">mail</span>
-                    </div>
-                    <div>
-                        <h2 class="text-3xl font-serif font-bold text-white mb-2">Advance your career in MarTech</h2>
-                        <p class="text-slate-400 font-light text-lg">
-                            Join 15,000+ professionals receiving curated jobs every Tuesday.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="w-full max-w-md">
-                    <form id="subscribe-form" class="flex flex-col sm:flex-row gap-0">
-                        {% csrf_token %}
-                        <input type="email" name="email" required placeholder="Enter your email" 
-                               class="w-full px-4 py-3 text-slate-900 bg-white border-0 focus:ring-0 outline-none h-12 text-sm placeholder-slate-500 rounded-none sm:rounded-l-sm">
-                        <button type="submit" 
-                                class="bg-[#244c33] hover:bg-[#1a3826] text-white font-bold px-6 py-3 text-xs tracking-wider uppercase h-12 rounded-none sm:rounded-r-sm transition-colors whitespace-nowrap">
-                            Subscribe
-                        </button>
-                    </form>
-                    <p class="text-[10px] text-slate-500 mt-2 font-mono tracking-wide" id="sub-message">
-                        No spam, ever. Unsubscribe at any time.
-                    </p>
-                </div>
-
+    <footer class="martech-footer">
+      <div class="wrap">
+        <div class="ft">
+          <div>
+            <div class="flogo">
+              <svg width="188" height="34" viewBox="0 0 260 48" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0" y="6" width="28" height="7" rx="2" fill="white"/>
+                <rect x="0" y="17" width="20" height="7" rx="2" fill="#f0a06a"/>
+                <rect x="0" y="28" width="24" height="7" rx="2" fill="white" opacity=".35"/>
+                <circle cx="36" cy="9.5" r="2.5" fill="white" opacity=".3"/>
+                <circle cx="36" cy="20.5" r="2.5" fill="#f0a06a" opacity=".65"/>
+                <circle cx="36" cy="31.5" r="2.5" fill="white" opacity=".18"/>
+                <text x="46" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="white" letter-spacing="-.3">MarTech</text>
+                <text x="171" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="#f0a06a" letter-spacing="-.3">Jobs</text>
+                <text x="46" y="36" font-family="'Courier Prime','Courier New',monospace" font-weight="700" font-size="9.5" fill="rgba(255,255,255,.38)" letter-spacing=".16em">MARTECHJOBS.IO</text>
+              </svg>
             </div>
+            <p class="ftag">The leading job board for marketing technology professionals worldwide. Curated, niche, and vendor-neutral.</p>
+            <form id="footer-subscribe-form" class="fnl">
+              {% csrf_token %}
+              <input type="email" name="email" required placeholder="Weekly job digest" aria-label="Footer newsletter"/>
+              <button type="submit">Go</button>
+            </form>
+            <p id="footer-sub-message" style="font-family:'Lato',sans-serif;font-size:11px;color:rgba(255,255,255,.2);margin-top:6px; min-height: 16px;">No spam · Unsubscribe anytime</p>
+          </div>
+          <div>
+            <div class="fct">Tech Stacks</div>
+            <ul class="fl">
+              {% for stack in popular_tech_stacks|slice:":8" %}
+              <li><a href="{% url 'tool_detail' stack.slug %}">{{ stack.name }} Jobs</a></li>
+              {% endfor %}
+              <li><a href="{% url 'directory' %}">All MarTech Stacks →</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="fct">Job Types</div>
+            <ul class="fl">
+              <li><a href="/?q=Marketing+Technologist">Marketing Technologist</a></li>
+              <li><a href="/?q=Marketing+Operations">Marketing Operations</a></li>
+              <li><a href="/?q=Revenue+Operations">Revenue Operations</a></li>
+              <li><a href="/?q=CRM+Manager">CRM Manager Jobs</a></li>
+              <li><a href="/?q=Solutions+Consultant">Solutions Consultant</a></li>
+              <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote MarTech Jobs</a></li>
+              <li><a href="/?rtype=contract">Contract MarTech Roles</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="fct">Locations</div>
+            <ul class="fl">
+              <li><a href="{% url 'seo_loc_only' 'united-states' %}">United States</a></li>
+              <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote / Global</a></li>
+              {% for loc in available_countries|slice:":6" %}
+              <li><a href="{% url 'seo_loc_only' loc|slugify %}">{{ loc }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div>
+            <div class="fct">Company</div>
+            <ul class="fl">
+              <li><a href="{% url 'about' %}">About</a></li>
+              <li><a href="{% url 'blog_list' %}">Blog</a></li>
+              <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
+              <li><a href="{% url 'for_employers' %}">For Employers</a></li>
+              <li><a href="{% url 'post_job' %}">Post a Job</a></li>
+              <li><a href="#" onclick="toggleModal('subscribe-modal'); return false;">Job Alerts</a></li>
+              <li><a href="{% url 'job_feed' %}">RSS Feed</a></li>
+              <li><a href="{% url 'contact' %}">Contact</a></li>
+              <li><a href="/sitemap.xml">Sitemap</a></li>
+            </ul>
+          </div>
         </div>
-    </div>
-
-    <footer class="bg-white pt-16 pb-12 text-slate-600 font-sans border-t border-slate-100">
-        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12 mb-16">
-                <div class="col-span-2 lg:col-span-1 pr-4">
-                    <a href="/" class="flex items-center gap-2 mb-4 group">
-                       <img src="{% static 'logo.svg' %}" alt="MarTechJobs" class="w-6 h-6 object-contain">
-                       <span class="font-bold text-lg text-slate-900 font-serif">MarTechJobs</span>
-                   </a>
-                   <p class="text-sm leading-relaxed mb-6 text-slate-500">
-                       The leading community and job board for marketing technology professionals.
-                   </p>
-                   <div class="flex gap-4 text-slate-400">
-                       <a href="{% url 'job_feed' %}" class="hover:text-slate-900 transition"><span class="material-symbols-outlined text-xl">rss_feed</span></a>
-                   </div>
-                </div>
-                
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Popular Tech Stacks</h3>
-                    <ul class="space-y-3 text-sm">
-                        {% for stack in popular_tech_stacks|slice:":6" %}
-                        <li><a href="{% url 'tool_detail' stack.slug %}" class="hover:text-martech-green hover:underline transition">{{ stack.name }}</a></li>
-                        {% empty %}
-                        <li><a href="/" class="hover:text-slate-900 transition">Salesforce</a></li>
-                        <li><a href="/" class="hover:text-slate-900 transition">HubSpot</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Trending Searches</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{% url 'job_list' %}" class="hover:text-martech-green hover:underline transition" title="MarTech Jobs">MarTech Jobs</a></li>
-                        <li><a href="/?q=Marketing+Technologist" class="hover:text-martech-green hover:underline transition" title="Marketing Technologist Jobs">Marketing Technologist Jobs</a></li>
-                        <li><a href="/?q=Marketing+Technology" class="hover:text-martech-green hover:underline transition" title="Marketing Technology Jobs">Marketing Technology Jobs</a></li>
-                        <li><a href="/?q=Tech+Marketing" class="hover:text-martech-green hover:underline transition" title="Tech Marketing Jobs">Tech Marketing Jobs</a></li>
-                        <li><a href="{% url 'salary_guide' %}" class="hover:text-martech-green hover:underline transition" title="MarTech Salary Guide">Salary Guide</a></li>
-                        <li><a href="{% url 'directory' %}" class="hover:text-martech-green hover:underline transition" title="Job Directory">Job Directory</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Locations</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{% url 'seo_loc_only' 'remote' %}" class="hover:text-martech-green hover:underline transition">Remote</a></li>
-                        <li><a href="{% url 'seo_loc_only' 'united-states' %}" class="hover:text-martech-green hover:underline transition">United States</a></li>
-                        {% for country in available_countries|slice:":5" %}
-                        <li><a href="{% url 'seo_loc_only' country|slugify %}" class="hover:text-martech-green hover:underline transition">{{ country }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                 <div>
-                    <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Employers</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{% url 'post_job' %}" class="hover:text-slate-900 transition">Post a Job</a></li>
-                        <li><a href="{% url 'for_employers' %}" class="hover:text-slate-900 transition">Pricing</a></li>
-                    </ul>
-                </div>
-                 <div>
-                    <h3 class="text-sm font-bold text-slate-900 font-serif mb-4">Support</h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{% url 'contact' %}" class="hover:text-slate-900 transition">Contact Us</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Privacy Policy</a></li>
-                        <li><a href="#" class="hover:text-slate-900 transition">Terms of Service</a></li>
-                    </ul>
-                </div>
-            </div>
+        <div class="fb">
+          <div class="fleg">
+            <span>© 2026 MarTechJobs.io</span>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </div>
+          <span style="font-family:'Lato',sans-serif;font-size:12px;color:rgba(255,255,255,.2)">The #1 Job Board for MarTech Professionals</span>
         </div>
+      </div>
     </footer>
 
-    <div id="subscribe-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) toggleModal('subscribe-modal')">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 relative transform transition-all scale-100">
-            <button onclick="toggleModal('subscribe-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <span class="material-symbols-outlined">close</span>
+    <div id="subscribe-modal" class="fixed inset-0 bg-[#0e1c30]/90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) toggleModal('subscribe-modal')">
+        <div class="bg-white border-2 border-navy rounded-xl shadow-2xl max-w-md w-full p-8 relative transform transition-all scale-100">
+            <button onclick="toggleModal('subscribe-modal')" class="absolute top-4 right-4 text-ink3 hover:text-navy transition">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                     <span class="material-symbols-outlined text-[#1f432d]">notifications_active</span>
+                <div class="w-12 h-12 bg-amber-light rounded-full flex items-center justify-center mx-auto mb-4 text-amber border border-amber">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                 </div>
-                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-2">Never miss a role</h3>
-                <p class="text-slate-500 text-sm">Get the latest MarTech jobs delivered to your inbox every Tuesday.</p>
+                <h3 class="text-2xl font-serif font-bold text-navy mb-2 leading-tight">Never miss<br>the right role.</h3>
+                <p class="text-ink3 text-sm font-sans">Get the latest MarTech jobs delivered to your inbox. No spam, ever.</p>
             </div>
             <form id="modal-sub-form" class="space-y-4">
                 {% csrf_token %}
                 <div>
                     <input type="email" name="email" required placeholder="name@company.com" 
-                           class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#1f432d] focus:border-transparent outline-none transition">
+                           class="w-full px-4 py-3 rounded border-2 border-rule font-sans focus:ring-0 focus:border-navy outline-none transition bg-paper text-ink">
                 </div>
-                <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 rounded-lg shadow-md transition-transform transform hover:-translate-y-0.5">
-                    Subscribe for Free
+                <button type="submit" class="w-full bg-amber hover:bg-[#d96025] text-white font-bold py-3.5 rounded font-sans uppercase tracking-wider text-sm transition">
+                    Get Free Alerts
                 </button>
-                <p id="modal-msg" class="text-center text-xs text-slate-400 mt-2 min-h-[1.5em]"></p>
+                <p id="modal-msg" class="text-center font-mono font-bold text-[11px] text-ink3 mt-2 min-h-[1.5em] tracking-widest uppercase"></p>
             </form>
         </div>
     </div>
@@ -294,30 +335,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }).then(response => response.json()).then(data => {
                     if(data.success) { 
                         btn.textContent = "Subscribed!"; 
-                        btn.classList.replace("bg-[#244c33]", "bg-black"); 
-                        btn.classList.replace("bg-[#1f432d]", "bg-black");
-                        msg.innerHTML = '<span class="text-green-600 font-bold">✓ Welcome to the club!</span>'; 
+                        msg.innerHTML = '<span style="color:#2d6a4f;">✓ Welcome to the club!</span>'; 
                         form.reset(); 
                         setTimeout(() => {
                            if(formId === 'modal-sub-form') toggleModal('subscribe-modal');
                            btn.disabled = false; btn.textContent = originalText;
                            msg.innerHTML = '';
-                        }, 2000);
+                        }, 2500);
                     } 
                     else { 
                         btn.disabled = false; btn.textContent = originalText; 
-                        msg.innerHTML = '<span class="text-red-500 font-bold">Error: ' + (data.error || 'Check email') + '</span>'; 
+                        msg.innerHTML = '<span style="color:#bf5420;">Error: ' + (data.error || 'Check email') + '</span>'; 
                     }
                 }).catch(error => { 
                     btn.disabled = false; btn.textContent = originalText; 
-                    msg.textContent = "Something went wrong. Try again."; 
+                    msg.innerHTML = '<span style="color:#bf5420;">Something went wrong. Try again.</span>'; 
                 });
             });
         }
 
-        // Initialize Listeners
         document.addEventListener('DOMContentLoaded', function() {
-            handleSubscribe('subscribe-form', 'sub-message');
+            handleSubscribe('footer-subscribe-form', 'footer-sub-message');
             handleSubscribe('modal-sub-form', 'modal-msg');
         });
     </script>
