@@ -1,507 +1,360 @@
+{% extends "jobs/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-P5B8FN4C');</script>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  
-  <title>Marketing Technology Jobs — 700+ MarTech Careers | MarTechJobs.io</title>
-  <meta name="description" content="Browse 700+ curated marketing technology jobs in Salesforce, HubSpot, Adobe, Braze, Amplitude and more. The #1 niche job board for MarTech professionals. Free job alerts. 2026 Salary Guide."/>
-  <meta name="keywords" content="martech jobs, marketing technology jobs, salesforce jobs, hubspot jobs, braze jobs, marketing operations jobs, marketing technologist, CDP jobs, CRM jobs, remote martech, adobe experience cloud jobs"/>
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
-  
-  <meta property="og:title" content="Marketing Technology Jobs — 700+ MarTech Careers | MarTechJobs.io"/>
-  <meta property="og:description" content="The #1 niche job board for MarTech professionals. Browse 700+ curated roles in Salesforce, HubSpot, Adobe, Braze and more. Free job alerts + 2026 Salary Guide."/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://martechjobs.io{{ request.path }}"/>
-  <meta property="og:image" content="https://martechjobs.io{% static 'logo.svg' %}"/>
-  <meta property="og:site_name" content="MarTechJobs.io"/>
-  
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Marketing Technology Jobs — 700+ MarTech Careers"/>
-  <meta name="twitter:description" content="The #1 niche job board for MarTech professionals. Salesforce, HubSpot, Adobe, Braze and 700+ more roles."/>
-  <meta name="twitter:image" content="https://martechjobs.io{% static 'logo.svg' %}"/>
-  <meta name="twitter:site" content="@martechjobs"/>
-  
-  <link rel="canonical" href="https://martechjobs.io{{ request.path }}"/>
-  <link rel="sitemap" type="application/xml" href="/sitemap.xml"/>
-  <link rel="alternate" type="application/rss+xml" title="MarTech Jobs — Latest Listings" href="/feed/"/>
-  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
-  
+
+{% block title %}Marketing Technology Jobs — 700+ MarTech Careers | MarTechJobs.io{% endblock %}
+{% block meta_description %}Browse 700+ curated marketing technology jobs in Salesforce, HubSpot, Adobe, Braze, Amplitude and more. The #1 niche job board for MarTech professionals. Free job alerts. 2026 Salary Guide.{% endblock %}
+
+{% block rel_prev_next %}
   {% if jobs.has_previous %}
       <link rel="prev" href="?page={{ jobs.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if location_filter %}&l={{ location_filter }}{% endif %}" />
   {% endif %}
   {% if jobs.has_next %}
       <link rel="next" href="?page={{ jobs.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if location_filter %}&l={{ location_filter }}{% endif %}" />
   {% endif %}
+{% endblock %}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Lato:ital,wght@0,300;0,400;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet"/>
+{% block content %}
+<style>
+  /* ── UTILITY ── */
+  .wrap{max-width:1160px;margin:0 auto;padding:0 32px}
+  .mono{font-family:'Courier Prime',monospace}
+
+  /* ── SCROLL ANIMATIONS ── */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.visible{opacity:1;transform:none}
+  .reveal-delay-1{transition-delay:.1s}
+  .reveal-delay-2{transition-delay:.2s}
+  .reveal-delay-3{transition-delay:.3s}
+  .reveal-delay-4{transition-delay:.4s}
+
+  /* ══════════════════════════════
+     TICKER
+  ══════════════════════════════ */
+  .ticker{background:var(--amber);height:34px;overflow:hidden;display:flex;align-items:center}
+  .ticker-pill{background:var(--ink);color:var(--amber);font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:0 16px;height:100%;display:flex;align-items:center;flex-shrink:0;gap:6px}
+  .ticker-live{width:6px;height:6px;background:var(--amber);border-radius:50%;animation:blink 1.8s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .ticker-track{display:flex;gap:56px;white-space:nowrap;animation:scroll-ticker 38s linear infinite;font-size:12px;font-weight:700;color:white;padding-left:32px}
+  .ticker-track span::before{content:'◆';font-size:7px;margin-right:10px;opacity:.7;vertical-align:middle}
+  @keyframes scroll-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  /* ══════════════════════════════
+     HERO
+  ══════════════════════════════ */
+  .hero{padding:72px 0 64px;position:relative;overflow:hidden;background:var(--paper)}
+  .hero::before{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:var(--white);z-index:0}
   
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"MarTech Jobs","alternateName":"MarTechJobs.io","url":"https://martechjobs.io","description":"The #1 niche job board for marketing technology professionals — Salesforce, Adobe, HubSpot, Braze and 700+ more roles","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://martechjobs.io/?q={search_term_string}"},"query-input":"required name=search_term_string"}}</script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"MarTech Jobs","alternateName":"MarTechJobs.io","url":"https://martechjobs.io","logo":{"@type":"ImageObject","url":"https://martechjobs.io{% static 'logo.svg' %}","width":260,"height":48},"description":"The #1 niche job board for marketing technology professionals","sameAs":["https://twitter.com/martechjobs","https://linkedin.com/company/martechjobs","https://facebook.com/martechjobs"]}</script>
+  /* THE FIX: minmax(0, 1fr) ensures exact 50/50 split so it perfectly aligns with background */
+  .hero-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));min-height:520px;position:relative;z-index:1}
+  
+  .hero-left{padding-right:64px;display:flex;flex-direction:column;justify-content:center}
+  .hero-right{background:var(--white);padding:52px 48px;display:flex;flex-direction:column;justify-content:flex-start;border-left:1px solid var(--rule);position:relative}
+  .eyebrow{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:'';width:32px;height:2px;background:var(--amber)}
+  h1{font-family:'Playfair Display',serif;font-weight:800;font-size:clamp(46px,5.2vw,68px);line-height:.98;letter-spacing:-.03em;color:var(--ink);margin-bottom:22px}
+  h1 em{font-style:italic;color:var(--navy)}
+  .hero-sub{font-size:17px;color:var(--ink2);line-height:1.7;font-weight:300;margin-bottom:40px;max-width:460px}
+  .hero-sub strong{font-weight:700;color:var(--ink)}
 
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --paper:#f6f3ee;
-      --paper2:#eeeae2;
-      --paper3:#e5e0d6;
-      --ink:#1a1714;
-      --ink2:#42403b;
-      --ink3:#857e75;
-      --ink4:#b5aea4;
-      --rule:#cdc8be;
-      --white:#fff;
-      --navy:#1b2e4b;
-      --navy2:#152540;
-      --navy3:#0e1c30;
-      --amber:#bf5420;
-      --amber2:#d96025;
-      --amber-light:#faeee5;
-      --green:#2d6a4f;
-      --green-light:#e8f5ee;
-    }
-    html{scroll-behavior:smooth}
-    body{font-family:'Lato',sans-serif;background:var(--paper);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-    a{color:inherit;text-decoration:none}
-    img{display:block;max-width:100%}
-    ::selection{background:rgba(191,84,32,.15)}
+  /* Search */
+  .search-container{margin-bottom:20px}
+  .search-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:block}
+  .search-box{display:flex;background:white;border:2px solid var(--ink);border-radius:8px;overflow:hidden;box-shadow:4px 4px 0 var(--navy);transition:box-shadow .2s,border-color .2s}
+  .search-box:focus-within{border-color:var(--navy);box-shadow:5px 5px 0 var(--amber)}
+  .s-icon{padding:0 14px;color:var(--ink3);display:flex;align-items:center;flex-shrink:0}
+  .s-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+  .s-input{flex:1;border:none;outline:none;font-size:15px;color:var(--ink);font-family:'Lato',sans-serif;height:52px;background:transparent;min-width:0}
+  .s-input::placeholder{color:var(--ink4)}
+  .s-sep{width:1px;background:var(--rule);margin:12px 0;flex-shrink:0}
+  .s-loc{border:none;outline:none;font-size:14px;color:var(--ink2);font-family:'Lato',sans-serif;padding:0 14px;background:transparent;cursor:pointer;height:52px;-webkit-appearance:none;flex-shrink:0}
+  .s-btn{background:var(--navy);color:white;border:none;padding:0 26px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:background .15s;flex-shrink:0}
+  .s-btn:hover{background:var(--amber)}
+  .pop-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
+  .pop-label{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+  .pop-chip{padding:5px 12px;background:var(--paper2);border:1px solid var(--rule);border-radius:100px;font-size:12px;color:var(--ink2);transition:all .15s;white-space:nowrap}
+  .pop-chip:hover{background:var(--navy);border-color:var(--navy);color:white}
 
-    /* ── UTILITY ── */
-    .wrap{max-width:1160px;margin:0 auto;padding:0 32px}
-    .mono{font-family:'Courier Prime',monospace}
+  /* Hero right — live jobs feed */
+  .feed-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);padding-bottom:12px;border-bottom:2px solid var(--ink);margin-bottom:0;display:flex;align-items:center;justify-content:space-between}
+  .feed-live{display:flex;align-items:center;gap:5px;color:var(--green);font-size:10px}
+  .feed-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.8s infinite}
+  .feed-item{padding:16px 0;border-bottom:1px solid var(--rule);display:block;transition:background .12s}
+  .feed-item:hover .fi-title{color:var(--navy)}
+  .fi-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .fi-favicon{width:28px;height:28px;border-radius:5px;background:var(--paper2);border:1px solid var(--rule);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center; text-transform:uppercase;}
+  .fi-favicon img{width:18px;height:18px;object-fit:contain}
+  .fi-company{font-size:12px;font-weight:700;color:var(--ink2)}
+  .fi-badge{margin-left:auto;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px}
+  .fi-badge.new{background:var(--amber-light);color:var(--amber)}
+  .fi-title{font-size:14px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:5px;transition:color .12s}
+  .fi-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3)}
+  .fi-tag{padding:2px 7px;border-radius:3px;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .fi-tag.mops{background:#ede9ff;color:#3d2f9e}
+  .fi-tag.dev{background:#dff0ff;color:#1a4f8a}
+  .fi-tag.remote{background:var(--green-light);color:var(--green)}
+  .feed-all{display:flex;align-items:center;justify-content:space-between;padding:16px 0 0;font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .feed-all a{color:var(--navy);transition:color .12s}
+  .feed-all a:hover{color:var(--amber)}
+  .feed-count{font-size:11px;color:var(--ink3)}
 
-    /* ── SCROLL ANIMATIONS ── */
-    .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
-    .reveal.visible{opacity:1;transform:none}
-    .reveal-delay-1{transition-delay:.1s}
-    .reveal-delay-2{transition-delay:.2s}
-    .reveal-delay-3{transition-delay:.3s}
-    .reveal-delay-4{transition-delay:.4s}
+  /* Hero stats strip */
+  .hero-stats{display:flex;gap:0;margin-top:40px;padding-top:32px;border-top:1px solid var(--rule)}
+  .hstat{flex:1;padding-right:24px}
+  .hstat+.hstat{padding-left:24px;border-left:1px solid var(--rule)}
+  .hstat-n{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1}
+  .hstat-l{font-size:12px;color:var(--ink3);margin-top:4px;letter-spacing:.02em}
 
-    /* ══════════════════════════════
-       NAV
-    ══════════════════════════════ */
-    nav{background:var(--navy3);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.07)}
-    .nav-inner{max-width:1160px;margin:0 auto;padding:0 32px;height:58px;display:flex;align-items:center;gap:32px}
-    .logo{display:flex;align-items:center;flex-shrink:0;line-height:0}
-    .nav-links{display:flex;align-items:center;gap:2px;flex:1;list-style:none}
-    .nav-links li{display:flex;align-items:center}
-    .nav-links a{font-size:13px;color:rgba(255,255,255,.55);padding:7px 12px;border-radius:5px;transition:all .15s;line-height:1;display:flex;align-items:center;white-space:nowrap}
-    .nav-links a:hover{color:white;background:rgba(255,255,255,.09)}
-    .nav-right{display:flex;align-items:center;gap:9px;flex-shrink:0}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 20px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.05em;line-height:1;white-space:nowrap}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75)}
-    .btn-ghost:hover{border-color:rgba(255,255,255,.6);color:white}
-    .btn-amber{background:var(--amber);color:white}
-    .btn-amber:hover{background:var(--amber2)}
-    .btn-navy{background:var(--navy);color:white}
-    .btn-navy:hover{background:var(--navy2)}
-    .btn-outline{background:transparent;border:1.5px solid var(--navy);color:var(--navy)}
-    .btn-outline:hover{background:var(--navy);color:white}
-    .btn-lg{padding:13px 28px;font-size:14px;border-radius:7px}
+  /* ══════════════════════════════
+     EMPLOYER LOGOS (trust strip)
+  ══════════════════════════════ */
+  .trust-strip{background:var(--white);border-bottom:1px solid var(--rule);padding:28px 0;overflow:hidden}
+  .trust-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink4);text-align:center;margin-bottom:20px}
+  .logo-scroll-wrap{overflow:hidden;position:relative}
+  .logo-scroll-wrap::before,.logo-scroll-wrap::after{content:'';position:absolute;top:0;width:80px;height:100%;z-index:2}
+  .logo-scroll-wrap::before{left:0;background:linear-gradient(to right,white,transparent)}
+  .logo-scroll-wrap::after{right:0;background:linear-gradient(to left,white,transparent)}
+  .logo-scroll{display:flex;gap:0;animation:scroll-logos 28s linear infinite;width:max-content}
+  .logo-scroll:hover{animation-play-state:paused}
+  @keyframes scroll-logos{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  .employer-logo{padding:0 40px;display:flex;align-items:center;height:44px;opacity:.5;transition:opacity .2s;filter:grayscale(1)}
+  .employer-logo:hover{opacity:1;filter:none}
+  .employer-logo span{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;color:var(--ink);white-space:nowrap}
 
-    /* ══════════════════════════════
-       TICKER
-    ══════════════════════════════ */
-    .ticker{background:var(--amber);height:34px;overflow:hidden;display:flex;align-items:center}
-    .ticker-pill{background:var(--ink);color:var(--amber);font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:0 16px;height:100%;display:flex;align-items:center;flex-shrink:0;gap:6px}
-    .ticker-live{width:6px;height:6px;background:var(--amber);border-radius:50%;animation:blink 1.8s infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-    .ticker-track{display:flex;gap:56px;white-space:nowrap;animation:scroll-ticker 38s linear infinite;font-size:12px;font-weight:700;color:white;padding-left:32px}
-    .ticker-track span::before{content:'◆';font-size:7px;margin-right:10px;opacity:.7;vertical-align:middle}
-    @keyframes scroll-ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  /* ══════════════════════════════
+     JOB CARDS SECTION
+  ══════════════════════════════ */
+  .jobs-section{padding:72px 0;border-bottom:1px solid var(--rule)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+  h2.sh-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  h2.sh-title em{font-style:italic;color:var(--navy)}
+  .sh-sub{font-size:13px;color:var(--ink3);margin-top:3px;font-weight:300}
+  .sh-link{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid var(--rule);padding-bottom:2px;transition:all .12s;white-space:nowrap}
+  .sh-link:hover{color:var(--amber);border-color:var(--amber)}
 
-    /* ══════════════════════════════
-       HERO
-    ══════════════════════════════ */
-    .hero{padding:72px 0 64px;position:relative;overflow:hidden;background:var(--paper)}
-    .hero::before{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:var(--white);z-index:0}
-    .hero-grid{display:grid;grid-template-columns:1fr 1fr;min-height:520px;position:relative;z-index:1}
-    .hero-left{padding-right:64px;display:flex;flex-direction:column;justify-content:center}
-    .hero-right{background:var(--white);padding:52px 48px;display:flex;flex-direction:column;justify-content:flex-start;border-left:1px solid var(--rule);position:relative}
-    .eyebrow{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:18px;display:flex;align-items:center;gap:10px}
-    .eyebrow::before{content:'';width:32px;height:2px;background:var(--amber)}
-    h1{font-family:'Playfair Display',serif;font-weight:800;font-size:clamp(46px,5.2vw,68px);line-height:.98;letter-spacing:-.03em;color:var(--ink);margin-bottom:22px}
-    h1 em{font-style:italic;color:var(--navy)}
-    .hero-sub{font-size:17px;color:var(--ink2);line-height:1.7;font-weight:300;margin-bottom:40px;max-width:460px}
-    .hero-sub strong{font-weight:700;color:var(--ink)}
+  .filter-row{display:flex;align-items:center;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+  .ftab{padding:8px 20px;font-size:12px;font-weight:700;font-family:'Lato',sans-serif;color:var(--ink3);background:white;border:1px solid var(--rule);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.06em;border-radius:4px; display:inline-block; text-align:center;}
+  .ftab.active{background:var(--navy);color:white;border-color:var(--navy)}
+  .ftab:hover:not(.active){background:var(--paper2);color:var(--ink);border-color:var(--rule)}
 
-    /* Search */
-    .search-container{margin-bottom:20px}
-    .search-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;display:block}
-    .search-box{display:flex;background:white;border:2px solid var(--ink);border-radius:8px;overflow:hidden;box-shadow:4px 4px 0 var(--navy);transition:box-shadow .2s,border-color .2s}
-    .search-box:focus-within{border-color:var(--navy);box-shadow:5px 5px 0 var(--amber)}
-    .s-icon{padding:0 14px;color:var(--ink3);display:flex;align-items:center;flex-shrink:0}
-    .s-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
-    .s-input{flex:1;border:none;outline:none;font-size:15px;color:var(--ink);font-family:'Lato',sans-serif;height:52px;background:transparent;min-width:0}
-    .s-input::placeholder{color:var(--ink4)}
-    .s-sep{width:1px;background:var(--rule);margin:12px 0;flex-shrink:0}
-    .s-loc{border:none;outline:none;font-size:14px;color:var(--ink2);font-family:'Lato',sans-serif;padding:0 14px;background:transparent;cursor:pointer;height:52px;-webkit-appearance:none;flex-shrink:0}
-    .s-btn{background:var(--navy);color:white;border:none;padding:0 26px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:background .15s;flex-shrink:0}
-    .s-btn:hover{background:var(--amber)}
-    .pop-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
-    .pop-label{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
-    .pop-chip{padding:5px 12px;background:var(--paper2);border:1px solid var(--rule);border-radius:100px;font-size:12px;color:var(--ink2);transition:all .15s;white-space:nowrap}
-    .pop-chip:hover{background:var(--navy);border-color:var(--navy);color:white}
+  /* Job cards grid — 2 cols */
+  .jobs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-    /* Hero right — live jobs feed */
-    .feed-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);padding-bottom:12px;border-bottom:2px solid var(--ink);margin-bottom:0;display:flex;align-items:center;justify-content:space-between}
-    .feed-live{display:flex;align-items:center;gap:5px;color:var(--green);font-size:10px}
-    .feed-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.8s infinite}
-    .feed-item{padding:16px 0;border-bottom:1px solid var(--rule);display:block;transition:background .12s}
-    .feed-item:hover .fi-title{color:var(--navy)}
-    .fi-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-    .fi-favicon{width:28px;height:28px;border-radius:5px;background:var(--paper2);border:1px solid var(--rule);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-    .fi-favicon img{width:18px;height:18px;object-fit:contain}
-    .fi-company{font-size:12px;font-weight:700;color:var(--ink2)}
-    .fi-badge{margin-left:auto;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px}
-    .fi-badge.new{background:var(--amber-light);color:var(--amber)}
-    .fi-title{font-size:14px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:5px;transition:color .12s}
-    .fi-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3)}
-    .fi-tag{padding:2px 7px;border-radius:3px;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-    .fi-tag.mops{background:#ede9ff;color:#3d2f9e}
-    .fi-tag.dev{background:#dff0ff;color:#1a4f8a}
-    .fi-tag.remote{background:var(--green-light);color:var(--green)}
-    .feed-all{display:flex;align-items:center;justify-content:space-between;padding:16px 0 0;font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-    .feed-all a{color:var(--navy);transition:color .12s}
-    .feed-all a:hover{color:var(--amber)}
-    .feed-count{font-size:11px;color:var(--ink3)}
+  .jcard{background:white;border:1px solid var(--rule);border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:0;transition:all .2s;cursor:pointer;position:relative}
+  .jcard:hover{border-color:var(--navy);box-shadow:3px 3px 0 var(--navy);transform:translate(-1px,-1px)}
+  .jcard.featured{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-light) 0%,white 60%)}
+  .jcard.featured::before{content:'FEATURED';position:absolute;top:14px;right:14px;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--amber);background:white;padding:3px 8px;border:1px solid var(--amber);border-radius:3px}
+  .jc-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+  .jc-favicon{width:48px;height:48px;border-radius:8px;background:var(--paper2);border:1px solid var(--rule);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center; text-transform:uppercase;}
+  .jc-favicon img{width:32px;height:32px;object-fit:contain}
+  .jc-co{font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:3px}
+  .jc-title{font-size:17px;font-weight:700;color:var(--ink);line-height:1.3;transition:color .12s}
+  .jcard:hover .jc-title{color:var(--navy)}
+  .jc-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .pill{padding:4px 10px;border-radius:4px;font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .pill-loc{background:var(--paper2);color:var(--ink2)}
+  .pill-mops{background:#ede9ff;color:#3d2f9e}
+  .pill-dev{background:#dff0ff;color:#1a4f8a}
+  .pill-remote{background:var(--green-light);color:var(--green)}
+  .pill-stack{background:var(--amber-light);color:var(--amber)}
+  .jc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--rule);margin-top:auto}
+  .jc-salary{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--green)}
+  .jc-salary.na{font-family:'Lato',sans-serif;font-size:12px;color:var(--ink3);font-weight:400}
+  .jc-date{font-size:11px;color:var(--ink3)}
+  .jc-apply{font-family:'Lato',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);border:1.5px solid var(--navy);padding:6px 14px;border-radius:4px;transition:all .15s}
+  .jcard:hover .jc-apply{background:var(--navy);color:white}
 
-    /* Hero stats strip */
-    .hero-stats{display:flex;gap:0;margin-top:40px;padding-top:32px;border-top:1px solid var(--rule)}
-    .hstat{flex:1;padding-right:24px}
-    .hstat+.hstat{padding-left:24px;border-left:1px solid var(--rule)}
-    .hstat-n{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--ink);line-height:1}
-    .hstat-l{font-size:12px;color:var(--ink3);margin-top:4px;letter-spacing:.02em}
+  .jobs-footer{margin-top:28px;display:flex;align-items:center;justify-content:space-between}
+  .jp-info{font-size:13px;color:var(--ink3)}
 
-    /* ══════════════════════════════
-       EMPLOYER LOGOS (trust strip)
-    ══════════════════════════════ */
-    .trust-strip{background:var(--white);border-bottom:1px solid var(--rule);padding:28px 0;overflow:hidden}
-    .trust-label{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink4);text-align:center;margin-bottom:20px}
-    .logo-scroll-wrap{overflow:hidden;position:relative}
-    .logo-scroll-wrap::before,.logo-scroll-wrap::after{content:'';position:absolute;top:0;width:80px;height:100%;z-index:2}
-    .logo-scroll-wrap::before{left:0;background:linear-gradient(to right,white,transparent)}
-    .logo-scroll-wrap::after{right:0;background:linear-gradient(to left,white,transparent)}
-    .logo-scroll{display:flex;gap:0;animation:scroll-logos 28s linear infinite;width:max-content}
-    .logo-scroll:hover{animation-play-state:paused}
-    @keyframes scroll-logos{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-    .employer-logo{padding:0 40px;display:flex;align-items:center;height:44px;opacity:.5;transition:opacity .2s;filter:grayscale(1)}
-    .employer-logo:hover{opacity:1;filter:none}
-    .employer-logo span{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;color:var(--ink);white-space:nowrap}
+  /* ══════════════════════════════
+     STACKS
+  ══════════════════════════════ */
+  .stacks-section{padding:72px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
+  .stacks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .scard{background:white;border:1px solid var(--rule);border-radius:8px;padding:22px;transition:all .2s;cursor:pointer;display:flex;flex-direction:column;gap:10px}
+  .scard:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,46,75,.1)}
+  .sc-top{display:flex;align-items:center;justify-content:space-between}
+  .sc-init{font-family:'Playfair Display',serif;font-weight:700;font-size:13px;color:var(--navy);background:var(--amber-light);width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0}
+  .sc-hot{font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);border:1px solid var(--amber);padding:2px 7px;border-radius:3px}
+  .sc-name{font-size:14px;font-weight:700;line-height:1.3}
+  .sc-bottom{display:flex;align-items:center;justify-content:space-between}
+  .sc-count{font-size:12px;color:var(--ink3)}
+  .sc-arrow{font-size:14px;color:var(--ink4);transition:all .2s}
+  .scard:hover .sc-arrow{color:var(--navy);transform:translate(2px,-2px)}
 
-    /* ══════════════════════════════
-       JOB CARDS SECTION
-    ══════════════════════════════ */
-    .jobs-section{padding:72px 0;border-bottom:1px solid var(--rule)}
-    .section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:36px;padding-bottom:16px;border-bottom:2px solid var(--ink)}
-    h2.sh-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
-    h2.sh-title em{font-style:italic;color:var(--navy)}
-    .sh-sub{font-size:13px;color:var(--ink3);margin-top:3px;font-weight:300}
-    .sh-link{font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid var(--rule);padding-bottom:2px;transition:all .12s;white-space:nowrap}
-    .sh-link:hover{color:var(--amber);border-color:var(--amber)}
+  /* ══════════════════════════════
+     ALERT + EMPLOYER SPLIT BAND
+  ══════════════════════════════ */
+  .split-band{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+  .split-inner{display:grid;grid-template-columns:1fr 1fr}
+  .shalf{padding:56px 52px}
+  .shalf.left{border-right:1px solid var(--rule)}
+  .shalf.right{background:var(--navy);color:white}
+  .sk{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
+  .sk.amber{color:var(--amber2)}
+  .sk.light{color:rgba(255,255,255,.45)}
+  h3.sh{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px}
+  .ssub{font-size:14px;line-height:1.65;margin-bottom:26px;font-weight:300}
+  .ssub.light{color:rgba(255,255,255,.65)}
+  .ssub.dark{color:var(--ink2)}
+  .irow{display:flex;gap:8px;max-width:400px}
+  .tinput{flex:1;height:46px;border:1.5px solid var(--rule);border-radius:5px;padding:0 16px;font-size:14px;color:var(--ink);font-family:'Lato',sans-serif;outline:none;background:var(--paper);transition:border-color .15s}
+  .tinput:focus{border-color:var(--navy)}
+  .tinput::placeholder{color:var(--ink4)}
+  .tinput.dark-bg{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:white}
+  .tinput.dark-bg::placeholder{color:rgba(255,255,255,.3)}
+  .tinput.dark-bg:focus{border-color:rgba(255,255,255,.5)}
+  .fnote{font-size:12px;color:var(--ink3);margin-top:8px; min-height: 20px;}
+  .fnote.light{color:rgba(255,255,255,.35)}
+  .emp-perks{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+  .perk{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:rgba(255,255,255,.75)}
+  .pchk{width:20px;height:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;color:white;font-weight:700}
 
-    .filter-row{display:flex;align-items:center;gap:8px;margin-bottom:28px;flex-wrap:wrap}
-    .ftab{padding:8px 20px;font-size:12px;font-weight:700;font-family:'Lato',sans-serif;color:var(--ink3);background:white;border:1px solid var(--rule);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.06em;border-radius:4px; display:inline-block; text-align:center;}
-    .ftab.active{background:var(--navy);color:white;border-color:var(--navy)}
-    .ftab:hover:not(.active){background:var(--paper2);color:var(--ink);border-color:var(--rule)}
+  /* ══════════════════════════════
+     REMOTE SEARCHES
+  ══════════════════════════════ */
+  .remote-section{padding:72px 0;border-bottom:1px solid var(--rule)}
+  .remote-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rcard{background:white;border:1px solid var(--rule);border-radius:8px;padding:24px;transition:all .18s;cursor:pointer}
+  .rcard:hover{border-color:var(--navy);box-shadow:2px 2px 0 var(--navy);transform:translate(-1px,-1px)}
+  .rc-stack{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+  .rc-title{font-size:15px;font-weight:700;margin-bottom:12px;line-height:1.35}
+  .rc-foot{display:flex;align-items:center;justify-content:space-between}
+  .rc-count{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy)}
+  .rc-tag{background:var(--green-light);color:var(--green);font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
 
-    /* Job cards grid — 2 cols */
-    .jobs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  /* ══════════════════════════════
+     SALARY GUIDE
+  ══════════════════════════════ */
+  .salary-section{background:var(--navy3);color:white;padding:80px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .salary-inner{display:grid;grid-template-columns:1fr 1.1fr;gap:80px;align-items:start}
+  .sal-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#f0a06a;margin-bottom:14px}
+  h2.sal-h{font-family:'Playfair Display',serif;font-size:clamp(34px,4.2vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px;color:white}
+  h2.sal-h em{font-style:italic;color:#f0a06a}
+  .sal-sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:32px;font-weight:300}
+  .sal-roles{border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+  .sal-row{display:flex;align-items:center;padding:0 20px;height:62px;border-bottom:1px solid rgba(255,255,255,.07);transition:background .15s;cursor:pointer}
+  .sal-row:last-child{border-bottom:none}
+  .sal-row:hover{background:rgba(255,255,255,.05)}
+  .sal-role{font-size:14px;color:rgba(255,255,255,.8);flex:1}
+  .sal-bar-wrap{flex:1;max-width:120px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 16px}
+  .sal-bar{height:100%;background:#f0a06a;border-radius:2px;opacity:.7}
+  .sal-range{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0a06a;white-space:nowrap}
+  .sal-lvl{font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.12);padding:2px 7px;border-radius:3px;margin-left:10px;flex-shrink:0}
+  .sal-footer-link{padding:18px 20px;text-align:center;font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f0a06a;border-top:1px solid rgba(255,255,255,.07);display:block;transition:background .15s}
+  .sal-footer-link:hover{background:rgba(255,255,255,.04)}
 
-    .jcard{background:white;border:1px solid var(--rule);border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:0;transition:all .2s;cursor:pointer;position:relative}
-    .jcard:hover{border-color:var(--navy);box-shadow:3px 3px 0 var(--navy);transform:translate(-1px,-1px)}
-    .jcard.featured{border-color:var(--amber);background:linear-gradient(135deg,var(--amber-light) 0%,white 60%)}
-    .jcard.featured::before{content:'FEATURED';position:absolute;top:14px;right:14px;font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--amber);background:white;padding:3px 8px;border:1px solid var(--amber);border-radius:3px}
-    .jc-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
-    .jc-favicon{width:48px;height:48px;border-radius:8px;background:var(--paper2);border:1px solid var(--rule);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center; text-transform:uppercase;}
-    .jc-favicon img{width:32px;height:32px;object-fit:contain}
-    .jc-co{font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:3px}
-    .jc-title{font-size:17px;font-weight:700;color:var(--ink);line-height:1.3;transition:color .12s}
-    .jcard:hover .jc-title{color:var(--navy)}
-    .jc-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-    .pill{padding:4px 10px;border-radius:4px;font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-    .pill-loc{background:var(--paper2);color:var(--ink2)}
-    .pill-mops{background:#ede9ff;color:#3d2f9e}
-    .pill-dev{background:#dff0ff;color:#1a4f8a}
-    .pill-remote{background:var(--green-light);color:var(--green)}
-    .pill-stack{background:var(--amber-light);color:var(--amber)}
-    .jc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--rule);margin-top:auto}
-    .jc-salary{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--green)}
-    .jc-salary.na{font-family:'Lato',sans-serif;font-size:12px;color:var(--ink3);font-weight:400}
-    .jc-date{font-size:11px;color:var(--ink3)}
-    .jc-apply{font-family:'Lato',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);border:1.5px solid var(--navy);padding:6px 14px;border-radius:4px;transition:all .15s}
-    .jcard:hover .jc-apply{background:var(--navy);color:white}
+  /* ══════════════════════════════
+     LOCATIONS
+  ══════════════════════════════ */
+  .loc-section{padding:72px 0;border-bottom:1px solid var(--rule)}
+  .loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .lcard{background:white;border:1px solid var(--rule);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:all .15s;cursor:pointer}
+  .lcard:hover{border-color:var(--navy);background:#f0f4fa}
+  .lname{font-size:14px;font-weight:700}
+  .lcount{font-family:'Courier Prime',monospace;font-size:11px;color:var(--ink3);font-weight:700;background:var(--paper2);padding:3px 8px;border-radius:3px}
 
-    .jobs-footer{margin-top:28px;display:flex;align-items:center;justify-content:space-between}
-    .jp-info{font-size:13px;color:var(--ink3)}
+  /* ══════════════════════════════
+     TESTIMONIALS
+  ══════════════════════════════ */
+  .testi-section{padding:80px 0;border-bottom:1px solid var(--rule);background:var(--white);overflow:hidden}
+  .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .tcard{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:30px;position:relative}
+  .tcard::before{content:'\201C';position:absolute;top:16px;left:20px;font-family:'Playfair Display',serif;font-size:64px;color:var(--amber);line-height:1;opacity:.3}
+  .tquote{font-size:15px;line-height:1.7;color:var(--ink2);margin-bottom:20px;padding-top:16px;font-style:italic;font-family:'Lato',sans-serif}
+  .tauthor{display:flex;align-items:center;gap:12px}
+  .tavatar{width:40px;height:40px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:white;flex-shrink:0}
+  .tname{font-size:14px;font-weight:700;color:var(--ink)}
+  .trole{font-size:12px;color:var(--ink3)}
 
-    /* ══════════════════════════════
-       STACKS
-    ══════════════════════════════ */
-    .stacks-section{padding:72px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
-    .stacks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .scard{background:white;border:1px solid var(--rule);border-radius:8px;padding:22px;transition:all .2s;cursor:pointer;display:flex;flex-direction:column;gap:10px}
-    .scard:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 8px 24px rgba(27,46,75,.1)}
-    .sc-top{display:flex;align-items:center;justify-content:space-between}
-    .sc-init{font-family:'Playfair Display',serif;font-weight:700;font-size:13px;color:var(--navy);background:var(--amber-light);width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0}
-    .sc-hot{font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);border:1px solid var(--amber);padding:2px 7px;border-radius:3px}
-    .sc-name{font-size:14px;font-weight:700;line-height:1.3}
-    .sc-bottom{display:flex;align-items:center;justify-content:space-between}
-    .sc-count{font-size:12px;color:var(--ink3)}
-    .sc-arrow{font-size:14px;color:var(--ink4);transition:all .2s}
-    .scard:hover .sc-arrow{color:var(--navy);transform:translate(2px,-2px)}
+  /* ══════════════════════════════
+     EMPLOYER SECTION
+  ══════════════════════════════ */
+  .emp-section{padding:80px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
+  .emp-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+  .emp-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);margin-bottom:14px}
+  h2.emp-h{font-family:'Playfair Display',serif;font-size:clamp(30px,3.6vw,44px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
+  h2.emp-h em{font-style:italic;color:var(--amber)}
+  .emp-sub{font-size:15px;color:var(--ink2);line-height:1.65;margin-bottom:26px;font-weight:300}
+  .perks{display:flex;flex-direction:column;gap:11px;margin-bottom:30px}
+  .ep{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--ink2)}
+  .ep-chk{width:22px;height:22px;background:var(--navy);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;color:white;font-size:11px;font-weight:700}
+  .emp-card{background:white;border:1.5px solid var(--rule);border-radius:10px;overflow:hidden}
+  .ec-head{background:var(--navy);color:white;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+  .ec-ht{font-size:14px;font-weight:700}
+  .ec-live{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:#6ee7b7;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+  .ec-lp{width:7px;height:7px;background:#6ee7b7;border-radius:50%;animation:blink 2s infinite}
+  .ec-row{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--rule);font-size:13px}
+  .ec-row:last-child{border-bottom:none}
+  .ec-k{color:var(--ink2)}
+  .ec-v{font-weight:700;color:var(--ink)}
+  .ec-v.good{color:var(--green)}
 
-    /* ══════════════════════════════
-       ALERT + EMPLOYER SPLIT BAND
-    ══════════════════════════════ */
-    .split-band{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
-    .split-inner{display:grid;grid-template-columns:1fr 1fr}
-    .shalf{padding:56px 52px}
-    .shalf.left{border-right:1px solid var(--rule)}
-    .shalf.right{background:var(--navy);color:white}
-    .sk{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
-    .sk.amber{color:var(--amber2)}
-    .sk.light{color:rgba(255,255,255,.45)}
-    h3.sh{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px}
-    .ssub{font-size:14px;line-height:1.65;margin-bottom:26px;font-weight:300}
-    .ssub.light{color:rgba(255,255,255,.65)}
-    .ssub.dark{color:var(--ink2)}
-    .irow{display:flex;gap:8px;max-width:400px}
-    .tinput{flex:1;height:46px;border:1.5px solid var(--rule);border-radius:5px;padding:0 16px;font-size:14px;color:var(--ink);font-family:'Lato',sans-serif;outline:none;background:var(--paper);transition:border-color .15s}
-    .tinput:focus{border-color:var(--navy)}
-    .tinput::placeholder{color:var(--ink4)}
-    .tinput.dark-bg{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:white}
-    .tinput.dark-bg::placeholder{color:rgba(255,255,255,.3)}
-    .tinput.dark-bg:focus{border-color:rgba(255,255,255,.5)}
-    .fnote{font-size:12px;color:var(--ink3);margin-top:8px; min-height: 20px;}
-    .fnote.light{color:rgba(255,255,255,.35)}
-    .emp-perks{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
-    .perk{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:rgba(255,255,255,.75)}
-    .pchk{width:20px;height:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;color:white;font-weight:700}
+  /* ══════════════════════════════
+     NEWSLETTER
+  ══════════════════════════════ */
+  .nl-section{padding:80px 0;border-bottom:2px solid var(--ink);background:var(--amber);position:relative;overflow:hidden}
+  .nl-section::before{content:'';position:absolute;top:-60px;right:-60px;width:320px;height:320px;border:60px solid rgba(0,0,0,.06);border-radius:50%}
+  .nl-section::after{content:'';position:absolute;bottom:-80px;left:10%;width:200px;height:200px;border:40px solid rgba(0,0,0,.04);border-radius:50%}
+  .nl-inner{max-width:680px;margin:0 auto;text-align:center;position:relative;z-index:1}
+  .nl-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:14px}
+  h2.nl-h{font-family:'Playfair Display',serif;font-size:clamp(34px,4.5vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.0;margin-bottom:12px;color:white}
+  .nl-sub{font-size:16px;color:rgba(255,255,255,.8);line-height:1.65;margin-bottom:32px;font-weight:300}
+  .nl-form{display:flex;gap:10px;max-width:480px;margin:0 auto 12px}
+  .nl-input{flex:1;height:50px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:7px;padding:0 18px;font-size:15px;color:white;font-family:'Lato',sans-serif;outline:none;transition:border-color .15s;backdrop-filter:blur(4px)}
+  .nl-input:focus{border-color:white}
+  .nl-input::placeholder{color:rgba(255,255,255,.55)}
+  .nl-btn{height:50px;padding:0 28px;background:white;color:var(--amber);border:none;border-radius:7px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:all .15s;white-space:nowrap}
+  .nl-btn:hover{background:var(--ink);color:white}
+  .nl-fine{font-size:12px;color:rgba(255,255,255,.55)}
+  .nl-proof{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:22px;font-size:13px;color:rgba(255,255,255,.75)}
+  .avs{display:flex}
+  .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid var(--amber);margin-left:-8px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white}
+  .avs .av:first-child{margin-left:0}
 
-    /* ══════════════════════════════
-       REMOTE SEARCHES
-    ══════════════════════════════ */
-    .remote-section{padding:72px 0;border-bottom:1px solid var(--rule)}
-    .remote-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .rcard{background:white;border:1px solid var(--rule);border-radius:8px;padding:24px;transition:all .18s;cursor:pointer}
-    .rcard:hover{border-color:var(--navy);box-shadow:2px 2px 0 var(--navy);transform:translate(-1px,-1px)}
-    .rc-stack{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
-    .rc-title{font-size:15px;font-weight:700;margin-bottom:12px;line-height:1.35}
-    .rc-foot{display:flex;align-items:center;justify-content:space-between}
-    .rc-count{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy)}
-    .rc-tag{background:var(--green-light);color:var(--green);font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:3px}
+  /* ══════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════ */
+  @media(max-width:1024px){
+    .hero::before{display:none}
+    .hero-grid{grid-template-columns:1fr}
+    .hero-right{border-left:none;border-top:1px solid var(--rule);margin-top:48px;padding:36px 0 0}
+    .hero-left{padding-right:0}
+    .stacks-grid{grid-template-columns:repeat(2,1fr)}
+    .salary-inner,.emp-layout{grid-template-columns:1fr}
+    .split-inner{grid-template-columns:1fr}
+    .shalf.left{border-right:none;border-bottom:1px solid var(--rule)}
+    .testi-grid{grid-template-columns:1fr}
+    .remote-grid{grid-template-columns:repeat(2,1fr)}
+    .loc-grid{grid-template-columns:repeat(3,1fr)}
+    .jobs-grid{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    h1{font-size:40px}
+    .stacks-grid{grid-template-columns:1fr 1fr}
+    .remote-grid,.loc-grid{grid-template-columns:1fr 1fr}
+    .hero-stats{flex-wrap:wrap;gap:20px}
+    .nl-form{flex-direction:column}
+    .hstat+.hstat{border-left:none;padding-left:0}
+  }
+  
+  /* FAQ */
+  .faq-section{padding:72px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
+  .faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+  .faq-item{border-bottom:1px solid var(--rule);background:white}
+  .faq-item:nth-child(odd){border-right:1px solid var(--rule)}
+  .faq-item:last-child,.faq-item:nth-last-child(2):nth-child(odd){border-bottom:none}
+  .faq-q{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;font-size:15px;font-weight:700;cursor:pointer;list-style:none;gap:12px;transition:background .12s}
+  .faq-q::-webkit-details-marker{display:none}
+  .faq-q::after{content:'+';font-size:20px;font-weight:300;color:var(--ink3);flex-shrink:0;transition:transform .2s;line-height:1}
+  details[open] .faq-q::after{transform:rotate(45deg)}
+  .faq-item:hover .faq-q{background:#faf8f4}
+  .faq-a{padding:0 24px 20px;font-size:14px;color:var(--ink2);line-height:1.7;font-weight:300}
+  .faq-a a{color:var(--navy);border-bottom:1px solid var(--rule);padding-bottom:1px;transition:color .12s}
+  .faq-a a:hover{color:var(--amber)}
+  @media(max-width:640px){.faq-grid{grid-template-columns:1fr}.faq-item:nth-child(odd){border-right:none}.faq-item:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--rule)}.faq-item:last-child{border-bottom:none}}
+</style>
 
-    /* ══════════════════════════════
-       SALARY GUIDE
-    ══════════════════════════════ */
-    .salary-section{background:var(--navy3);color:white;padding:80px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-    .salary-inner{display:grid;grid-template-columns:1fr 1.1fr;gap:80px;align-items:start}
-    .sal-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#f0a06a;margin-bottom:14px}
-    h2.sal-h{font-family:'Playfair Display',serif;font-size:clamp(34px,4.2vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px;color:white}
-    h2.sal-h em{font-style:italic;color:#f0a06a}
-    .sal-sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.65;margin-bottom:32px;font-weight:300}
-    .sal-roles{border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
-    .sal-row{display:flex;align-items:center;padding:0 20px;height:62px;border-bottom:1px solid rgba(255,255,255,.07);transition:background .15s;cursor:pointer}
-    .sal-row:last-child{border-bottom:none}
-    .sal-row:hover{background:rgba(255,255,255,.05)}
-    .sal-role{font-size:14px;color:rgba(255,255,255,.8);flex:1}
-    .sal-bar-wrap{flex:1;max-width:120px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 16px}
-    .sal-bar{height:100%;background:#f0a06a;border-radius:2px;opacity:.7}
-    .sal-range{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#f0a06a;white-space:nowrap}
-    .sal-lvl{font-family:'Courier Prime',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.12);padding:2px 7px;border-radius:3px;margin-left:10px;flex-shrink:0}
-    .sal-footer-link{padding:18px 20px;text-align:center;font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f0a06a;border-top:1px solid rgba(255,255,255,.07);display:block;transition:background .15s}
-    .sal-footer-link:hover{background:rgba(255,255,255,.04)}
-
-    /* ══════════════════════════════
-       LOCATIONS
-    ══════════════════════════════ */
-    .loc-section{padding:72px 0;border-bottom:1px solid var(--rule)}
-    .loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .lcard{background:white;border:1px solid var(--rule);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;transition:all .15s;cursor:pointer}
-    .lcard:hover{border-color:var(--navy);background:#f0f4fa}
-    .lname{font-size:14px;font-weight:700}
-    .lcount{font-family:'Courier Prime',monospace;font-size:11px;color:var(--ink3);font-weight:700;background:var(--paper2);padding:3px 8px;border-radius:3px}
-
-    /* ══════════════════════════════
-       TESTIMONIALS
-    ══════════════════════════════ */
-    .testi-section{padding:80px 0;border-bottom:1px solid var(--rule);background:var(--white);overflow:hidden}
-    .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-    .tcard{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:30px;position:relative}
-    .tcard::before{content:'\201C';position:absolute;top:16px;left:20px;font-family:'Playfair Display',serif;font-size:64px;color:var(--amber);line-height:1;opacity:.3}
-    .tquote{font-size:15px;line-height:1.7;color:var(--ink2);margin-bottom:20px;padding-top:16px;font-style:italic;font-family:'Lato',sans-serif}
-    .tauthor{display:flex;align-items:center;gap:12px}
-    .tavatar{width:40px;height:40px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:white;flex-shrink:0}
-    .tname{font-size:14px;font-weight:700;color:var(--ink)}
-    .trole{font-size:12px;color:var(--ink3)}
-
-    /* ══════════════════════════════
-       EMPLOYER SECTION
-    ══════════════════════════════ */
-    .emp-section{padding:80px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
-    .emp-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
-    .emp-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);margin-bottom:14px}
-    h2.emp-h{font-family:'Playfair Display',serif;font-size:clamp(30px,3.6vw,44px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:14px}
-    h2.emp-h em{font-style:italic;color:var(--amber)}
-    .emp-sub{font-size:15px;color:var(--ink2);line-height:1.65;margin-bottom:26px;font-weight:300}
-    .perks{display:flex;flex-direction:column;gap:11px;margin-bottom:30px}
-    .ep{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--ink2)}
-    .ep-chk{width:22px;height:22px;background:var(--navy);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;color:white;font-size:11px;font-weight:700}
-    .emp-card{background:white;border:1.5px solid var(--rule);border-radius:10px;overflow:hidden}
-    .ec-head{background:var(--navy);color:white;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
-    .ec-ht{font-size:14px;font-weight:700}
-    .ec-live{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;color:#6ee7b7;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-    .ec-lp{width:7px;height:7px;background:#6ee7b7;border-radius:50%;animation:blink 2s infinite}
-    .ec-row{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--rule);font-size:13px}
-    .ec-row:last-child{border-bottom:none}
-    .ec-k{color:var(--ink2)}
-    .ec-v{font-weight:700;color:var(--ink)}
-    .ec-v.good{color:var(--green)}
-
-    /* ══════════════════════════════
-       NEWSLETTER
-    ══════════════════════════════ */
-    .nl-section{padding:80px 0;border-bottom:2px solid var(--ink);background:var(--amber);position:relative;overflow:hidden}
-    .nl-section::before{content:'';position:absolute;top:-60px;right:-60px;width:320px;height:320px;border:60px solid rgba(0,0,0,.06);border-radius:50%}
-    .nl-section::after{content:'';position:absolute;bottom:-80px;left:10%;width:200px;height:200px;border:40px solid rgba(0,0,0,.04);border-radius:50%}
-    .nl-inner{max-width:680px;margin:0 auto;text-align:center;position:relative;z-index:1}
-    .nl-ey{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:14px}
-    h2.nl-h{font-family:'Playfair Display',serif;font-size:clamp(34px,4.5vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.0;margin-bottom:12px;color:white}
-    .nl-sub{font-size:16px;color:rgba(255,255,255,.8);line-height:1.65;margin-bottom:32px;font-weight:300}
-    .nl-form{display:flex;gap:10px;max-width:480px;margin:0 auto 12px}
-    .nl-input{flex:1;height:50px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);border-radius:7px;padding:0 18px;font-size:15px;color:white;font-family:'Lato',sans-serif;outline:none;transition:border-color .15s;backdrop-filter:blur(4px)}
-    .nl-input:focus{border-color:white}
-    .nl-input::placeholder{color:rgba(255,255,255,.55)}
-    .nl-btn{height:50px;padding:0 28px;background:white;color:var(--amber);border:none;border-radius:7px;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.07em;transition:all .15s;white-space:nowrap}
-    .nl-btn:hover{background:var(--ink);color:white}
-    .nl-fine{font-size:12px;color:rgba(255,255,255,.55)}
-    .nl-proof{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:22px;font-size:13px;color:rgba(255,255,255,.75)}
-    .avs{display:flex}
-    .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid var(--amber);margin-left:-8px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white}
-    .avs .av:first-child{margin-left:0}
-
-    /* ══════════════════════════════
-       FOOTER
-    ══════════════════════════════ */
-    footer{background:var(--ink);color:rgba(255,255,255,.65);padding:64px 0 32px}
-    .ft{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:44px;padding-bottom:52px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:28px}
-    .flogo{margin-bottom:12px;line-height:0}
-    .ftag{font-size:13px;color:rgba(255,255,255,.4);line-height:1.65;margin-bottom:22px;max-width:240px;font-weight:300}
-    .fnl{display:flex;gap:7px;margin-bottom:7px}
-    .fnl input{flex:1;height:40px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:4px;padding:0 12px;font-size:13px;color:white;font-family:'Lato',sans-serif;outline:none}
-    .fnl input::placeholder{color:rgba(255,255,255,.28)}
-    .fnl button{height:40px;padding:0 14px;background:var(--amber);color:white;border:none;border-radius:4px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:background .15s}
-    .fnl button:hover{background:var(--amber2)}
-    .fct{font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
-    .fl{list-style:none;display:flex;flex-direction:column;gap:9px}
-    .fl a{font-size:13px;color:rgba(255,255,255,.48);transition:color .12s;font-weight:300}
-    .fl a:hover{color:white}
-    .fb{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-    .fleg{font-size:12px;color:rgba(255,255,255,.25);display:flex;gap:20px;flex-wrap:wrap}
-    .fleg a{color:rgba(255,255,255,.25);transition:color .12s}
-    .fleg a:hover{color:rgba(255,255,255,.6)}
-
-    /* ══════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════ */
-    @media(max-width:1024px){
-      .hero::before{display:none}
-      .hero-grid{grid-template-columns:1fr}
-      .hero-right{border-left:none;border-top:1px solid var(--rule);margin-top:48px;padding:36px 0 0}
-      .hero-left{padding-right:0}
-      .stacks-grid{grid-template-columns:repeat(2,1fr)}
-      .salary-inner,.emp-layout{grid-template-columns:1fr}
-      .split-inner{grid-template-columns:1fr}
-      .shalf.left{border-right:none;border-bottom:1px solid var(--rule)}
-      .testi-grid{grid-template-columns:1fr}
-      .remote-grid{grid-template-columns:repeat(2,1fr)}
-      .loc-grid{grid-template-columns:repeat(3,1fr)}
-      .ft{grid-template-columns:1fr 1fr 1fr}
-      .nav-links{display:none}
-      .jobs-grid{grid-template-columns:1fr}
-    }
-    @media(max-width:640px){
-      h1{font-size:40px}
-      .stacks-grid{grid-template-columns:1fr 1fr}
-      .remote-grid,.loc-grid{grid-template-columns:1fr 1fr}
-      .ft{grid-template-columns:1fr 1fr}
-      .hero-stats{flex-wrap:wrap;gap:20px}
-      .nl-form{flex-direction:column}
-      .hstat+.hstat{border-left:none;padding-left:0}
-    }
-    /* FAQ */
-    .faq-section{padding:72px 0;border-bottom:1px solid var(--rule);background:var(--paper2)}
-    .faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden}
-    .faq-item{border-bottom:1px solid var(--rule);background:white}
-    .faq-item:nth-child(odd){border-right:1px solid var(--rule)}
-    .faq-item:last-child,.faq-item:nth-last-child(2):nth-child(odd){border-bottom:none}
-    .faq-q{display:flex;align-items:center;justify-content:space-between;padding:22px 24px;font-size:15px;font-weight:700;cursor:pointer;list-style:none;gap:12px;transition:background .12s}
-    .faq-q::-webkit-details-marker{display:none}
-    .faq-q::after{content:'+';font-size:20px;font-weight:300;color:var(--ink3);flex-shrink:0;transition:transform .2s;line-height:1}
-    details[open] .faq-q::after{transform:rotate(45deg)}
-    .faq-item:hover .faq-q{background:#faf8f4}
-    .faq-a{padding:0 24px 20px;font-size:14px;color:var(--ink2);line-height:1.7;font-weight:300}
-    .faq-a a{color:var(--navy);border-bottom:1px solid var(--rule);padding-bottom:1px;transition:color .12s}
-    .faq-a a:hover{color:var(--amber)}
-    @media(max-width:640px){.faq-grid{grid-template-columns:1fr}.faq-item:nth-child(odd){border-right:none}.faq-item:nth-last-child(2):nth-child(odd){border-bottom:1px solid var(--rule)}.faq-item:last-child{border-bottom:none}}
-  </style>
-</head>
-<body>
-
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<nav aria-label="Main navigation">
-  <div class="nav-inner">
-    <a href="{% url 'job_list' %}" class="logo" aria-label="MarTechJobs home">
-      <svg width="196" height="36" viewBox="0 0 260 48" xmlns="http://www.w3.org/2000/svg">
-        <rect x="0" y="6" width="28" height="7" rx="2" fill="white"/>
-        <rect x="0" y="17" width="20" height="7" rx="2" fill="#f0a06a"/>
-        <rect x="0" y="28" width="24" height="7" rx="2" fill="white" opacity=".35"/>
-        <circle cx="36" cy="9.5" r="2.5" fill="white" opacity=".3"/>
-        <circle cx="36" cy="20.5" r="2.5" fill="#f0a06a" opacity=".65"/>
-        <circle cx="36" cy="31.5" r="2.5" fill="white" opacity=".18"/>
-        <text x="46" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="white" letter-spacing="-.3">MarTech</text>
-        <text x="171" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="#f0a06a" letter-spacing="-.3">Jobs</text>
-        <text x="46" y="36" font-family="'Courier Prime','Courier New',monospace" font-weight="700" font-size="9.5" fill="rgba(255,255,255,.38)" letter-spacing=".16em">MARTECHJOBS.IO</text>
-      </svg>
-    </a>
-    <ul class="nav-links" role="list">
-      <li><a href="{% url 'job_list' %}">MarTech Jobs</a></li>
-      <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
-      <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
-      <li><a href="{% url 'directory' %}">Job Directory</a></li>
-      <li><a href="{% url 'blog_list' %}">Blog</a></li>
-      <li><a href="{% url 'post_job' %}">Post a Job</a></li>
-      <li><a href="{% url 'about' %}">About</a></li>
-    </ul>
-    <div class="nav-right">
-      <a href="#alert-section" class="btn btn-ghost">🔔 Get Alerts</a>
-      <a href="{% url 'post_job' %}" class="btn btn-amber">Post a Job</a>
-    </div>
-  </div>
-</nav>
-
-{% if messages %}
-    <div class="wrap" style="padding-top: 15px;">
-        {% for message in messages %}
-            <div style="padding: 12px; border-radius: 5px; margin-bottom: 10px; font-size: 14px; font-weight: bold; {% if message.tags == 'success' %}background-color: #d1fae5; color: #065f46;{% elif message.tags == 'error' %}background-color: #fee2e2; color: #991b1b;{% else %}background-color: #dbeafe; color: #1e40af;{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
-
-<main id="main-content">
 <div class="ticker" aria-label="New listings">
   <div class="ticker-pill"><div class="ticker-live"></div> New</div>
   <div class="ticker-track" role="marquee">
@@ -528,7 +381,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span class="s-icon">
               <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
             </span>
-            <input class="s-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company…" aria-label="Search MarTech jobs"/>
+            <input class="s-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or comp…" aria-label="Search MarTech jobs"/>
             <div class="s-sep"></div>
             <select class="s-loc" name="country" aria-label="Filter by location">
               <option value="">All Locations</option>
@@ -581,7 +434,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
           <div class="fi-title">{{ job.title }}</div>
           <div class="fi-meta">
-              <span>{{ job.location|default:"Remote" }}</span>
+              <span>{{ job.location|default:"Remote"|truncatechars:20 }}</span>
               <span class="fi-tag mops">{{ job.get_role_type_display }}</span>
               {% for tool in job.tools.all|slice:":1" %}
               <span class="fi-tag" style="background:var(--amber-light);color:var(--amber)">{{ tool.name }}</span>
@@ -663,7 +516,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div><div class="jc-co">{{ job.company }}</div><div class="jc-title">{{ job.title }}</div></div>
         </div>
         <div class="jc-pills">
-          <span class="pill pill-loc">{{ job.location|default:"Remote" }}</span>
+          <span class="pill pill-loc">{{ job.location|default:"Remote"|truncatechars:20 }}</span>
           <span class="pill pill-stack">{{ job.get_role_type_display }}</span>
           {% for tool in job.tools.all|slice:":2" %}
               <span class="pill pill-mops">{{ tool.name }}</span>
@@ -899,26 +752,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<section class="nl-section" aria-labelledby="nl-h">
-  <div class="nl-inner">
-    <div class="nl-ey reveal">Weekly · Every Tuesday morning</div>
-    <h2 class="nl-h reveal reveal-delay-1" id="nl-h">The MarTech briefing<br/>your career needs.</h2>
-    <p class="nl-sub reveal reveal-delay-2">Curated jobs, salary moves, stack trends, and career intel — read by 15,000+ marketing technology professionals before their first meeting.</p>
-    <form id="subscribe-form" class="nl-form reveal reveal-delay-3">
-      {% csrf_token %}
-      <input class="nl-input" name="email" type="email" required placeholder="your@email.com" aria-label="Email for newsletter"/>
-      <button type="submit" class="nl-btn">Subscribe Free</button>
-    </form>
-    <p id="sub-message" class="nl-fine reveal reveal-delay-3" style="min-height: 20px;">No spam, ever. Unsubscribe in one click.</p>
-    <div class="nl-proof reveal reveal-delay-4">
-      <div class="avs">
-        <div class="av">JR</div><div class="av">SK</div><div class="av">MT</div><div class="av">PL</div><div class="av">AW</div>
-      </div>
-      <span>Joined by 15,000+ professionals this year</span>
-    </div>
-  </div>
-</section>
-
 <section class="faq-section" aria-labelledby="faq-h">
   <div class="wrap">
     <div class="section-head">
@@ -956,89 +789,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <div class="ft">
-      <div>
-        <div class="flogo">
-          <svg width="188" height="34" viewBox="0 0 260 48" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0" y="6" width="28" height="7" rx="2" fill="white"/>
-            <rect x="0" y="17" width="20" height="7" rx="2" fill="#f0a06a"/>
-            <rect x="0" y="28" width="24" height="7" rx="2" fill="white" opacity=".35"/>
-            <circle cx="36" cy="9.5" r="2.5" fill="white" opacity=".3"/>
-            <circle cx="36" cy="20.5" r="2.5" fill="#f0a06a" opacity=".65"/>
-            <circle cx="36" cy="31.5" r="2.5" fill="white" opacity=".18"/>
-            <text x="46" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="white" letter-spacing="-.3">MarTech</text>
-            <text x="171" y="22" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="20" fill="#f0a06a" letter-spacing="-.3">Jobs</text>
-            <text x="46" y="36" font-family="'Courier Prime','Courier New',monospace" font-weight="700" font-size="9.5" fill="rgba(255,255,255,.38)" letter-spacing=".16em">MARTECHJOBS.IO</text>
-          </svg>
-        </div>
-        <p class="ftag">The leading job board for marketing technology professionals worldwide. Curated, niche, and vendor-neutral.</p>
-        <form id="footer-subscribe-form" class="fnl">
-          {% csrf_token %}
-          <input type="email" name="email" required placeholder="Weekly job digest" aria-label="Footer newsletter"/>
-          <button type="submit">Go</button>
-        </form>
-        <p id="footer-sub-message" style="font-size:11px;color:rgba(255,255,255,.2);margin-top:6px; min-height: 16px;">No spam · Unsubscribe anytime</p>
-      </div>
-      <div>
-        <div class="fct">Tech Stacks</div>
-        <ul class="fl">
-          {% for stack in popular_tech_stacks|slice:":8" %}
-          <li><a href="{% url 'tool_detail' stack.slug %}">{{ stack.name }} Jobs</a></li>
-          {% endfor %}
-          <li><a href="{% url 'directory' %}">All MarTech Stacks →</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="fct">Job Types</div>
-        <ul class="fl">
-          <li><a href="/?q=Marketing+Technologist">Marketing Technologist Jobs</a></li>
-          <li><a href="/?q=Marketing+Operations">Marketing Operations Jobs</a></li>
-          <li><a href="/?q=Revenue+Operations">Revenue Operations Jobs</a></li>
-          <li><a href="/?q=CRM+Manager">CRM Manager Jobs</a></li>
-          <li><a href="/?q=Solutions+Consultant">Solutions Consultant Jobs</a></li>
-          <li><a href="/?q=Marketing+Technology">Marketing Technology Jobs</a></li>
-          <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote MarTech Jobs</a></li>
-          <li><a href="?rtype=contract">Contract MarTech Roles</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="fct">Locations</div>
-        <ul class="fl">
-          <li><a href="{% url 'seo_loc_only' 'united-states' %}">United States</a></li>
-          <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote / Global</a></li>
-          {% for loc in available_countries|slice:":6" %}
-          <li><a href="{% url 'seo_loc_only' loc|slugify %}">{{ loc }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
-      <div>
-        <div class="fct">Company</div>
-        <ul class="fl">
-          <li><a href="{% url 'about' %}">About</a></li>
-          <li><a href="{% url 'blog_list' %}">Blog</a></li>
-          <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
-          <li><a href="{% url 'for_employers' %}">For Employers</a></li>
-          <li><a href="{% url 'post_job' %}">Post a Job</a></li>
-          <li><a href="#alert-section">Job Alerts</a></li>
-          <li><a href="{% url 'job_feed' %}">RSS Feed</a></li>
-          <li><a href="{% url 'contact' %}">Contact</a></li>
-          <li><a href="/sitemap.xml">Sitemap</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="fb">
-      <div class="fleg">
-        <span>© 2026 MarTechJobs.io</span>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-      </div>
-      <span style="font-size:12px;color:rgba(255,255,255,.2)">The #1 Job Board for MarTech Professionals</span>
-    </div>
-  </div>
-</footer>
-
 <script>
   /* Filter tabs */
   document.querySelectorAll('.ftab').forEach(t=>{
@@ -1058,59 +808,5 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     });
   },{threshold:0.12});
   document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
-
-  /* Unified Subscription Handling */
-  function handleSubscribe(formId, msgId) {
-      const form = document.getElementById(formId);
-      if(!form) return;
-      form.addEventListener('submit', function(e) {
-          e.preventDefault();
-          const btn = form.querySelector('button');
-          const msg = document.getElementById(msgId);
-          const email = form.querySelector('input[name="email"]').value;
-          const originalText = btn.textContent;
-          
-          btn.disabled = true; 
-          btn.textContent = "Joining...";
-          
-          fetch("{% url 'subscribe' %}", {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/x-www-form-urlencoded", 
-                  "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value
-              },
-              body: "email=" + encodeURIComponent(email)
-          })
-          .then(response => response.json())
-          .then(data => {
-              if(data.success) { 
-                  btn.textContent = "Subscribed!"; 
-                  msg.innerHTML = '<span style="color:#6ee7b7; font-weight:bold;">✓ Welcome to the club!</span>'; 
-                  form.reset(); 
-                  setTimeout(() => {
-                     btn.disabled = false; 
-                     btn.textContent = originalText;
-                     msg.innerHTML = '';
-                  }, 3000);
-              } else { 
-                  btn.disabled = false; 
-                  btn.textContent = originalText; 
-                  msg.innerHTML = '<span style="color:#fca5a5; font-weight:bold;">Error: ' + (data.error || 'Check email') + '</span>'; 
-              }
-          })
-          .catch(error => { 
-              btn.disabled = false; 
-              btn.textContent = originalText; 
-              msg.textContent = "Something went wrong. Try again."; 
-          });
-      });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-      handleSubscribe('subscribe-form', 'sub-message');
-      handleSubscribe('footer-subscribe-form', 'footer-sub-message');
-      handleSubscribe('alert-subscribe-form', 'alert-sub-message');
-  });
 </script>
-</body>
-</html>
+{% endblock %}
