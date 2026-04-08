@@ -51,7 +51,7 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-    <nav class="flex text-xs font-medium text-slate-400">
+    <nav class="flex text-xs font-medium text-slate-400 font-sans">
         <a href="/" class="hover:text-slate-900 transition">Home</a>
         <span class="mx-2">/</span>
         <a href="/" class="hover:text-slate-900 transition">Jobs</a>
@@ -76,14 +76,14 @@
 
         <div class="flex-grow">
             <div>
-                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-3 leading-tight">{{ job.title }}</h1>
-                <div class="flex justify-center items-center gap-2 text-sm font-medium text-slate-900 mb-6">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-3 leading-tight font-serif">{{ job.title }}</h1>
+                <div class="flex justify-center items-center gap-2 text-sm font-medium text-slate-900 mb-6 font-sans">
                     {{ job.company }}
                     <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                 </div>
             </div>
 
-            <div class="flex flex-wrap justify-center gap-3 mb-8">
+            <div class="flex flex-wrap justify-center gap-3 mb-8 font-sans">
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     {{ job.location|default:"Remote" }}
@@ -101,7 +101,7 @@
             </div>
 
             <div>
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-martech-green hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm transition">
+                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm font-sans transition">
                     Apply for this Position
                 </a>
             </div>
@@ -112,18 +112,18 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div class="lg:col-span-2">
-            <div class="prose prose-slate max-w-none text-slate-700">
+            <div class="prose prose-slate max-w-none text-slate-700 font-sans">
                 {{ job.description|safe }}
             </div>
             <div class="mt-16 pt-10 border-t border-slate-200">
                 <h3 class="text-2xl font-serif font-bold text-slate-900 mb-4">Ready to make an impact?</h3>
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-martech-green hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm transition">
+                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm font-sans transition">
                     Apply Now
                 </a>
             </div>
         </div>
 
-        <div class="space-y-8">
+        <div class="space-y-8 font-sans">
             <div class="border border-black rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
                 <div class="flex items-center gap-4 mb-4">
                      <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center font-serif font-bold text-slate-400">
