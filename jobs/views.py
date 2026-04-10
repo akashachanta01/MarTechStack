@@ -197,21 +197,34 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
 # --- SEO: SALARY GUIDE ---
 def salary_guide(request):
-    data = cache.get('salary_guide_data')
+    data = cache.get('salary_guide_data_v2')
     if not data:
-        tools = Tool.objects.annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).filter(job_count__gt=2).order_by('-job_count')
+        tools = Tool.objects.annotate(
+            job_count=Count('jobs', filter=Q(jobs__is_active=True))
+        ).filter(job_count__gt=0).order_by('-job_count')
+        
         salary_stats = []
         for tool in tools:
             jobs = tool.jobs.filter(is_active=True, screening_status='approved')
             min_sum, max_sum, count = 0, 0, 0
             for job in jobs:
                 s_min, s_max = job.get_salary_min_max()
-                if s_min and s_max: min_sum += s_min; max_sum += s_max; count += 1
+                if s_min and s_max: 
+                    min_sum += s_min
+                    max_sum += s_max
+                    count += 1
             if count > 0:
-                salary_stats.append({'tool': tool, 'avg_min': int(min_sum / count), 'avg_max': int(max_sum / count), 'count': count})
+                salary_stats.append({
+                    'tool': tool, 
+                    'avg_min': int(min_sum / count), 
+                    'avg_max': int(max_sum / count), 
+                    'count': count
+                })
+                
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
-        cache.set('salary_guide_data', data, 86400) # 24 hrs
+        cache.set('salary_guide_data_v2', data, 3600) # 1 hr
+        
     return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
 
 def unsubscribe(request):
@@ -345,7 +358,6 @@ def contact(request):
     return render(request, "jobs/contact.html", {"form": form})
 
 def company_list(request):
-    # Only show companies with at least 1 active/approved job
     companies = Job.objects.filter(is_active=True, screening_status='approved')\
         .values('company', 'company_logo')\
         .annotate(job_count=Count('id'), last_posted=Max('created_at'))\
@@ -354,9 +366,6 @@ def company_list(request):
     return render(request, 'jobs/company_list.html', {'companies': companies})
 
 def company_detail(request, company_slug):
-    # We decodify the slug back to a name search (simple approach)
-    # Note: In a robust app, you'd make a dedicated Company model. 
-    # For now, we search case-insensitive.
     company_name = company_slug.replace('-', ' ')
     
     jobs = Job.objects.filter(
@@ -366,10 +375,8 @@ def company_detail(request, company_slug):
     ).order_by('-created_at')
 
     if not jobs:
-        # Fallback: fuzzy match or redirect
         return redirect('job_list')
 
-    # Get the "canonical" company name and logo from the most recent job
     canonical_job = jobs.first()
     
     return render(request, 'jobs/company_detail.html', {
@@ -379,17 +386,14 @@ def company_detail(request, company_slug):
         'tech_stack': Tool.objects.filter(jobs__in=jobs).distinct()[:5]
     })
 
-# --- SEO: DIRECTORY (Fixes Orphan Pages) ---
 def directory(request):
     tools = Tool.objects.filter(jobs__is_active=True).annotate(job_count=Count('jobs')).order_by('name')
     
-    # Get all unique locations that are active
     raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
     locations = set()
     for loc in raw_locs:
         if not loc: continue
         if "remote" in loc.lower(): continue
-        # Extract City/State or Country
         parts = loc.split(',')
         if len(parts) > 0:
             locations.add(parts[0].strip())
