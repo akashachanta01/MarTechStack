@@ -148,7 +148,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # SAFE DEFAULTS: Prevents 500 error if these variables are missing
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'noreply@martechjobs.io')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
