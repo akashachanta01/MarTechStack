@@ -337,7 +337,7 @@ def contact(request):
         if form.is_valid():
             cleaned = form.cleaned_data
             reply_to = [cleaned["email"]]
-            recipient = "hello@martechstack.io"
+            recipient = "martechjobs@gmail.com"
             email = EmailMultiAlternatives(subject=f"Contact form: {cleaned['subject']}", body=cleaned["message"], from_email=settings.DEFAULT_FROM_EMAIL, to=[recipient], reply_to=reply_to)
             try: email.send(fail_silently=False); messages.success(request, "Thanks for reaching out! We'll get back to you soon."); return redirect("contact")
             except: messages.error(request, "We couldn't send your message right now. Please try again.")
