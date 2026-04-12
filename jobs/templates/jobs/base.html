@@ -20,15 +20,15 @@
     
     <meta property="og:site_name" content="MarTechJobs" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
-    <meta property="og:title" content="{% block og_title %}{{ block.super }}{% endblock %}" />
-    <meta property="og:description" content="{% block og_desc %}{{ block.super }}{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}MarTechJobs{% endblock %}" />
+    <meta property="og:description" content="{% block og_desc %}The leading job board for marketing technology professionals worldwide. Curated, niche, and vendor-neutral.{% endblock %}" />
     <meta property="og:url" content="https://martechjobs.io{{ request.path }}" />
     <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'logo.svg' %}{% endblock %}" />
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@MarTechJobs">
-    <meta name="twitter:title" content="{% block twitter_title %}{{ block.super }}{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_desc %}{{ block.super }}{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}MarTechJobs{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_desc %}The leading job board for marketing technology professionals worldwide.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io{% static 'logo.svg' %}{% endblock %}">
 
     <script type="application/ld+json">
@@ -108,7 +108,7 @@
 
         /* Nav specific styling */
         .martech-nav {background:var(--navy3);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.07)}
-        .nav-inner {max-width:1160px;margin:0 auto;padding:0 32px;height:58px;display:flex;align-items:center;gap:32px}
+        .nav-inner {max-width:1160px;margin:0 auto;padding:0 32px;height:58px;display:flex;align-items:center;gap:32px; justify-content: space-between;}
         .logo {display:flex;align-items:center;flex-shrink:0;line-height:0}
         .nav-links {display:flex;align-items:center;gap:2px;flex:1;list-style:none;margin:0;padding:0;}
         .nav-links li {display:flex;align-items:center}
@@ -123,6 +123,14 @@
         .btn-brand-amber {background:var(--amber);color:white}
         .btn-brand-amber:hover {background:var(--amber2)}
         
+        /* Mobile Menu Styles */
+        .mobile-menu-btn { display: none; background: transparent; border: none; color: white; cursor: pointer; padding: 4px; }
+        .mobile-menu { display: none; background: var(--navy2); padding: 20px 32px; border-top: 1px solid rgba(255,255,255,.07); }
+        .mobile-menu.active { display: block; }
+        .mobile-menu ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
+        .mobile-menu a { color: rgba(255,255,255,.75); text-decoration: none; font-size: 15px; font-family: 'Lato', sans-serif; font-weight: 700; display: flex; align-items: center; gap: 8px;}
+        .mobile-menu a:hover { color: white; }
+
         /* Footer styling */
         .martech-footer {background:var(--ink);color:rgba(255,255,255,.65);padding:64px 0 32px}
         .martech-footer .wrap {max-width:1160px;margin:0 auto;padding:0 32px}
@@ -145,10 +153,13 @@
 
         @media(max-width:1024px){
           .nav-links {display:none}
+          .mobile-menu-btn { display: block; }
           .ft {grid-template-columns:1fr 1fr 1fr}
         }
         @media(max-width:640px){
           .ft {grid-template-columns:1fr 1fr}
+          /* Hide desktop "Get Alerts" button on small screens to save header space */
+          .nav-right .btn-brand-ghost { display: none; }
         }
     </style>
 </head>
@@ -156,6 +167,7 @@
     
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    
     <nav class="martech-nav" aria-label="Main navigation">
       <div class="nav-inner">
         <a href="{% url 'job_list' %}" class="logo" aria-label="MarTechJobs home">
@@ -171,6 +183,7 @@
             <text x="46" y="36" font-family="'Courier Prime','Courier New',monospace" font-weight="700" font-size="9.5" fill="rgba(255,255,255,.38)" letter-spacing=".16em">MARTECHJOBS.IO</text>
           </svg>
         </a>
+        
         <ul class="nav-links" role="list">
           <li><a href="{% url 'job_list' %}">MarTech Jobs</a></li>
           <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
@@ -181,13 +194,31 @@
               Free Tools
           </a></li>
           <li><a href="{% url 'blog_list' %}">Blog</a></li>
-          <li><a href="{% url 'post_job' %}">Post a Job</a></li>
-          <li><a href="{% url 'about' %}">About</a></li>
         </ul>
+        
         <div class="nav-right">
           <button onclick="toggleModal('subscribe-modal')" class="btn-brand btn-brand-ghost">🔔 Get Alerts</button>
           <a href="{% url 'post_job' %}" class="btn-brand btn-brand-amber">Post a Job</a>
+          <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
         </div>
+      </div>
+      
+      <div id="mobile-menu" class="mobile-menu">
+        <ul>
+          <li><a href="{% url 'job_list' %}">MarTech Jobs</a></li>
+          <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
+          <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
+          <li><a href="{% url 'directory' %}">Job Directory</a></li>
+          <li><a href="{% url 'tools_hub' %}" style="color: #f0a06a;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              Free Tools
+          </a></li>
+          <li><a href="{% url 'blog_list' %}">Blog</a></li>
+          <li><a href="{% url 'about' %}">About</a></li>
+          <li><a href="#" onclick="toggleModal('subscribe-modal'); toggleMobileMenu(); return false;" style="color: white;">🔔 Get Alerts</a></li>
+        </ul>
       </div>
     </nav>
 
@@ -317,6 +348,11 @@
         // Modal Logic
         function toggleModal(modalID){
             document.getElementById(modalID).classList.toggle("hidden");
+        }
+
+        // Mobile Menu Logic
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('active');
         }
 
         // Shared Subscribe Logic
