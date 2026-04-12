@@ -26,7 +26,7 @@
                     <span class="material-symbols-outlined text-[#1f432d]">public</span> Top Locations
                 </h2>
                 <div class="flex flex-wrap gap-3">
-                    <a href="{% url 'seo_loc_only' 'remote' %}" class="bg-[#1f432d] text-white px-3 py-1 rounded text-sm font-bold hover:bg-black transition shadow-md">Remote Marketing Jobs</a>
+                    <a href="{% url 'seo_loc_only' 'remote' %}" class="bg-[#1f432d] text-white px-3 py-1 rounded text-sm font-bold hover:bg-black transition">Remote Marketing Jobs</a>
                     {% for loc in locations %}
                     <a href="{% url 'seo_loc_only' loc|slugify %}" class="bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1 rounded text-sm hover:border-[#1f432d] transition">
                         MarTech Jobs in {{ loc }}
