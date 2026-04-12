@@ -22,7 +22,6 @@ from .emails import send_job_alert, send_welcome_email, send_admin_new_subscribe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# Mapping to consolidate variations of tool names for filtering
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'Adobe Experience Platform': 'Adobe', 'aep': 'Adobe',
@@ -94,14 +93,12 @@ def job_list(request):
         "current_rtype": role_type_filter,
     })
 
-# --- BLOG VIEWS (UPDATED FOR SEARCH & FILTER) ---
 def blog_list(request):
     search_query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
 
     posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')
 
-    # Apply Search Filter
     if search_query:
         posts = posts.filter(
             Q(title__icontains=search_query) | 
@@ -109,12 +106,9 @@ def blog_list(request):
             Q(excerpt__icontains=search_query)
         )
     
-    # Apply Category Filter
     if category_filter:
         posts = posts.filter(category__iexact=category_filter)
 
-    # Determine Featured Post
-    # Only show featured layout if on homepage (no filters applied)
     featured_post = None
     remaining_posts = posts
 
@@ -131,15 +125,8 @@ def blog_list(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
-    
-    # Suggest 2 other posts as "Related"
     related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
-    
-    # NEW: Fetch 2 "Featured" or recent jobs for the sidebar
-    sidebar_jobs = Job.objects.filter(
-        is_active=True, 
-        screening_status='approved'
-    ).order_by('-is_featured', '-created_at')[:2]
+    sidebar_jobs = Job.objects.filter(is_active=True, screening_status='approved').order_by('-is_featured', '-created_at')[:2]
     
     return render(request, 'jobs/post_detail.html', {
         'post': post,
@@ -155,11 +142,7 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
     SEO_LOCATIONS = {
-        "remote": "Remote", "new-york": "New York", "nyc": "New York", "san-francisco": "San Francisco",
-        "sf": "San Francisco", "london": "London", "chicago": "Chicago", "austin": "Austin",
-        "los-angeles": "Los Angeles", "toronto": "Toronto", "berlin": "Berlin", "singapore": "Singapore",
-        "sydney": "Sydney", "bengaluru": "Bengaluru", "bangalore": "Bengaluru", "boston": "Boston",
-        "seattle": "Seattle", "denver": "Denver", "atlanta": "Atlanta", "amsterdam": "Amsterdam", "dublin": "Dublin"
+        "nyc": "New York", "sf": "San Francisco", "la": "Los Angeles", "dfw": "Dallas"
     }
 
     location_name = "Remote" 
@@ -171,11 +154,7 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
     else: jobs = jobs.filter(location__icontains=location_name)
 
-    if jobs.count() == 0:
-        base_url = "/?q="
-        if tool: base_url += tool.name
-        if location_name: base_url += f"&l={location_name}"
-        return redirect(base_url)
+    # REMOVED ZERO-JOB REDIRECT TO ALLOW PROGRAMMATIC SEO INDEXING
 
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
@@ -190,12 +169,16 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
 
+    # Paginate results
+    paginator = Paginator(jobs.order_by('-is_pinned', '-created_at'), 20)
+    jobs_page = paginator.get_page(request.GET.get('page'))
+
     return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, 'jobs': jobs.order_by('-is_pinned', '-created_at'),
-        'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc, 'is_seo_landing': True
+        'tool': tool, 'jobs': jobs_page,
+        'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc, 
+        'is_seo_landing': True, 'location_name': location_name
     })
 
-# --- SEO: SALARY GUIDE ---
 def salary_guide(request):
     data = cache.get('salary_guide_data_v2')
     if not data:
@@ -223,7 +206,7 @@ def salary_guide(request):
                 
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
-        cache.set('salary_guide_data_v2', data, 3600) # 1 hr
+        cache.set('salary_guide_data_v2', data, 3600)
         
     return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
 
@@ -241,7 +224,7 @@ def tool_detail(request, slug):
     jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
-    return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page})
+    return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page, 'location_name': 'Global/Remote'})
 
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
@@ -387,21 +370,30 @@ def company_detail(request, company_slug):
     })
 
 def directory(request):
-    tools = Tool.objects.filter(jobs__is_active=True).annotate(job_count=Count('jobs')).order_by('name')
+    tools = Tool.objects.all().annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).order_by('-job_count')
     
-    raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
-    locations = set()
-    for loc in raw_locs:
-        if not loc: continue
-        if "remote" in loc.lower(): continue
-        parts = loc.split(',')
-        if len(parts) > 0:
-            locations.add(parts[0].strip())
-            
-    sorted_locs = sorted(list(locations))
+    # 50 States Matrix for Programmatic SEO
+    states = [
+        "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", 
+        "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", 
+        "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", 
+        "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", 
+        "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
+        "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", 
+        "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", 
+        "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", 
+        "Washington", "West Virginia", "Wisconsin", "Wyoming"
+    ]
+    
+    # Top Metro Areas Matrix for Programmatic SEO
+    top_cities = [
+        "New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston", 
+        "Los Angeles", "Denver", "Atlanta", "Dallas", "Miami", "Toronto", "London"
+    ]
     
     return render(request, 'jobs/directory.html', {
         'tools': tools,
-        'locations': sorted_locs,
+        'states': states,
+        'top_cities': top_cities,
         'seo_title': "MarTech Jobs Directory - Browse by Tech Stack & Location"
     })
