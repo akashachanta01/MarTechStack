@@ -180,11 +180,20 @@
                 </div>
             </div>
         {% empty %}
-            <div class="text-center py-20 bg-white border border-dashed border-slate-300 rounded-xl">
-                <div class="mx-auto w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 text-xl">🤷‍♂️</div>
-                <h3 class="text-base font-bold text-slate-900 font-serif">No active {{ tool.name }} jobs.</h3>
-                <p class="text-slate-500 mt-1 mb-4 text-sm">Our bots are hunting. Check back tomorrow!</p>
-                <a href="/" class="text-martech-green font-bold hover:underline text-xs">Browse All Jobs</a>
+            <div class="text-center py-20 bg-white border border-dashed border-slate-300 rounded-xl px-4">
+                <div class="mx-auto w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                    <span class="material-symbols-outlined text-4xl text-green-700">notifications_active</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 font-serif mb-3">No active {% if tool %}{{ tool.name }}{% endif %} jobs in {{ location_name|default:"this area"|title }} right now.</h3>
+                <p class="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
+                    Top-tier marketing operations roles fill up fast. Join 15,000+ professionals and get notified the moment a new role matching your criteria is posted.
+                </p>
+                <button onclick="toggleModal('subscribe-modal')" class="bg-[#1f432d] text-white font-bold py-3.5 px-10 rounded-md hover:bg-green-900 transition shadow-lg hover:-translate-y-0.5 transform">
+                    Set Job Alert
+                </button>
+                <div class="mt-8 pt-6 border-t border-slate-100">
+                    <a href="{% url 'job_list' %}" class="text-[#1f432d] font-bold hover:underline text-sm">Browse All Open Jobs &rarr;</a>
+                </div>
             </div>
         {% endfor %}
 
