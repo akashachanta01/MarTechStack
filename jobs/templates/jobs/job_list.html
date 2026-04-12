@@ -5,63 +5,185 @@
 {% block meta_description %}Search {{ jobs.paginator.count }}+ active MarTech jobs. The #1 niche job board for Salesforce, HubSpot, and Marketing Operations. Find high-paying remote marketing positions today.{% endblock %}
 
 {% block content %}
-<div class="ticker" aria-label="New listings">
-  <div class="ticker-pill"><div class="ticker-live"></div> New</div>
-  <div class="ticker-track" role="marquee">
+<style>
+/* Ambient Hero Background Glow */
+.hero-premium-bg {
+    position: relative;
+    overflow: hidden;
+    background: var(--navy3);
+}
+.hero-premium-bg::before {
+    content: ''; position: absolute; top: -50%; left: -20%; width: 140%; height: 200%;
+    background: radial-gradient(circle at 50% 30%, rgba(191, 84, 32, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+}
+.hero-premium-bg > * { position: relative; z-index: 1; }
+</style>
+
+<div class="ticker bg-[#0a1526] border-b border-white/5" aria-label="New listings">
+  <div class="ticker-pill bg-amber text-white border-amber/20 shadow-md"><div class="ticker-live bg-white"></div> New</div>
+  <div class="ticker-track text-slate-300" role="marquee">
     {% for job in jobs|slice:":10" %}
-    <span>{{ job.title }} · {{ job.company }} · {{ job.location|default:"Remote" }}</span>
+    <span class="hover:text-white transition-colors cursor-default">{{ job.title }} · {{ job.company }} · {{ job.location|default:"Remote" }}</span>
     {% empty %}
     <span>No new jobs currently listed. Check back soon.</span>
     {% endfor %}
   </div>
 </div>
 
-<header class="hero" role="banner">
-  <div class="wrap">
-    <div class="hero-grid">
-      <div class="hero-left">
-        <div class="eyebrow">The #1 Board For MarTech Jobs</div>
-        <h1>{{ jobs.paginator.count }}+ <em>MarTech Jobs</em><br/>— curated daily.</h1>
-        <p class="hero-sub">The only job board built <strong>exclusively</strong> for marketing technology professionals. Find top <strong>Salesforce, Adobe, HubSpot, and Braze jobs</strong>, including specialized <strong>remote marketing jobs</strong>.</p>
+<header class="hero hero-premium-bg py-20" role="banner">
+  <div class="wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="hero-grid grid lg:grid-cols-12 gap-16 items-center">
+      
+      <div class="hero-left lg:col-span-7">
+        <div class="eyebrow inline-block mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-[#f0a06a] bg-[#f0a06a]/10 px-3 py-1.5 rounded-full border border-[#f0a06a]/20">The #1 Board For MarTech Jobs</div>
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-[1.1]">{{ jobs.paginator.count }}+ <em class="text-[#f0a06a] not-italic">MarTech Jobs</em><br/><span class="text-slate-300 font-light">— curated daily.</span></h1>
+        <p class="hero-sub text-lg md:text-xl text-slate-400 font-light max-w-2xl leading-relaxed mb-10">The only job board built <strong>exclusively</strong> for marketing technology professionals. Find top Salesforce, Adobe, HubSpot, and Braze jobs.</p>
 
-        <div class="search-container">
-          <span class="search-label">Search live martech jobs</span>
-          <form method="get" action="{% url 'job_list' %}#jobs-section" class="search-box" role="search">
-            <span class="s-icon">
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-            </span>
-            <input class="s-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Search Salesforce, HubSpot, MarTech..."/>
-            <button type="submit" class="s-btn">Search</button>
+        <div class="search-container bg-white/5 p-4 md:p-6 rounded-2xl border border-white/10 backdrop-blur-sm shadow-2xl">
+          <span class="search-label block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Search live roles</span>
+          <form method="get" action="{% url 'job_list' %}#jobs-section" class="search-box flex flex-col md:flex-row gap-3" role="search">
+            <div class="relative flex-grow">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <input class="w-full bg-white/10 border border-white/20 text-white rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#f0a06a] focus:ring-1 focus:ring-[#f0a06a] transition placeholder-slate-500" type="search" name="q" value="{{ query|default:'' }}" placeholder="Search Salesforce, HubSpot..."/>
+            </div>
+            <button type="submit" class="bg-[#f0a06a] hover:bg-[#d96025] text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg transform hover:-translate-y-0.5 w-full md:w-auto flex-shrink-0">Search</button>
           </form>
           
-          <div class="mt-4 flex flex-wrap items-center gap-2">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mr-1">Trending:</span>
-            <a href="{% url 'seo_loc_only' 'remote' %}" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">Remote</a>
-            <a href="?q=Salesforce" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">Salesforce</a>
-            <a href="?q=HubSpot" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">HubSpot</a>
-            <a href="?q=Operations" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">MOPs</a>
+          <div class="mt-4 flex flex-wrap items-center gap-2.5">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mr-1">Trending:</span>
+            <a href="{% url 'seo_loc_only' 'remote' %}" class="text-xs font-bold bg-white/5 border border-white/10 text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-white/15 hover:text-white transition">Remote</a>
+            <a href="?q=Salesforce" class="text-xs font-bold bg-white/5 border border-white/10 text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-white/15 hover:text-white transition">Salesforce</a>
+            <a href="?q=HubSpot" class="text-xs font-bold bg-white/5 border border-white/10 text-slate-300 px-3.5 py-1.5 rounded-full hover:bg-white/15 hover:text-white transition">HubSpot</a>
           </div>
         </div>
       </div>
       
-      <aside class="hero-right" aria-label="Latest job listings">
-        <div class="feed-label">
-          <span>Latest roles</span>
-          <span class="feed-live"><span class="feed-dot"></span> Live</span>
+      <aside class="hero-right lg:col-span-5 w-full max-w-md mx-auto lg:ml-auto bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-2xl" aria-label="Latest job listings">
+        <div class="feed-label flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+          <span class="text-sm font-bold text-white uppercase tracking-wider">Just Added</span>
+          <span class="feed-live flex items-center gap-1.5 text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded-md"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Live</span>
         </div>
-        {% for job in jobs|slice:":5" %}
-        <a href="{% url 'job_detail' job.id job.slug %}" class="feed-item hover:-translate-y-0.5 transition-transform duration-200">
-          <div class="fi-top">
-            <span class="fi-company">{{ job.company }}</span>
-          </div>
-          <div class="fi-title">{{ job.title }}</div>
-          <div class="fi-meta">
-              <span>{{ job.location|default:"Remote" }}</span>
-          </div>
-        </a>
-        {% endfor %}
+        <div class="space-y-4">
+            {% for job in jobs|slice:":4" %}
+            <a href="{% url 'job_detail' job.id job.slug %}" class="block group bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 shadow-sm hover:shadow-xl">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition">{{ job.company }}</span>
+                <span class="text-[10px] text-slate-500">{{ job.location|default:"Remote" }}</span>
+              </div>
+              <div class="text-white font-serif font-bold text-lg leading-tight group-hover:text-[#f0a06a] transition-colors">{{ job.title }}</div>
+            </a>
+            {% endfor %}
+        </div>
       </aside>
+
     </div>
   </div>
 </header>
+
+<section id="jobs-section" class="py-16 bg-slate-50 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h2 class="text-2xl font-serif font-bold text-slate-900">Active Roles</h2>
+                {% if query %}<p class="text-sm text-slate-500 mt-1">Showing results for "<span class="text-navy font-bold">{{ query }}</span>"</p>{% endif %}
+            </div>
+            <span class="text-xs font-bold bg-white border border-slate-200 px-3 py-1.5 rounded-full text-slate-600 shadow-sm">{{ jobs.paginator.count|default:0 }} Positions Open</span>
+        </div>
+
+        {% for job in jobs %}
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-premium hover:shadow-premium-hover hover:border-[#f0a06a]/40 transition-all duration-300 group relative flex flex-col md:flex-row gap-5 items-start">
+                
+                <div class="flex-shrink-0">
+                    {% if job.company_logo %}
+                        <div class="w-16 h-16 border border-slate-100 rounded-xl p-2.5 flex items-center justify-center bg-white shadow-sm group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
+                        </div>
+                    {% else %}
+                        <div class="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl font-serif font-bold text-slate-400 shadow-inner group-hover:bg-[#faeee5] group-hover:text-[#f0a06a] transition-colors duration-300">
+                            {{ job.company|slice:":1" }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex-grow w-full">
+                    <h3 class="text-xl font-serif font-bold text-slate-900 leading-tight mb-1.5 flex items-center gap-2">
+                        <a href="{% url 'job_detail' job.id job.slug %}" class="hover:text-navy transition-colors before:absolute before:inset-0">
+                            {{ job.title }}
+                        </a>
+                        {% if job.is_featured %}
+                            <span class="bg-amber text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm relative z-10">Featured</span>
+                        {% endif %}
+                    </h3>
+                    <p class="text-sm text-slate-500 font-medium mb-3">{{ job.company }}</p>
+                    
+                    <div class="flex flex-wrap gap-2 relative z-10">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 text-[11px] font-sans font-bold text-slate-600 uppercase tracking-wide">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            {{ job.location|default:"Remote" }}
+                        </div>
+
+                        {% if job.salary_range %}
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-50 border border-green-100 text-[11px] font-sans font-bold text-green-700 uppercase tracking-wide">
+                            <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            {{ job.salary_range }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex flex-row md:flex-col justify-between items-center md:items-end gap-4 min-w-[140px] w-full md:w-auto relative z-10 mt-4 md:mt-0">
+                    <div class="flex gap-1.5 order-2 md:order-1 flex-wrap justify-end">
+                        {% for t in job.tools.all|slice:":3" %}
+                        <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold border border-slate-200">
+                            {{ t.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="order-1 md:order-2 w-full md:w-auto">
+                        <a href="{% url 'job_detail' job.id job.slug %}" class="block w-full text-center bg-white border-2 border-slate-200 hover:border-navy text-navy hover:bg-navy hover:text-white font-bold py-2 px-5 rounded-lg shadow-sm text-xs transition-all duration-200">
+                            Apply Now
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        {% empty %}
+            <div class="text-center py-20 bg-white border border-dashed border-slate-300 rounded-2xl px-4 shadow-sm">
+                <div class="mx-auto w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-slate-100">
+                    <span class="material-symbols-outlined text-4xl text-slate-400">search_off</span>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 font-serif mb-2">No exact matches found</h3>
+                <p class="text-slate-500 mb-8 max-w-md mx-auto">We couldn't find any live roles matching your specific criteria. Adjust your search or let us do the hunting for you.</p>
+                <button onclick="toggleModal('subscribe-modal')" class="bg-navy text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-slate-800 transition transform hover:-translate-y-0.5">
+                    Set up a custom Job Alert
+                </button>
+            </div>
+        {% endfor %}
+
+        {% if jobs and jobs.paginator.num_pages > 1 %}
+        <div class="mt-12 flex justify-center pb-10">
+            <div class="inline-flex items-center bg-white rounded-lg shadow-sm border border-slate-200 p-1">
+                {% if jobs.has_previous %}
+                    <a href="?page={{ jobs.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy hover:bg-slate-50 rounded-md transition">← Prev</a>
+                {% endif %}
+                
+                <span class="px-5 py-2 text-sm font-bold text-slate-900 border-l border-r border-slate-100 bg-slate-50">
+                    {{ jobs.number }} <span class="text-slate-400 font-normal mx-1">of</span> {{ jobs.paginator.num_pages }}
+                </span>
+
+                {% if jobs.has_next %}
+                    <a href="?page={{ jobs.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-navy hover:bg-slate-50 rounded-md transition">Next →</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
 {% endblock %}
