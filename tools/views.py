@@ -1,345 +1,179 @@
 import json
 import os
+import time
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Q
 from openai import OpenAI
 from .models import ToolPage
-# Import Job model to fetch listings
 from jobs.models import Job 
 
-# --- 1. JOB DESCRIPTION GENERATOR (OPTIMIZED) ---
-def jd_generator(request, slug=None):
-    # Fetch General MOPs Jobs
-    jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved'
-    ).filter(
-        Q(title__icontains='Operations') | 
-        Q(title__icontains='Manager')
-    ).order_by('-created_at')[:5]
+# --- SECURITY: API RATE LIMITER (Protects your OpenAI Wallet) ---
+def check_rate_limit(request):
+    current_time = time.time()
+    
+    # Check frequency (Cooldown: 5 seconds between clicks)
+    last_call = request.session.get('last_ai_call', 0)
+    if current_time - last_call < 5:
+        return False, "Please wait a few seconds before generating again."
+        
+    # Check daily quota (Max 15 free generations per user per day)
+    usage_count = request.session.get('ai_usage_count', 0)
+    last_reset = request.session.get('ai_usage_reset', current_time)
+    
+    # Reset quota every 24 hours
+    if current_time - last_reset > 86400:
+        usage_count = 0
+        request.session['ai_usage_reset'] = current_time
+        
+    if usage_count >= 15:
+        return False, "You've hit your free daily limit for AI tools! Please come back tomorrow."
+        
+    # Update session
+    request.session['last_ai_call'] = current_time
+    request.session['ai_usage_count'] = usage_count + 1
+    return True, ""
 
+
+# --- 1. JOB DESCRIPTION GENERATOR ---
+def jd_generator(request, slug=None):
+    jobs = Job.objects.filter(is_active=True, screening_status='approved').filter(Q(title__icontains='Operations') | Q(title__icontains='Manager')).order_by('-created_at')[:5]
     context = {
         'role_title': "Marketing Operations Manager",
-        'responsibilities': [
-            "Manage and optimize the marketing technology stack (Marketo, Salesforce)",
-            "Oversee lead scoring, routing, and attribution models",
-            "Ensure data hygiene and compliance (GDPR/CCPA)",
-            "Build scalable workflows for campaign execution"
-        ],
-        'skills': [
-            "3+ years in Marketing Ops or Demand Gen",
-            "Proficiency in SQL and Data Visualization (Tableau/Looker)",
-            "Experience with CRM integration (Salesforce/HubSpot)",
-            "Strong analytical skills and attention to detail"
-        ],
-        'jobs': jobs
+        'responsibilities': ["Manage and optimize the marketing technology stack", "Oversee lead scoring and routing", "Ensure data hygiene"],
+        'skills': ["3+ years in Marketing Ops", "Proficiency in SQL", "CRM integration experience"],
+        'jobs': jobs,
+        'seo_title': "AI Job Description Generator for MarTech Roles",
+        'seo_description': "Draft highly technical, customized Marketing Operations job descriptions in seconds."
     }
     if slug:
         tool = get_object_or_404(ToolPage, slug=slug)
         context['role_title'] = tool.role_name
-        if tool.default_responsibilities:
-            context['responsibilities'] = [line.strip() for line in tool.default_responsibilities.split('\n') if line.strip()]
-        if tool.default_skills:
-            context['skills'] = [line.strip() for line in tool.default_skills.split('\n') if line.strip()]
-        context['seo_title'] = tool.seo_title
-        context['seo_description'] = tool.seo_description
+        if tool.default_responsibilities: context['responsibilities'] = [line.strip() for line in tool.default_responsibilities.split('\n') if line.strip()]
+        if tool.default_skills: context['skills'] = [line.strip() for line in tool.default_skills.split('\n') if line.strip()]
+        context['seo_title'] = tool.seo_title; context['seo_description'] = tool.seo_description
 
     return render(request, 'tools/jd_generator.html', context)
 
 @require_POST
 def api_generate_jd(request):
+    is_safe, error_msg = check_rate_limit(request)
+    if not is_safe: return JsonResponse({"error": error_msg}, status=429)
+
     try:
         data = json.loads(request.body)
-        role = data.get('role')
-        stack = data.get('stack')
-        seniority = data.get('seniority')
-        tone = data.get('tone')
-
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-        prompt = f"Write a job description for a {seniority} {role}. Tech Stack: {stack}. Tone: {tone}. Output HTML with <h3> headers."
+        prompt = f"Write a {data.get('seniority')} job description for a {data.get('role')} using {data.get('stack')}. Tone: {data.get('tone')}. Output HTML with <h3> headers."
         
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are an expert HR recruiter."}, {"role": "user", "content": prompt}]
-        )
+        completion = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": "You are an expert HR recruiter."}, {"role": "user", "content": prompt}])
         return JsonResponse({"html": completion.choices[0].message.content})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception as e: return JsonResponse({"error": str(e)}, status=500)
 
-# --- 2. SALARY CALCULATOR (OPTIMIZED) ---
+
+# --- 2. SALARY CALCULATOR ---
 def salary_calculator(request):
-    high_paying_jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved'
-    ).filter(
-        Q(title__icontains='Director') | 
-        Q(title__icontains='Head') | 
-        Q(title__icontains='Manager')
-    ).order_by('-created_at')[:5]
+    jobs = Job.objects.filter(is_active=True, screening_status='approved').filter(Q(title__icontains='Director') | Q(title__icontains='Manager')).order_by('-created_at')[:5]
+    return render(request, 'tools/salary_calculator.html', {'seo_title': "MarTech Salary Calculator 2026", 'seo_description': "Calculate your market value in Marketing Operations.", 'jobs': jobs})
 
-    return render(request, 'tools/salary_calculator.html', {
-        'seo_title': "MarTech Salary Calculator 2026 - Real-time Market Data",
-        'seo_description': "Calculate your market value in Marketing Operations. Data based on role, experience, and tech stack proficiency.",
-        'jobs': high_paying_jobs
-    })
 
-# --- 3. INTERVIEW GENERATOR (OPTIMIZED) ---
+# --- 3. INTERVIEW GENERATOR ---
 def interview_generator(request):
-    # Fetch Hiring Manager / Lead roles (people who interview others)
-    jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved'
-    ).filter(
-        Q(title__icontains='Lead') | 
-        Q(title__icontains='Principal') | 
-        Q(title__icontains='Manager')
-    ).order_by('-created_at')[:5]
-
-    return render(request, 'tools/interview_generator.html', {
-        'seo_title': "MarTech Interview Question Generator | For Hiring Managers",
-        'seo_description': "Generate technical interview questions for Salesforce, HubSpot, and Marketo roles. Perfect for hiring managers and candidates.",
-        'jobs': jobs
-    })
+    jobs = Job.objects.filter(is_active=True, screening_status='approved').filter(Q(title__icontains='Lead') | Q(title__icontains='Manager')).order_by('-created_at')[:5]
+    return render(request, 'tools/interview_generator.html', {'seo_title': "MarTech Interview Question Generator", 'seo_description': "Generate technical interview questions.", 'jobs': jobs})
 
 @require_POST
 def api_generate_interview(request):
+    is_safe, error_msg = check_rate_limit(request)
+    if not is_safe: return JsonResponse({"error": error_msg}, status=429)
+
     try:
         data = json.loads(request.body)
-        role = data.get('role')
-        stack = data.get('stack')
-        difficulty = data.get('difficulty')
-
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-        prompt = f"""
-        Generate 5 technical interview questions for a {role} specializing in {stack}.
-        Difficulty: {difficulty}.
-        Include 1 "Scenario-based" question.
-        Output format (HTML):
-        <ul>
-            <li><strong>Question 1:</strong> [Question text]</li>
-            ...
-        </ul>
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are a technical hiring manager for Marketing Operations."}, {"role": "user", "content": prompt}]
-        )
+        prompt = f"Generate 5 technical interview questions for a {data.get('role')} specializing in {data.get('stack')}. Difficulty: {data.get('difficulty')}. Output HTML list."
+        completion = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": "You are a technical hiring manager."}, {"role": "user", "content": prompt}])
         return JsonResponse({"html": completion.choices[0].message.content})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception as e: return JsonResponse({"error": str(e)}, status=500)
 
-# --- 4. SIGNATURE GENERATOR (OPTIMIZED) ---
-def signature_generator(request):
-    # Fetch HubSpot jobs (since it's a HubSpot tool)
-    hubspot_jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved',
-        title__icontains='HubSpot'
-    ).order_by('-created_at')[:5]
 
-    return render(request, 'tools/signature_generator.html', {
-        'seo_title': "Free HubSpot Email Signature Generator | Professional Templates",
-        'seo_description': "Create a professional email signature for HubSpot, Gmail, and Outlook. Free tool for marketers and sales pros.",
-        'jobs': hubspot_jobs
-    })
-
-# --- 5. SALESFORCE ID CONVERTER (OPTIMIZED) ---
-def sf_id_converter(request):
-    salesforce_jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved',
-        title__icontains='Salesforce'
-    ).order_by('-created_at')[:5]
-
-    return render(request, 'tools/sf_id_converter.html', {
-        'seo_title': "Salesforce 15 to 18 Character ID Converter | MarTechJobs",
-        'seo_description': "Convert Salesforce 15-character case-sensitive IDs to 18-character case-insensitive IDs. Essential for Admins doing data migration or VLOOKUPs.",
-        'jobs': salesforce_jobs
-    })
-
-# --- 6. CONSULTANT RATE CALCULATOR (OPTIMIZED) ---
-def consultant_calculator(request):
-    # Fetch Contract roles
-    contract_jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved',
-        role_type='contract'
-    ).order_by('-created_at')[:5]
-
-    return render(request, 'tools/rate_calculator.html', {
-        'seo_title': "Freelance MarTech Consultant Rate Calculator",
-        'seo_description': "Calculate your hourly rate as a HubSpot, Salesforce, or Marketo consultant. Based on market demand and experience.",
-        'jobs': contract_jobs
-    })
-
-# --- 7. QR CODE GENERATOR ---
-def qr_generator(request):
-    # Fetch Marketing Manager roles
-    jobs = Job.objects.filter(is_active=True, screening_status='approved', title__icontains='Manager').order_by('-created_at')[:5]
-    return render(request, 'tools/qr_generator.html', {
-        'seo_title': "Free HubSpot QR Code Generator with UTM Tracking",
-        'seo_description': "Generate trackable QR codes for your marketing campaigns. Built-in UTM builder for HubSpot and Google Analytics tracking.",
-        'jobs': jobs
-    })
-
-# --- 8. UTM BUILDER (OPTIMIZED) ---
-def utm_builder(request):
-    analytics_jobs = Job.objects.filter(
-        is_active=True,
-        screening_status='approved'
-    ).filter(
-        Q(title__icontains='Analytics') | 
-        Q(title__icontains='Data') | 
-        Q(title__icontains='Operations')
-    ).order_by('-created_at')[:5]
-
-    return render(request, 'tools/utm_builder.html', {
-        'seo_title': "Bulk UTM Link Builder for Marketers (Google Analytics 4 Compatible)",
-        'seo_description': "The fastest way to build Google Analytics tracking links. Save your presets for consistency across your team.",
-        'jobs': analytics_jobs
-    })
-
-# --- 9. TEXT TO SQL ---
+# --- 4. TEXT TO SQL ---
 def sql_generator(request):
-    # Fetch SQL/Data roles
     jobs = Job.objects.filter(is_active=True, screening_status='approved', title__icontains='SQL').order_by('-created_at')[:5]
-    return render(request, 'tools/sql_generator.html', {
-        'seo_title': "AI Text-to-SQL Generator for Marketing Data",
-        'seo_description': "Convert plain English into SQL queries for Salesforce Data Cloud, Snowflake, and BigQuery. No coding required.",
-        'jobs': jobs
-    })
+    return render(request, 'tools/sql_generator.html', {'seo_title': "AI Text-to-SQL Generator for Marketing Data", 'seo_description': "Convert plain English into SQL queries.", 'jobs': jobs})
 
 @require_POST
 def api_generate_sql(request):
+    is_safe, error_msg = check_rate_limit(request)
+    if not is_safe: return JsonResponse({"error": error_msg}, status=429)
+
     try:
         data = json.loads(request.body)
-        query = data.get('query')
-        flavor = data.get('flavor') 
-
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-        prompt = f"""
-        You are an expert Data Engineer. Convert this marketing question into a SQL query.
-        SQL Flavor: {flavor}
-        Question: "{query}"
-        
-        Return ONLY the raw SQL code block. Do not wrap it in markdown ticks.
-        Format it for readability.
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": "You are a SQL expert."}, {"role": "user", "content": prompt}]
-        )
+        prompt = f"Convert to SQL ({data.get('flavor')}): '{data.get('query')}'. Return ONLY raw SQL code."
+        completion = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": "You are a SQL expert."}, {"role": "user", "content": prompt}])
         return JsonResponse({"sql": completion.choices[0].message.content.strip()})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception as e: return JsonResponse({"error": str(e)}, status=500)
 
-# --- 10. RESUME SCANNER ---
+
+# --- 5. RESUME SCANNER ---
 def resume_scanner(request):
-    return render(request, 'tools/resume_scanner.html', {
-        'seo_title': "Free ATS Resume Scanner for Marketing Ops",
-        'seo_description': "Check your resume against MarTech job descriptions. Find missing keywords like SQL, Marketo, and API integration."
-    })
+    return render(request, 'tools/resume_scanner.html', {'seo_title': "Free ATS Resume Scanner for Marketing Ops", 'seo_description': "Check your resume against MarTech job descriptions."})
 
 @require_POST
 def api_scan_resume(request):
+    is_safe, error_msg = check_rate_limit(request)
+    if not is_safe: return JsonResponse({"error": error_msg}, status=429)
+
     try:
         data = json.loads(request.body)
-        resume_text = data.get('resume_text', '')
-        target_role = data.get('target_role', 'Marketing Operations Manager')
-
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-        
-        prompt = f"""
-        Act as an ATS (Applicant Tracking System) for a {target_role} role.
-        
-        Analyze this resume text:
-        "{resume_text[:3000]}"
-        
-        Identify:
-        1. A Match Score (0-100)
-        2. 3 Critical Missing Keywords (Technical skills only, e.g. SQL, Marketo, Python)
-        3. 1 Actionable Improvement Tip
-        
-        Output JSON: {{ "score": 85, "missing": ["SQL", "Looker"], "tip": "..." }}
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
-        )
-        
+        prompt = f"Act as ATS for {data.get('target_role')}. Analyze resume: '{data.get('resume_text', '')[:3000]}'. Output JSON: {{ 'score': 85, 'missing': ['SQL'], 'tip': '...' }}"
+        completion = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"})
         return JsonResponse(json.loads(completion.choices[0].message.content))
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception as e: return JsonResponse({"error": str(e)}, status=500)
 
-# --- 11. ROAS CALCULATOR ---
-def roas_calculator(request):
-    return render(request, 'tools/roas_calculator.html', {
-        'seo_title': "Free ROAS Calculator (Return on Ad Spend)",
-        'seo_description': "Calculate your Return on Ad Spend (ROAS) instantly. Essential tool for Paid Search, Social, and Performance Marketers."
-    })
 
-# --- 12. EMAIL SUBJECT LINE TESTER ---
+# --- 6. SUBJECT LINE TESTER ---
 def subject_line_tester(request):
-    return render(request, 'tools/subject_line_tester.html', {
-        'seo_title': "AI Email Subject Line Tester & Grader",
-        'seo_description': "Will your email get opened? Test your subject line against millions of data points using AI. Get a score and improvement tips."
-    })
+    return render(request, 'tools/subject_line_tester.html', {'seo_title': "AI Email Subject Line Tester & Grader", 'seo_description': "Will your email get opened? Test your subject line."})
 
 @require_POST
 def api_test_subject_line(request):
+    is_safe, error_msg = check_rate_limit(request)
+    if not is_safe: return JsonResponse({"error": error_msg}, status=429)
+
     try:
         data = json.loads(request.body)
-        subject = data.get('subject', '')
-
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: return JsonResponse({"error": "API Key missing"}, status=500)
 
         client = OpenAI(api_key=api_key)
-        
-        prompt = f"""
-        Act as a World-Class Email Marketing Copywriter (like Chase Dimond or Drayton Bird).
-        Analyze this email subject line: "{subject}"
-        
-        Provide a JSON response with:
-        1. "score": 0-100 integer.
-        2. "grade": "A", "B", "C", "D", or "F".
-        3. "feedback": One concise sentence on why it's good or bad.
-        4. "better_versions": A list of 3 alternative, higher-converting variations.
-        
-        Strict JSON format.
-        """
-        
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"}
-        )
-        
+        prompt = f"Analyze email subject: '{data.get('subject')}'. JSON output: {{'score': int, 'grade': str, 'feedback': str, 'better_versions': [str]}}"
+        completion = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": "You are a copywriter."}, {"role": "user", "content": prompt}], response_format={"type": "json_object"})
         return JsonResponse(json.loads(completion.choices[0].message.content))
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    except Exception as e: return JsonResponse({"error": str(e)}, status=500)
 
-        # --- 13. THE TOOLS HUB (SEO MAGNET) ---
+
+# --- OTHER STATIC TOOLS ---
+def signature_generator(request): return render(request, 'tools/signature_generator.html', {'seo_title': "HubSpot Email Signature Generator", 'seo_description': "Create a professional email signature."})
+def sf_id_converter(request): return render(request, 'tools/sf_id_converter.html', {'seo_title': "Salesforce 15 to 18 Character ID Converter", 'seo_description': "Convert Salesforce IDs easily."})
+def consultant_calculator(request): return render(request, 'tools/rate_calculator.html', {'seo_title': "Freelance MarTech Consultant Rate Calculator", 'seo_description': "Calculate your hourly rate."})
+def qr_generator(request): return render(request, 'tools/qr_generator.html', {'seo_title': "HubSpot QR Code Generator", 'seo_description': "Generate trackable QR codes."})
+def utm_builder(request): return render(request, 'tools/utm_builder.html', {'seo_title': "Bulk UTM Link Builder for Marketers", 'seo_description': "Build Google Analytics tracking links."})
+def roas_calculator(request): return render(request, 'tools/roas_calculator.html', {'seo_title': "Free ROAS Calculator", 'seo_description': "Calculate Return on Ad Spend."})
+
+# --- THE TOOLS HUB ---
 def tools_hub(request):
-    return render(request, 'tools/hub.html', {
-        'seo_title': "Free MarTech Tools & Calculators | MarTechJobs",
-        'seo_description': "A curated suite of free tools for marketing operations professionals. Generate SQL, build UTMs, calculate ROAS, and scan your resume instantly."
-    })
+    return render(request, 'tools/hub.html', {'seo_title': "Free MarTech Tools & Calculators | MarTechJobs", 'seo_description': "A curated suite of free tools for marketing operations professionals."})
