@@ -399,5 +399,49 @@
             handleSubscribe('modal-sub-form', 'modal-msg');
         });
     </script>
+
+    <div id="toast-container" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-[150] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // Global UX Function: Modern Toast Notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            // Styling the toast based on type
+            const bgColor = type === 'success' ? 'bg-slate-900' : 'bg-red-600';
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 transform transition-all duration-300 translate-y-10 opacity-0 pointer-events-auto text-sm font-bold tracking-wide`;
+            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span> ${message}`;
+            
+            container.appendChild(toast);
+            
+            // Animate In
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+            
+            // Animate Out & Remove
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Override the native window.alert globally for smoother UX on existing tool pages
+        window.originalAlert = window.alert;
+        window.alert = function(message) {
+            if (message.toLowerCase().includes('copied') || message.toLowerCase().includes('success')) {
+                showToast(message, 'success');
+            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('please')) {
+                showToast(message, 'error');
+            } else {
+                window.originalAlert(message);
+            }
+        };
+    </script>
 </body>
 </html>
