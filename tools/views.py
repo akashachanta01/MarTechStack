@@ -336,3 +336,10 @@ def api_test_subject_line(request):
         return JsonResponse(json.loads(completion.choices[0].message.content))
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+        # --- 13. THE TOOLS HUB (SEO MAGNET) ---
+def tools_hub(request):
+    return render(request, 'tools/hub.html', {
+        'seo_title': "Free MarTech Tools & Calculators | MarTechJobs",
+        'seo_description': "A curated suite of free tools for marketing operations professionals. Generate SQL, build UTMs, calculate ROAS, and scan your resume instantly."
+    })
