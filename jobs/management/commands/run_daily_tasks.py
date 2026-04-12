@@ -3,7 +3,7 @@ from django.core.management import call_command
 import time
 
 class Command(BaseCommand):
-    help = 'MASTER COMMAND: Runs all daily maintenance and ingestion tasks in order.'
+    help = 'MASTER COMMAND: Runs all daily maintenance, ingestion, and content tasks in order.'
 
     def handle(self, *args, **options):
         self.stdout.write("🚀 STARTING DAILY AUTOPILOT SEQUENCE...")
@@ -22,9 +22,13 @@ class Command(BaseCommand):
         self.stdout.write("\n[3/5] 🎨 Backfilling Logos...")
         call_command('update_logos')
         
-        # 4. INDEXING (Ping Google)
-        # This forces Google to crawl the new jobs you just found in Step 2.
-        self.stdout.write("\n[4/5] 📡 Pinging Google Indexing API...")
+        # 4. CONTENT ENGINE (Automated Blog)
+        self.stdout.write("\n[4/5] ✍️ Running AI Blog Engine...")
+        call_command('generate_blog')
+        
+        # 5. INDEXING (Ping Google)
+        # This forces Google to crawl the new jobs and the new blog post.
+        self.stdout.write("\n[5/5] 📡 Pinging Google Indexing API...")
         try:
             call_command('index_jobs')
         except Exception as e:
