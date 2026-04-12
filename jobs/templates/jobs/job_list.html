@@ -33,6 +33,14 @@
             <input class="s-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Search Salesforce, HubSpot, MarTech..."/>
             <button type="submit" class="s-btn">Search</button>
           </form>
+          
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mr-1">Trending:</span>
+            <a href="{% url 'seo_loc_only' 'remote' %}" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">Remote</a>
+            <a href="?q=Salesforce" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">Salesforce</a>
+            <a href="?q=HubSpot" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">HubSpot</a>
+            <a href="?q=Operations" class="text-xs font-bold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-full hover:bg-white/20 transition backdrop-blur-sm">MOPs</a>
+          </div>
         </div>
       </div>
       
@@ -42,7 +50,7 @@
           <span class="feed-live"><span class="feed-dot"></span> Live</span>
         </div>
         {% for job in jobs|slice:":5" %}
-        <a href="{% url 'job_detail' job.id job.slug %}" class="feed-item">
+        <a href="{% url 'job_detail' job.id job.slug %}" class="feed-item hover:-translate-y-0.5 transition-transform duration-200">
           <div class="fi-top">
             <span class="fi-company">{{ job.company }}</span>
           </div>
