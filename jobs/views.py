@@ -31,6 +31,10 @@ TOOL_MAPPING = {
     'shopify': 'Commerce', 'the trade desk': 'AdTech'
 }
 
+# --- SEO CROSS-LINKING DATA ---
+SEO_CROSS_CITIES = ["New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston", "Los Angeles", "Denver", "Atlanta", "London"]
+SEO_CROSS_STATES = ["California", "Texas", "New York", "Florida", "Illinois", "Pennsylvania", "Washington", "Colorado"]
+
 def job_list(request):
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip() 
@@ -142,7 +146,8 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
     SEO_LOCATIONS = {
-        "nyc": "New York", "sf": "San Francisco", "la": "Los Angeles", "dfw": "Dallas"
+        "nyc": "New York", "sf": "San Francisco", "la": "Los Angeles", "dfw": "Dallas",
+        "united-states": "United States"
     }
 
     location_name = "Remote" 
@@ -152,9 +157,7 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     if tool: jobs = jobs.filter(tools=tool)
     if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
-    else: jobs = jobs.filter(location__icontains=location_name)
-
-    # REMOVED ZERO-JOB REDIRECT TO ALLOW PROGRAMMATIC SEO INDEXING
+    elif location_name != "United States": jobs = jobs.filter(location__icontains=location_name)
 
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
@@ -169,14 +172,14 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
 
-    # Paginate results
     paginator = Paginator(jobs.order_by('-is_pinned', '-created_at'), 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'jobs/tool_detail.html', {
         'tool': tool, 'jobs': jobs_page,
         'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc, 
-        'is_seo_landing': True, 'location_name': location_name
+        'is_seo_landing': True, 'location_name': location_name,
+        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
     })
 
 def salary_guide(request):
@@ -224,7 +227,10 @@ def tool_detail(request, slug):
     jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
-    return render(request, 'jobs/tool_detail.html', {'tool': tool, 'jobs': jobs_page, 'location_name': 'Global/Remote'})
+    return render(request, 'jobs/tool_detail.html', {
+        'tool': tool, 'jobs': jobs_page, 'location_name': 'Global/Remote',
+        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
+    })
 
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
