@@ -1,0 +1,64 @@
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
+from datetime import timedelta
+import time
+
+from jobs.models import Job, Subscriber
+
+class Command(BaseCommand):
+    help = 'Sends the weekly curated job digest to all active subscribers.'
+
+    def handle(self, *args, **options):
+        self.stdout.write("📧 Booting up the Newsletter Engine...")
+
+        # 1. Get jobs from the last 7 days
+        one_week_ago = timezone.now() - timedelta(days=7)
+        top_jobs = Job.objects.filter(
+            is_active=True, 
+            screening_status='approved',
+            created_at__gte=one_week_ago
+        ).order_by('-is_featured', '-created_at')[:10] # Top 10 jobs
+
+        if not top_jobs.exists():
+            self.stdout.write(self.style.WARNING("⚠️ No new jobs this week. Skipping email blast."))
+            return
+
+        # 2. Get all subscribers
+        subscribers = Subscriber.objects.all()
+        total_subs = subscribers.count()
+        self.stdout.write(f"📫 Found {total_subs} active subscribers. Preparing to send...")
+
+        # 3. Prepare the Email Template
+        context = {
+            'jobs': top_jobs,
+            'job_count': top_jobs.count(),
+            'domain': getattr(settings, 'DOMAIN_URL', 'https://martechjobs.io')
+        }
+        
+        # Note: Relies on your existing digest.html template
+        html_content = render_to_string('emails/digest.html', context)
+        text_content = f"Here are your top {top_jobs.count()} MarTech Jobs this week! Visit martechjobs.io to apply."
+
+        # 4. Send Emails (with a slight delay to avoid spam filters/rate limits)
+        success_count = 0
+        for sub in subscribers:
+            try:
+                msg = EmailMultiAlternatives(
+                    subject="🔥 Top MarTech Jobs of the Week",
+                    body=text_content,
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'hello@martechjobs.io'),
+                    to=[sub.email]
+                )
+                msg.attach_alternative(html_content, "text/html")
+                msg.send(fail_silently=False)
+                success_count += 1
+                
+                # Sleep for 0.5 seconds between emails to respect SMTP limits
+                time.sleep(0.5) 
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"❌ Failed to send to {sub.email}: {e}"))
+
+        self.stdout.write(self.style.SUCCESS(f"✨ Weekly Digest Complete! Sent to {success_count}/{total_subs} subscribers."))
