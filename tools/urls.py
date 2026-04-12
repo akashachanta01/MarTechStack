@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # --- THE NEW TOOLS HUB ---
+    path('', views.tools_hub, name='tools_hub'),
+
     # --- EXISTING TOOLS ---
     path('job-description-generator/', views.jd_generator, name='jd_generator'),
     path('api/generate-jd/', views.api_generate_jd, name='api_generate_jd'),
@@ -10,8 +13,6 @@ urlpatterns = [
     path('api/generate-interview/', views.api_generate_interview, name='api_generate_interview'),
     path('hubspot-email-signature-generator/', views.signature_generator, name='signature_generator'),
     path('salesforce-id-converter/', views.sf_id_converter, name='sf_id_converter'),
-
-    # --- NEW TOOLS ---
     path('qr-code-generator/', views.qr_generator, name='qr_generator'),
     path('utm-link-builder/', views.utm_builder, name='utm_builder'),
     path('sql-generator/', views.sql_generator, name='sql_generator'),
@@ -25,5 +26,4 @@ urlpatterns = [
 
     # Dynamic Matcher (LAST)
     path('<slug:slug>/', views.jd_generator, name='tool_dynamic'),
-
 ]
