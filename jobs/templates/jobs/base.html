@@ -31,33 +31,6 @@
     <meta name="twitter:description" content="{% block twitter_desc %}The leading job board for marketing technology professionals worldwide.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}https://martechjobs.io{% static 'logo.svg' %}{% endblock %}">
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "MarTechJobs",
-      "url": "https://martechjobs.io",
-      "logo": "https://martechjobs.io{% static 'logo.svg' %}",
-      "sameAs": [
-        "https://www.linkedin.com/company/martechjobs",
-        "https://twitter.com/MarTechJobs"
-      ]
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "url": "https://martechjobs.io",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://martechjobs.io/?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
-    
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -79,6 +52,10 @@
                         amber: '#bf5420',
                         ink: '#1a1714',
                         rule: '#cdc8be'
+                    },
+                    boxShadow: {
+                        'premium': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'premium-hover': '0 12px 25px -5px rgba(240, 160, 106, 0.15), 0 8px 10px -6px rgba(240, 160, 106, 0.08)'
                     }
                 }
             }
@@ -87,69 +64,83 @@
     
     <style>
         :root{
-          --paper:#f6f3ee;
-          --paper2:#eeeae2;
-          --paper3:#e5e0d6;
+          --paper:#fcfcfa;
           --ink:#1a1714;
-          --ink2:#42403b;
           --ink3:#857e75;
-          --ink4:#b5aea4;
-          --rule:#cdc8be;
-          --white:#fff;
+          --rule:#eae5de;
           --navy:#1b2e4b;
           --navy2:#152540;
           --navy3:#0e1c30;
           --amber:#bf5420;
           --amber2:#d96025;
           --amber-light:#faeee5;
-          --green:#2d6a4f;
-          --green-light:#e8f5ee;
         }
 
-        /* Nav specific styling */
-        .martech-nav {background:var(--navy3);position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.07)}
-        .nav-inner {max-width:1160px;margin:0 auto;padding:0 32px;height:58px;display:flex;align-items:center;gap:32px; justify-content: space-between;}
-        .logo {display:flex;align-items:center;flex-shrink:0;line-height:0}
-        .nav-links {display:flex;align-items:center;gap:2px;flex:1;list-style:none;margin:0;padding:0;}
+        body { background: var(--paper); }
+
+        /* UI UPGRADE: Frosted Glass Navigation */
+        .martech-nav {
+            background: rgba(14, 28, 48, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.3s ease;
+        }
+        .nav-inner {max-width:1160px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;gap:32px; justify-content: space-between;}
+        .logo {display:flex;align-items:center;flex-shrink:0;line-height:0; transition: transform 0.2s ease;}
+        .logo:hover { transform: scale(1.02); }
+        
+        .nav-links {display:flex;align-items:center;gap:4px;flex:1;list-style:none;margin:0;padding:0;}
         .nav-links li {display:flex;align-items:center}
-        .nav-links a {font-family:'Lato',sans-serif;font-size:13px;font-weight:400;color:rgba(255,255,255,.55);padding:7px 12px;border-radius:5px;transition:all .15s;line-height:1;display:flex;align-items:center;white-space:nowrap;text-decoration:none;}
-        .nav-links a:hover {color:white;background:rgba(255,255,255,.09)}
-        .nav-right {display:flex;align-items:center;gap:9px;flex-shrink:0}
+        .nav-links a {font-family:'Lato',sans-serif;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.65);padding:8px 14px;border-radius:6px;transition:all .2s ease;line-height:1;display:flex;align-items:center;white-space:nowrap;text-decoration:none;}
+        .nav-links a:hover {color:white; background:rgba(255,255,255,.08); transform: translateY(-1px);}
+        .nav-right {display:flex;align-items:center;gap:12px;flex-shrink:0}
         
-        /* Global Button styling */
-        .btn-brand {display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 20px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:'Lato',sans-serif;text-transform:uppercase;letter-spacing:.05em;line-height:1;white-space:nowrap;text-decoration:none;}
-        .btn-brand-ghost {background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.75)}
-        .btn-brand-ghost:hover {border-color:rgba(255,255,255,.6);color:white}
+        /* UI UPGRADE: Button Elevation & Micro-interactions */
+        .btn-brand {
+            display:inline-flex;align-items:center;justify-content:center;gap:6px;
+            padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;
+            cursor:pointer;transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);
+            border:none;font-family:'Lato',sans-serif;text-transform:uppercase;
+            letter-spacing:.06em;line-height:1;white-space:nowrap;text-decoration:none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .btn-brand-ghost {background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+        .btn-brand-ghost:hover {border-color:rgba(255,255,255,.4);color:white; background:rgba(255,255,255,0.1); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15);}
         .btn-brand-amber {background:var(--amber);color:white}
-        .btn-brand-amber:hover {background:var(--amber2)}
+        .btn-brand-amber:hover {background:var(--amber2); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(191,84,32,0.3);}
         
-        /* Mobile Menu Styles */
-        .mobile-menu-btn { display: none; background: transparent; border: none; color: white; cursor: pointer; padding: 4px; }
+        .mobile-menu-btn { display: none; background: transparent; border: none; color: white; cursor: pointer; padding: 4px; transition: transform 0.2s ease; }
+        .mobile-menu-btn:active { transform: scale(0.9); }
         .mobile-menu { display: none; background: var(--navy2); padding: 20px 32px; border-top: 1px solid rgba(255,255,255,.07); }
-        .mobile-menu.active { display: block; }
+        .mobile-menu.active { display: block; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .mobile-menu ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
         .mobile-menu a { color: rgba(255,255,255,.75); text-decoration: none; font-size: 15px; font-family: 'Lato', sans-serif; font-weight: 700; display: flex; align-items: center; gap: 8px;}
         .mobile-menu a:hover { color: white; }
 
-        /* Footer styling */
         .martech-footer {background:var(--ink);color:rgba(255,255,255,.65);padding:64px 0 32px}
         .martech-footer .wrap {max-width:1160px;margin:0 auto;padding:0 32px}
         .ft {display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:44px;padding-bottom:52px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:28px}
         .flogo {margin-bottom:12px;line-height:0}
         .ftag {font-family:'Lato',sans-serif;font-size:13px;color:rgba(255,255,255,.4);line-height:1.65;margin-bottom:22px;max-width:240px;font-weight:300}
         .fnl {display:flex;gap:7px;margin-bottom:7px}
-        .fnl input {flex:1;height:40px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:4px;padding:0 12px;font-size:13px;color:white;font-family:'Lato',sans-serif;outline:none}
-        .fnl input::placeholder {color:rgba(255,255,255,.28)}
-        .fnl button {height:40px;padding:0 14px;background:var(--amber);color:white;border:none;border-radius:4px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:background .15s}
-        .fnl button:hover {background:var(--amber2)}
-        .fct {font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
-        .fl {list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;padding:0;}
-        .fl a {font-family:'Lato',sans-serif;font-size:13px;color:rgba(255,255,255,.48);transition:color .12s;font-weight:300;text-decoration:none;}
-        .fl a:hover {color:white}
+        .fnl input {flex:1;height:42px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:0 14px;font-size:13.5px;color:white;font-family:'Lato',sans-serif;outline:none; transition: border 0.2s ease;}
+        .fnl input:focus { border-color: var(--amber); }
+        .fnl input::placeholder {color:rgba(255,255,255,.3)}
+        .fnl button {height:42px;padding:0 16px;background:var(--amber);color:white;border:none;border-radius:6px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;transition:all .2s ease;}
+        .fnl button:hover {background:var(--amber2); transform: translateY(-1px);}
+        .fct {font-family:'Courier Prime',monospace;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px}
+        .fl {list-style:none;display:flex;flex-direction:column;gap:10px;margin:0;padding:0;}
+        .fl a {font-family:'Lato',sans-serif;font-size:13.5px;color:rgba(255,255,255,.5);transition:all .15s;font-weight:400;text-decoration:none;}
+        .fl a:hover {color:white; transform: translateX(2px);}
         .fb {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-        .fleg {font-family:'Lato',sans-serif;font-size:12px;color:rgba(255,255,255,.25);display:flex;gap:20px;flex-wrap:wrap}
-        .fleg a {color:rgba(255,255,255,.25);transition:color .12s;text-decoration:none;}
-        .fleg a:hover {color:rgba(255,255,255,.6)}
+        .fleg {font-family:'Lato',sans-serif;font-size:12px;color:rgba(255,255,255,.3);display:flex;gap:20px;flex-wrap:wrap}
+        .fleg a {color:rgba(255,255,255,.3);transition:color .12s;text-decoration:none;}
+        .fleg a:hover {color:rgba(255,255,255,.7)}
 
         @media(max-width:1024px){
           .nav-links {display:none}
@@ -158,12 +149,11 @@
         }
         @media(max-width:640px){
           .ft {grid-template-columns:1fr 1fr}
-          /* Hide desktop "Get Alerts" button on small screens to save header space */
           .nav-right .btn-brand-ghost { display: none; }
         }
     </style>
 </head>
-<body class="bg-paper text-ink font-sans antialiased selection:bg-amber selection:text-white flex flex-col min-h-screen">
+<body class="text-ink font-sans antialiased selection:bg-amber selection:text-white flex flex-col min-h-screen">
     
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -205,7 +195,7 @@
         </div>
       </div>
       
-      <div id="mobile-menu" class="mobile-menu">
+      <div id="mobile-menu" class="mobile-menu shadow-2xl">
         <ul>
           <li><a href="{% url 'job_list' %}">MarTech Jobs</a></li>
           <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
@@ -224,9 +214,9 @@
 
     <main class="flex-grow">
         {% if messages %}
-            <div class="max-w-7xl mx-auto px-4 pt-4">
+            <div class="max-w-7xl mx-auto px-4 pt-6">
                 {% for message in messages %}
-                    <div class="p-4 border rounded-lg mb-4 text-sm font-bold font-sans {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
+                    <div class="p-4 border rounded-xl mb-4 text-sm font-bold font-sans flex items-center gap-2 shadow-sm animate-pulse {% if message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -318,44 +308,60 @@
       </div>
     </footer>
 
-    <div id="subscribe-modal" class="fixed inset-0 bg-[#0e1c30]/90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target === this) toggleModal('subscribe-modal')">
-        <div class="bg-white border-2 border-navy rounded-xl shadow-2xl max-w-md w-full p-8 relative transform transition-all scale-100">
-            <button onclick="toggleModal('subscribe-modal')" class="absolute top-4 right-4 text-ink3 hover:text-navy transition">
+    <div id="subscribe-modal" class="fixed inset-0 bg-[#0e1c30]/90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="if(event.target === this) toggleModal('subscribe-modal')">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-md w-full p-8 relative transform transition-all scale-100">
+            <button onclick="toggleModal('subscribe-modal')" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 transition transform hover:scale-110">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-amber-light rounded-full flex items-center justify-center mx-auto mb-4 text-amber border border-amber">
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <div class="w-14 h-14 bg-amber-light rounded-full flex items-center justify-center mx-auto mb-5 text-amber border border-[#f0a06a]/30 shadow-inner">
+                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                 </div>
-                <h3 class="text-2xl font-serif font-bold text-navy mb-2 leading-tight">Never miss<br>the right role.</h3>
-                <p class="text-ink3 text-sm font-sans">Get the latest MarTech jobs delivered to your inbox. No spam, ever.</p>
+                <h3 class="text-3xl font-serif font-bold text-navy mb-2 leading-tight">Never miss<br>the right role.</h3>
+                <p class="text-slate-500 text-sm font-sans mt-3">Get the latest MarTech jobs delivered to your inbox. No spam, ever.</p>
             </div>
             <form id="modal-sub-form" class="space-y-4">
                 {% csrf_token %}
                 <div>
                     <input type="email" name="email" required placeholder="name@company.com" 
-                           class="w-full px-4 py-3 rounded border-2 border-rule font-sans focus:ring-0 focus:border-navy outline-none transition bg-paper text-ink">
+                           class="w-full px-4 py-3.5 rounded-lg border-2 border-slate-200 font-sans focus:ring-0 focus:border-amber outline-none transition bg-slate-50 text-ink">
                 </div>
-                <button type="submit" class="w-full bg-amber hover:bg-[#d96025] text-white font-bold py-3.5 rounded font-sans uppercase tracking-wider text-sm transition">
+                <button type="submit" class="w-full bg-amber hover:bg-[#d96025] text-white font-bold py-4 rounded-lg font-sans uppercase tracking-wider text-sm transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                     Get Free Alerts
                 </button>
-                <p id="modal-msg" class="text-center font-mono font-bold text-[11px] text-ink3 mt-2 min-h-[1.5em] tracking-widest uppercase"></p>
+                <p id="modal-msg" class="text-center font-mono font-bold text-[11px] text-slate-400 mt-3 min-h-[1.5em] tracking-widest uppercase"></p>
             </form>
         </div>
     </div>
 
+    <div id="toast-container" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[150] flex flex-col gap-2 pointer-events-none"></div>
+
     <script>
-        // Modal Logic
-        function toggleModal(modalID){
-            document.getElementById(modalID).classList.toggle("hidden");
+        function toggleModal(modalID){ document.getElementById(modalID).classList.toggle("hidden"); }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('active'); }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-navy border border-slate-700' : 'bg-red-600 border border-red-800';
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            toast.className = `${bgColor} text-white px-5 py-3.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.3)] flex items-center gap-2 transform transition-all duration-300 translate-y-10 opacity-0 pointer-events-auto text-sm font-bold tracking-wide`;
+            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span> ${message}`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.remove('translate-y-10', 'opacity-0'); toast.classList.add('translate-y-0', 'opacity-100'); });
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100'); toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
-        // Mobile Menu Logic
-        function toggleMobileMenu() {
-            document.getElementById('mobile-menu').classList.toggle('active');
-        }
+        window.originalAlert = window.alert;
+        window.alert = function(message) {
+            if (message.toLowerCase().includes('copied') || message.toLowerCase().includes('success')) { showToast(message, 'success'); } 
+            else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('please')) { showToast(message, 'error'); } 
+            else { window.originalAlert(message); }
+        };
 
-        // Shared Subscribe Logic
         function handleSubscribe(formId, msgId) {
             const form = document.getElementById(formId);
             if(!form) return;
@@ -382,8 +388,7 @@
                            btn.disabled = false; btn.textContent = originalText;
                            msg.innerHTML = '';
                         }, 2500);
-                    } 
-                    else { 
+                    } else { 
                         btn.disabled = false; btn.textContent = originalText; 
                         msg.innerHTML = '<span style="color:#bf5420;">Error: ' + (data.error || 'Check email') + '</span>'; 
                     }
@@ -393,55 +398,10 @@
                 });
             });
         }
-
         document.addEventListener('DOMContentLoaded', function() {
             handleSubscribe('footer-subscribe-form', 'footer-sub-message');
             handleSubscribe('modal-sub-form', 'modal-msg');
         });
-    </script>
-
-    <div id="toast-container" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-[150] flex flex-col gap-2 pointer-events-none"></div>
-
-    <script>
-        // Global UX Function: Modern Toast Notification
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            // Styling the toast based on type
-            const bgColor = type === 'success' ? 'bg-slate-900' : 'bg-red-600';
-            const icon = type === 'success' ? 'check_circle' : 'error';
-            
-            toast.className = `${bgColor} text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 transform transition-all duration-300 translate-y-10 opacity-0 pointer-events-auto text-sm font-bold tracking-wide`;
-            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span> ${message}`;
-            
-            container.appendChild(toast);
-            
-            // Animate In
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-                toast.classList.add('translate-y-0', 'opacity-100');
-            });
-            
-            // Animate Out & Remove
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Override the native window.alert globally for smoother UX on existing tool pages
-        window.originalAlert = window.alert;
-        window.alert = function(message) {
-            if (message.toLowerCase().includes('copied') || message.toLowerCase().includes('success')) {
-                showToast(message, 'success');
-            } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('please')) {
-                showToast(message, 'error');
-            } else {
-                window.originalAlert(message);
-            }
-        };
     </script>
 </body>
 </html>
