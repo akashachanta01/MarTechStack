@@ -24,10 +24,8 @@ class ToolSitemap(Sitemap):
     
     def items(self):
         from .models import Tool
-        return Tool.objects.filter(
-            jobs__is_active=True, 
-            jobs__screening_status='approved'
-        ).distinct()
+        # EXPOSE ALL TOOLS (Even empty ones, to catch leads)
+        return Tool.objects.all().order_by('name')
 
     def location(self, obj):
         return reverse('tool_detail', args=[obj.slug])
@@ -38,30 +36,25 @@ class SEOLandingSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        from .models import Job
+        from .models import Tool
         
         seo_pages = set()
-        active_jobs = Job.objects.filter(is_active=True, screening_status='approved').prefetch_related('tools')
         
-        for job in active_jobs:
-            try:
-                if job.work_arrangement == 'remote':
-                    seo_pages.add(('remote', '')) 
-                    for tool in job.tools.all():
-                        if tool.slug:
-                            seo_pages.add(('remote', tool.slug))
+        # 1. Base Remote Pages for ALL tools
+        seo_pages.add(('remote', '')) 
+        for tool in Tool.objects.all():
+            if tool.slug:
+                seo_pages.add(('remote', tool.slug))
 
-                if job.location:
-                    raw_city = job.location.split(',')[0].strip()
-                    city_slug = slugify(raw_city)
-
-                    if city_slug and city_slug != 'remote':
-                        seo_pages.add((city_slug, ''))
-                        for tool in job.tools.all():
-                            if tool.slug:
-                                seo_pages.add((city_slug, tool.slug))
-            except Exception:
-                continue
+        # 2. Hardcode Top Hubs to force indexing of combinations
+        top_hubs = ["new-york", "san-francisco", "austin", "chicago", "london", "texas", "california"]
+        
+        for hub in top_hubs:
+            seo_pages.add((hub, ''))
+            # Limit to top 20 tools per city to avoid blowing up the sitemap size instantly
+            for tool in Tool.objects.all()[:20]: 
+                if tool.slug:
+                    seo_pages.add((hub, tool.slug))
         
         return sorted(list(seo_pages))
 
@@ -105,8 +98,8 @@ class ToolsStaticSitemap(Sitemap):
             'sql_generator',
             'consultant_calculator',
             'resume_scanner',
-            'roas_calculator',      # ADDED
-            'subject_line_tester',  # ADDED
+            'roas_calculator',      
+            'subject_line_tester',  
         ]
 
     def location(self, item):
@@ -125,9 +118,9 @@ class StaticViewSitemap(Sitemap):
             'post_job', 
             'job_list', 
             'blog_list',
-            'salary_guide',  # ADDED - High traffic potential
-            'directory',     # ADDED - Important for navigation
-            'company_list'   # ADDED
+            'salary_guide',  
+            'directory',     
+            'company_list'   
         ]
 
     def location(self, item):
