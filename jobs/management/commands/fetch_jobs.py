@@ -123,13 +123,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
 
     def check_dead_links(self):
-        # Checks if existing active jobs are 404ing
+        # Checks if existing active jobs are confirmed gone (404/410)
         self.stdout.write("💀 Checking for dead links...")
         active_jobs = Job.objects.filter(is_active=True)
         for job in active_jobs:
             try:
-                r = requests.head(job.apply_url, timeout=5, allow_redirects=True)
-                if r.status_code >= 400:
+                r = requests.head(job.apply_url, headers=self.get_headers(), timeout=5, allow_redirects=True)
+                if r.status_code in (404, 410):
                     job.is_active = False
                     job.save()
             except:
