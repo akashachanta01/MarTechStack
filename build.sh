@@ -15,3 +15,8 @@ python manage.py migrate
 # 4. FIX SEO DOMAIN (Critical for Sitemap.xml)
 # This ensures Django knows the site is 'martechjobs.io', not 'example.com'
 python manage.py fix_seo_domain
+
+# 5. RECOVER wrongly-removed jobs
+# Restores postings that the old buggy dead-link checker auto-rejected.
+# Safe to run every deploy: once recovered, jobs no longer match the filter.
+python manage.py reactivate_jobs
