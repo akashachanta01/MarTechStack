@@ -161,22 +161,27 @@ class Command(BaseCommand):
         # Serper.dev: same Google results, pay-as-you-go credits.
         # Note: Serper charges extra credits above 10 results, so we cap at 30
         # (3 credits) — top results carry nearly all the relevant postings.
+        # Serper only accepts the standard Google ranges (qdr:h/d/w/m/y), not
+        # custom spans like qdr:d14 — map those to the nearest standard range.
+        if tbs and tbs.startswith("qdr:d") and tbs != "qdr:d":
+            tbs = "qdr:w"
         payload = {
             "q": query,
             "num": min(num, 30),
             "gl": "us",
             "hl": "en",
-            "tbs": tbs
         }
+        if tbs:
+            payload["tbs"] = tbs
         headers = {"X-API-KEY": self.serper_key, "Content-Type": "application/json"}
         try:
             resp = requests.post("https://google.serper.dev/search", json=payload, headers=headers, timeout=15)
             if resp.status_code == 200:
                 return [r.get("link") for r in resp.json().get("organic", [])]
             else:
-                self.stdout.write(self.style.WARNING(f"   ⚠️ Serper returned HTTP {resp.status_code}"))
-        except Exception:
-            pass
+                self.stdout.write(self.style.WARNING(f"   ⚠️ Serper HTTP {resp.status_code}: {resp.text[:200]}"))
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"   ⚠️ Serper request failed: {e}"))
         return []
     
     def _clean_url(self, url):
