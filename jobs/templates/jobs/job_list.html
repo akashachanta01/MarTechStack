@@ -431,6 +431,7 @@
           <option value="full_time" {% if current_rtype == 'full_time' %}selected{% endif %}>Full-time</option>
           <option value="contract" {% if current_rtype == 'contract' %}selected{% endif %}>Contract</option>
           <option value="part_time" {% if current_rtype == 'part_time' %}selected{% endif %}>Part-time</option>
+          <option value="temporary" {% if current_rtype == 'temporary' %}selected{% endif %}>Temporary</option>
           <option value="internship" {% if current_rtype == 'internship' %}selected{% endif %}>Internship</option>
         </select>
         {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}"/>{% endif %}
