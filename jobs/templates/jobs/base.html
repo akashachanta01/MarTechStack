@@ -17,6 +17,33 @@
 
     {% block rel_prev_next %}{% endblock %}
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=2.0">
+    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'favicon-48.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MarTechJobs",
+      "url": "https://martechjobs.io/",
+      "logo": "https://martechjobs.io{% static 'logo-512.png' %}",
+      "sameAs": []
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MarTechJobs",
+      "url": "https://martechjobs.io/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://martechjobs.io/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     
     <meta property="og:site_name" content="MarTechJobs" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
