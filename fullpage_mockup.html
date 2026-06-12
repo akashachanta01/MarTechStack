@@ -181,6 +181,35 @@ body { background: #fff; }
 .results-head h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; letter-spacing: -0.3px; }
 .results-head .sort { font-size: 13px; color: var(--ink2); }
 .results-head .sort select { border: 0; background: none; font-weight: 600; color: var(--ink); font-size: 13px; padding: 0 18px 0 4px; height: auto; cursor: pointer; }
+
+/* ===== ALERT CAPTURE ===== */
+/* 1. "Save this search" alert bar — appears with active filters */
+.alertbar { display: flex; align-items: center; gap: 14px; background: linear-gradient(90deg, #eaf3ed, #f3f9f5); border: 1px solid #cfe5d7; border-radius: 14px; padding: 16px 18px; margin: 18px 0 4px; }
+.alertbar .bell { width: 40px; height: 40px; border-radius: 10px; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.alertbar .ab-text { flex: 1; min-width: 0; }
+.alertbar .ab-title { font-size: 14.5px; font-weight: 700; }
+.alertbar .ab-sub { font-size: 12.5px; color: var(--ink2); margin-top: 1px; }
+.alertbar form { display: flex; gap: 8px; flex: 1; max-width: 380px; }
+.alertbar input { flex: 1; height: 42px; border: 1.5px solid #cfe5d7; border-radius: 9px; padding: 0 13px; font-size: 13.5px; font-family: inherit; outline: 0; }
+.alertbar input:focus { border-color: var(--green); }
+.alertbar button { background: var(--green); color: #fff; border: 0; font-weight: 700; font-size: 13.5px; padding: 0 18px; border-radius: 9px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.alertbar button:hover { background: #163322; }
+
+/* 2. Inline capture card between job rows */
+.inline-sub { display: flex; align-items: center; gap: 16px; border: 1.5px dashed #cfe5d7; border-radius: 14px; padding: 20px 22px; margin: 10px 0; background: #fbfdfc; }
+.inline-sub .is-emoji { font-size: 28px; }
+.inline-sub .is-text { flex: 1; }
+.inline-sub .is-title { font-weight: 700; font-size: 15px; }
+.inline-sub .is-sub { font-size: 13px; color: var(--ink2); margin-top: 2px; }
+.inline-sub form { display: flex; gap: 8px; flex: 1; max-width: 360px; }
+.inline-sub input { flex: 1; height: 42px; border: 1.5px solid var(--line); border-radius: 9px; padding: 0 13px; font-size: 13.5px; font-family: inherit; outline: 0; }
+.inline-sub input:focus { border-color: var(--green); }
+.inline-sub button { background: var(--green); color: #fff; border: 0; font-weight: 700; font-size: 13.5px; padding: 0 18px; border-radius: 9px; cursor: pointer; font-family: inherit; }
+
+/* 3. Floating "Get alerts" pill (mobile-friendly persistent CTA) */
+.float-alert { position: fixed; right: 22px; bottom: 22px; z-index: 90; display: flex; align-items: center; gap: 8px; background: var(--green); color: #fff; font-weight: 700; font-size: 14px; padding: 13px 20px; border-radius: 999px; box-shadow: 0 10px 30px rgba(31,67,45,.35); cursor: pointer; border: 0; font-family: inherit; transition: transform .15s; }
+.float-alert:hover { transform: translateY(-2px); }
+@media (max-width: 720px) { .alertbar { flex-direction: column; align-items: stretch; text-align: center; } .alertbar form, .inline-sub form { max-width: none; } .inline-sub { flex-direction: column; text-align: center; } }
 </style>
 </head>
 <body>
@@ -287,6 +316,18 @@ body { background: #fff; }
 
 
 <div class="wrap">
+  <div class="alertbar">
+    <div class="bell">🔔</div>
+    <div class="ab-text">
+      <div class="ab-title">Get alerted when new “Remote · Salesforce” jobs are posted</div>
+      <div class="ab-sub">We'll email you matching roles as they go live. No spam, unsubscribe anytime.</div>
+    </div>
+    <form onsubmit="return false">
+      <input type="email" placeholder="your@email.com">
+      <button>Create Alert</button>
+    </form>
+  </div>
+
   <div class="results-head">
     <h2>Latest MarTech Jobs <span style="font-family:Inter,sans-serif;font-size:14px;font-weight:600;color:var(--ink3)">— 312 open roles</span></h2>
     <div class="sort">Sort by <select><option>Newest</option><option>Salary</option><option>Relevance</option></select></div>
@@ -363,6 +404,18 @@ body { background: #fff; }
     </div>
   </a>
 
+  <div class="inline-sub">
+    <div class="is-emoji">📬</div>
+    <div class="is-text">
+      <div class="is-title">Never miss a MarTech role</div>
+      <div class="is-sub">Join 15,000+ subscribers getting fresh jobs every week — free forever.</div>
+    </div>
+    <form onsubmit="return false">
+      <input type="email" placeholder="your@email.com">
+      <button>Subscribe</button>
+    </form>
+  </div>
+
   <a class="jrow" href="#">
     <div class="jlogo" style="color:#16a34a">M</div>
     <div class="jmain">
@@ -426,5 +479,7 @@ body { background: #fff; }
     </div>
   </div>
 </section>
+<button class="float-alert">🔔 Get Job Alerts</button>
+
 </body>
 </html>
