@@ -129,6 +129,16 @@
     .alertbar { flex-direction: column; align-items: stretch; text-align: center; }
     .alertbar form { max-width: none; }
   }
+
+  /* ===== THEME PALETTES ===== */
+  [data-theme="green"]  { --blue:#1f432d; --blue-dark:#163322; --blue-light:#eaf3ed; }
+  [data-theme="navy"]   { --blue:#1e3a5f; --blue-dark:#162c49; --blue-light:#e9eff7; }
+  [data-theme="violet"] { --blue:#5b21b6; --blue-dark:#4c1d95; --blue-light:#f1ebfc; }
+  [data-theme="teal"]   { --blue:#0f766e; --blue-dark:#0b5d57; --blue-light:#e6f5f4; }
+  [data-theme="slate"]  { --blue:#1f2937; --blue-dark:#111827; --blue-light:#eef1f5; }
+  .theme-picker { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 200; display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; box-shadow: 0 10px 36px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; color: var(--ink2); }
+  .tp-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; }
+  .tp-dot.sel { border-color: #111; }
 </style>
 </head>
 <body>
@@ -331,5 +341,23 @@
   <div style="margin-top:10px">© 2026 MarTechJobs.io</div>
 </footer>
 
+
+<div class="theme-picker">
+  Try a color:
+  <span class="tp-dot" style="background:#0b5cab" onclick="setTheme('blue',this)" title="Blue"></span>
+  <span class="tp-dot sel" style="background:#1f432d" onclick="setTheme('green',this)" title="Brand Green"></span>
+  <span class="tp-dot" style="background:#1e3a5f" onclick="setTheme('navy',this)" title="Navy"></span>
+  <span class="tp-dot" style="background:#5b21b6" onclick="setTheme('violet',this)" title="Violet"></span>
+  <span class="tp-dot" style="background:#0f766e" onclick="setTheme('teal',this)" title="Teal"></span>
+  <span class="tp-dot" style="background:#1f2937" onclick="setTheme('slate',this)" title="Slate"></span>
+</div>
+<script>
+function setTheme(t, el) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.querySelectorAll('.tp-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+document.documentElement.setAttribute('data-theme', 'green');
+</script>
 </body>
 </html>
