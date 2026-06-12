@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MarTechJobs.io — The #1 Job Board for Marketing Technology Professionals</title>
+  <title>MarTechJobs.io &mdash; The #1 Job Board for Marketing Technology Professionals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -18,193 +18,191 @@
       --text-muted: #98a1ad;
       --border: #e3e7ec;
       --bg-alt: #f5f7fa;
-      --featured: #d97706;
-      --remote-text: #047857;
+      --featured-accent: #d97706;
       --remote-bg: #ecfdf5;
+      --remote-text: #047857;
       --white: #ffffff;
     }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text-primary); background: var(--white); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; color: var(--text-primary); background: var(--white); line-height: 1.6; -webkit-font-smoothing: antialiased; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
     a { text-decoration: none; color: inherit; }
-    ul { list-style: none; }
 
-    /* NAVBAR */
-    .navbar { background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-    .navbar .container { display: flex; align-items: center; height: 64px; gap: 32px; }
-    .nav-logo { font-weight: 700; font-size: 1.125rem; color: var(--green-primary); display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; }
-    .nav-links { display: flex; align-items: center; gap: 28px; flex: 1; }
-    .nav-links a { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; transition: color 0.15s; }
+    /* NAV */
+    .nav { background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .nav-inner { display: flex; align-items: center; height: 64px; gap: 32px; }
+    .nav-logo { font-weight: 700; font-size: 1.1rem; color: var(--green-primary); display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 28px; flex: 1; justify-content: center; }
+    .nav-links a { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: color 0.15s; }
     .nav-links a:hover { color: var(--green-primary); }
     .nav-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-    .nav-signin { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; transition: color 0.15s; }
+    .nav-signin { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: color 0.15s; }
     .nav-signin:hover { color: var(--green-primary); }
-    .btn-post-job { background: var(--green-primary); color: var(--white); font-size: 0.875rem; font-weight: 600; padding: 8px 18px; border-radius: 6px; transition: background 0.15s; white-space: nowrap; }
-    .btn-post-job:hover { background: var(--green-dark); }
+    .btn-post { background: var(--green-primary); color: var(--white); font-size: 0.875rem; font-weight: 600; padding: 9px 18px; border-radius: 7px; border: none; cursor: pointer; transition: background 0.15s; }
+    .btn-post:hover { background: var(--green-dark); }
 
     /* HERO */
     .hero { background: linear-gradient(135deg, #f8faf9 0%, #eaf3ed 100%); padding: 80px 0; }
-    .hero .container { display: flex; align-items: center; gap: 60px; flex-wrap: wrap; }
-    .hero-left { flex: 1; min-width: 280px; }
-    .hero-right { flex: 0 0 420px; min-width: 300px; }
-    .hero-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.8rem; font-weight: 600; color: var(--green-primary); margin-bottom: 24px; }
-    .hero h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.2; color: var(--text-primary); margin-bottom: 18px; letter-spacing: -0.02em; }
-    .hero-subhead { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.7; }
-    .hero-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .stat-chip { background: var(--white); border: 1px solid #c9ddd0; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; color: var(--green-primary); }
-    .stat-sep { color: var(--text-muted); font-size: 0.75rem; }
-    .hero-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .hero-card-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: 16px; }
+    .hero-inner { display: flex; gap: 64px; align-items: center; flex-wrap: wrap; }
+    .hero-left { flex: 1; min-width: 300px; }
+    .hero-right { flex: 0 0 420px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.8rem; font-weight: 600; color: var(--green-primary); margin-bottom: 20px; }
+    .hero-h1 { font-size: 2.6rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .hero-sub { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.7; }
+    .hero-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .stat-chip { background: var(--white); border: 1px solid #c8ddd0; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; color: var(--green-primary); }
+    .search-card { background: var(--white); border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); padding: 28px; }
+    .search-card-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
     .search-field { margin-bottom: 12px; }
-    .search-field label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-    .search-field input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; font-size: 0.9rem; font-family: inherit; color: var(--text-primary); background: var(--white); transition: border-color 0.15s, box-shadow 0.15s; outline: none; }
+    .search-field label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .search-field input { width: 100%; border: 1px solid var(--border); border-radius: 7px; padding: 11px 14px; font-size: 0.9rem; font-family: 'Inter', sans-serif; color: var(--text-primary); background: var(--white); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
     .search-field input:focus { border-color: var(--green-primary); box-shadow: 0 0 0 3px rgba(31,67,45,0.08); }
     .search-field input::placeholder { color: var(--text-muted); }
-    .btn-search { width: 100%; background: var(--green-primary); color: var(--white); border: none; border-radius: 7px; padding: 12px; font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 4px; transition: background 0.15s; }
+    .btn-search { width: 100%; background: var(--green-primary); color: var(--white); font-size: 0.95rem; font-weight: 700; padding: 13px; border-radius: 8px; border: none; cursor: pointer; margin-top: 4px; transition: background 0.15s; }
     .btn-search:hover { background: var(--green-dark); }
-    .filter-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .filter-chip { border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; background: var(--white); transition: border-color 0.15s, color 0.15s; user-select: none; }
+    .search-filters { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .filter-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); background: var(--white); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
     .filter-chip:hover { border-color: var(--green-primary); color: var(--green-primary); }
-    .filter-chip.active { background: var(--green-light-bg); border-color: #a3c4ac; color: var(--green-primary); font-weight: 600; }
+    .filter-chip.active { background: var(--green-light-bg); border-color: #a8c9b5; color: var(--green-primary); font-weight: 600; }
 
     /* STATS STRIP */
     .stats-strip { background: var(--green-light-bg); padding: 40px 0; }
-    .stats-strip .container { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
-    .stat-item { flex: 1; text-align: center; padding: 12px 24px; min-width: 130px; }
-    .stat-item + .stat-item { border-left: 1px solid #c9ddd0; }
-    .stat-number { font-size: 2rem; font-weight: 700; color: var(--green-primary); line-height: 1.2; }
+    .stats-row { display: flex; justify-content: center; align-items: center; }
+    .stat-item { text-align: center; flex: 1; padding: 0 24px; position: relative; }
+    .stat-item + .stat-item::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 40px; width: 1px; background: #c8ddd0; }
+    .stat-num { font-size: 2rem; font-weight: 700; color: var(--green-primary); line-height: 1.2; }
     .stat-label { font-size: 0.875rem; color: var(--text-secondary); margin-top: 4px; }
 
     /* JOB LISTINGS */
     .jobs-section { background: var(--white); padding: 80px 0; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-    .section-header h2 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
-    .sort-select { border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; font-family: inherit; color: var(--text-secondary); background: var(--white); cursor: pointer; outline: none; }
-    .job-card { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 10px; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.15s, border-color 0.15s; flex-wrap: wrap; }
-    .job-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #c9ddd0; }
-    .job-card.featured { border-left: 3px solid var(--featured); }
-    .job-logo { width: 44px; height: 44px; border-radius: 8px; background: var(--green-light-bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: var(--green-primary); flex-shrink: 0; }
-    .job-info { flex: 1; min-width: 180px; }
-    .job-title { font-weight: 600; font-size: 0.975rem; color: var(--text-primary); margin-bottom: 3px; }
-    .job-meta { font-size: 0.835rem; color: var(--text-muted); margin-bottom: 8px; }
-    .job-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-    .badge { border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
-    .badge-featured { background: #fef3c7; color: var(--featured); }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .section-h2 { font-size: 1.75rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.01em; }
+    .section-sub { font-size: 0.95rem; color: var(--text-secondary); margin-top: 6px; }
+    .sort-select { border: 1px solid var(--border); border-radius: 7px; padding: 8px 14px; font-size: 0.85rem; font-family: 'Inter', sans-serif; color: var(--text-secondary); background: var(--white); cursor: pointer; outline: none; }
+    .job-card { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 12px; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: box-shadow 0.15s, border-color 0.15s; }
+    .job-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: #c8ddd0; }
+    .job-card.featured { border-left: 3px solid var(--featured-accent); }
+    .job-logo { width: 44px; height: 44px; border-radius: 8px; background: var(--green-light-bg); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--green-primary); flex-shrink: 0; }
+    .job-middle { flex: 1; min-width: 0; }
+    .job-title { font-size: 0.975rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .job-meta { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 8px; }
+    .badge-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .badge-featured { background: #fef3c7; color: var(--featured-accent); }
     .badge-remote { background: var(--remote-bg); color: var(--remote-text); }
     .badge-tool { background: var(--bg-alt); color: var(--text-secondary); }
     .job-right { text-align: right; flex-shrink: 0; }
-    .job-salary { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 3px; }
-    .job-date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; }
-    .job-apply { color: var(--green-primary); font-weight: 600; font-size: 0.85rem; transition: color 0.15s; }
+    .job-salary { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .job-date { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+    .job-apply { font-size: 0.83rem; font-weight: 600; color: var(--green-primary); transition: color 0.15s; }
     .job-apply:hover { color: var(--green-dark); }
-    .pagination { display: flex; align-items: center; gap: 6px; margin-top: 28px; justify-content: center; flex-wrap: wrap; }
-    .page-btn { border: 1px solid var(--border); border-radius: 6px; padding: 7px 14px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); background: var(--white); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 32px; }
+    .page-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); background: var(--white); cursor: pointer; transition: all 0.15s; }
     .page-btn:hover { border-color: var(--green-primary); color: var(--green-primary); }
-    .page-btn.active { background: var(--green-primary); border-color: var(--green-primary); color: var(--white); }
+    .page-btn.active { background: var(--green-primary); color: var(--white); border-color: var(--green-primary); }
 
     /* TECH STACKS */
     .stacks-section { background: var(--bg-alt); padding: 80px 0; }
-    .section-intro { margin-bottom: 36px; }
-    .section-intro h2 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
-    .section-intro p { font-size: 0.95rem; color: var(--text-secondary); }
-    .tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .tool-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; text-align: center; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .tool-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
-    .tool-emoji { font-size: 1.5rem; margin-bottom: 6px; }
-    .tool-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; }
-    .tool-jobs { font-size: 0.8rem; color: var(--text-muted); }
+    .stacks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 32px; }
+    .stack-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .stack-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .stack-emoji { font-size: 1.6rem; margin-bottom: 8px; }
+    .stack-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .stack-count { font-size: 0.78rem; color: var(--text-muted); }
 
     /* SALARY GUIDE */
     .salary-section { background: var(--white); padding: 80px 0; }
-    .salary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .salary-card { border: 1px solid var(--border); border-radius: 8px; padding: 24px; transition: border-color 0.15s, box-shadow 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .salary-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
-    .salary-role { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 10px; }
-    .salary-range { font-size: 1.3rem; font-weight: 700; color: var(--green-primary); margin-bottom: 12px; }
-    .salary-link { font-size: 0.82rem; color: var(--green-primary); font-weight: 600; }
-    .salary-link:hover { text-decoration: underline; }
+    .salary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+    .salary-card { border: 1px solid var(--border); border-radius: 8px; padding: 24px; transition: border-color 0.15s, box-shadow 0.15s; }
+    .salary-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .salary-role { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+    .salary-range { font-size: 1.4rem; font-weight: 700; color: var(--green-primary); margin-bottom: 12px; letter-spacing: -0.02em; }
+    .salary-link { font-size: 0.82rem; font-weight: 600; color: var(--green-primary); transition: color 0.15s; }
+    .salary-link:hover { color: var(--green-dark); }
 
     /* REMOTE JOBS */
     .remote-section { background: var(--bg-alt); padding: 80px 0; }
-    .remote-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 32px; }
-    .remote-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.15s; }
-    .remote-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .remote-logo { width: 40px; height: 40px; border-radius: 8px; background: var(--green-light-bg); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: var(--green-primary); flex-shrink: 0; }
-    .remote-info { flex: 1; min-width: 0; }
-    .remote-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 2px; }
+    .remote-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 32px; }
+    .remote-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; display: flex; align-items: center; gap: 14px; transition: box-shadow 0.15s; }
+    .remote-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .remote-logo { width: 40px; height: 40px; border-radius: 8px; background: var(--green-light-bg); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; color: var(--green-primary); flex-shrink: 0; }
+    .remote-info { flex: 1; }
+    .remote-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
     .remote-company { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-    .remote-bottom { display: flex; align-items: center; gap: 8px; }
     .remote-salary { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
-    .btn-outline-green { display: inline-block; border: 2px solid var(--green-primary); color: var(--green-primary); background: transparent; border-radius: 7px; padding: 11px 24px; font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; }
-    .btn-outline-green:hover { background: var(--green-primary); color: var(--white); }
+    .remote-cta { text-align: center; margin-top: 36px; }
+    .btn-outline { display: inline-block; border: 1.5px solid var(--green-primary); color: var(--green-primary); font-size: 0.9rem; font-weight: 600; padding: 12px 28px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+    .btn-outline:hover { background: var(--green-primary); color: var(--white); }
 
-    /* LOCATIONS */
-    .locations-section { background: var(--white); padding: 80px 0; }
-    .locations-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .location-card { border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .location-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .location-flag { font-size: 1.6rem; margin-bottom: 8px; }
-    .location-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; }
-    .location-count { font-size: 0.8rem; color: var(--text-muted); }
+    /* LOCATION */
+    .location-section { background: var(--white); padding: 80px 0; }
+    .location-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 32px; }
+    .location-card { border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .location-card:hover { border-color: var(--green-primary); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .location-flag { font-size: 1.8rem; margin-bottom: 8px; }
+    .location-name { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .location-count { font-size: 0.78rem; color: var(--text-muted); }
 
     /* TESTIMONIALS */
     .testimonials-section { background: var(--green-light-bg); padding: 80px 0; }
-    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .testimonial-card { background: var(--white); border: 1px solid #c9ddd0; border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .stars { color: #f59e0b; font-size: 0.95rem; letter-spacing: 2px; margin-bottom: 14px; }
-    .testimonial-quote { font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary); font-style: italic; margin-bottom: 18px; }
-    .testimonial-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); }
-    .testimonial-role { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
+    .testimonial-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .stars { color: #f59e0b; font-size: 0.9rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial-quote { font-size: 0.9rem; font-style: italic; color: var(--text-secondary); line-height: 1.7; margin-bottom: 18px; }
+    .testimonial-name { font-size: 0.875rem; font-weight: 700; color: var(--text-primary); }
+    .testimonial-role { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
     /* EMPLOYER CTA */
     .employer-section { background: var(--white); padding: 80px 0; }
-    .employer-card { background: linear-gradient(135deg, #1f432d, #163322); border-radius: 16px; padding: 60px; max-width: 800px; margin: 0 auto; text-align: center; }
-    .employer-card h2 { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 14px; letter-spacing: -0.02em; }
-    .employer-subhead { font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 28px; line-height: 1.7; }
-    .employer-bullets { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; align-items: center; }
-    .employer-bullet { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: rgba(255,255,255,0.85); }
-    .check-icon { width: 20px; height: 20px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #6ee7a0; flex-shrink: 0; }
-    .btn-white { display: inline-block; background: var(--white); color: var(--green-primary); border-radius: 7px; padding: 13px 28px; font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 16px; }
-    .btn-white:hover { background: #f0f0f0; }
-    .employer-secondary { display: block; font-size: 0.85rem; color: rgba(255,255,255,0.6); transition: color 0.15s; }
-    .employer-secondary:hover { color: rgba(255,255,255,0.9); }
+    .employer-card { background: linear-gradient(135deg, #1f432d 0%, #163322 100%); border-radius: 16px; padding: 60px; max-width: 800px; margin: 0 auto; text-align: center; }
+    .employer-h2 { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 14px; letter-spacing: -0.02em; }
+    .employer-sub { font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 28px; line-height: 1.7; }
+    .employer-bullets { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+    .employer-bullet { font-size: 0.85rem; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 7px; }
+    .employer-bullet .check { color: #6ee7a0; }
+    .btn-employer { display: inline-block; background: var(--white); color: var(--green-primary); font-size: 0.95rem; font-weight: 700; padding: 14px 32px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .btn-employer:hover { background: #f0f9f4; }
+    .employer-secondary { display: block; font-size: 0.85rem; color: #6ee7a0; cursor: pointer; margin-top: 14px; transition: color 0.15s; }
+    .employer-secondary:hover { color: #a7f3d0; }
 
     /* FAQ */
     .faq-section { background: var(--bg-alt); padding: 80px 0; }
-    .faq-list { max-width: 760px; margin: 0 auto; }
+    .faq-list { margin-top: 32px; }
     .faq-item { background: var(--white); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
-    .faq-question { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; font-weight: 600; font-size: 0.925rem; color: var(--text-primary); cursor: pointer; user-select: none; transition: background 0.1s; }
-    .faq-question:hover { background: var(--bg-alt); }
-    .faq-toggle { width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-muted); flex-shrink: 0; transition: all 0.15s; line-height: 1; }
-    .faq-item.open .faq-toggle { background: var(--green-primary); border-color: var(--green-primary); color: var(--white); }
-    .faq-answer { display: none; padding: 0 24px 20px; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+    .faq-question { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); user-select: none; transition: color 0.15s; }
+    .faq-question:hover { color: var(--green-primary); }
+    .faq-icon { font-size: 1.3rem; font-weight: 300; color: var(--text-muted); flex-shrink: 0; margin-left: 16px; line-height: 1; }
+    .faq-answer { padding: 0 24px 20px; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.7; display: none; }
     .faq-item.open .faq-answer { display: block; }
+    .faq-item.open .faq-icon { color: var(--green-primary); }
 
     /* FOOTER */
     .footer { background: var(--green-primary); color: var(--white); padding: 60px 0 0; }
-    .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; }
-    .footer-logo { font-weight: 700; font-size: 1.1rem; color: var(--white); margin-bottom: 12px; }
-    .footer-tagline { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.6; margin-bottom: 20px; }
-    .footer-socials { display: flex; gap: 10px; }
-    .social-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.8); transition: all 0.15s; cursor: pointer; }
-    .social-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); }
-    .footer-col-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.45); margin-bottom: 16px; }
+    .footer-grid { display: grid; grid-template-columns: 1.8fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    .footer-logo { font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+    .footer-tagline { font-size: 0.83rem; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 20px; }
+    .footer-social { display: flex; gap: 10px; }
+    .social-icon { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; transition: background 0.15s; }
+    .social-icon:hover { background: rgba(255,255,255,0.25); }
+    .footer-col-heading { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
     .footer-links { display: flex; flex-direction: column; gap: 10px; }
-    .footer-links a { font-size: 0.875rem; color: rgba(255,255,255,0.7); transition: color 0.15s; }
+    .footer-links a { font-size: 0.85rem; color: rgba(255,255,255,0.7); transition: color 0.15s; }
     .footer-links a:hover { color: var(--white); }
-    .footer-bar { border-top: 1px solid rgba(255,255,255,0.15); padding: 20px 0; }
-    .footer-bar .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    .footer-bar-text { font-size: 0.82rem; color: rgba(255,255,255,0.5); }
-    .footer-bar-links { font-size: 0.82rem; color: rgba(255,255,255,0.5); }
-    .footer-bar-links a { color: rgba(255,255,255,0.5); transition: color 0.15s; }
-    .footer-bar-links a:hover { color: rgba(255,255,255,0.85); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.15); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+    .footer-copy { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+    .footer-legal { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+    .footer-legal a { color: rgba(255,255,255,0.5); transition: color 0.15s; }
+    .footer-legal a:hover { color: rgba(255,255,255,0.8); }
+    .section-title-block .section-h2 { margin-bottom: 6px; }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="container">
-      <a href="#" class="nav-logo"><span>&#9679;</span> MarTechJobs</a>
+<!-- NAVIGATION -->
+<nav class="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">&#9679;&nbsp;MarTechJobs</a>
       <div class="nav-links">
         <a href="#">Find Jobs</a>
         <a href="#">Companies</a>
@@ -212,30 +210,30 @@
         <a href="#">Resources</a>
       </div>
       <div class="nav-actions">
-        <a href="#" class="nav-signin">Sign In</a>
-        <a href="#" class="btn-post-job">Post a Job</a>
+        <span class="nav-signin">Sign In</span>
+        <button class="btn-post">Post a Job</button>
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="container">
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
       <div class="hero-left">
         <div class="hero-eyebrow">&#127919; The #1 MarTech Job Board</div>
-        <h1>The job board for Marketing Technology professionals</h1>
-        <p class="hero-subhead">Find your next role in Marketing Ops, RevOps, Analytics, and beyond.</p>
+        <h1 class="hero-h1">The job board for Marketing Technology professionals</h1>
+        <p class="hero-sub">Find your next role in Marketing Ops, RevOps, Analytics, and beyond.</p>
         <div class="hero-stats">
           <span class="stat-chip">847 live jobs</span>
-          <span class="stat-sep">&middot;</span>
           <span class="stat-chip">312 companies</span>
-          <span class="stat-sep">&middot;</span>
           <span class="stat-chip">2,400 subscribers</span>
         </div>
       </div>
       <div class="hero-right">
-        <div class="hero-card">
-          <p class="hero-card-title">Search MarTech Jobs</p>
+        <div class="search-card">
+          <div class="search-card-title">Find your next role</div>
           <div class="search-field">
             <label>What role?</label>
             <input type="text" placeholder="e.g. Marketing Ops Manager, HubSpot Admin..." />
@@ -245,7 +243,7 @@
             <input type="text" placeholder="Remote, New York, London..." />
           </div>
           <button class="btn-search">Search Jobs</button>
-          <div class="filter-row">
+          <div class="search-filters">
             <span class="filter-chip active">Remote Only</span>
             <span class="filter-chip">Tools &#9660;</span>
             <span class="filter-chip">Job Type &#9660;</span>
@@ -253,442 +251,402 @@
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- STATS STRIP -->
-  <div class="stats-strip">
-    <div class="container">
+<!-- STATS STRIP -->
+<section class="stats-strip">
+  <div class="container">
+    <div class="stats-row">
       <div class="stat-item">
-        <div class="stat-number">847</div>
+        <div class="stat-num">847</div>
         <div class="stat-label">Live Jobs</div>
       </div>
       <div class="stat-item">
-        <div class="stat-number">312</div>
+        <div class="stat-num">312</div>
         <div class="stat-label">Companies Hiring</div>
       </div>
       <div class="stat-item">
-        <div class="stat-number">2,400</div>
+        <div class="stat-num">2,400</div>
         <div class="stat-label">Subscribers</div>
       </div>
       <div class="stat-item">
-        <div class="stat-number">Daily</div>
+        <div class="stat-num">Daily</div>
         <div class="stat-label">Links Verified</div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- JOB LISTINGS -->
-  <section class="jobs-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>Latest MarTech Jobs</h2>
-        <select class="sort-select">
-          <option>Sort: Newest &#9660;</option>
-          <option>Sort: Salary &#9660;</option>
-          <option>Sort: Relevance &#9660;</option>
-        </select>
-      </div>
+<!-- JOB LISTINGS -->
+<section class="jobs-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-h2">Latest MarTech Jobs</h2>
+      <select class="sort-select">
+        <option>Sort: Newest</option>
+        <option>Sort: Salary</option>
+        <option>Sort: Relevance</option>
+      </select>
+    </div>
 
-      <div class="job-card featured">
-        <div class="job-logo">AC</div>
-        <div class="job-info">
-          <div class="job-title">Marketing Ops Manager</div>
-          <div class="job-meta">Acme Corp &middot; San Francisco, CA</div>
-          <div class="job-badges">
-            <span class="badge badge-featured">&#11088; Featured</span>
-            <span class="badge badge-remote">Remote</span>
-            <span class="badge badge-tool">HubSpot</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-salary">$95k&ndash;$130k</div>
-          <div class="job-date">2 days ago</div>
-          <a href="#" class="job-apply">Apply &rarr;</a>
+    <div class="job-card featured">
+      <div class="job-logo">AC</div>
+      <div class="job-middle">
+        <div class="job-title">Marketing Ops Manager</div>
+        <div class="job-meta">Acme Corp &middot; San Francisco, CA</div>
+        <div class="badge-row">
+          <span class="badge badge-featured">Featured</span>
+          <span class="badge badge-remote">Remote</span>
+          <span class="badge badge-tool">HubSpot</span>
         </div>
       </div>
-
-      <div class="job-card">
-        <div class="job-logo">SF</div>
-        <div class="job-info">
-          <div class="job-title">Senior RevOps Analyst</div>
-          <div class="job-meta">Salesforce &middot; New York, NY</div>
-          <div class="job-badges">
-            <span class="badge badge-remote">Remote</span>
-            <span class="badge badge-tool">Salesforce</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-salary">$110k&ndash;$145k</div>
-          <div class="job-date">1 day ago</div>
-          <a href="#" class="job-apply">Apply &rarr;</a>
-        </div>
-      </div>
-
-      <div class="job-card featured">
-        <div class="job-logo">HS</div>
-        <div class="job-info">
-          <div class="job-title">Demand Gen Lead</div>
-          <div class="job-meta">HubSpot &middot; Boston, MA</div>
-          <div class="job-badges">
-            <span class="badge badge-featured">&#11088; Featured</span>
-            <span class="badge badge-tool">Marketo</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-salary">$120k&ndash;$160k</div>
-          <div class="job-date">3 days ago</div>
-          <a href="#" class="job-apply">Apply &rarr;</a>
-        </div>
-      </div>
-
-      <div class="job-card">
-        <div class="job-logo">ST</div>
-        <div class="job-info">
-          <div class="job-title">Marketing Analytics Engineer</div>
-          <div class="job-meta">Stripe &middot; Remote</div>
-          <div class="job-badges">
-            <span class="badge badge-remote">Remote</span>
-            <span class="badge badge-tool">Segment</span>
-            <span class="badge badge-tool">dbt</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-salary">$130k&ndash;$170k</div>
-          <div class="job-date">5 days ago</div>
-          <a href="#" class="job-apply">Apply &rarr;</a>
-        </div>
-      </div>
-
-      <div class="job-card">
-        <div class="job-logo">KL</div>
-        <div class="job-info">
-          <div class="job-title">CRM Manager</div>
-          <div class="job-meta">Klaviyo &middot; London, UK</div>
-          <div class="job-badges">
-            <span class="badge badge-tool">Klaviyo</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-salary">&pound;60k&ndash;&pound;80k</div>
-          <div class="job-date">1 week ago</div>
-          <a href="#" class="job-apply">Apply &rarr;</a>
-        </div>
-      </div>
-
-      <div class="pagination">
-        <button class="page-btn">&larr; Previous</button>
-        <button class="page-btn active">1</button>
-        <button class="page-btn">2</button>
-        <button class="page-btn">3</button>
-        <button class="page-btn">Next &rarr;</button>
+      <div class="job-right">
+        <div class="job-salary">$95k&ndash;$130k</div>
+        <div class="job-date">2 days ago</div>
+        <a href="#" class="job-apply">Apply &rarr;</a>
       </div>
     </div>
-  </section>
 
-  <!-- TECH STACKS -->
-  <section class="stacks-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2>Browse by Marketing Technology</h2>
-        <p>Find roles requiring your stack</p>
+    <div class="job-card">
+      <div class="job-logo">SF</div>
+      <div class="job-middle">
+        <div class="job-title">Senior RevOps Analyst</div>
+        <div class="job-meta">Salesforce &middot; New York, NY</div>
+        <div class="badge-row">
+          <span class="badge badge-remote">Remote</span>
+          <span class="badge badge-tool">Salesforce</span>
+        </div>
       </div>
-      <div class="tools-grid">
-        <div class="tool-card"><div class="tool-emoji">&#128992;</div><div class="tool-name">HubSpot</div><div class="tool-jobs">184 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#9729;&#65039;</div><div class="tool-name">Salesforce</div><div class="tool-jobs">211 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128309;</div><div class="tool-name">Marketo</div><div class="tool-jobs">97 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128202;</div><div class="tool-name">Google Analytics</div><div class="tool-jobs">143 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128311;</div><div class="tool-name">Segment</div><div class="tool-jobs">68 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128156;</div><div class="tool-name">Klaviyo</div><div class="tool-jobs">72 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128310;</div><div class="tool-name">Braze</div><div class="tool-jobs">55 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128200;</div><div class="tool-name">Amplitude</div><div class="tool-jobs">49 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128153;</div><div class="tool-name">Pardot</div><div class="tool-jobs">61 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128308;</div><div class="tool-name">Adobe Analytics</div><div class="tool-jobs">44 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128994;</div><div class="tool-name">Iterable</div><div class="tool-jobs">38 jobs</div></div>
-        <div class="tool-card"><div class="tool-emoji">&#128241;</div><div class="tool-name">Attentive</div><div class="tool-jobs">27 jobs</div></div>
+      <div class="job-right">
+        <div class="job-salary">$110k&ndash;$145k</div>
+        <div class="job-date">1 day ago</div>
+        <a href="#" class="job-apply">Apply &rarr;</a>
       </div>
     </div>
-  </section>
 
-  <!-- SALARY GUIDE -->
-  <section class="salary-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2>MarTech Salary Guide</h2>
-        <p>2025 compensation benchmarks</p>
+    <div class="job-card featured">
+      <div class="job-logo">HS</div>
+      <div class="job-middle">
+        <div class="job-title">Demand Gen Lead</div>
+        <div class="job-meta">HubSpot &middot; Boston, MA</div>
+        <div class="badge-row">
+          <span class="badge badge-featured">Featured</span>
+          <span class="badge badge-tool">Marketo</span>
+        </div>
       </div>
-      <div class="salary-grid">
-        <div class="salary-card">
-          <div class="salary-role">Marketing Ops Manager</div>
-          <div class="salary-range">$95k&ndash;$145k</div>
-          <a href="#" class="salary-link">View 42 jobs &rarr;</a>
-        </div>
-        <div class="salary-card">
-          <div class="salary-role">Demand Gen Lead</div>
-          <div class="salary-range">$100k&ndash;$155k</div>
-          <a href="#" class="salary-link">View 29 jobs &rarr;</a>
-        </div>
-        <div class="salary-card">
-          <div class="salary-role">Analytics Engineer</div>
-          <div class="salary-range">$120k&ndash;$165k</div>
-          <a href="#" class="salary-link">View 37 jobs &rarr;</a>
-        </div>
-        <div class="salary-card">
-          <div class="salary-role">RevOps Director</div>
-          <div class="salary-range">$140k&ndash;$200k</div>
-          <a href="#" class="salary-link">View 18 jobs &rarr;</a>
-        </div>
-        <div class="salary-card">
-          <div class="salary-role">CRM Specialist</div>
-          <div class="salary-range">$70k&ndash;$110k</div>
-          <a href="#" class="salary-link">View 54 jobs &rarr;</a>
-        </div>
-        <div class="salary-card">
-          <div class="salary-role">Marketing Technologist</div>
-          <div class="salary-range">$90k&ndash;$135k</div>
-          <a href="#" class="salary-link">View 31 jobs &rarr;</a>
-        </div>
+      <div class="job-right">
+        <div class="job-salary">$120k&ndash;$160k</div>
+        <div class="job-date">3 days ago</div>
+        <a href="#" class="job-apply">Apply &rarr;</a>
       </div>
     </div>
-  </section>
 
-  <!-- REMOTE JOBS -->
-  <section class="remote-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2>Work from Anywhere</h2>
-        <p>100% remote MarTech roles, updated daily</p>
-      </div>
-      <div class="remote-grid">
-        <div class="remote-card">
-          <div class="remote-logo">GG</div>
-          <div class="remote-info">
-            <div class="remote-title">Head of Marketing Operations</div>
-            <div class="remote-company">Gong &middot; Remote</div>
-            <div class="remote-bottom">
-              <span class="remote-salary">$130k&ndash;$160k</span>
-              <span class="badge badge-remote">Remote</span>
-            </div>
-          </div>
-        </div>
-        <div class="remote-card">
-          <div class="remote-logo">DT</div>
-          <div class="remote-info">
-            <div class="remote-title">RevOps Manager</div>
-            <div class="remote-company">Drift &middot; Remote</div>
-            <div class="remote-bottom">
-              <span class="remote-salary">$115k&ndash;$145k</span>
-              <span class="badge badge-remote">Remote</span>
-            </div>
-          </div>
-        </div>
-        <div class="remote-card">
-          <div class="remote-logo">IC</div>
-          <div class="remote-info">
-            <div class="remote-title">Marketing Analytics Lead</div>
-            <div class="remote-company">Intercom &middot; Remote</div>
-            <div class="remote-bottom">
-              <span class="remote-salary">$125k&ndash;$155k</span>
-              <span class="badge badge-remote">Remote</span>
-            </div>
-          </div>
-        </div>
-        <div class="remote-card">
-          <div class="remote-logo">CB</div>
-          <div class="remote-info">
-            <div class="remote-title">CRM &amp; Email Automation Specialist</div>
-            <div class="remote-company">Clearbit &middot; Remote</div>
-            <div class="remote-bottom">
-              <span class="remote-salary">$90k&ndash;$120k</span>
-              <span class="badge badge-remote">Remote</span>
-            </div>
-          </div>
+    <div class="job-card">
+      <div class="job-logo">ST</div>
+      <div class="job-middle">
+        <div class="job-title">Marketing Analytics Engineer</div>
+        <div class="job-meta">Stripe &middot; Remote</div>
+        <div class="badge-row">
+          <span class="badge badge-remote">Remote</span>
+          <span class="badge badge-tool">Segment</span>
+          <span class="badge badge-tool">dbt</span>
         </div>
       </div>
-      <div style="text-align:center;">
-        <a href="#" class="btn-outline-green">See all 247 remote jobs &rarr;</a>
+      <div class="job-right">
+        <div class="job-salary">$130k&ndash;$170k</div>
+        <div class="job-date">5 days ago</div>
+        <a href="#" class="job-apply">Apply &rarr;</a>
       </div>
     </div>
-  </section>
 
-  <!-- LOCATIONS -->
-  <section class="locations-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2>Jobs by Location</h2>
+    <div class="job-card">
+      <div class="job-logo">KL</div>
+      <div class="job-middle">
+        <div class="job-title">CRM Manager</div>
+        <div class="job-meta">Klaviyo &middot; London, UK</div>
+        <div class="badge-row">
+          <span class="badge badge-tool">Klaviyo</span>
+        </div>
       </div>
-      <div class="locations-grid">
-        <div class="location-card"><div class="location-flag">&#127482;&#127480;</div><div class="location-name">United States</div><div class="location-count">423 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127468;&#127463;</div><div class="location-name">United Kingdom</div><div class="location-count">89 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127464;&#127462;</div><div class="location-name">Canada</div><div class="location-count">67 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127462;&#127482;</div><div class="location-name">Australia</div><div class="location-count">45 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127465;&#127466;</div><div class="location-name">Germany</div><div class="location-count">38 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127475;&#127473;</div><div class="location-name">Netherlands</div><div class="location-count">29 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127758;</div><div class="location-name">Remote Global</div><div class="location-count">247 jobs</div></div>
-        <div class="location-card"><div class="location-flag">&#127480;&#127468;</div><div class="location-name">Singapore</div><div class="location-count">22 jobs</div></div>
+      <div class="job-right">
+        <div class="job-salary">&pound;60k&ndash;&pound;80k</div>
+        <div class="job-date">1 week ago</div>
+        <a href="#" class="job-apply">Apply &rarr;</a>
       </div>
     </div>
-  </section>
 
-  <!-- TESTIMONIALS -->
-  <section class="testimonials-section">
-    <div class="container">
-      <div class="section-intro">
-        <h2>Trusted by MarTech Professionals</h2>
+    <div class="pagination">
+      <button class="page-btn">&larr; Previous</button>
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">3</button>
+      <button class="page-btn">Next &rarr;</button>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACKS -->
+<section class="stacks-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">Browse by Marketing Technology</h2>
+      <p class="section-sub">Find roles requiring your stack</p>
+    </div>
+    <div class="stacks-grid">
+      <div class="stack-card"><div class="stack-emoji">🟠</div><div class="stack-name">HubSpot</div><div class="stack-count">184 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">☁️</div><div class="stack-name">Salesforce</div><div class="stack-count">216 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">🔵</div><div class="stack-name">Marketo</div><div class="stack-count">97 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">📊</div><div class="stack-name">Google Analytics</div><div class="stack-count">143 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">🔷</div><div class="stack-name">Segment</div><div class="stack-count">61 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">💜</div><div class="stack-name">Klaviyo</div><div class="stack-count">78 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">🔶</div><div class="stack-name">Braze</div><div class="stack-count">52 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">📈</div><div class="stack-name">Amplitude</div><div class="stack-count">44 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">💙</div><div class="stack-name">Pardot</div><div class="stack-count">39 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">🔴</div><div class="stack-name">Adobe Analytics</div><div class="stack-count">55 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">🟢</div><div class="stack-name">Iterable</div><div class="stack-count">28 jobs</div></div>
+      <div class="stack-card"><div class="stack-emoji">📱</div><div class="stack-name">Attentive</div><div class="stack-count">19 jobs</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SALARY GUIDE -->
+<section class="salary-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">MarTech Salary Guide</h2>
+      <p class="section-sub">2025 compensation benchmarks</p>
+    </div>
+    <div class="salary-grid">
+      <div class="salary-card"><div class="salary-role">Marketing Ops Manager</div><div class="salary-range">$95k&ndash;$145k</div><a href="#" class="salary-link">View 47 jobs &rarr;</a></div>
+      <div class="salary-card"><div class="salary-role">Demand Gen Lead</div><div class="salary-range">$100k&ndash;$155k</div><a href="#" class="salary-link">View 38 jobs &rarr;</a></div>
+      <div class="salary-card"><div class="salary-role">Analytics Engineer</div><div class="salary-range">$120k&ndash;$165k</div><a href="#" class="salary-link">View 29 jobs &rarr;</a></div>
+      <div class="salary-card"><div class="salary-role">RevOps Director</div><div class="salary-range">$140k&ndash;$200k</div><a href="#" class="salary-link">View 22 jobs &rarr;</a></div>
+      <div class="salary-card"><div class="salary-role">CRM Specialist</div><div class="salary-range">$70k&ndash;$110k</div><a href="#" class="salary-link">View 63 jobs &rarr;</a></div>
+      <div class="salary-card"><div class="salary-role">Marketing Technologist</div><div class="salary-range">$90k&ndash;$135k</div><a href="#" class="salary-link">View 31 jobs &rarr;</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- REMOTE JOBS -->
+<section class="remote-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">Work from Anywhere</h2>
+      <p class="section-sub">100% remote MarTech roles, updated daily</p>
+    </div>
+    <div class="remote-grid">
+      <div class="remote-card">
+        <div class="remote-logo">AP</div>
+        <div class="remote-info">
+          <div class="remote-title">Marketing Automation Manager</div>
+          <div class="remote-company">Appcues &middot; Remote</div>
+          <div class="remote-salary">$105k&ndash;$135k</div>
+        </div>
+        <span class="badge badge-remote" style="flex-shrink:0;">Remote</span>
       </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-quote">"Found my current role as a Marketing Ops Manager within 2 weeks. The quality of listings here is miles above generic job boards."</p>
-          <div class="testimonial-name">Sarah K.</div>
-          <div class="testimonial-role">Marketing Ops Manager at Drift</div>
+      <div class="remote-card">
+        <div class="remote-logo">CH</div>
+        <div class="remote-info">
+          <div class="remote-title">Senior Data Analyst, Marketing</div>
+          <div class="remote-company">Chargebee &middot; Remote</div>
+          <div class="remote-salary">$115k&ndash;$145k</div>
         </div>
-        <div class="testimonial-card">
-          <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-quote">"Finally a job board that actually understands what RevOps is. Highly specific, high quality."</p>
-          <div class="testimonial-name">Marcus T.</div>
-          <div class="testimonial-role">RevOps Lead at Gong</div>
+        <span class="badge badge-remote" style="flex-shrink:0;">Remote</span>
+      </div>
+      <div class="remote-card">
+        <div class="remote-logo">PD</div>
+        <div class="remote-info">
+          <div class="remote-title">RevOps Analyst</div>
+          <div class="remote-company">Paddle &middot; Remote</div>
+          <div class="remote-salary">$90k&ndash;$120k</div>
         </div>
-        <div class="testimonial-card">
-          <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p class="testimonial-quote">"I set up job alerts for HubSpot roles and landed 3 interviews in a month. Incredible resource."</p>
-          <div class="testimonial-name">Priya M.</div>
-          <div class="testimonial-role">CRM Manager at Intercom</div>
+        <span class="badge badge-remote" style="flex-shrink:0;">Remote</span>
+      </div>
+      <div class="remote-card">
+        <div class="remote-logo">GN</div>
+        <div class="remote-info">
+          <div class="remote-title">Growth Marketing Engineer</div>
+          <div class="remote-company">Gong &middot; Remote</div>
+          <div class="remote-salary">$130k&ndash;$160k</div>
         </div>
+        <span class="badge badge-remote" style="flex-shrink:0;">Remote</span>
       </div>
     </div>
-  </section>
+    <div class="remote-cta">
+      <a href="#" class="btn-outline">See all 247 remote jobs &rarr;</a>
+    </div>
+  </div>
+</section>
 
-  <!-- EMPLOYER CTA -->
-  <section class="employer-section">
-    <div class="container">
-      <div class="employer-card">
-        <h2>Hire MarTech talent faster</h2>
-        <p class="employer-subhead">Reach 2,400+ verified marketing technology professionals actively looking for their next role.</p>
-        <div class="employer-bullets">
-          <div class="employer-bullet"><div class="check-icon">&#10003;</div><span>Reach 2,400+ email subscribers</span></div>
-          <div class="employer-bullet"><div class="check-icon">&#10003;</div><span>Verified MarTech professionals only</span></div>
-          <div class="employer-bullet"><div class="check-icon">&#10003;</div><span>ATS-friendly apply links</span></div>
-        </div>
-        <a href="#" class="btn-white">Post a Job &mdash; from $99</a>
-        <a href="#" class="employer-secondary">Learn more about employer plans &rarr;</a>
+<!-- BROWSE BY LOCATION -->
+<section class="location-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">Jobs by Location</h2>
+    </div>
+    <div class="location-grid">
+      <div class="location-card"><div class="location-flag">🇺🇸</div><div class="location-name">United States</div><div class="location-count">423 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇬🇧</div><div class="location-name">United Kingdom</div><div class="location-count">89 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇨🇦</div><div class="location-name">Canada</div><div class="location-count">67 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇦🇺</div><div class="location-name">Australia</div><div class="location-count">45 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇩🇪</div><div class="location-name">Germany</div><div class="location-count">38 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇳🇱</div><div class="location-name">Netherlands</div><div class="location-count">29 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🌍</div><div class="location-name">Remote Global</div><div class="location-count">247 jobs</div></div>
+      <div class="location-card"><div class="location-flag">🇸🇬</div><div class="location-name">Singapore</div><div class="location-count">22 jobs</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">Trusted by MarTech Professionals</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testimonial-quote">&ldquo;Found my current role as a Marketing Ops Manager within 2 weeks. The quality of listings here is miles above generic job boards.&rdquo;</p>
+        <div class="testimonial-name">Sarah K.</div>
+        <div class="testimonial-role">Marketing Ops Manager at Drift</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testimonial-quote">&ldquo;Finally a job board that actually understands what RevOps is. Highly specific, high quality.&rdquo;</p>
+        <div class="testimonial-name">Marcus T.</div>
+        <div class="testimonial-role">RevOps Lead at Gong</div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="testimonial-quote">&ldquo;I set up job alerts for HubSpot roles and landed 3 interviews in a month. Incredible resource.&rdquo;</p>
+        <div class="testimonial-name">Priya M.</div>
+        <div class="testimonial-role">CRM Manager at Intercom</div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- FAQ -->
-  <section class="faq-section">
-    <div class="container">
-      <div class="section-intro" style="text-align:center; margin-bottom:40px;">
-        <h2>Frequently Asked Questions</h2>
+<!-- EMPLOYER CTA -->
+<section class="employer-section">
+  <div class="container">
+    <div class="employer-card">
+      <h2 class="employer-h2">Hire MarTech talent faster</h2>
+      <p class="employer-sub">Reach 2,400+ verified marketing technology professionals actively looking for their next role.</p>
+      <div class="employer-bullets">
+        <span class="employer-bullet"><span class="check">&#10003;</span> Reach 2,400+ email subscribers</span>
+        <span class="employer-bullet"><span class="check">&#10003;</span> Verified MarTech professionals only</span>
+        <span class="employer-bullet"><span class="check">&#10003;</span> ATS-friendly apply links</span>
       </div>
-      <div class="faq-list">
-        <div class="faq-item open">
-          <div class="faq-question" onclick="toggleFaq(this)">
-            Is MarTechJobs free for job seekers?
-            <span class="faq-toggle">&minus;</span>
-          </div>
-          <div class="faq-answer">Yes, completely free. Browse jobs, set up alerts, and apply directly &mdash; no account required.</div>
-        </div>
-        <div class="faq-item open">
-          <div class="faq-question" onclick="toggleFaq(this)">
-            How do I post a job?
-            <span class="faq-toggle">&minus;</span>
-          </div>
-          <div class="faq-answer">Click &lsquo;Post a Job&rsquo; at the top, fill in the role details, and choose your listing tier. Jobs go live within 24 hours.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaq(this)">
-            How often are jobs updated?
-            <span class="faq-toggle">+</span>
-          </div>
-          <div class="faq-answer">New jobs are added daily and all listings are verified every 24 hours to ensure links are active and roles are still open.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaq(this)">
-            What marketing technologies does this cover?
-            <span class="faq-toggle">+</span>
-          </div>
-          <div class="faq-answer">We cover the full MarTech landscape including CRM, MAP, analytics, CDP, email, and revenue operations tools &mdash; HubSpot, Salesforce, Marketo, Segment, Amplitude, Braze, Klaviyo, and many more.</div>
-        </div>
-        <div class="faq-item">
-          <div class="faq-question" onclick="toggleFaq(this)">
-            How do job alerts work?
-            <span class="faq-toggle">+</span>
-          </div>
-          <div class="faq-answer">Enter your email and set your preferences (role type, tool, location). We'll send you a daily or weekly digest of matching roles straight to your inbox.</div>
-        </div>
+      <a href="#" class="btn-employer">Post a Job &mdash; from $99</a>
+      <a href="#" class="employer-secondary">Learn more about employer plans &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <div class="section-title-block">
+      <h2 class="section-h2">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item open">
+        <div class="faq-question">Is MarTechJobs free for job seekers?<span class="faq-icon">&minus;</span></div>
+        <div class="faq-answer">Yes, completely free. Browse jobs, set up alerts, and apply directly &mdash; no account required.</div>
+      </div>
+      <div class="faq-item open">
+        <div class="faq-question">How do I post a job?<span class="faq-icon">&minus;</span></div>
+        <div class="faq-answer">Click &lsquo;Post a Job&rsquo; at the top, fill in the role details, and choose your listing tier. Jobs go live within 24 hours.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">How often are jobs updated?<span class="faq-icon">+</span></div>
+        <div class="faq-answer">New jobs are added daily. We also verify all apply links every 24 hours to ensure they remain active and functional.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">What marketing technologies does this cover?<span class="faq-icon">+</span></div>
+        <div class="faq-answer">We cover the full MarTech landscape: MAP tools (HubSpot, Marketo, Pardot), CRM (Salesforce), analytics (GA4, Amplitude, Mixpanel), CDP (Segment, mParticle), email/SMS (Klaviyo, Braze, Iterable, Attentive), and more.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">How do job alerts work?<span class="faq-icon">+</span></div>
+        <div class="faq-answer">Enter your email and set your preferences &mdash; role type, tools, location &mdash; and we&rsquo;ll send you matching new listings as soon as they go live, typically once per day.</div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <div class="footer-logo">&#9679; MarTechJobs</div>
-          <p class="footer-tagline">The #1 job board for marketing technology professionals.</p>
-          <div class="footer-socials">
-            <a href="#" class="social-btn" title="LinkedIn">in</a>
-            <a href="#" class="social-btn" title="Twitter/X">X</a>
-          </div>
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">&#9679; MarTechJobs</div>
+        <p class="footer-tagline">The #1 job board for marketing technology professionals.</p>
+        <div class="footer-social">
+          <div class="social-icon" title="LinkedIn">in</div>
+          <div class="social-icon" title="X / Twitter">&#120143;</div>
         </div>
-        <div>
-          <div class="footer-col-title">For Job Seekers</div>
-          <div class="footer-links">
-            <a href="#">Browse Jobs</a>
-            <a href="#">Remote Jobs</a>
-            <a href="#">Salary Guide</a>
-            <a href="#">Job Alerts</a>
-            <a href="#">Companies</a>
-          </div>
+      </div>
+      <div>
+        <div class="footer-col-heading">For Job Seekers</div>
+        <div class="footer-links">
+          <a href="#">Browse Jobs</a>
+          <a href="#">Remote Jobs</a>
+          <a href="#">Salary Guide</a>
+          <a href="#">Job Alerts</a>
+          <a href="#">Companies</a>
         </div>
-        <div>
-          <div class="footer-col-title">For Employers</div>
-          <div class="footer-links">
-            <a href="#">Post a Job</a>
-            <a href="#">Pricing</a>
-            <a href="#">Employer Dashboard</a>
-            <a href="#">ATS Integration</a>
-            <a href="#">Hire a Team</a>
-          </div>
+      </div>
+      <div>
+        <div class="footer-col-heading">For Employers</div>
+        <div class="footer-links">
+          <a href="#">Post a Job</a>
+          <a href="#">Pricing</a>
+          <a href="#">Employer Dashboard</a>
+          <a href="#">ATS Integration</a>
+          <a href="#">Hire a Team</a>
         </div>
-        <div>
-          <div class="footer-col-title">Company</div>
-          <div class="footer-links">
-            <a href="#">About</a>
-            <a href="#">Blog</a>
-            <a href="#">Newsletter</a>
-            <a href="#">Contact</a>
-            <a href="#">Privacy Policy</a>
-          </div>
+      </div>
+      <div>
+        <div class="footer-col-heading">Company</div>
+        <div class="footer-links">
+          <a href="#">About</a>
+          <a href="#">Blog</a>
+          <a href="#">Newsletter</a>
+          <a href="#">Contact</a>
+          <a href="#">Privacy Policy</a>
         </div>
       </div>
     </div>
-    <div class="footer-bar">
-      <div class="container">
-        <span class="footer-bar-text">&copy; 2025 MarTechJobs.io &middot; All rights reserved</span>
-        <span class="footer-bar-links"><a href="#">Privacy Policy</a> &middot; <a href="#">Terms of Service</a></span>
-      </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">&copy; 2025 MarTechJobs.io &middot; All rights reserved</span>
+      <span class="footer-legal"><a href="#">Privacy Policy</a> &middot; <a href="#">Terms of Service</a></span>
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <script>
-    function toggleFaq(el) {
-      var item = el.closest('.faq-item');
-      var toggle = el.querySelector('.faq-toggle');
+<script>
+  document.querySelectorAll('.faq-question').forEach(function(q) {
+    q.addEventListener('click', function() {
+      var item = this.closest('.faq-item');
       var isOpen = item.classList.contains('open');
-      item.classList.toggle('open');
-      toggle.textContent = isOpen ? '+' : '−';
-    }
-    document.querySelectorAll('.filter-chip').forEach(function(chip) {
-      chip.addEventListener('click', function() {
-        var txt = this.textContent;
-        if (txt.indexOf('▼') === -1 && txt.indexOf('陠') === -1) {
-          this.classList.toggle('active');
-        }
-      });
+      item.classList.toggle('open', !isOpen);
+      var icon = this.querySelector('.faq-icon');
+      icon.innerHTML = isOpen ? '+' : '&minus;';
     });
-  </script>
+  });
+
+  document.querySelectorAll('.filter-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() { this.classList.toggle('active'); });
+  });
+
+  document.querySelectorAll('.page-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (this.textContent.includes('←') || this.textContent.includes('→')) return;
+      document.querySelectorAll('.page-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+</script>
 </body>
 </html>
