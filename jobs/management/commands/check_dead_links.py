@@ -27,8 +27,7 @@ class Command(BaseCommand):
             "this position has been filled", 
             "no longer accepting applications", 
             "page you are looking for doesn't exist",
-            "job listing has expired",
-            "search for more jobs"
+            "job listing has expired"
         ]
 
         for job in active_jobs:

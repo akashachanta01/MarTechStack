@@ -12,15 +12,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY & PRODUCTION CONFIG
 # ==============================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-debug-key-123')
-
 # SECURITY WARNING: don't run with debug turned on in production!
 # We now check the Environment Variable. If not set, it defaults to False.
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Allow all hosts. For strict production security, you can list specific domains here.
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+# In production the SECRET_KEY env var is required; the insecure fallback
+# is only allowed while DEBUG=True (local development).
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-debug-key-123'
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("SECRET_KEY environment variable is required in production.")
+
+# Only accept requests addressed to our real domains (prevents Host-header attacks).
+ALLOWED_HOSTS = [
+    'martechjobs.io', 'www.martechjobs.io',
+    'martechstack.io', 'www.martechstack.io',
+    '.onrender.com',
+]
+if DEBUG:
+    ALLOWED_HOSTS += ['localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com', 

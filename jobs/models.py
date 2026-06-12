@@ -133,6 +133,20 @@ class Job(models.Model):
         except: pass
         return None, None
 
+    def get_schema_country(self):
+        # Best-effort ISO country code for Google Jobs structured data.
+        loc = (self.location or "").lower()
+        country_map = {
+            "united kingdom": "GB", "india": "IN", "canada": "CA",
+            "australia": "AU", "germany": "DE", "france": "FR",
+            "netherlands": "NL", "ireland": "IE", "spain": "ES",
+            "singapore": "SG", "mexico": "MX", "brazil": "BR",
+        }
+        for name, code in country_map.items():
+            if name in loc:
+                return code
+        return "US"
+
     def get_schema_valid_through(self):
         return (self.created_at + timedelta(days=90)).strftime('%Y-%m-%d')
 
@@ -140,9 +154,10 @@ class Job(models.Model):
         if self.location: self.location = normalize_location(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
-        if self.screening_status == 'approved': 
-            self.is_active = True
-        else:
+        # Safety: a job that isn't approved can never be visible. We intentionally
+        # do NOT force is_active=True for approved jobs, so admins can hide an
+        # approved job (👁️/🚫 actions) without later saves un-hiding it.
+        if self.screening_status != 'approved':
             self.is_active = False
         super().save(*args, **kwargs)
 
