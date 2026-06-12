@@ -39,11 +39,23 @@ class Command(BaseCommand):
         self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} rejected jobs.")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
+        self.serper_key = os.environ.get('SERPER_API_KEY')
         self.openai_key = os.environ.get('OPENAI_API_KEY')
-        
-        if not self.serpapi_key:
+
+        # Search provider switch: set SEARCH_PROVIDER=serper or serpapi to force one.
+        # Default: use Serper if its key is set, otherwise fall back to SerpAPI.
+        self.search_provider = os.environ.get('SEARCH_PROVIDER', '').strip().lower()
+        if self.search_provider not in ('serper', 'serpapi'):
+            self.search_provider = 'serper' if self.serper_key else 'serpapi'
+
+        if self.search_provider == 'serper' and not self.serper_key:
+            self.stdout.write(self.style.ERROR("❌ Error: SEARCH_PROVIDER=serper but SERPER_API_KEY is missing."))
+            return
+        if self.search_provider == 'serpapi' and not self.serpapi_key:
             self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY."))
             return
+
+        self.stdout.write(f"🔌 Search provider: {self.search_provider}")
 
         self.client = OpenAI(api_key=self.openai_key) if self.openai_key else None
         self.screener = MarTechScreener()
@@ -136,20 +148,47 @@ class Command(BaseCommand):
                 pass
 
     def search_google(self, query, num=100, tbs="qdr:d14"):
-        params = { 
-            "engine": "google", 
-            "q": query, 
-            "api_key": self.serpapi_key, 
-            "num": num, 
-            "gl": "us", 
+        if self.search_provider == 'serper':
+            return self._search_serper(query, num=num, tbs=tbs)
+        return self._search_serpapi(query, num=num, tbs=tbs)
+
+    def _search_serpapi(self, query, num=100, tbs="qdr:d14"):
+        params = {
+            "engine": "google",
+            "q": query,
+            "api_key": self.serpapi_key,
+            "num": num,
+            "gl": "us",
             "hl": "en",
-            "tbs": tbs 
+            "tbs": tbs
         }
         try:
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
             if resp.status_code == 200:
                 return [r.get("link") for r in resp.json().get("organic_results", [])]
         except: pass
+        return []
+
+    def _search_serper(self, query, num=100, tbs="qdr:d14"):
+        # Serper.dev: same Google results, pay-as-you-go credits.
+        # Note: Serper charges extra credits above 10 results, so we cap at 30
+        # (3 credits) — top results carry nearly all the relevant postings.
+        payload = {
+            "q": query,
+            "num": min(num, 30),
+            "gl": "us",
+            "hl": "en",
+            "tbs": tbs
+        }
+        headers = {"X-API-KEY": self.serper_key, "Content-Type": "application/json"}
+        try:
+            resp = requests.post("https://google.serper.dev/search", json=payload, headers=headers, timeout=15)
+            if resp.status_code == 200:
+                return [r.get("link") for r in resp.json().get("organic", [])]
+            else:
+                self.stdout.write(self.style.WARNING(f"   ⚠️ Serper returned HTTP {resp.status_code}"))
+        except Exception:
+            pass
         return []
     
     def _clean_url(self, url):
