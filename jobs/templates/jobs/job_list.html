@@ -313,205 +313,222 @@
     }
 </style>
 
-<div class="ticker" aria-label="New listings">
-  <div class="ticker-pill"><div class="ticker-live"></div> New</div>
-  <div class="ticker-track" role="marquee">
-    {% for job in jobs|slice:":10" %}
-    <span>{{ job.title }} · {{ job.company }} · {{ job.location|default:"Remote" }}</span>
-    {% empty %}
-    <span>No new jobs currently listed. Check back soon.</span>
-    {% endfor %}
-    {% for job in jobs|slice:":10" %}
-    <span>{{ job.title }} · {{ job.company }} · {{ job.location|default:"Remote" }}</span>
-    {% endfor %}
-  </div>
-</div>
+<style>
+  /* ===== NEW GREEN CORPORATE DESIGN (hero + jobs) ===== */
+  .nj { --g: #1f432d; --g-dark: #163322; --g-light: #eaf3ed; --nink: #1f2937; --nink2: #545d69; --nink3: #98a1ad; --nline: #e3e7ec; --nbg2: #f5f7fa; font-family: 'Lato', sans-serif; color: var(--nink); }
+  .nj .njwrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  .nj-hero { background: var(--nbg2); border-bottom: 1px solid var(--nline); padding: 46px 0 42px; text-align: center; }
+  .nj-hero h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.8px; font-family: 'Lato', sans-serif; color: var(--nink); }
+  .nj-hero h1 b { color: var(--g); }
+  .nj-hero .nj-sub { margin-top: 8px; font-size: 15px; color: var(--nink2); }
+  .nj-hero .nj-live { color: var(--g); font-weight: 700; }
+  .nj-searchcard { max-width: 760px; margin: 26px auto 0; background: #fff; border: 1px solid var(--nline); border-radius: 12px; padding: 12px; box-shadow: 0 4px 18px rgba(31,41,55,.07); }
+  .nj-smain { display: flex; border: 1.5px solid var(--nline); border-radius: 9px; overflow: hidden; }
+  .nj-scell { flex: 1; display: flex; align-items: center; gap: 9px; padding: 0 14px; height: 52px; background: #fff; }
+  .nj-scell + .nj-scell { border-left: 1.5px solid var(--nline); }
+  .nj-scell:focus-within { box-shadow: inset 0 0 0 1.5px var(--g); }
+  .nj-scell svg { width: 17px; height: 17px; stroke: var(--nink3); fill: none; stroke-width: 2; flex-shrink: 0; }
+  .nj-scell input { border: 0; outline: 0; width: 100%; font-size: 14.5px; font-family: inherit; background: transparent; color: var(--nink); }
+  .nj-sbtn { background: var(--g); color: #fff; border: 0; font-weight: 700; font-size: 15px; padding: 0 28px; cursor: pointer; font-family: inherit; }
+  .nj-sbtn:hover { background: var(--g-dark); }
+  .nj-sfilters { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+  .nj-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--nink2); background: #fff; border: 1.5px solid var(--nline); border-radius: 999px; padding: 8px 15px; cursor: pointer; user-select: none; transition: all .12s; text-decoration: none; }
+  .nj-chip:hover { border-color: var(--g); color: var(--g); }
+  .nj-chip.on { background: var(--g-light); border-color: var(--g); color: var(--g); }
+  select.nj-chip { appearance: none; -webkit-appearance: none; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2398a1ad' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; background-color: #fff; }
+  .nj-stats { display: flex; justify-content: center; gap: 56px; padding: 22px 0; border-bottom: 1px solid var(--nline); flex-wrap: wrap; }
+  .nj-stat { text-align: center; }
+  .nj-stat b { display: block; font-size: 21px; font-weight: 800; color: var(--nink); }
+  .nj-stat span { font-size: 12.5px; color: var(--nink2); }
+  .nj-alertbar { display: flex; align-items: center; gap: 14px; background: var(--g-light); border: 1px solid #cfe5d7; border-radius: 10px; padding: 14px 16px; margin: 20px 0 18px; }
+  .nj-bell { width: 38px; height: 38px; border-radius: 9px; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .nj-abtext { flex: 1; }
+  .nj-abtitle { font-size: 14px; font-weight: 700; }
+  .nj-absub { font-size: 12.5px; color: var(--nink2); margin-top: 1px; }
+  .nj-alertbar form { display: flex; gap: 8px; flex: 1; max-width: 360px; }
+  .nj-alertbar input { flex: 1; height: 40px; border: 1.5px solid #cfe5d7; border-radius: 8px; padding: 0 12px; font-size: 13.5px; font-family: inherit; outline: 0; }
+  .nj-alertbar input:focus { border-color: var(--g); }
+  .nj-alertbar button { background: var(--g); color: #fff; border: 0; font-weight: 700; font-size: 13.5px; padding: 0 16px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+  .nj-listhead { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 12px; flex-wrap: wrap; gap: 8px; }
+  .nj-listhead h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; font-family: 'Lato', sans-serif; }
+  .nj-count { color: var(--nink2); font-weight: 500; font-size: 14px; }
+  .nj-sort { font-size: 13px; color: var(--nink2); display: flex; align-items: center; gap: 6px; }
+  .nj-sort select { border: 1px solid var(--nline); border-radius: 7px; background: #fff; font-weight: 600; color: var(--nink); font-size: 13px; padding: 6px 26px 6px 10px; cursor: pointer; font-family: inherit; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2398a1ad' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 9px center; }
+  .nj-row { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--nline); border-radius: 10px; margin-bottom: 10px; text-decoration: none; color: inherit; transition: all .12s; background: #fff; }
+  .nj-row:hover { border-color: var(--g); box-shadow: 0 3px 14px rgba(31,67,45,.1); }
+  .nj-row:hover .nj-title { color: var(--g); text-decoration: underline; }
+  .nj-row.featured { border-left: 4px solid #d97706; background: #fffcf5; }
+  .nj-logo { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--nline); background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: var(--nink3); flex-shrink: 0; overflow: hidden; }
+  .nj-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .nj-main { flex: 1; min-width: 0; }
+  .nj-title { font-size: 15.5px; font-weight: 700; letter-spacing: -0.1px; color: var(--nink); }
+  .nj-meta { font-size: 13px; color: var(--nink2); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .nj-meta .co { font-weight: 600; color: var(--nink); }
+  .nj-badges { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .nj-b { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+  .nj-b.remote { color: #047857; background: #ecfdf5; }
+  .nj-b.type { color: var(--nink2); background: var(--nbg2); }
+  .nj-b.tool { color: var(--g); background: var(--g-light); }
+  .nj-b.feat { color: #b45309; background: #fef3c7; }
+  .nj-right { text-align: right; flex-shrink: 0; }
+  .nj-salary { font-size: 14px; font-weight: 700; color: var(--nink); }
+  .nj-salary.na { color: var(--nink3); font-weight: 400; font-size: 13px; }
+  .nj-date { font-size: 12px; color: var(--nink3); margin-top: 4px; }
+  .nj-apply { display: inline-block; margin-top: 7px; font-size: 12.5px; font-weight: 700; color: var(--g); }
+  .nj-pagination { display: flex; justify-content: center; gap: 6px; margin: 26px 0 40px; flex-wrap: wrap; }
+  .nj-pg { min-width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; padding: 0 12px; border: 1px solid var(--nline); border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--nink2); text-decoration: none; }
+  .nj-pg.cur { background: var(--g); border-color: var(--g); color: #fff; }
+  .nj-pg:hover:not(.cur) { border-color: var(--g); color: var(--g); }
+  .nj-empty { text-align: center; padding: 50px 0; }
+  @media (max-width: 720px) {
+    .nj-smain { flex-direction: column; }
+    .nj-scell + .nj-scell { border-left: 0; border-top: 1.5px solid var(--nline); }
+    .nj-sbtn { height: 48px; }
+    .nj-stats { gap: 26px; }
+    .nj-right { display: none; }
+    .nj-alertbar { flex-direction: column; align-items: stretch; text-align: center; }
+    .nj-alertbar form { max-width: none; }
+    .nj-hero h1 { font-size: 25px; }
+  }
+</style>
 
-<header class="hero" role="banner">
-  <div class="wrap">
-    <div class="hero-grid">
+<div class="nj">
+<header class="nj-hero" role="banner">
+  <div class="njwrap">
+    <h1>The job board for <b>Marketing Technology</b></h1>
+    <p class="nj-sub"><span class="nj-live">{{ jobs.paginator.count }} verified job{{ jobs.paginator.count|pluralize }}</span> &middot; updated daily &middot; every application link checked</p>
 
-      <div class="hero-left">
-        <div class="eyebrow reveal">The #1 MarTech Job Board · {{ jobs.paginator.count|default:"700" }}+ Live Roles</div>
-        <h1 class="reveal reveal-delay-1">{{ jobs.paginator.count|default:"700" }}+ <em>Marketing<br/>Technology Jobs</em><br/>— curated daily.</h1>
-        <p class="hero-sub reveal reveal-delay-2">The only job board built <strong>exclusively</strong> for marketing technology professionals. Salesforce, Adobe, HubSpot, Braze — every role, curated daily.</p>
-
-        <div class="search-container reveal reveal-delay-3">
-          <span class="search-label">Search {{ jobs.paginator.count|default:"700" }}+ live roles</span>
-          <form method="get" action="{% url 'job_list' %}#jobs-section" class="search-box" role="search">
-            <span class="s-icon">
-              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-            </span>
-            <input class="s-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company…" aria-label="Search MarTech jobs"/>
-            <div class="s-sep"></div>
-            <select class="s-loc" name="l" aria-label="Filter by location">
-              <option value="">All Locations</option>
-              <option value="Remote" {% if location_filter == 'Remote' %}selected{% endif %}>Remote</option>
-              <option value="United States" {% if location_filter == 'United States' %}selected{% endif %}>United States</option>
-              <option value="United Kingdom" {% if location_filter == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
-              <option value="Australia" {% if location_filter == 'Australia' %}selected{% endif %}>Australia</option>
-              <option value="Canada" {% if location_filter == 'Canada' %}selected{% endif %}>Canada</option>
-              <option value="Germany" {% if location_filter == 'Germany' %}selected{% endif %}>Germany</option>
-            </select>
-            <button type="submit" class="s-btn">Search</button>
-          </form>
+    <form method="get" action="{% url 'job_list' %}#jobs-section" class="nj-searchcard" role="search">
+      <div class="nj-smain">
+        <div class="nj-scell">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company" aria-label="Search MarTech jobs"/>
         </div>
-
-        <div class="pop-row reveal reveal-delay-4">
-          <span class="pop-label">Trending:</span>
-          <a href="{% url 'seo_tool_loc' 'remote' 'salesforce' %}" class="pop-chip">Remote Salesforce</a>
-          <a href="{% url 'seo_tool_loc' 'remote' 'hubspot' %}" class="pop-chip">Remote HubSpot</a>
-          <a href="{% url 'seo_tool_loc' 'remote' 'braze' %}" class="pop-chip">Remote Braze</a>
-          <a href="?q=Operations#jobs-section" class="pop-chip">Marketing Ops</a>
+        <div class="nj-scell">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <input type="text" name="l" value="{{ location_filter|default:'' }}" list="nj-countries" placeholder="Country, city, or &ldquo;Remote&rdquo;" aria-label="Location"/>
+          <datalist id="nj-countries">
+            <option value="Remote"></option>
+            {% for c in available_countries %}<option value="{{ c }}"></option>{% endfor %}
+          </datalist>
         </div>
-
-        <div class="hero-stats reveal reveal-delay-4">
-          <div class="hstat"><div class="hstat-n">{{ jobs.paginator.count|default:"700" }}+</div><div class="hstat-l">live jobs right now</div></div>
-          <div class="hstat"><div class="hstat-n">15K+</div><div class="hstat-l">weekly subscribers</div></div>
-          <div class="hstat"><div class="hstat-n">200+</div><div class="hstat-l">companies hiring</div></div>
-        </div>
+        <button type="submit" class="nj-sbtn">Find Jobs</button>
       </div>
-
-      <aside class="hero-right reveal" aria-label="Latest job listings">
-        <div class="feed-label">
-          <span>Latest roles</span>
-          <span class="feed-live"><span class="feed-dot"></span> Live</span>
-        </div>
-
-        {% for job in jobs|slice:":5" %}
-        <a href="{% url 'job_detail' job.id job.slug %}" class="feed-item">
-          <div class="fi-top">
-            <div class="fi-favicon">
-              {% if job.company_logo %}
-                <img src="{{ job.company_logo }}" alt="" loading="lazy"/>
-              {% else %}
-                <span style="font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--ink3)">{{ job.company|slice:":1" }}</span>
-              {% endif %}
-            </div>
-            <span class="fi-company">{{ job.company }}</span>
-            {% if job.is_featured %}<span class="fi-badge new">New</span>{% endif %}
-          </div>
-          <div class="fi-title">{{ job.title }}</div>
-          <div class="fi-meta">
-            <span>{{ job.location|default:"Remote" }}</span>
-            {% if job.tools.exists %}
-            <span class="fi-tag" style="background:var(--amber-light);color:var(--amber)">{{ job.tools.first.name }}</span>
-            {% else %}
-            <span class="fi-tag mops">MOPS</span>
-            {% endif %}
-          </div>
-        </a>
-        {% endfor %}
-
-        <div class="feed-all">
-          <a href="#jobs-section">View all {{ jobs.paginator.count|default:"700" }}+ open roles →</a>
-          <span class="feed-count">Page 1 of {{ jobs.paginator.num_pages|default:"1" }}</span>
-        </div>
-      </aside>
-
-    </div>
+      <div class="nj-sfilters">
+        {% if current_arrangement == 'remote' %}
+          <a class="nj-chip on" href="?{{ filter_qs }}#jobs-section" onclick="njToggleParam(event, 'arrangement', '')">Remote &#10003;</a>
+        {% else %}
+          <a class="nj-chip" href="?{{ filter_qs }}#jobs-section" onclick="njToggleParam(event, 'arrangement', 'remote')">Remote</a>
+        {% endif %}
+        <select class="nj-chip" name="tool" aria-label="Filter by tool" onchange="this.form.submit()">
+          <option value="">Tool: Any</option>
+          {% for t in popular_tech_stacks %}
+          <option value="{{ t.slug }}" {% if selected_tool == t.slug %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+        <select class="nj-chip" name="rtype" aria-label="Filter by job type" onchange="this.form.submit()">
+          <option value="">Job type: Any</option>
+          <option value="full_time" {% if current_rtype == 'full_time' %}selected{% endif %}>Full-time</option>
+          <option value="contract" {% if current_rtype == 'contract' %}selected{% endif %}>Contract</option>
+          <option value="part_time" {% if current_rtype == 'part_time' %}selected{% endif %}>Part-time</option>
+          <option value="internship" {% if current_rtype == 'internship' %}selected{% endif %}>Internship</option>
+        </select>
+        {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}"/>{% endif %}
+      </div>
+    </form>
   </div>
 </header>
 
-<div class="trust-strip" role="complementary" aria-label="Companies currently hiring">
-  <div class="trust-label">Companies hiring right now</div>
-  <div class="logo-scroll-wrap">
-    <div class="logo-scroll">
-      <div class="employer-logo"><span>Salesforce</span></div>
-      <div class="employer-logo"><span>Braze</span></div>
-      <div class="employer-logo"><span>Adobe</span></div>
-      <div class="employer-logo"><span>HubSpot</span></div>
-      <div class="employer-logo"><span>Cloudflare</span></div>
-      <div class="employer-logo"><span>Nagarro</span></div>
-      <div class="employer-logo"><span>AvePoint</span></div>
-      <div class="employer-logo"><span>Valtech</span></div>
-      <div class="employer-logo"><span>Zeta Global</span></div>
-      <div class="employer-logo"><span>Eversana</span></div>
-      <div class="employer-logo"><span>Salesforce</span></div>
-      <div class="employer-logo"><span>Braze</span></div>
-      <div class="employer-logo"><span>Adobe</span></div>
-      <div class="employer-logo"><span>HubSpot</span></div>
-      <div class="employer-logo"><span>Cloudflare</span></div>
-      <div class="employer-logo"><span>Nagarro</span></div>
-      <div class="employer-logo"><span>AvePoint</span></div>
-      <div class="employer-logo"><span>Valtech</span></div>
-      <div class="employer-logo"><span>Zeta Global</span></div>
-      <div class="employer-logo"><span>Eversana</span></div>
-    </div>
+<div class="njwrap">
+  <div class="nj-stats">
+    <div class="nj-stat"><b>{{ jobs.paginator.count }}</b><span>live jobs</span></div>
+    <div class="nj-stat"><b>200+</b><span>companies hiring</span></div>
+    <div class="nj-stat"><b>15K+</b><span>subscribers</span></div>
+    <div class="nj-stat"><b>Daily</b><span>link verification</span></div>
   </div>
+
+  <div class="nj-alertbar" id="jobs-section">
+    <div class="nj-bell">&#128276;</div>
+    <div class="nj-abtext">
+      <div class="nj-abtitle">{% if query or selected_tool or location_filter %}Be first to new &ldquo;{{ query|default:'' }}{% if location_filter %} {{ location_filter }}{% endif %}&rdquo; jobs{% else %}Never miss a new MarTech job{% endif %}</div>
+      <div class="nj-absub">Get matching roles by email as soon as they&rsquo;re posted. Free, unsubscribe anytime.</div>
+    </div>
+    <form id="nj-alert-form">
+      {% csrf_token %}
+      <input type="email" name="email" required placeholder="your@email.com" aria-label="Email for job alerts"/>
+      <button type="submit">Create Alert</button>
+    </form>
+  </div>
+  <p id="nj-alert-msg" style="font-size:12.5px;margin:-10px 0 14px 4px;"></p>
+
+  <div class="nj-listhead">
+    <h2>MarTech Jobs <span class="nj-count">&mdash; {{ jobs.paginator.count }} result{{ jobs.paginator.count|pluralize }}</span></h2>
+    <form method="get" class="nj-sort">
+      Sort:
+      <select name="sort" onchange="this.form.submit()">
+        <option value="" {% if not current_sort %}selected{% endif %}>Newest</option>
+        <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest</option>
+      </select>
+      {% if query %}<input type="hidden" name="q" value="{{ query }}"/>{% endif %}
+      {% if location_filter %}<input type="hidden" name="l" value="{{ location_filter }}"/>{% endif %}
+      {% if selected_tool %}<input type="hidden" name="tool" value="{{ selected_tool }}"/>{% endif %}
+      {% if current_rtype %}<input type="hidden" name="rtype" value="{{ current_rtype }}"/>{% endif %}
+      {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}"/>{% endif %}
+    </form>
+  </div>
+
+  {% for job in jobs %}
+  <a class="nj-row {% if job.is_featured %}featured{% endif %}" href="{% url 'job_detail' job.id job.slug %}">
+    <div class="nj-logo">
+      {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="" loading="lazy"/>{% else %}<span>{{ job.company|slice:":1" }}</span>{% endif %}
+    </div>
+    <div class="nj-main">
+      <div class="nj-title">{{ job.title }}</div>
+      <div class="nj-meta"><span class="co">{{ job.company }}</span><span>&middot;</span><span>{{ job.location|default:"Remote" }}</span></div>
+      <div class="nj-badges">
+        {% if job.is_featured %}<span class="nj-b feat">&#9733; Featured</span>{% endif %}
+        {% if job.work_arrangement == 'remote' %}<span class="nj-b remote">Remote</span>{% endif %}
+        {% for t in job.tools.all|slice:":2" %}<span class="nj-b tool">{{ t.name }}</span>{% endfor %}
+        <span class="nj-b type">{{ job.get_role_type_display }}</span>
+      </div>
+    </div>
+    <div class="nj-right">
+      {% if job.salary_range %}<div class="nj-salary">{{ job.salary_range }}</div>{% else %}<div class="nj-salary na">Salary not listed</div>{% endif %}
+      <div class="nj-date">Posted {{ job.created_at|timesince }} ago</div>
+      <span class="nj-apply">Apply now &rarr;</span>
+    </div>
+  </a>
+  {% empty %}
+  <div class="nj-empty">
+    <h3 style="font-size:18px;font-weight:700;">No jobs match your search.</h3>
+    <p style="margin-top:8px;"><a href="{% url 'job_list' %}#jobs-section" style="color:var(--g);font-weight:700;">View all jobs &rarr;</a></p>
+  </div>
+  {% endfor %}
+
+  {% if jobs.paginator.num_pages > 1 %}
+  <div class="nj-pagination">
+    {% if jobs.has_previous %}<a class="nj-pg" href="?{% if filter_qs %}{{ filter_qs }}&amp;{% endif %}page={{ jobs.previous_page_number }}#jobs-section">&larr;</a>{% endif %}
+    <span class="nj-pg cur">{{ jobs.number }}</span>
+    <span class="nj-pg" style="border:0">of {{ jobs.paginator.num_pages }}</span>
+    {% if jobs.has_next %}<a class="nj-pg" href="?{% if filter_qs %}{{ filter_qs }}&amp;{% endif %}page={{ jobs.next_page_number }}#jobs-section" rel="next">&rarr;</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
 </div>
 
-<section class="jobs-section" aria-labelledby="jobs-h" id="jobs-section">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <h2 class="sh-title" id="jobs-h">Top <em>MarTech Jobs</em></h2>
-        <p class="sh-sub">Curated daily from 200+ hiring companies worldwide</p>
-      </div>
-      <a href="{% url 'job_list' %}#jobs-section" class="sh-link">View all roles →</a>
-    </div>
-
-    <div class="filter-row" role="tablist">
-      <a href="{% url 'job_list' %}{% if query %}?q={{ query }}{% endif %}#jobs-section" class="ftab {% if not current_arrangement and not current_rtype %}active{% endif %}" role="tab">All Jobs</a>
-      <a href="{% url 'job_list' %}?arrangement=remote{% if query %}&q={{ query }}{% endif %}#jobs-section" class="ftab {% if current_arrangement == 'remote' %}active{% endif %}" role="tab">Remote Only</a>
-      <a href="{% url 'job_list' %}?rtype=contract{% if query %}&q={{ query }}{% endif %}#jobs-section" class="ftab {% if current_rtype == 'contract' %}active{% endif %}" role="tab">Contract</a>
-    </div>
-
-    <div class="jobs-grid">
-      {% for job in jobs %}
-      <a href="{% url 'job_detail' job.id job.slug %}" class="jcard {% if job.is_featured %}featured{% endif %} reveal">
-        <div class="jc-top">
-          <div class="jc-favicon">
-            {% if job.company_logo %}
-              <img src="{{ job.company_logo }}" alt="{{ job.company }} logo" loading="lazy"/>
-            {% else %}
-              <span>{{ job.company|slice:":1" }}</span>
-            {% endif %}
-          </div>
-          <div><div class="jc-co">{{ job.company }}</div><div class="jc-title">{{ job.title }}</div></div>
-        </div>
-        <div class="jc-pills">
-          <span class="pill pill-loc">{{ job.location|default:"Remote" }}</span>
-          <span class="pill pill-mops">{{ job.get_role_type_display|default:"Full-time" }}</span>
-          {% for t in job.tools.all|slice:":2" %}
-            <span class="pill pill-stack">{{ t.name }}</span>
-          {% endfor %}
-        </div>
-        <div class="jc-footer">
-          <div>
-            {% if job.salary_range %}
-              <div class="jc-salary">{{ job.salary_range }}</div>
-            {% else %}
-              <div class="jc-salary na">Salary not listed</div>
-            {% endif %}
-            <div class="jc-date">Posted {{ job.created_at|timesince }} ago</div>
-          </div>
-          <span class="jc-apply">Apply →</span>
-        </div>
-      </a>
-      {% empty %}
-      <div style="grid-column: 1 / -1; text-align: center; padding: 60px 0;">
-        <h3 style="font-family: 'Playfair Display', serif; font-size: 24px; color: var(--ink3);">No jobs match your search.</h3>
-        <p style="margin-top: 10px;"><a href="{% url 'job_list' %}#jobs-section" class="btn btn-navy">View All Jobs</a></p>
-      </div>
-      {% endfor %}
-    </div>
-
-    {% if jobs and jobs.paginator.num_pages > 1 %}
-    <div class="jobs-footer">
-      <span class="jp-info">Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</span>
-      <div style="display:flex;gap:10px;">
-        {% if jobs.has_previous %}
-        <a href="?page={{ jobs.previous_page_number }}{% if query %}&q={{ query }}{% endif %}#jobs-section" class="btn btn-ghost" style="border-color:var(--navy);color:var(--navy)">&larr; Prev</a>
-        {% endif %}
-        {% if jobs.has_next %}
-        <a href="?page={{ jobs.next_page_number }}{% if query %}&q={{ query }}{% endif %}#jobs-section" rel="next" class="btn btn-navy btn-lg">Next Page →</a>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-  </div>
-</section>
+<script>
+  function njToggleParam(e, key, val) {
+    e.preventDefault();
+    const u = new URL(window.location.href);
+    if (val) { u.searchParams.set(key, val); } else { u.searchParams.delete(key); }
+    u.searchParams.delete('page');
+    u.hash = 'jobs-section';
+    window.location.href = u.toString();
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof handleSubscribe === 'function') handleSubscribe('nj-alert-form', 'nj-alert-msg');
+  });
+</script>
 
 <section class="stacks-section" aria-labelledby="stacks-h">
   <div class="wrap">
