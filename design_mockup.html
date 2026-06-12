@@ -35,14 +35,23 @@
   .btn-post { background: var(--green); color: #fff !important; padding: 9px 18px; border-radius: 8px; font-weight: 600; }
 
   /* HERO */
-  .hero { padding: 48px 0 0; text-align: center; }
-  .hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -1.2px; line-height: 1.15; }
-  .hero h1 em { font-style: normal; color: var(--green); }
-  .hero p { margin-top: 10px; font-size: 16px; color: var(--ink2); }
-  .hero p b { color: var(--ink); }
+  .hero-band { background: linear-gradient(160deg, #16331f 0%, #1f432d 55%, #2a5a3c 100%); position: relative; overflow: hidden; }
+  .hero-band::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 75% 20%, rgba(255,255,255,.08), transparent); pointer-events: none; }
+  .hero { padding: 56px 0 64px; text-align: center; color: #fff; position: relative; }
+  .hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.12; }
+  .hero h1 em { font-style: normal; color: #8fd6a8; }
+  .hero p { margin-top: 12px; font-size: 16px; color: rgba(255,255,255,.78); }
+  .hero p b { color: #fff; }
+  .hero-badges { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .hbadge { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.9); background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 999px; backdrop-filter: blur(2px); }
+  .quick-cats { display: flex; gap: 8px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+  .qcat { font-size: 13px; font-weight: 600; color: #fff; text-decoration: none; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); padding: 8px 16px; border-radius: 999px; transition: all .15s; }
+  .qcat:hover { background: #fff; color: var(--green); }
 
-  /* FILTER BAR */
-  .filterbar-outer { position: sticky; top: 0; z-index: 50; background: #fff; padding: 24px 0 14px; border-bottom: 1px solid var(--line); }
+  /* FILTER BAR — floats up over the hero edge */
+  .filterbar-outer { position: sticky; top: 0; z-index: 50; background: #fff; padding: 18px 0 14px; border-bottom: 1px solid var(--line); box-shadow: 0 4px 24px rgba(17,24,39,.06); }
+  .filterbar-card { margin-top: -34px; position: relative; z-index: 51; }
+  .filterbar-card .filterbar { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: 0 12px 40px rgba(17,24,39,.12); }
   .filterbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .f-search { flex: 2 1 260px; display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 14px; height: 46px; background: #fff; }
   .f-search:focus-within { border-color: var(--green); }
@@ -64,9 +73,10 @@
 
   /* JOB LIST */
   .joblist { padding: 8px 0 40px; }
-  .jrow { display: flex; align-items: center; gap: 16px; padding: 18px 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; transition: background .12s; border-radius: 10px; }
-  .jrow:hover { background: var(--bg2); }
-  .jrow.featured { background: #fffdf5; border: 1px solid #f3e8c0; margin: 6px 0; }
+  .jrow { display: flex; align-items: center; gap: 16px; padding: 18px 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; transition: all .15s; border-radius: 12px; position: relative; }
+  .jrow:hover { background: var(--bg2); transform: translateX(4px); box-shadow: inset 3px 0 0 var(--green); }
+  .jrow:hover .jtitle { color: var(--green); }
+  .jrow.featured { background: linear-gradient(90deg, #fffbeb, #fffdf5); border: 1px solid #f3e8c0; margin: 6px 0; }
   .jlogo { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--line); background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: var(--ink3); flex-shrink: 0; }
   .jmain { flex: 1; min-width: 0; }
   .jtitle { font-size: 15.5px; font-weight: 600; letter-spacing: -0.2px; }
@@ -74,6 +84,7 @@
   .jtags { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
   .tag { font-size: 12px; font-weight: 500; color: var(--ink2); background: var(--bg2); border: 1px solid var(--line); padding: 4px 9px; border-radius: 6px; white-space: nowrap; }
   .tag.loc { color: var(--green); background: var(--green-light); border-color: transparent; }
+  .tag.tool { color: #4338ca; background: #eef2ff; border-color: transparent; }
   .tag.feat { color: var(--amber); background: var(--amber-bg); border-color: transparent; font-weight: 600; }
   .jright { text-align: right; flex-shrink: 0; width: 130px; }
   .jsalary { font-size: 13.5px; font-weight: 600; }
@@ -112,10 +123,25 @@
   </div>
 </nav>
 
-<header class="hero wrap">
-  <h1>Find your next <em>MarTech</em> role</h1>
-  <p><b>312 live jobs</b> across Salesforce, Adobe, HubSpot, Braze &amp; more — updated daily</p>
-</header>
+<div class="hero-band">
+  <header class="hero wrap">
+    <h1>Find your next <em>MarTech</em> role</h1>
+    <p><b>312 live jobs</b> across Salesforce, Adobe, HubSpot, Braze &amp; more — updated daily</p>
+    <div class="hero-badges">
+      <span class="hbadge">✓ Curated daily</span>
+      <span class="hbadge">✓ 200+ companies</span>
+      <span class="hbadge">✓ 15K+ subscribers</span>
+    </div>
+    <div class="quick-cats">
+      <a class="qcat" href="#">Salesforce</a>
+      <a class="qcat" href="#">Adobe</a>
+      <a class="qcat" href="#">HubSpot</a>
+      <a class="qcat" href="#">Braze</a>
+      <a class="qcat" href="#">Marketing Ops</a>
+      <a class="qcat" href="#">CDP</a>
+    </div>
+  </header>
+</div>
 
 <div class="filterbar-outer">
   <div class="wrap">
@@ -149,7 +175,7 @@
     <div class="jtags">
       <span class="tag feat">★ Featured</span>
       <span class="tag loc">Remote · US</span>
-      <span class="tag">SFMC</span>
+      <span class="tag tool">SFMC</span>
       <span class="tag">Full-time</span>
     </div>
     <div class="jright">
@@ -166,7 +192,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">Remote · UK</span>
-      <span class="tag">HubSpot</span>
+      <span class="tag tool">HubSpot</span>
       <span class="tag">Full-time</span>
     </div>
     <div class="jright">
@@ -183,7 +209,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">San Francisco, CA</span>
-      <span class="tag">Braze</span>
+      <span class="tag tool">Braze</span>
       <span class="tag">Full-time</span>
     </div>
     <div class="jright">
@@ -200,7 +226,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">Remote · Germany</span>
-      <span class="tag">Adobe AEP</span>
+      <span class="tag tool">Adobe AEP</span>
       <span class="tag">Contract</span>
     </div>
     <div class="jright">
@@ -217,7 +243,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">Minneapolis, MN</span>
-      <span class="tag">Marketo</span>
+      <span class="tag tool">Marketo</span>
       <span class="tag">Full-time</span>
     </div>
     <div class="jright">
@@ -234,7 +260,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">Remote · Canada</span>
-      <span class="tag">Tealium</span>
+      <span class="tag tool">Tealium</span>
       <span class="tag">Contract</span>
     </div>
     <div class="jright">
@@ -251,7 +277,7 @@
     </div>
     <div class="jtags">
       <span class="tag loc">New York, NY</span>
-      <span class="tag">Segment</span>
+      <span class="tag tool">Segment</span>
       <span class="tag">Full-time</span>
     </div>
     <div class="jright">
