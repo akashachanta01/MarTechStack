@@ -34,6 +34,7 @@
 
                     <form method="post" class="space-y-6" novalidate>
                         {% csrf_token %}
+                        {{ form.website }}
                         <div>
                             <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Email <span class="text-red-500">*</span></label>
                             {{ form.email }}

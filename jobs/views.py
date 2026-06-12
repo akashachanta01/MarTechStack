@@ -22,6 +22,27 @@ from .emails import send_job_alert, send_welcome_email, send_admin_new_subscribe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
+def _client_ip(request):
+    # Render puts the real client IP first in X-Forwarded-For.
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')
+
+
+def _rate_limited(request, action, limit=5, window_seconds=3600):
+    """Returns True if this IP exceeded `limit` requests for `action` within the window."""
+    key = f"ratelimit:{action}:{_client_ip(request)}"
+    count = cache.get_or_set(key, 0, timeout=window_seconds)
+    if count >= limit:
+        return True
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, timeout=window_seconds)
+    return False
+
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
     'marketo': 'Adobe', 'Adobe Experience Platform': 'Adobe', 'aep': 'Adobe',
@@ -239,6 +260,8 @@ def job_detail(request, id, slug):
 
 def post_job(request):
     if request.method == 'POST':
+        if _rate_limited(request, 'post_job', limit=5, window_seconds=3600):
+            return HttpResponse("Too many submissions. Please try again later.", status=429)
         form = JobPostForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
@@ -277,12 +300,18 @@ def post_job(request):
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
-    try: event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
-    except: return HttpResponse(status=400)
+    # Refuse to process webhooks at all if signature verification isn't configured.
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        return HttpResponse(status=500)
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError):
+        return HttpResponse(status=400)
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         job_id = session.get('metadata', {}).get('job_id')
-        if job_id:
+        # Only publish the job if Stripe confirms the money actually arrived.
+        if job_id and session.get('payment_status') == 'paid':
             try: 
                 job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
                 cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
@@ -293,6 +322,8 @@ def post_job_success(request): return render(request, 'jobs/post_job_success.htm
 
 def subscribe(request):
     if request.method == "POST":
+        if _rate_limited(request, 'subscribe', limit=5, window_seconds=3600):
+            return JsonResponse({"success": False, "error": "Too many attempts. Try again later."}, status=429)
         email = request.POST.get("email", "").strip().lower()
         if email:
             try: validate_email(email)
@@ -335,6 +366,9 @@ def for_employers(request): return render(request, 'jobs/for_employers.html')
 
 def contact(request):
     if request.method == "POST":
+        if _rate_limited(request, 'contact', limit=5, window_seconds=3600):
+            messages.error(request, "Too many messages. Please try again later.")
+            return redirect("contact")
         form = ContactForm(request.POST)
         if form.is_valid():
             cleaned = form.cleaned_data

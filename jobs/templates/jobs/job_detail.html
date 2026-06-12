@@ -30,23 +30,26 @@
     "name": "{{ job.company|escapejs }}",
     "logo": "{{ job.company_logo|default:'' }}"
   },
-  "jobLocation": {
+  {% if job.work_arrangement == 'remote' %}"jobLocationType": "TELECOMMUTE",
+  "applicantLocationRequirements": { "@type": "Country", "name": "{{ job.get_schema_country }}" },
+  {% endif %}"jobLocation": {
     "@type": "Place",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "{{ job.location|escapejs }}",
-      "addressCountry": "US" 
+      "addressCountry": "{{ job.get_schema_country }}"
     }
-  },
+  }{% with salary=job.get_salary_min_max %}{% if salary.0 %},
   "baseSalary": {
     "@type": "MonetaryAmount",
     "currency": "USD",
     "value": {
       "@type": "QuantitativeValue",
       "unitText": "YEAR",
-      "value": "{{ job.salary_range|default:'Competitive' }}" 
+      "minValue": {{ salary.0 }},
+      "maxValue": {{ salary.1 }}
     }
-  }
+  }{% endif %}{% endwith %}
 }
 </script>
 
@@ -101,7 +104,7 @@
             </div>
 
             <div>
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm font-sans transition">
+                <a href="{{ job.apply_url }}" target="_blank" rel="noopener" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm font-sans transition">
                     Apply for this Position
                 </a>
             </div>
@@ -117,7 +120,7 @@
             </div>
             <div class="mt-16 pt-10 border-t border-slate-200">
                 <h3 class="text-2xl font-serif font-bold text-slate-900 mb-4">Ready to make an impact?</h3>
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm font-sans transition">
+                <a href="{{ job.apply_url }}" target="_blank" rel="noopener" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm font-sans transition">
                     Apply Now
                 </a>
             </div>

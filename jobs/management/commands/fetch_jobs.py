@@ -30,13 +30,14 @@ class Command(BaseCommand):
         self.geolocator = Nominatim(user_agent="martechstack_jobs_bot_v2")
         self.location_cache = {}
 
-        # --- 1. DEAD LINK CHECKER ---
-        self.check_dead_links()
-
-        # --- 2. AUTO-CLEANUP ---
-        # Only remove explicitly rejected jobs. Keep pending for review.
-        deleted_count = Job.objects.filter(screening_status='rejected').delete()[0]
-        self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} rejected jobs.")
+        # --- 1. AUTO-CLEANUP ---
+        # Dead-link checking is handled by the dedicated check_dead_links command
+        # (run_daily_tasks runs it right before this command).
+        # Keep rejected jobs for 30 days so _is_duplicate still recognizes them
+        # and we don't re-fetch + re-screen (paid AI calls) the same bad jobs daily.
+        purge_cutoff = timezone.now() - timedelta(days=30)
+        deleted_count = Job.objects.filter(screening_status='rejected', updated_at__lt=purge_cutoff).delete()[0]
+        self.stdout.write(f"🧹 Database Cleanup: Removed {deleted_count} old rejected jobs (>30 days).")
         
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         self.serper_key = os.environ.get('SERPER_API_KEY')
@@ -133,19 +134,6 @@ class Command(BaseCommand):
                         pass
 
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
-
-    def check_dead_links(self):
-        # Checks if existing active jobs are confirmed gone (404/410)
-        self.stdout.write("💀 Checking for dead links...")
-        active_jobs = Job.objects.filter(is_active=True)
-        for job in active_jobs:
-            try:
-                r = requests.head(job.apply_url, headers=self.get_headers(), timeout=5, allow_redirects=True)
-                if r.status_code in (404, 410):
-                    job.is_active = False
-                    job.save()
-            except:
-                pass
 
     def search_google(self, query, num=100, tbs="qdr:d14"):
         if self.search_provider == 'serper':

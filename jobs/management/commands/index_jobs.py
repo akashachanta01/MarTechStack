@@ -62,7 +62,7 @@ class Command(BaseCommand):
             headers = {"Authorization": f"Bearer {creds.token}"}
             
             try:
-                resp = requests.post(endpoint, json=payload, headers=headers)
+                resp = requests.post(endpoint, json=payload, headers=headers, timeout=15)
                 
                 if resp.status_code == 200:
                     self.stdout.write(self.style.SUCCESS(f"   ✅ Pinged: {job.title}"))

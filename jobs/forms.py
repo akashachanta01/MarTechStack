@@ -1,7 +1,28 @@
 from django import forms
 from .models import Job, Tool
 
-class JobPostForm(forms.ModelForm):
+
+class HoneypotMixin(forms.Form):
+    # Spam trap: invisible to humans, but bots auto-fill it. Submissions
+    # with this field filled are rejected.
+    website = forms.CharField(
+        required=False,
+        label="",
+        widget=forms.TextInput(attrs={
+            'style': 'position:absolute;left:-9999px;top:-9999px;',
+            'tabindex': '-1',
+            'autocomplete': 'off',
+            'aria-hidden': 'true',
+        })
+    )
+
+    def clean_website(self):
+        if self.cleaned_data.get('website'):
+            raise forms.ValidationError("Submission rejected.")
+        return ''
+
+
+class JobPostForm(HoneypotMixin, forms.ModelForm):
     # Strategy: Simple 2-Tier Structure
     PLAN_CHOICES = [
         ('free', 'Standard Listing - Free'),
@@ -60,7 +81,7 @@ class JobPostForm(forms.ModelForm):
         }
 
 
-class ContactForm(forms.Form):
+class ContactForm(HoneypotMixin, forms.Form):
     email = forms.EmailField(
         label="Email",
         widget=forms.EmailInput(attrs={
