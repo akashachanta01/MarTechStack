@@ -58,13 +58,18 @@ SEO_CROSS_STATES = ["California", "Texas", "New York", "Florida", "Illinois", "P
 
 def job_list(request):
     query = request.GET.get("q", "").strip()
-    vendor_query = request.GET.get("vendor", "").strip() 
+    vendor_query = request.GET.get("vendor", "").strip()
     location_query = request.GET.get("l", "").strip()
     country_query = request.GET.get("country", "").strip()
     work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
     role_type_filter = request.GET.get("rtype", "").strip().lower()
+    tool_filter = request.GET.get("tool", "").strip()
+    sort = request.GET.get("sort", "").strip().lower()
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
+
+    if tool_filter:
+        jobs = jobs.filter(tools__slug=tool_filter)
 
     if vendor_query:
         if vendor_query == "General":
@@ -87,7 +92,9 @@ def job_list(request):
             )
         )
     
-    if query:
+    if sort == "oldest":
+        jobs = jobs.order_by('created_at')
+    elif query:
         jobs = jobs.order_by('-is_pinned', '-relevance', '-created_at')
     else:
         jobs = jobs.order_by('-is_pinned', '-created_at')
@@ -108,14 +115,22 @@ def job_list(request):
     page_number = request.GET.get("page")
     jobs_page = paginator.get_page(page_number)
 
+    # Querystring with all current filters except page, so pagination links keep them.
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
     return render(request, "jobs/job_list.html", {
-        "jobs": jobs_page, 
-        "query": query, 
+        "jobs": jobs_page,
+        "query": query,
         "location_filter": location_query,
         "selected_country": country_query,
         "vendor_filter": vendor_query,
         "current_arrangement": work_arrangement_filter,
         "current_rtype": role_type_filter,
+        "selected_tool": tool_filter,
+        "current_sort": sort,
+        "filter_qs": filter_qs,
     })
 
 def blog_list(request):

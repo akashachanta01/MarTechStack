@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarTechJobs — Redesign Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1f432d;
+    --green-dark: #16331f;
+    --green-light: #eaf3ed;
+    --ink: #111827;
+    --ink2: #4b5563;
+    --ink3: #9ca3af;
+    --line: #e5e7eb;
+    --bg: #ffffff;
+    --bg2: #f9fafb;
+    --amber: #b45309;
+    --amber-bg: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--ink); background: var(--bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav { border-bottom: 1px solid var(--line); background: #fff; }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-weight: 800; font-size: 19px; color: var(--green); letter-spacing: -0.5px; }
+  .logo span { color: var(--ink); }
+  .nav-links { display: flex; gap: 28px; align-items: center; font-size: 14px; font-weight: 500; }
+  .nav-links a { color: var(--ink2); text-decoration: none; }
+  .nav-links a:hover { color: var(--ink); }
+  .btn-post { background: var(--green); color: #fff !important; padding: 9px 18px; border-radius: 8px; font-weight: 600; }
+
+  /* HERO */
+  .hero-band { background: linear-gradient(160deg, #16331f 0%, #1f432d 55%, #2a5a3c 100%); position: relative; overflow: hidden; }
+  .hero-band::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 75% 20%, rgba(255,255,255,.08), transparent); pointer-events: none; }
+  .hero { padding: 56px 0 64px; text-align: center; color: #fff; position: relative; }
+  .hero h1 { font-size: 42px; font-weight: 800; letter-spacing: -1.4px; line-height: 1.12; }
+  .hero h1 em { font-style: normal; color: #8fd6a8; }
+  .hero p { margin-top: 12px; font-size: 16px; color: rgba(255,255,255,.78); }
+  .hero p b { color: #fff; }
+  .hero-badges { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .hbadge { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.9); background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); padding: 6px 14px; border-radius: 999px; backdrop-filter: blur(2px); }
+  .quick-cats { display: flex; gap: 8px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+  .qcat { font-size: 13px; font-weight: 600; color: #fff; text-decoration: none; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); padding: 8px 16px; border-radius: 999px; transition: all .15s; }
+  .qcat:hover { background: #fff; color: var(--green); }
+
+  /* FILTER BAR — floats up over the hero edge */
+  .filterbar-outer { position: sticky; top: 0; z-index: 50; background: #fff; padding: 18px 0 14px; border-bottom: 1px solid var(--line); box-shadow: 0 4px 24px rgba(17,24,39,.06); }
+  .filterbar-card { margin-top: -34px; position: relative; z-index: 51; }
+  .filterbar-card .filterbar { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: 0 12px 40px rgba(17,24,39,.12); }
+  .filterbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .f-search { flex: 2 1 260px; display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 14px; height: 46px; background: #fff; }
+  .f-search:focus-within { border-color: var(--green); }
+  .f-search svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 2; flex-shrink: 0; }
+  .f-search input { border: 0; outline: 0; font-size: 14.5px; width: 100%; font-family: inherit; color: var(--ink); }
+  select { appearance: none; -webkit-appearance: none; flex: 1 1 130px; height: 46px; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 32px 0 14px; font-size: 14px; font-weight: 500; font-family: inherit; color: var(--ink); background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; cursor: pointer; }
+  select:focus { border-color: var(--green); outline: 0; }
+  .f-remote { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; white-space: nowrap; }
+  .f-remote.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .f-remote .dot { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--ink3); display: inline-block; }
+  .f-remote.on .dot { background: var(--green); border-color: var(--green); position: relative; }
+  .f-remote.on .dot::after { content: "✓"; color: #fff; font-size: 11px; position: absolute; top: -1px; left: 2.5px; }
+  .active-filters { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); color: var(--green); font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; }
+  .chip b { cursor: pointer; opacity: .6; }
+  .clear-all { font-size: 12.5px; color: var(--ink3); text-decoration: underline; cursor: pointer; }
+  .result-count { margin-left: auto; font-size: 13px; color: var(--ink2); }
+  .result-count b { color: var(--ink); }
+
+  /* JOB LIST */
+  .joblist { padding: 8px 0 40px; }
+  .jrow { display: flex; align-items: center; gap: 16px; padding: 18px 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; transition: all .15s; border-radius: 12px; position: relative; }
+  .jrow:hover { background: var(--bg2); transform: translateX(4px); box-shadow: inset 3px 0 0 var(--green); }
+  .jrow:hover .jtitle { color: var(--green); }
+  .jrow.featured { background: linear-gradient(90deg, #fffbeb, #fffdf5); border: 1px solid #f3e8c0; margin: 6px 0; }
+  .jlogo { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--line); background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: var(--ink3); flex-shrink: 0; }
+  .jmain { flex: 1; min-width: 0; }
+  .jtitle { font-size: 15.5px; font-weight: 600; letter-spacing: -0.2px; }
+  .jco { font-size: 13.5px; color: var(--ink2); margin-top: 2px; }
+  .jtags { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .tag { font-size: 12px; font-weight: 500; color: var(--ink2); background: var(--bg2); border: 1px solid var(--line); padding: 4px 9px; border-radius: 6px; white-space: nowrap; }
+  .tag.loc { color: var(--green); background: var(--green-light); border-color: transparent; }
+  .tag.tool { color: #4338ca; background: #eef2ff; border-color: transparent; }
+  .tag.feat { color: var(--amber); background: var(--amber-bg); border-color: transparent; font-weight: 600; }
+  .jright { text-align: right; flex-shrink: 0; width: 130px; }
+  .jsalary { font-size: 13.5px; font-weight: 600; }
+  .jsalary.na { color: var(--ink3); font-weight: 400; }
+  .jdate { font-size: 12px; color: var(--ink3); margin-top: 3px; }
+
+  .load-more { display: block; margin: 28px auto 0; background: #fff; border: 1.5px solid var(--green); color: var(--green); font-weight: 600; font-size: 14px; padding: 12px 32px; border-radius: 10px; cursor: pointer; font-family: inherit; }
+  .load-more:hover { background: var(--green-light); }
+
+  /* FOOTER STRIP */
+  .subscribe { background: var(--green); margin-top: 50px; padding: 44px 0; text-align: center; color: #fff; }
+  .subscribe h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .subscribe p { margin: 8px 0 20px; opacity: .85; font-size: 14.5px; }
+  .sub-form { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; }
+  .sub-form input { flex: 1; height: 46px; border-radius: 10px; border: 0; padding: 0 16px; font-size: 14px; font-family: inherit; }
+  .sub-form button { background: #fff; color: var(--green); border: 0; font-weight: 700; padding: 0 22px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; }
+
+  @media (max-width: 720px) {
+    .jtags { display: none; }
+    .jright { width: auto; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="logo">MarTech<span>Jobs</span></div>
+    <div class="nav-links">
+      <a href="#">Companies</a>
+      <a href="#">Tools</a>
+      <a href="#">Blog</a>
+      <a href="#" class="btn-post">Post a Job — $99</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-band">
+  <header class="hero wrap">
+    <h1>Find your next <em>MarTech</em> role</h1>
+    <p><b>312 live jobs</b> across Salesforce, Adobe, HubSpot, Braze &amp; more — updated daily</p>
+    <div class="hero-badges">
+      <span class="hbadge">✓ Curated daily</span>
+      <span class="hbadge">✓ 200+ companies</span>
+      <span class="hbadge">✓ 15K+ subscribers</span>
+    </div>
+    <div class="quick-cats">
+      <a class="qcat" href="#">Salesforce</a>
+      <a class="qcat" href="#">Adobe</a>
+      <a class="qcat" href="#">HubSpot</a>
+      <a class="qcat" href="#">Braze</a>
+      <a class="qcat" href="#">Marketing Ops</a>
+      <a class="qcat" href="#">CDP</a>
+    </div>
+  </header>
+</div>
+
+<div class="filterbar-outer">
+  <div class="wrap">
+    <div class="filterbar">
+      <div class="f-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input type="search" placeholder="Job title, skill, or company…">
+      </div>
+      <select><option>🌍 All locations</option><option>United States</option><option>United Kingdom</option><option>Canada</option><option>Germany</option><option>India</option><option>Australia</option></select>
+      <select><option>All tools</option><option>Salesforce</option><option>Adobe</option><option>HubSpot</option><option>Braze</option><option>Segment</option></select>
+      <select><option>All types</option><option>Full-time</option><option>Contract</option><option>Part-time</option></select>
+      <div class="f-remote on"><span class="dot"></span> Remote only</div>
+    </div>
+    <div class="active-filters">
+      <span class="chip">Remote <b>✕</b></span>
+      <span class="chip">Salesforce <b>✕</b></span>
+      <span class="clear-all">Clear all</span>
+      <span class="result-count"><b>47</b> jobs match</span>
+    </div>
+  </div>
+</div>
+
+<main class="joblist wrap">
+
+  <a class="jrow featured" href="#">
+    <div class="jlogo" style="color:#0176d3">S</div>
+    <div class="jmain">
+      <div class="jtitle">Senior Marketing Cloud Developer</div>
+      <div class="jco">Salesforce</div>
+    </div>
+    <div class="jtags">
+      <span class="tag feat">★ Featured</span>
+      <span class="tag loc">Remote · US</span>
+      <span class="tag tool">SFMC</span>
+      <span class="tag">Full-time</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$140k – $175k</div>
+      <div class="jdate">2 hours ago</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#ff7a59">H</div>
+    <div class="jmain">
+      <div class="jtitle">Marketing Operations Manager</div>
+      <div class="jco">HubSpot</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">Remote · UK</span>
+      <span class="tag tool">HubSpot</span>
+      <span class="tag">Full-time</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">£65k – £80k</div>
+      <div class="jdate">5 hours ago</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#5d2de2">B</div>
+    <div class="jmain">
+      <div class="jtitle">Lifecycle Marketing Specialist (Braze)</div>
+      <div class="jco">Chime</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">San Francisco, CA</span>
+      <span class="tag tool">Braze</span>
+      <span class="tag">Full-time</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$95k – $120k</div>
+      <div class="jdate">Yesterday</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#eb1000">A</div>
+    <div class="jmain">
+      <div class="jtitle">Adobe Experience Platform Architect</div>
+      <div class="jco">Accenture</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">Remote · Germany</span>
+      <span class="tag tool">Adobe AEP</span>
+      <span class="tag">Contract</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary na">Salary not listed</div>
+      <div class="jdate">Yesterday</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#16a34a">M</div>
+    <div class="jmain">
+      <div class="jtitle">Marketo Campaign Operations Lead</div>
+      <div class="jco">Medtronic</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">Minneapolis, MN</span>
+      <span class="tag tool">Marketo</span>
+      <span class="tag">Full-time</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$110k – $130k</div>
+      <div class="jdate">2 days ago</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#0ea5e9">T</div>
+    <div class="jmain">
+      <div class="jtitle">CDP Implementation Consultant</div>
+      <div class="jco">Tealium Partner Network</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">Remote · Canada</span>
+      <span class="tag tool">Tealium</span>
+      <span class="tag">Contract</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$80/hr</div>
+      <div class="jdate">2 days ago</div>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#7c3aed">S</div>
+    <div class="jmain">
+      <div class="jtitle">Growth Engineer — Segment & Amplitude</div>
+      <div class="jco">Notion</div>
+    </div>
+    <div class="jtags">
+      <span class="tag loc">New York, NY</span>
+      <span class="tag tool">Segment</span>
+      <span class="tag">Full-time</span>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$150k – $190k</div>
+      <div class="jdate">3 days ago</div>
+    </div>
+  </a>
+
+  <button class="load-more">Show more jobs ↓</button>
+</main>
+
+<section class="subscribe">
+  <div class="wrap">
+    <h2>Get new MarTech jobs in your inbox</h2>
+    <p>One email per week. 15,000+ subscribers. Free forever.</p>
+    <div class="sub-form">
+      <input type="email" placeholder="your@email.com">
+      <button>Subscribe</button>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

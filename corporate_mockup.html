@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarTechJobs — Corporate Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0b5cab;       /* trusted corporate blue */
+    --blue-dark: #094a8a;
+    --blue-light: #eaf2fb;
+    --green: #1f432d;      /* brand green kept for logo + success accents */
+    --ink: #1f2937; --ink2: #545d69; --ink3: #98a1ad;
+    --line: #e3e7ec; --bg2: #f5f7fa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--ink); background: #fff; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* NAV */
+  nav { border-bottom: 1px solid var(--line); background: #fff; position: sticky; top: 0; z-index: 100; }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .logo { font-weight: 800; font-size: 19px; color: var(--green); letter-spacing: -0.5px; }
+  .logo span { color: var(--ink); }
+  .nav-links { display: flex; gap: 26px; align-items: center; font-size: 14px; font-weight: 500; }
+  .nav-links a { color: var(--ink2); text-decoration: none; }
+  .nav-links a:hover { color: var(--blue); }
+  .btn-alert { color: var(--blue) !important; font-weight: 600; }
+  .btn-post { background: var(--blue); color: #fff !important; padding: 9px 16px; border-radius: 7px; font-weight: 600; }
+  .btn-post:hover { background: var(--blue-dark); }
+
+  /* HERO — light, simple, search-first like Indeed */
+  .hero { background: var(--bg2); border-bottom: 1px solid var(--line); padding: 46px 0 42px; text-align: center; }
+  .hero h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.8px; }
+  .hero h1 b { color: var(--blue); }
+  .hero .sub { margin-top: 8px; font-size: 15px; color: var(--ink2); }
+  .hero .sub .live { color: var(--green); font-weight: 700; }
+
+  /* SEARCH — the familiar "what / where" pattern */
+  .searchcard { max-width: 760px; margin: 26px auto 0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 4px 18px rgba(31,41,55,.07); }
+  .s-main { display: flex; gap: 0; border: 1.5px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .s-cell { flex: 1; display: flex; align-items: center; gap: 9px; padding: 0 14px; height: 52px; background: #fff; }
+  .s-cell + .s-cell { border-left: 1.5px solid var(--line); }
+  .s-cell:focus-within { box-shadow: inset 0 0 0 1.5px var(--blue); }
+  .s-cell svg { width: 17px; height: 17px; stroke: var(--ink3); fill: none; stroke-width: 2; flex-shrink: 0; }
+  .s-cell input { border: 0; outline: 0; width: 100%; font-size: 14.5px; font-family: inherit; }
+  .s-cell input::placeholder { color: var(--ink3); }
+  .s-btn { background: var(--blue); color: #fff; border: 0; font-weight: 700; font-size: 15px; padding: 0 28px; cursor: pointer; font-family: inherit; }
+  .s-btn:hover { background: var(--blue-dark); }
+  /* secondary filter row */
+  .s-filters { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+  .fchip { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink2); background: #fff; border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 15px; cursor: pointer; user-select: none; transition: all .12s; }
+  .fchip:hover { border-color: var(--blue); color: var(--blue); }
+  .fchip.on { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+  .fchip svg.dn { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+  /* STATS STRIP — credibility row */
+  .stats-strip { display: flex; justify-content: center; gap: 56px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+  .sstat { text-align: center; }
+  .sstat b { display: block; font-size: 21px; font-weight: 800; color: var(--ink); }
+  .sstat span { font-size: 12.5px; color: var(--ink2); }
+
+  /* LIST HEADER */
+  .list-head { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 10px; }
+  .list-head h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .list-head .count { color: var(--ink2); font-weight: 500; font-size: 14px; }
+  .sort { font-size: 13px; color: var(--ink2); }
+  .sort select { border: 1px solid var(--line); border-radius: 7px; background: #fff; font-weight: 600; color: var(--ink); font-size: 13px; padding: 6px 26px 6px 10px; cursor: pointer; font-family: inherit; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2398a1ad' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 9px center; }
+
+  /* ALERT BAR */
+  .alertbar { display: flex; align-items: center; gap: 14px; background: var(--blue-light); border: 1px solid #c9ddf2; border-radius: 10px; padding: 14px 16px; margin: 14px 0 18px; }
+  .alertbar .bell { width: 38px; height: 38px; border-radius: 9px; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .alertbar .ab-title { font-size: 14px; font-weight: 700; }
+  .alertbar .ab-sub { font-size: 12.5px; color: var(--ink2); margin-top: 1px; }
+  .alertbar .ab-text { flex: 1; }
+  .alertbar form { display: flex; gap: 8px; flex: 1; max-width: 360px; }
+  .alertbar input { flex: 1; height: 40px; border: 1.5px solid #c9ddf2; border-radius: 8px; padding: 0 12px; font-size: 13.5px; font-family: inherit; outline: 0; }
+  .alertbar input:focus { border-color: var(--blue); }
+  .alertbar button { background: var(--blue); color: #fff; border: 0; font-weight: 700; font-size: 13.5px; padding: 0 16px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+
+  /* JOB ROWS — clean, bordered, corporate */
+  .jrow { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; text-decoration: none; color: inherit; transition: all .12s; background: #fff; }
+  .jrow:hover { border-color: var(--blue); box-shadow: 0 3px 14px rgba(11,92,171,.09); }
+  .jrow:hover .jtitle { color: var(--blue); text-decoration: underline; }
+  .jrow.featured { border-left: 4px solid #d97706; background: #fffcf5; }
+  .jlogo { width: 46px; height: 46px; border-radius: 8px; border: 1px solid var(--line); background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: var(--ink3); flex-shrink: 0; }
+  .jmain { flex: 1; min-width: 0; }
+  .jtitle { font-size: 15.5px; font-weight: 700; letter-spacing: -0.1px; }
+  .jmeta { font-size: 13px; color: var(--ink2); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .jmeta .co { font-weight: 600; color: var(--ink); }
+  .jmeta .sep { color: var(--ink3); }
+  .jbadges { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .b { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+  .b.remote { color: #047857; background: #ecfdf5; }
+  .b.type { color: var(--ink2); background: var(--bg2); }
+  .b.tool { color: var(--blue); background: var(--blue-light); }
+  .b.feat { color: #b45309; background: #fef3c7; }
+  .jright { text-align: right; flex-shrink: 0; }
+  .jsalary { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .jsalary.na { color: var(--ink3); font-weight: 400; font-size: 13px; }
+  .jdate { font-size: 12px; color: var(--ink3); margin-top: 4px; }
+  .japply { display: inline-block; margin-top: 7px; font-size: 12.5px; font-weight: 700; color: var(--blue); }
+
+  .pagination { display: flex; justify-content: center; gap: 6px; margin: 26px 0 40px; }
+  .pg { min-width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink2); text-decoration: none; }
+  .pg.cur { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .pg:hover:not(.cur) { border-color: var(--blue); color: var(--blue); }
+
+  /* SUBSCRIBE BAND */
+  .subscribe { background: var(--bg2); border-top: 1px solid var(--line); padding: 40px 0; text-align: center; }
+  .subscribe h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.4px; }
+  .subscribe p { margin: 6px 0 18px; color: var(--ink2); font-size: 14px; }
+  .sub-form { display: flex; gap: 8px; max-width: 420px; margin: 0 auto; }
+  .sub-form input { flex: 1; height: 46px; border-radius: 8px; border: 1.5px solid var(--line); padding: 0 14px; font-size: 14px; font-family: inherit; outline: 0; background: #fff; }
+  .sub-form input:focus { border-color: var(--blue); }
+  .sub-form button { background: var(--blue); color: #fff; border: 0; font-weight: 700; padding: 0 22px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit; }
+
+  footer { padding: 26px 0; text-align: center; font-size: 12.5px; color: var(--ink3); }
+  footer a { color: var(--ink2); text-decoration: none; margin: 0 10px; }
+
+  @media (max-width: 720px) {
+    .s-main { flex-direction: column; }
+    .s-cell + .s-cell { border-left: 0; border-top: 1.5px solid var(--line); }
+    .s-btn { height: 48px; border-radius: 0 0 8px 8px; }
+    .stats-strip { gap: 26px; }
+    .jright { display: none; }
+    .alertbar { flex-direction: column; align-items: stretch; text-align: center; }
+    .alertbar form { max-width: none; }
+  }
+
+  /* ===== THEME PALETTES ===== */
+  [data-theme="green"]  { --blue:#1f432d; --blue-dark:#163322; --blue-light:#eaf3ed; }
+  [data-theme="navy"]   { --blue:#1e3a5f; --blue-dark:#162c49; --blue-light:#e9eff7; }
+  [data-theme="violet"] { --blue:#5b21b6; --blue-dark:#4c1d95; --blue-light:#f1ebfc; }
+  [data-theme="teal"]   { --blue:#0f766e; --blue-dark:#0b5d57; --blue-light:#e6f5f4; }
+  [data-theme="slate"]  { --blue:#1f2937; --blue-dark:#111827; --blue-light:#eef1f5; }
+  .theme-picker { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 200; display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; box-shadow: 0 10px 36px rgba(0,0,0,.18); font-size: 12px; font-weight: 700; color: var(--ink2); }
+  .tp-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2.5px solid transparent; }
+  .tp-dot.sel { border-color: #111; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="logo">MarTech<span>Jobs</span></div>
+    <div class="nav-links">
+      <a href="#">Jobs</a>
+      <a href="#">Companies</a>
+      <a href="#">Tools</a>
+      <a href="#" class="btn-alert">🔔 Job Alerts</a>
+      <a href="#" class="btn-post">Post a Job</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>The job board for <b>Marketing Technology</b></h1>
+    <p class="sub"><span class="live">312 verified jobs</span> · updated daily · every application link checked</p>
+
+    <div class="searchcard">
+      <div class="s-main">
+        <div class="s-cell">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" placeholder="Job title, skill, or company">
+        </div>
+        <div class="s-cell">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <input type="text" placeholder="Country, city, or “Remote”">
+        </div>
+        <button class="s-btn">Find Jobs</button>
+      </div>
+      <div class="s-filters">
+        <span class="fchip on">Remote ✓</span>
+        <span class="fchip">Tool: Any <svg class="dn" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span class="fchip">Job type <svg class="dn" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span class="fchip">Salary <svg class="dn" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        <span class="fchip">Posted: Any time <svg class="dn" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats-strip">
+    <div class="sstat"><b>312</b><span>live jobs</span></div>
+    <div class="sstat"><b>200+</b><span>companies hiring</span></div>
+    <div class="sstat"><b>15K+</b><span>subscribers</span></div>
+    <div class="sstat"><b>Daily</b><span>link verification</span></div>
+  </div>
+
+  <div class="alertbar">
+    <div class="bell">🔔</div>
+    <div class="ab-text">
+      <div class="ab-title">Be first to new “Remote · Salesforce” jobs</div>
+      <div class="ab-sub">Get matching roles by email as soon as they're posted. Free, unsubscribe anytime.</div>
+    </div>
+    <form onsubmit="return false">
+      <input type="email" placeholder="your@email.com">
+      <button>Create Alert</button>
+    </form>
+  </div>
+
+  <div class="list-head">
+    <h2>MarTech Jobs <span class="count">— 312 results</span></h2>
+    <div class="sort">Sort: <select><option>Newest</option><option>Salary</option><option>Relevance</option></select></div>
+  </div>
+
+  <a class="jrow featured" href="#">
+    <div class="jlogo" style="color:#0176d3">S</div>
+    <div class="jmain">
+      <div class="jtitle">Senior Marketing Cloud Developer</div>
+      <div class="jmeta"><span class="co">Salesforce</span><span class="sep">·</span><span>Remote, United States</span></div>
+      <div class="jbadges">
+        <span class="b feat">★ Featured</span>
+        <span class="b remote">Remote</span>
+        <span class="b tool">SFMC</span>
+        <span class="b type">Full-time</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$140,000 – $175,000</div>
+      <div class="jdate">Posted 2 hours ago</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#ff7a59">H</div>
+    <div class="jmain">
+      <div class="jtitle">Marketing Operations Manager</div>
+      <div class="jmeta"><span class="co">HubSpot</span><span class="sep">·</span><span>Remote, United Kingdom</span></div>
+      <div class="jbadges">
+        <span class="b remote">Remote</span>
+        <span class="b tool">HubSpot</span>
+        <span class="b type">Full-time</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary">£65,000 – £80,000</div>
+      <div class="jdate">Posted 5 hours ago</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#5d2de2">C</div>
+    <div class="jmain">
+      <div class="jtitle">Lifecycle Marketing Specialist (Braze)</div>
+      <div class="jmeta"><span class="co">Chime</span><span class="sep">·</span><span>San Francisco, CA</span></div>
+      <div class="jbadges">
+        <span class="b tool">Braze</span>
+        <span class="b type">Full-time</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$95,000 – $120,000</div>
+      <div class="jdate">Posted yesterday</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#eb1000">A</div>
+    <div class="jmain">
+      <div class="jtitle">Adobe Experience Platform Architect</div>
+      <div class="jmeta"><span class="co">Accenture</span><span class="sep">·</span><span>Remote, Germany</span></div>
+      <div class="jbadges">
+        <span class="b remote">Remote</span>
+        <span class="b tool">Adobe AEP</span>
+        <span class="b type">Contract</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary na">Salary not listed</div>
+      <div class="jdate">Posted yesterday</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#16a34a">M</div>
+    <div class="jmain">
+      <div class="jtitle">Marketo Campaign Operations Lead</div>
+      <div class="jmeta"><span class="co">Medtronic</span><span class="sep">·</span><span>Minneapolis, MN</span></div>
+      <div class="jbadges">
+        <span class="b tool">Marketo</span>
+        <span class="b type">Full-time</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$110,000 – $130,000</div>
+      <div class="jdate">Posted 2 days ago</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <a class="jrow" href="#">
+    <div class="jlogo" style="color:#0ea5e9">T</div>
+    <div class="jmain">
+      <div class="jtitle">CDP Implementation Consultant</div>
+      <div class="jmeta"><span class="co">Tealium Partner Network</span><span class="sep">·</span><span>Remote, Canada</span></div>
+      <div class="jbadges">
+        <span class="b remote">Remote</span>
+        <span class="b tool">Tealium</span>
+        <span class="b type">Contract</span>
+      </div>
+    </div>
+    <div class="jright">
+      <div class="jsalary">$80/hour</div>
+      <div class="jdate">Posted 2 days ago</div>
+      <span class="japply">Apply now →</span>
+    </div>
+  </a>
+
+  <div class="pagination">
+    <a class="pg cur" href="#">1</a>
+    <a class="pg" href="#">2</a>
+    <a class="pg" href="#">3</a>
+    <a class="pg" href="#">4</a>
+    <a class="pg" href="#">→</a>
+  </div>
+</div>
+
+<section class="subscribe">
+  <div class="wrap">
+    <h2>Get new MarTech jobs in your inbox</h2>
+    <p>One email per week · 15,000+ subscribers · free forever</p>
+    <div class="sub-form">
+      <input type="email" placeholder="your@email.com">
+      <button>Subscribe</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="#">About</a><a href="#">For Employers</a><a href="#">Contact</a><a href="#">Privacy</a><a href="#">Terms</a>
+  <div style="margin-top:10px">© 2026 MarTechJobs.io</div>
+</footer>
+
+
+<div class="theme-picker">
+  Try a color:
+  <span class="tp-dot" style="background:#0b5cab" onclick="setTheme('blue',this)" title="Blue"></span>
+  <span class="tp-dot sel" style="background:#1f432d" onclick="setTheme('green',this)" title="Brand Green"></span>
+  <span class="tp-dot" style="background:#1e3a5f" onclick="setTheme('navy',this)" title="Navy"></span>
+  <span class="tp-dot" style="background:#5b21b6" onclick="setTheme('violet',this)" title="Violet"></span>
+  <span class="tp-dot" style="background:#0f766e" onclick="setTheme('teal',this)" title="Teal"></span>
+  <span class="tp-dot" style="background:#1f2937" onclick="setTheme('slate',this)" title="Slate"></span>
+</div>
+<script>
+function setTheme(t, el) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.querySelectorAll('.tp-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+document.documentElement.setAttribute('data-theme', 'green');
+</script>
+</body>
+</html>
