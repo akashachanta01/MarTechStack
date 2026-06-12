@@ -24,10 +24,10 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def _client_ip(request):
-    # Behind Render's proxy the real client IP is appended last to X-Forwarded-For.
+    # Render puts the real client IP first in X-Forwarded-For.
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
     if xff:
-        return xff.split(',')[-1].strip()
+        return xff.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR', 'unknown')
 
 

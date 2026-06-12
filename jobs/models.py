@@ -154,11 +154,19 @@ class Job(models.Model):
         if self.location: self.location = normalize_location(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
-        # Safety: a job that isn't approved can never be visible. We intentionally
-        # do NOT force is_active=True for approved jobs, so admins can hide an
-        # approved job (👁️/🚫 actions) without later saves un-hiding it.
+        # Safety: a job that isn't approved can never be visible.
         if self.screening_status != 'approved':
             self.is_active = False
+        else:
+            # Auto-activate when a job is created approved or its status
+            # *transitions* to approved (e.g. inline edits in the admin list).
+            # An already-approved job keeps its current is_active, so the
+            # admin Hide action sticks.
+            old_status = None
+            if self.pk:
+                old_status = Job.objects.filter(pk=self.pk).values_list('screening_status', flat=True).first()
+            if old_status != 'approved':
+                self.is_active = True
         super().save(*args, **kwargs)
 
     class Meta:
