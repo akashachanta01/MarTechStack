@@ -115,6 +115,19 @@ class MarTechScreener:
         t_low = title.lower()
         c_low = company.lower()
 
+        # 0. Tool-name-but-wrong-role trap. These are NEVER MarTech ops/eng/
+        # analytics roles, but they often carry a tool name in the title
+        # (e.g. "Salesforce Account Executive", "Adobe Photoshop Designer",
+        # "HubSpot Sales Rep") which sneaks them past the keyword gate.
+        nonmartech_roles = [
+            "account executive", "account manager", "sales representative",
+            "sales rep", "sales development", " sdr", " bdr", "business development",
+            "photoshop", "illustrator", "videographer", "copywriter",
+            "recruiter", "talent acquisition", "customer success",
+        ]
+        if any(r in t_low for r in nonmartech_roles):
+            return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: non-MarTech role (sales/creative/CS).", "details": {}}
+
         # 1. SEO/Event/Social Trap (Still keep this to filter noise)
         bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
         if any(bad in t_low for bad in bad_keywords):

@@ -66,6 +66,10 @@ class Command(BaseCommand):
         self.screener = MarTechScreener()
         self.total_added = 0
         self.stats = defaultdict(int)  # per-source observability counters
+        # Anti-flooding: cap how many roles from ONE company go live per run so
+        # the board never shows a wall of 15 jobs from a single employer.
+        self.company_counts = defaultdict(int)
+        self.MAX_APPROVED_PER_COMPANY = 4
 
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         self.cutoff_date = timezone.now() - timedelta(days=14)
@@ -414,6 +418,15 @@ class Command(BaseCommand):
             return
 
         status = analysis.get("status", "pending")
+        # Anti-flooding: excess approved roles from the same company this run are
+        # demoted to 'pending' (review queue) instead of flooding the live board.
+        if status == "approved":
+            ckey = (job_data.get("company") or "").strip().lower()
+            if self.company_counts[ckey] >= self.MAX_APPROVED_PER_COMPANY:
+                status = "pending"
+                self.stats[f"{source}:capped"] += 1
+            else:
+                self.company_counts[ckey] += 1
         self.stats[f"{source}:{status}"] += 1
         signals = analysis.get("details", {}).get("signals", {})
 
