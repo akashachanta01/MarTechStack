@@ -22,16 +22,19 @@ class Command(BaseCommand):
         self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
 
         # 2. INGESTION (Get new jobs)
-        self._run("\n[2/5] 🏹 Hunting via API (Deep Search)...", 'fetch_jobs')
+        self._run("\n[2/6] 🏹 Hunting via API (Deep Search)...", 'fetch_jobs')
 
         # 3. POLISH (Images)
-        self._run("\n[3/5] 🎨 Backfilling Logos...", 'update_logos')
+        self._run("\n[3/6] 🎨 Backfilling Logos...", 'update_logos')
 
-        # 4. CONTENT ENGINE (Automated Blog)
-        self._run("\n[4/5] ✍️ Running AI Blog Engine...", 'generate_blog')
+        # 4. ALERTS (Email subscribers today's new roles — skips if none)
+        self._run("\n[4/6] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
 
-        # 5. INDEXING (Ping Google)
+        # 5. CONTENT ENGINE (Automated Blog)
+        self._run("\n[5/6] ✍️ Running AI Blog Engine...", 'generate_blog')
+
+        # 6. INDEXING (Ping Google)
         # This forces Google to crawl the new jobs and the new blog post.
-        self._run("\n[5/5] 📡 Pinging Google Indexing API...", 'index_jobs')
+        self._run("\n[6/6] 📡 Pinging Google Indexing API...", 'index_jobs')
 
         self.stdout.write(self.style.SUCCESS("\n✨ AUTOPILOT COMPLETE. System is fresh."))
