@@ -1,44 +1,86 @@
 {% extends "jobs/base.html" %}
 {% block title %}Unsubscribe — MarTechJobs{% endblock %}
 
+{# Suppress the global message banner — we render messages inside the card instead #}
+{% block messages %}{% endblock %}
+
 {% block content %}
 <style>
-  .unsub-wrap { min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
-  .unsub-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 44px 36px; max-width: 420px; width: 100%; text-align: center; box-shadow: var(--shadow); }
-  .unsub-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--paper); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--ink3); }
-  .unsub-card h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
-  .unsub-card p { font-size: 14px; color: var(--ink2); line-height: 1.65; margin-bottom: 24px; }
-  .unsub-card input { width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--rule2); background: var(--paper); color: var(--ink); font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px; transition: border-color .15s; }
+  .unsub-wrap { min-height: 64vh; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
+  .unsub-card { background: var(--card); border: 1px solid var(--rule); border-radius: 18px; padding: 48px 40px; max-width: 440px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); }
+  .unsub-icon { width: 60px; height: 60px; border-radius: 50%; background: var(--paper); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; color: var(--ink3); }
+  .unsub-icon.done { background: var(--green-light); border-color: #c3e6d1; color: var(--green); }
+  .unsub-card h2 { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 800; color: var(--ink); margin-bottom: 12px; line-height: 1.2; }
+  .unsub-card p { font-size: 14.5px; color: var(--ink2); line-height: 1.65; margin-bottom: 26px; }
+  .unsub-card input { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1.5px solid var(--rule2); background: var(--paper); color: var(--ink); font-size: 14.5px; font-family: inherit; outline: none; margin-bottom: 12px; transition: border-color .15s; box-sizing: border-box; }
   .unsub-card input:focus { border-color: var(--amber); }
-  .msg-success { background: var(--green-light); border: 1px solid #c3e6d1; border-radius: 8px; padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 20px; }
-  .msg-info { background: var(--amber-light); border: 1px solid #f0c6a8; border-radius: 8px; padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--amber); margin-bottom: 20px; }
-  .unsub-foot { margin-top: 20px; font-size: 12px; color: var(--ink3); }
-  .unsub-foot a { color: var(--amber); font-weight: 600; }
+  .msg-success { background: var(--green-light); border: 1px solid #c3e6d1; border-radius: 10px; padding: 13px 16px; font-size: 13.5px; font-weight: 600; color: var(--green); margin-bottom: 22px; line-height: 1.5; }
+  .msg-info { background: var(--amber-light); border: 1px solid #f0c6a8; border-radius: 10px; padding: 13px 16px; font-size: 13.5px; font-weight: 600; color: var(--amber); margin-bottom: 22px; line-height: 1.5; }
+  .unsub-foot { margin-top: 24px; font-size: 13px; color: var(--ink3); }
+  .unsub-foot a { color: var(--amber); font-weight: 700; cursor: pointer; }
+  .unsub-actions { display: flex; flex-direction: column; gap: 10px; }
 </style>
 
 <div class="unsub-wrap">
   <div class="unsub-card">
-    <div class="unsub-icon">
-      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-    </div>
-    <h2>Unsubscribe</h2>
-    <p>We're sorry to see you go. Enter your email below to stop receiving MarTech job alerts.</p>
 
-    {% if messages %}
+    {% if oneclick_done or messages %}
+      {# Show whatever message(s) we have, styled in-card #}
       {% for message in messages %}
-        <div class="{% if message.tags == 'success' %}msg-success{% else %}msg-info{% endif %}">{{ message }}</div>
+        {% if message.tags == 'success' %}
+          <div class="unsub-icon done">
+            <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>You're unsubscribed</h2>
+          <div class="msg-success">{{ message }}</div>
+          <p>You won't receive any more job alerts. No hard feelings — the board is always free to browse whenever you want.</p>
+          <div class="unsub-actions">
+            <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-block">Browse jobs anyway →</a>
+            <a class="unsub-foot" onclick="toggleModal('subscribe-modal')">Changed your mind? Re-subscribe</a>
+          </div>
+        {% else %}
+          <div class="unsub-icon">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+          </div>
+          <h2>Unsubscribe</h2>
+          <div class="msg-info">{{ message }}</div>
+          <form method="post" action="{% url 'unsubscribe' %}">
+            {% csrf_token %}
+            <input type="email" name="email" required placeholder="name@company.com">
+            <button type="submit" class="btn btn-navy btn-block">Unsubscribe</button>
+          </form>
+        {% endif %}
       {% endfor %}
+
+    {% elif oneclick_error %}
+      <div class="unsub-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h2>Link expired</h2>
+      <p>That unsubscribe link is invalid or has expired. Enter your email below and we'll remove you right away.</p>
+      <form method="post" action="{% url 'unsubscribe' %}">
+        {% csrf_token %}
+        <input type="email" name="email" required placeholder="name@company.com">
+        <button type="submit" class="btn btn-navy btn-block">Unsubscribe</button>
+      </form>
+
+    {% else %}
+      {# Default state — landing on the page directly #}
+      <div class="unsub-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+      </div>
+      <h2>Unsubscribe</h2>
+      <p>We're sorry to see you go. Enter your email below to stop receiving MarTech job alerts.</p>
+      <form method="post" action="{% url 'unsubscribe' %}">
+        {% csrf_token %}
+        <input type="email" name="email" required placeholder="name@company.com">
+        <button type="submit" class="btn btn-navy btn-block">Unsubscribe</button>
+      </form>
+      <div class="unsub-foot">
+        Unsubscribed by mistake? <a onclick="toggleModal('subscribe-modal')">Re-subscribe here</a>.
+      </div>
     {% endif %}
 
-    <form method="post">
-      {% csrf_token %}
-      <input type="email" name="email" required placeholder="name@company.com">
-      <button type="submit" class="btn btn-navy btn-block">Unsubscribe</button>
-    </form>
-
-    <div class="unsub-foot">
-      Unsubscribed by mistake? <a href="#" onclick="document.getElementById('subscribe-modal').style.display='flex';return false;">Re-subscribe here</a>.
-    </div>
   </div>
 </div>
 {% endblock %}
