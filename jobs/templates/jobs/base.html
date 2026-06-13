@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Find the best Marketing Operations, Technology, and Analytics jobs. Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze and 200+ companies — refreshed daily, every link verified.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Find the best Marketing Operations, Technology, and Analytics jobs. Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze and more — refreshed daily, every link verified.{% endblock %}">
     <meta name="robots" content="{% block meta_robots %}{% if page_noindex %}noindex, follow{% else %}{{ robots_directive|default:'index, follow' }}{% endif %}{% endblock %}">
     <meta name="author" content="MarTechJobs">
     <meta name="keywords" content="{% block meta_keywords %}marketing technology jobs, marketing ops jobs, martech careers, HubSpot jobs, Salesforce jobs, Marketo jobs, RevOps jobs, marketing operations{% endblock %}">
@@ -67,7 +67,7 @@
     <meta property="og:site_name" content="MarTechJobs" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:title" content="{% block og_title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}" />
-    <meta property="og:description" content="{% block og_desc %}Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze &amp; 200+ companies — refreshed daily, every link verified.{% endblock %}" />
+    <meta property="og:description" content="{% block og_desc %}Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze &amp; more — refreshed daily, every link verified.{% endblock %}" />
     <meta property="og:url" content="{{ canonical_url|default:'https://martechjobs.io' }}{% if not canonical_url %}{{ request.path }}{% endif %}" />
     <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'logo-512.png' %}{% endblock %}" />
     <meta property="og:image:width" content="512" />
