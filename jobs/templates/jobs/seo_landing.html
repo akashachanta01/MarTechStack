@@ -37,9 +37,9 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"How many MarTech jobs are available in {{ location_name }}?","acceptedAnswer":{"@type":"Answer","text":"{% if total_count %}There {% if total_count == 1 %}is 1 open MarTech role{% else %}are {{ total_count }} open MarTech roles{% endif %} in {{ location_name }} on MarTechJobs{% else %}MarTechJobs lists Marketing Operations and MarTech roles in {{ location_name }}{% endif %} — hand-screened and refreshed daily."}},
-    {"@type":"Question","name":"What kinds of MarTech roles are in {{ location_name }}?","acceptedAnswer":{"@type":"Answer","text":"Marketing Operations, Revenue Operations, MarTech engineering, lifecycle and analytics roles across tools like Salesforce, HubSpot, Marketo and Braze."}},
-    {"@type":"Question","name":"How do I get alerts for new {{ location_name }} MarTech jobs?","acceptedAnswer":{"@type":"Answer","text":"Subscribe for free and we'll email you new matching {{ location_name }} roles as they're posted. Unsubscribe anytime."}}
+    {"@type":"Question","name":"How many MarTech jobs are available in {{ location_name|escapejs }}?","acceptedAnswer":{"@type":"Answer","text":"{% if total_count %}There {% if total_count == 1 %}is 1 open MarTech role{% else %}are {{ total_count }} open MarTech roles{% endif %} in {{ location_name|escapejs }} on MarTechJobs{% else %}MarTechJobs lists Marketing Operations and MarTech roles in {{ location_name|escapejs }}{% endif %} — hand-screened and refreshed daily."}},
+    {"@type":"Question","name":"What kinds of MarTech roles are in {{ location_name|escapejs }}?","acceptedAnswer":{"@type":"Answer","text":"Marketing Operations, Revenue Operations, MarTech engineering, lifecycle and analytics roles across tools like Salesforce, HubSpot, Marketo and Braze."}},
+    {"@type":"Question","name":"How do I get alerts for new {{ location_name|escapejs }} MarTech jobs?","acceptedAnswer":{"@type":"Answer","text":"Subscribe for free and we'll email you new matching {{ location_name|escapejs }} roles as they're posted. Unsubscribe anytime."}}
   ]
 }
 </script>

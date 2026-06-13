@@ -1,6 +1,6 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}{{ title_name }} Jobs — {{ total_count }} Open Roles {% now "Y" %} | MarTechJobs{% endblock %}
+{% block title %}{{ title_name }} Jobs{% if total_count %} — {{ total_count }} Open Roles{% endif %} {% now "Y" %} | MarTechJobs{% endblock %}
 {% block meta_description %}Browse {{ total_count }} {{ title_name }} jobs. {{ intro }} Hand-screened MarTech roles, refreshed daily on MarTechJobs.{% endblock %}
 {% block meta_keywords %}{{ title_name }} jobs, {{ title_name }} careers, {{ title_name }} hiring, remote {{ title_name }} jobs{% endblock %}
 

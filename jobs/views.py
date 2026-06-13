@@ -761,7 +761,7 @@ def _related_jobs_for(job, tool_ids, limit=6):
 
 
 def job_detail(request, id, slug):
-    job = Job.objects.filter(id=id).prefetch_related('tools').first()
+    job = Job.objects.filter(id=id).first()
     if job is None:
         raise Http404("Job not found")
 
