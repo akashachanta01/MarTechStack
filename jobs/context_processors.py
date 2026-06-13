@@ -39,7 +39,7 @@ def global_seo_data(request):
     """
 
     # 1. POPULAR TECH STACKS (deduped by vendor for a diverse footer)
-    popular_tech_stacks = cache.get('popular_tech_stacks_v3')
+    popular_tech_stacks = cache.get('popular_tech_stacks_v4')
     if popular_tech_stacks is None:
         raw_stacks = Tool.objects.filter(
             jobs__is_active=True,
@@ -51,7 +51,13 @@ def global_seo_data(request):
         seen_vendors = set()
         deduped = []
         for stack in raw_stacks:
-            vendor = stack['name'].split()[0].lower() if stack['name'] else ''
+            name = stack['name'] or ''
+            # Skip junk auto-created tools: multi-word, all-lowercase names
+            # (e.g. "paid media data") are almost always noise. Real tools are
+            # capitalized ("Salesforce") or single-word lowercase ("dbt").
+            if ' ' in name and name == name.lower():
+                continue
+            vendor = name.split()[0].lower() if name else ''
             if vendor in seen_vendors:
                 continue
             seen_vendors.add(vendor)
@@ -59,7 +65,7 @@ def global_seo_data(request):
             if len(deduped) >= 12:
                 break
         popular_tech_stacks = deduped
-        cache.set('popular_tech_stacks_v3', popular_tech_stacks, 3600)
+        cache.set('popular_tech_stacks_v4', popular_tech_stacks, 3600)
 
     # 2. POPULAR LOCATIONS
     available_countries = cache.get('available_countries_v2')

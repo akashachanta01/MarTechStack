@@ -264,7 +264,7 @@
     /* ============================================================
        FOOTER
     ============================================================ */
-    .footer { background: var(--ink); color: rgba(255,255,255,.62); padding: 64px 0 30px; margin-top: 80px; }
+    .footer { background: var(--navy3); color: rgba(255,255,255,.62); padding: 64px 0 30px; margin-top: 80px; }
     .ft-grid {
       display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px;
       padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 26px;
@@ -456,10 +456,10 @@
                 <text x="49" y="38" font-family="'Courier Prime',monospace" font-weight="700" font-size="8.5" fill="rgba(255,255,255,.38)" letter-spacing=".18em">MARTECHJOBS.IO</text>
               </svg>
             </a>
-            <p class="ft-tag">The leading job board for marketing technology professionals worldwide. Curated, niche, and vendor-neutral.</p>
+            <p class="ft-tag">The niche job board for marketing technology professionals. Curated, focused, and vendor-neutral.</p>
             <form id="footer-subscribe-form" class="ft-nl">
               {% csrf_token %}
-              <input type="email" name="email" required placeholder="Weekly job digest" aria-label="Subscribe to job digest">
+              <input type="email" name="email" required placeholder="Email for daily job alerts" aria-label="Subscribe to job alerts">
               <button type="submit">Go</button>
             </form>
             <p id="footer-sub-message" class="ft-nl-msg">No spam · Unsubscribe anytime</p>
@@ -483,10 +483,8 @@
               <li><a href="{% url 'category_detail' 'engineering' %}">Engineering Jobs</a></li>
               <li><a href="{% url 'category_detail' 'operations' %}">Operations Jobs</a></li>
               <li><a href="{% url 'category_detail' 'data' %}">Data &amp; Analytics Jobs</a></li>
-              <li><a href="/?q=Lifecycle">Lifecycle / CRM</a></li>
-              <li><a href="/?q=Demand+Generation">Demand Generation</a></li>
               <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote MarTech Jobs</a></li>
-              <li><a href="/?rtype=contract">Contract Roles</a></li>
+              <li><a href="{% url 'all_jobs' %}">Browse all jobs →</a></li>
             </ul>
           </div>
 
@@ -514,9 +512,7 @@
               <li><a href="{% url 'for_employers' %}">For Employers</a></li>
               <li><a href="{% url 'post_job' %}">Post a Job</a></li>
               <li><a href="{% url 'tools_hub' %}">Free Tools</a></li>
-              <li><a href="#" onclick="toggleModal('subscribe-modal'); return false;">Job Alerts</a></li>
-              <li><a href="{% url 'contact' %}">Contact</a></li>
-              <li><a href="/sitemap.xml">Sitemap</a></li>
+              <li><a href="{% url 'contact' %}">Feedback</a></li>
             </ul>
           </div>
 
@@ -529,7 +525,7 @@
             <a href="{% url 'terms' %}">Terms of Service</a>
             <a href="{% url 'job_feed' %}">RSS Feed</a>
           </div>
-          <span style="font-size:12px;color:rgba(255,255,255,.2);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.06em">THE #1 JOB BOARD FOR MARTECH PROFESSIONALS</span>
+          <span style="font-size:12px;color:rgba(255,255,255,.2);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.06em">BUILT FOR MARKETING OPS, REVOPS &amp; MARTECH ENGINEERS</span>
         </div>
       </div>
     </footer>
