@@ -361,12 +361,16 @@ class Command(BaseCommand):
         return f"https://www.google.com/s2/favicons?domain={company_name.lower().replace(' ', '')}.com&sz=128"
 
     def is_fresh(self, date_str):
+        # No date (common for some ATS APIs) -> keep, since these are curated
+        # boards. But an UNPARSEABLE date means a format we don't understand --
+        # fail closed so a source format change can't silently flood stale jobs.
         if not date_str: return True
-        try: 
+        try:
             dt = dateutil.parser.parse(date_str)
             if dt.tzinfo is None: dt = timezone.make_aware(dt)
             return dt >= self.cutoff_date
-        except: return True
+        except Exception:
+            return False
     
     def screen_and_upsert(self, job_data):
         clean_url = self._clean_url(job_data.get("apply_url"))
@@ -381,14 +385,21 @@ class Command(BaseCommand):
         raw_function = signals.get("function", "other")
         valid_functions = {"engineering", "operations", "data", "other"}
         fn = raw_function if raw_function in valid_functions else "other"
+        # role_type is employment type — the screener sometimes returns a
+        # specialty (e.g. "MOPs") here, which is NOT a valid choice. Validate
+        # against the real choices and default to full_time otherwise.
+        valid_role_types = {"full_time", "contract", "part_time", "temporary", "internship"}
+        raw_role = (signals.get("role_type") or "").strip().lower().replace("-", "_").replace(" ", "_")
+        role_type = raw_role if raw_role in valid_role_types else "full_time"
         job = Job.objects.create(
             title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
             location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
             description=job_data.get("description"), apply_url=clean_url,
-            role_type=signals.get("role_type", "full_time"), screening_status=status,
+            role_type=role_type, screening_status=status,
             screening_score=score, screening_reason=analysis.get("reason", ""),
             is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
             function=fn,
+            screening_details=analysis.get("details", {}),
         )
         for t in signals.get("stack", []):
             t_obj = self.tool_cache.get(self.screener._normalize(t))
