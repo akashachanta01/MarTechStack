@@ -768,7 +768,13 @@ def company_detail(request, company_slug):
     })
 
 def directory(request):
-    tools = Tool.objects.all().annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).order_by('-job_count')
+    # "MarTech Jobs by Tool" hub — only tools that have live roles (no thin
+    # empty pages), most-popular first.
+    tools = (
+        Tool.objects.annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved')))
+        .filter(job_count__gt=0)
+        .order_by('-job_count')
+    )
     
     # 50 States Matrix for Programmatic SEO
     states = [
@@ -791,7 +797,7 @@ def directory(request):
     
     return render(request, 'jobs/directory.html', {
         'tools': tools,
+        'tool_count': tools.count(),
         'states': states,
         'top_cities': top_cities,
-        'seo_title': "MarTech Jobs Directory - Browse by Tech Stack & Location"
     })
