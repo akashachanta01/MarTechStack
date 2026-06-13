@@ -27,7 +27,7 @@
   },
   {% if job.work_arrangement == 'remote' %}"jobLocationType": "TELECOMMUTE",
   "applicantLocationRequirements": {"@type":"Country","name":"{{ job.get_schema_country }}"},
-  {% endif %}"jobLocation": {"@type":"Place","address":{"@type":"PostalAddress","addressLocality":"{{ job.location|escapejs }}","addressCountry":"{{ job.get_schema_country }}"}}{% with salary=job.get_salary_min_max %}{% if salary.0 %},"baseSalary":{"@type":"MonetaryAmount","currency":"USD","value":{"@type":"QuantitativeValue","unitText":"YEAR","minValue":{{ salary.0 }},"maxValue":{{ salary.1 }}}}{% endif %}{% endwith %}
+  {% endif %}"jobLocation": {"@type":"Place","address":{"@type":"PostalAddress"{% with addr=job.get_address_parts %}{% if addr.locality %},"addressLocality":"{{ addr.locality|escapejs }}"{% endif %}{% if addr.region %},"addressRegion":"{{ addr.region|escapejs }}"{% endif %}{% endwith %},"addressCountry":"{{ job.get_schema_country }}"}}{% with salary=job.get_salary_min_max %}{% if salary.0 %},"baseSalary":{"@type":"MonetaryAmount","currency":"USD","value":{"@type":"QuantitativeValue","unitText":"YEAR","minValue":{{ salary.0 }},"maxValue":{{ salary.1 }}}}{% endif %}{% endwith %}
 }
 </script>
 <script type="application/ld+json">

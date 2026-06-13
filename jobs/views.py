@@ -295,6 +295,7 @@ def category_detail(request, slug):
         "category_slug": slug,
         "jobs": jobs_page,
         "total_count": total_count,
+        "page_noindex": total_count == 0,
         "query": query,
         "location_filter": location_query,
         "selected_tool": tool_filter,
@@ -446,6 +447,7 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     return render(request, 'jobs/seo_landing.html', {
         'tool': tool, 'jobs': jobs_page, 'total_count': total_count,
+        'page_noindex': total_count == 0,
         'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc,
         'is_seo_landing': True, 'location_name': location_name,
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
@@ -571,6 +573,7 @@ def tool_detail(request, slug):
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,
+        'page_noindex': total_count == 0,
         'query': query,
         'location_filter': location_query,
         'current_arrangement': work_arrangement_filter,
