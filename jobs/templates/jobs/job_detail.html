@@ -91,8 +91,16 @@
   .jd-stack-chips a { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: var(--amber-light); color: var(--amber); border: 1px solid #f0c6a8; transition: all .15s; }
   .jd-stack-chips a:hover { background: var(--amber); color: #fff; }
 
-  .jd-related { padding: 60px 0; border-top: 1px solid var(--rule); background: var(--paper2); }
-  .jd-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
+  .jd-related { padding: 56px 0 72px; border-top: 1px solid var(--rule); background: var(--paper2); }
+  .jd-related h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .jd-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 22px; }
+  .jd-rel-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; display: flex; flex-direction: column; gap: 6px; }
+  .jd-rel-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .jd-rel-co { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+  .jd-rel-title { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jd-rel-meta { font-size: 12.5px; color: var(--ink3); }
+  .jd-rel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .jd-rel-chips span { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; background: var(--amber-light); color: var(--amber); }
 </style>
 
 <div class="jd-wrap">
@@ -180,14 +188,35 @@
       <div class="jd-card">
         <h4>Browse More Roles</h4>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <a href="/?q=marketing+operations" style="font-size:13px;color:var(--amber);font-weight:600;">Marketing Operations →</a>
-          <a href="/?q=revenue+operations" style="font-size:13px;color:var(--amber);font-weight:600;">Revenue Operations →</a>
-          <a href="/?q=HubSpot" style="font-size:13px;color:var(--amber);font-weight:600;">HubSpot Jobs →</a>
-          <a href="/?q=Salesforce" style="font-size:13px;color:var(--amber);font-weight:600;">Salesforce Jobs →</a>
+          {% for t in job.tools.all|slice:":3" %}
+          <a href="{% url 'tool_detail' t.slug %}" style="font-size:13px;color:var(--amber);font-weight:600;">{{ t.name }} Jobs →</a>
+          {% endfor %}
+          {% if job.function and job.function != 'other' %}
+          <a href="{% url 'category_detail' job.function %}" style="font-size:13px;color:var(--amber);font-weight:600;">{{ job.get_function_display }} Jobs →</a>
+          {% endif %}
           <a href="{% url 'seo_loc_only' 'remote' %}" style="font-size:13px;color:var(--amber);font-weight:600;">Remote MarTech Jobs →</a>
+          <a href="{% url 'all_jobs' %}" style="font-size:13px;color:var(--amber);font-weight:600;">All MarTech Jobs →</a>
         </div>
       </div>
     </aside>
   </div>
 </div>
+
+{% if related_jobs %}
+<section class="jd-related">
+  <div class="jd-wrap">
+    <h2>Similar jobs</h2>
+    <div class="jd-related-grid">
+      {% for rjob in related_jobs %}
+      <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jd-rel-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
+        <span class="jd-rel-co">{{ rjob.company }}</span>
+        <span class="jd-rel-title">{{ rjob.title }}</span>
+        <span class="jd-rel-meta">{{ rjob.location|default:"Remote" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
+        <span class="jd-rel-chips">{% for t in rjob.tools.all|slice:":2" %}<span>{{ t.name }}</span>{% endfor %}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 {% endblock %}

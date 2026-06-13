@@ -121,10 +121,21 @@
 
     </div>
 
+    <!-- Cross-sell: turn tools traffic into job-board engagement -->
+    <div style="margin-top:48px;background:var(--navy3);border-radius:18px;padding:42px 36px;text-align:center;">
+      <div class="eyebrow" style="color:var(--amber-accent);">Looking for your next role?</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,34px);font-weight:800;color:#fff;margin:10px 0 12px;">These tools are free. So is the job board.</h2>
+      <p style="font-size:15px;color:rgba(255,255,255,.7);max-width:520px;margin:0 auto 24px;line-height:1.6;">Browse hand-screened Marketing Ops, RevOps &amp; MarTech engineering roles — organized by the exact tools you specialize in.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse MarTech jobs →</a>
+        <a href="{% url 'salary_guide' %}" class="btn btn-ghost-light btn-lg">See salary data</a>
+      </div>
+    </div>
+
     <div class="tools-nl">
       <h2>Want more tools like these?</h2>
-      <p>Join 15,000+ MarTech professionals who get our newest tools, salary updates, and top job picks delivered every Tuesday.</p>
-      <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber btn-lg">Join the Newsletter — Free</button>
+      <p>Get our newest free tools, salary updates, and top MarTech job picks delivered straight to your inbox.</p>
+      <button onclick="toggleModal('subscribe-modal')" class="btn btn-amber btn-lg">Join the Newsletter — Free</button>
     </div>
   </div>
 </section>
