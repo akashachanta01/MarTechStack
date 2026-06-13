@@ -111,9 +111,26 @@ def job_list(request):
     if role_type_filter:
         jobs = jobs.filter(role_type__iexact=role_type_filter)
 
-    paginator = Paginator(jobs.distinct(), 25)
-    page_number = request.GET.get("page")
-    jobs_page = paginator.get_page(page_number)
+    # On the unfiltered homepage, show only the latest 10 roles with a
+    # "View all jobs" link. Active searches/filters (or ?all=1) get the full
+    # paginated list.
+    has_filters = bool(
+        query or vendor_query or location_query or country_query
+        or work_arrangement_filter or role_type_filter or tool_filter or sort
+    )
+    show_all = request.GET.get("all") == "1"
+    limited = not has_filters and not show_all
+
+    distinct_jobs = jobs.distinct()
+    total_count = distinct_jobs.count()
+
+    if limited:
+        paginator = Paginator(distinct_jobs, 10)
+        jobs_page = paginator.get_page(1)
+    else:
+        paginator = Paginator(distinct_jobs, 25)
+        page_number = request.GET.get("page")
+        jobs_page = paginator.get_page(page_number)
 
     # Querystring with all current filters except page, so pagination links keep them.
     params = request.GET.copy()
@@ -131,6 +148,8 @@ def job_list(request):
         "selected_tool": tool_filter,
         "current_sort": sort,
         "filter_qs": filter_qs,
+        "limited": limited,
+        "total_count": total_count,
     })
 
 def blog_list(request):
