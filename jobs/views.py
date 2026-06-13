@@ -137,6 +137,8 @@ def job_list(request):
     params.pop("page", None)
     filter_qs = params.urlencode()
 
+    featured_stacks = _build_featured_stacks()
+
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page,
         "query": query,
@@ -150,7 +152,51 @@ def job_list(request):
         "filter_qs": filter_qs,
         "limited": limited,
         "total_count": total_count,
+        "featured_stacks": featured_stacks,
     })
+
+# Curated "Browse by stack" cards: preferred slug -> short role line.
+STACK_META = {
+    "salesforce": "Marketing Cloud, CRM, Admin",
+    "hubspot": "Marketing Hub, Ops, automation",
+    "marketo": "Campaigns, lead scoring, MOps",
+    "braze": "Lifecycle, push, in-app",
+    "adobe": "Experience Platform, AEP, AEM",
+    "klaviyo": "Email & SMS, DTC retention",
+    "segment": "CDP, tracking, identity",
+    "snowflake": "Warehouse, modeling, BI",
+}
+_STACK_TINTS = ["tint-navy", "tint-amber", "tint-violet", "tint-ink", "tint-green"]
+
+def _build_featured_stacks(limit=8):
+    """Data-driven homepage stack cards: real slugs + live job counts."""
+    approved = Q(jobs__is_active=True, jobs__screening_status="approved")
+    found = {
+        t.slug: t for t in Tool.objects.filter(slug__in=list(STACK_META.keys()))
+        .annotate(job_count=Count("jobs", filter=approved))
+    }
+    cards = []
+    for slug, role in STACK_META.items():
+        tool = found.get(slug)
+        if not tool or not tool.job_count:
+            continue
+        cards.append({"slug": tool.slug, "name": tool.name, "role": role, "count": tool.job_count})
+
+    # Fill any remaining slots with the next most popular tools.
+    if len(cards) < limit:
+        used = {c["slug"] for c in cards}
+        extra = (
+            Tool.objects.annotate(job_count=Count("jobs", filter=approved))
+            .filter(job_count__gt=0).exclude(slug__in=used).order_by("-job_count")[: limit - len(cards)]
+        )
+        for tool in extra:
+            cards.append({"slug": tool.slug, "name": tool.name, "role": "MarTech roles", "count": tool.job_count})
+
+    cards = cards[:limit]
+    for i, card in enumerate(cards):
+        card["tint"] = _STACK_TINTS[i % len(_STACK_TINTS)]
+        card["initial"] = card["name"][:1]
+    return cards
 
 # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
 CATEGORY_CONFIG = {
