@@ -10,9 +10,20 @@ from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
 
 class Command(BaseCommand):
-    help = 'Fetches high-quality MarTech jobs from RSS Feeds with Geocoding & Smart Parsing'
+    help = 'DEPRECATED: aggregator RSS import. Apply URLs point to the aggregator, not the company — use --force to override.'
+
+    def add_arguments(self, parser):
+        parser.add_argument("--force", action="store_true", help="Run anyway (NOT recommended — produces aggregator apply URLs)")
 
     def handle(self, *args, **options):
+        if not options.get("force"):
+            self.stdout.write(self.style.WARNING(
+                "⛔ fetch_rss is disabled. These feeds (WeWorkRemotely/Remotive/RemoteOK) "
+                "produce APPLY URLS THAT POINT TO THE AGGREGATOR, not the employer — which "
+                "breaks the direct-to-company promise and lowers signal. Not wired into the "
+                "daily run. Use --force only if you've handled URL resolution."
+            ))
+            return
         self.stdout.write("📡 Starting Smart RSS Import...")
         
         # 1. SETUP
