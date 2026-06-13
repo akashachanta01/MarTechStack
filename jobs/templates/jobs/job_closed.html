@@ -1,0 +1,54 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ job.title }} at {{ job.company }} — Role Closed | MarTechJobs{% endblock %}
+{% block meta_description %}This {{ job.title }} role at {{ job.company }} is no longer accepting applications. Browse similar live MarTech roles on MarTechJobs.{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<style>
+  .jc-wrap { max-width: 720px; margin: 0 auto; padding: 64px 24px 24px; text-align: center; }
+  .jc-ico { width: 60px; height: 60px; border-radius: 50%; background: var(--paper2); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; color: var(--ink3); }
+  .jc-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .jc-wrap h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,40px); font-weight: 800; color: var(--ink); margin-bottom: 12px; line-height: 1.15; }
+  .jc-wrap p { font-size: 16px; color: var(--ink2); line-height: 1.65; max-width: 520px; margin: 0 auto 8px; }
+  .jc-role { font-weight: 700; color: var(--ink); }
+  .jc-cta { margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .jc-related { max-width: 980px; margin: 0 auto; padding: 16px 24px 80px; }
+  .jc-related h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; color: var(--ink); margin-bottom: 18px; text-align: center; }
+  .jc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .jc-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; display: flex; flex-direction: column; gap: 6px; }
+  .jc-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .jc-card .co { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+  .jc-card .ti { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jc-card .me { font-size: 12.5px; color: var(--ink3); }
+</style>
+
+<div class="jc-wrap">
+  <div class="jc-ico">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
+  </div>
+  <h1>This role is no longer available</h1>
+  <p>The <span class="jc-role">{{ job.title }}</span> position at <span class="jc-role">{{ job.company }}</span> has closed or expired.</p>
+  <p>Good news — there are plenty of live MarTech roles, and we can email you when matching ones are posted.</p>
+  <div class="jc-cta">
+    <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse open roles →</a>
+    <button onclick="toggleModal('subscribe-modal')" class="btn btn-ghost btn-lg">Get job alerts</button>
+  </div>
+</div>
+
+{% if related_jobs %}
+<section class="jc-related">
+  <h2>Similar live roles</h2>
+  <div class="jc-grid">
+    {% for rjob in related_jobs %}
+    <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jc-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
+      <span class="co">{{ rjob.company }}</span>
+      <span class="ti">{{ rjob.title }}</span>
+      <span class="me">{{ rjob.location|default:"Remote" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

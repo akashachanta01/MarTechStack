@@ -32,6 +32,17 @@
 }
 </script>
 {% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What {{ tool.name|escapejs }} jobs are available?","acceptedAnswer":{"@type":"Answer","text":"{% if total_count %}There {% if total_count == 1 %}is currently 1 open {{ tool.name|escapejs }} role{% else %}are currently {{ total_count }} open {{ tool.name|escapejs }} roles{% endif %} on MarTechJobs{% else %}MarTechJobs lists {{ tool.name|escapejs }} roles{% endif %} across Marketing Operations, RevOps, lifecycle, and analytics. Listings are hand-screened and refreshed daily."}},
+    {"@type":"Question","name":"Are there remote {{ tool.name|escapejs }} jobs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Many {{ tool.name|escapejs }} roles on MarTechJobs are remote or hybrid. Use the remote filter to see only remote {{ tool.name|escapejs }} openings."}},
+    {"@type":"Question","name":"How do I get alerts for new {{ tool.name|escapejs }} jobs?","acceptedAnswer":{"@type":"Answer","text":"Subscribe from this page to get a free email alert whenever a new {{ tool.name|escapejs }} role is posted. Unsubscribe anytime with one click."}}
+  ]
+}
+</script>
 {% endblock %}
 
 {% block content %}

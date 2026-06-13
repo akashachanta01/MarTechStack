@@ -1,0 +1,169 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ title_name }} Jobs{% if total_count %} — {{ total_count }} Open Roles{% endif %} {% now "Y" %} | MarTechJobs{% endblock %}
+{% block meta_description %}Browse {{ total_count }} {{ title_name }} jobs. {{ intro }} Hand-screened MarTech roles, refreshed daily on MarTechJobs.{% endblock %}
+{% block meta_keywords %}{{ title_name }} jobs, {{ title_name }} careers, {{ title_name }} hiring, remote {{ title_name }} jobs{% endblock %}
+
+{% block rel_prev_next %}
+  {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
+  {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
+{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
+    {"@type":"ListItem","position":3,"name":"{{ title_name }} Jobs","item":"https://martechjobs.io/{{ title_slug }}-jobs/"}
+  ]
+}
+</script>
+{% if total_count > 0 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ title_name }} Jobs",
+  "numberOfItems": {{ total_count }},
+  "itemListElement": [{% for job in jobs|slice:":10" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+}
+</script>
+{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What does a {{ title_name }} do?","acceptedAnswer":{"@type":"Answer","text":"{{ intro|escapejs }}"}},
+    {"@type":"Question","name":"What tools and skills do {{ title_name }} roles require?","acceptedAnswer":{"@type":"Answer","text":"Common skills include {{ skills|escapejs }}. Exact requirements vary by employer and seniority."}},
+    {"@type":"Question","name":"Are there remote {{ title_name }} jobs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Many {{ title_name }} roles on MarTechJobs are remote or hybrid. Use the remote filter on the jobs board to see only remote openings."}}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .tj-hero { padding: 48px 0 40px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .tj-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); margin-bottom: 16px; }
+  .tj-badge b { color: var(--amber); font-weight: 800; }
+  .tj-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.08; font-size: clamp(32px, 5vw, 54px); margin: 0 auto; color: var(--ink); max-width: 820px; }
+  .tj-h1 .em { color: var(--amber); }
+  .tj-intro { margin: 16px auto 0; font-size: 16.5px; color: var(--ink2); max-width: 660px; line-height: 1.6; }
+  .tj-skills { margin: 16px auto 0; font-size: 13px; color: var(--ink3); }
+  .tj-skills b { color: var(--ink2); }
+
+  .tj-sec { padding: 40px 0 64px; }
+  .tj-list-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .tj-list-head h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: var(--ink); }
+  .tj-list-head .count { color: var(--ink3); font-weight: 800; font-style: italic; font-size: 19px; }
+
+  .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; margin-bottom: 10px; }
+  .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
+  .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
+  .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .jrow-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .jrow-main { flex: 1; min-width: 0; }
+  .jrow-title { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jrow:hover .jrow-title { color: var(--navy); }
+  .jrow-meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink3); margin-top: 4px; flex-wrap: wrap; }
+  .jrow-meta .co { color: var(--ink2); font-weight: 600; }
+  .jrow-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .jrow-right { text-align: right; flex-shrink: 0; }
+  .jrow-salary { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); }
+  .jrow-salary.na { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); font-style: italic; }
+  @media (max-width: 640px) { .jrow-right { display: none; } }
+
+  .tj-empty { text-align: center; padding: 56px 24px; background: #fff; border: 1px dashed var(--rule2); border-radius: 12px; }
+  .tj-empty h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+  .tj-empty p { color: var(--ink2); margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
+
+  .tj-cross { border-top: 1px solid var(--rule); padding: 40px 0 8px; }
+  .tj-cross h3 { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 14px; }
+  .tj-cross-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .tj-cross-row a { font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; background: #fff; }
+  .tj-cross-row a:hover { border-color: var(--amber); color: var(--amber); }
+
+  .pg-wrap { display: flex; justify-content: center; gap: 5px; margin-top: 30px; }
+  .pg-btn { min-width: 40px; height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--rule); border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); background: #fff; text-decoration: none; transition: all .14s; }
+  .pg-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .pg-btn.cur { background: var(--amber); color: #fff; border-color: var(--amber); }
+</style>
+
+<section class="tj-hero">
+  <div class="wrap">
+    <span class="tj-badge"><b>{{ total_count }}</b> open {{ title_name }} role{{ total_count|pluralize }} · Updated {% now "F j, Y" %}</span>
+    <h1 class="tj-h1">{{ title_name }} <span class="em">Jobs</span></h1>
+    <p class="tj-intro">{{ intro }}</p>
+    {% if skills %}<p class="tj-skills"><b>Common skills:</b> {{ skills }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="tj-sec">
+  <div class="wrap">
+    <div class="tj-list-head">
+      <h2>{{ title_name }} jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
+      <a href="{% url 'all_jobs' %}" style="font-size:13px;font-weight:700;color:var(--amber);">All MarTech jobs →</a>
+    </div>
+
+    {% for job in jobs %}
+      <a class="jrow {% if job.is_featured %}feat{% endif %}" href="{% url 'job_detail' job.id job.slug %}" aria-label="{{ job.title }} at {{ job.company }}">
+        <div class="jrow-logo">{% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }} logo" loading="lazy">{% else %}{{ job.company|slice:":1" }}{% endif %}</div>
+        <div class="jrow-main">
+          <div class="jrow-title">{{ job.title }}</div>
+          <div class="jrow-meta">
+            <span class="co">{{ job.company }}</span><span>·</span>
+            <span>{{ job.location|default:"Remote" }}</span><span>·</span>
+            <span>{{ job.created_at|timesince }} ago</span>
+          </div>
+          <div class="jrow-badges">
+            {% if job.is_featured %}<span class="pill pill-feat">★ Featured</span>{% endif %}
+            {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
+            <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+            {% for t in job.tools.all|slice:":2" %}<span class="pill pill-stack">{{ t.name }}</span>{% endfor %}
+          </div>
+        </div>
+        <div class="jrow-right">
+          {% if job.salary_range %}<div class="jrow-salary">{{ job.salary_range }}</div>{% else %}<div class="jrow-salary na">Salary not listed</div>{% endif %}
+        </div>
+      </a>
+    {% empty %}
+      <div class="tj-empty">
+        <h3>No {{ title_name }} jobs open right now</h3>
+        <p>New roles land daily. Set a free alert and we'll email you the moment a matching {{ title_name }} role is posted.</p>
+        <button onclick="toggleModal('subscribe-modal')" class="btn btn-amber">Get free job alerts</button>
+      </div>
+    {% endfor %}
+
+    {% if jobs.paginator.num_pages > 1 %}
+    <nav class="pg-wrap" aria-label="Job listing pages">
+      {% if jobs.has_previous %}<a class="pg-btn" href="?page={{ jobs.previous_page_number }}" rel="prev">←</a>{% endif %}
+      {% for i in jobs.paginator.page_range %}
+        {% if i == jobs.number %}<span class="pg-btn cur" aria-current="page">{{ i }}</span>
+        {% elif i == 1 or i == jobs.paginator.num_pages or i >= jobs.number|add:"-2" and i <= jobs.number|add:"2" %}<a class="pg-btn" href="?page={{ i }}">{{ i }}</a>{% endif %}
+      {% endfor %}
+      {% if jobs.has_next %}<a class="pg-btn" href="?page={{ jobs.next_page_number }}" rel="next">→</a>{% endif %}
+    </nav>
+    {% endif %}
+
+    <!-- Internal linking: other MarTech roles -->
+    <div class="tj-cross">
+      <h3>Browse other MarTech roles</h3>
+      <div class="tj-cross-row">
+        {% for r in related_titles %}<a href="/{{ r.slug }}-jobs/">{{ r.name }}</a>{% endfor %}
+      </div>
+      <h3>Browse by category</h3>
+      <div class="tj-cross-row">
+        <a href="{% url 'category_detail' 'engineering' %}">Engineering</a>
+        <a href="{% url 'category_detail' 'operations' %}">Operations</a>
+        <a href="{% url 'category_detail' 'data' %}">Data &amp; Analytics</a>
+        <a href="{% url 'seo_loc_only' 'remote' %}">Remote</a>
+        <a href="{% url 'directory' %}">Jobs by tool</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

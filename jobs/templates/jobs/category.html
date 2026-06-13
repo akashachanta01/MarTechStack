@@ -27,6 +27,17 @@
 }
 </script>
 {% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What are {{ category.name }} MarTech jobs?","acceptedAnswer":{"@type":"Answer","text":"{{ category.description|escapejs }}"}},
+    {"@type":"Question","name":"Are there remote {{ category.name }} MarTech jobs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Many {{ category.name }} roles on MarTechJobs are remote or hybrid. Use the remote filter to see only remote openings."}},
+    {"@type":"Question","name":"How often are new {{ category.name }} jobs added?","acceptedAnswer":{"@type":"Answer","text":"The board refreshes daily — new {{ category.name }} MarTech roles are hand-screened and added as employers post them. Subscribe for free alerts to hear about them first."}}
+  ]
+}
+</script>
 {% endblock %}
 
 {% block content %}
