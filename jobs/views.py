@@ -617,7 +617,19 @@ def tool_detail(request, slug):
 def job_detail(request, id, slug):
     job = get_object_or_404(Job, id=id, is_active=True, screening_status='approved')
     if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
-    return render(request, 'jobs/job_detail.html', {'job': job})
+
+    # Similar jobs: same company / same tools / same function — keeps the
+    # session alive instead of dead-ending after the apply CTA.
+    tool_ids = list(job.tools.values_list('id', flat=True))
+    related_jobs = (
+        Job.objects.filter(is_active=True, screening_status='approved')
+        .exclude(id=job.id)
+        .filter(Q(tools__id__in=tool_ids) | Q(company=job.company) | Q(function=job.function))
+        .prefetch_related('tools')
+        .distinct()
+        .order_by('-created_at')[:6]
+    )
+    return render(request, 'jobs/job_detail.html', {'job': job, 'related_jobs': related_jobs})
 
 def post_job(request):
     if request.method == 'POST':
