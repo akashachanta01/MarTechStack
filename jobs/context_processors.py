@@ -2,12 +2,42 @@ from django.core.cache import cache
 from django.db.models import Count
 from .models import Tool, Job
 
+# Query params that produce a filtered/sorted/thin variant of a page. When any
+# are present we noindex the page (follow, so equity still flows) and canonical
+# back to the clean URL — prevents duplicate-content / crawl-budget bloat.
+FILTER_PARAMS = {
+    'q', 'l', 'tool', 'arrangement', 'sort', 'rtype', 'view',
+    'vendor', 'country', 'function', 'all', 'category', 'status',
+}
+
+
+def seo_indexing(request):
+    """
+    Per-request canonical URL + robots directive for clean indexing:
+      - filtered/search/sort URLs  -> noindex,follow + canonical to clean path
+      - paginated URLs (?page=N>1) -> index,follow + SELF-referencing canonical
+        (so deep listing pages get indexed instead of folding to page 1)
+      - clean URLs                 -> index,follow + canonical to path
+    """
+    base = f"https://martechjobs.io{request.path}"
+    params = set(request.GET.keys())
+    page = request.GET.get('page', '')
+
+    if params & FILTER_PARAMS:
+        return {'canonical_url': base, 'robots_directive': 'noindex, follow'}
+
+    if page.isdigit() and int(page) > 1:
+        return {'canonical_url': f"{base}?page={page}", 'robots_directive': 'index, follow'}
+
+    return {'canonical_url': base, 'robots_directive': 'index, follow'}
+
+
 def global_seo_data(request):
     """
-    Makes 'popular_tech_stacks' and 'available_countries' available 
+    Makes 'popular_tech_stacks' and 'available_countries' available
     on EVERY page of the website (for the footer).
     """
-    
+
     # 1. POPULAR TECH STACKS (deduped by vendor for a diverse footer)
     popular_tech_stacks = cache.get('popular_tech_stacks_v3')
     if popular_tech_stacks is None:
