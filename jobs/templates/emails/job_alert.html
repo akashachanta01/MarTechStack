@@ -1,26 +1,37 @@
 {% extends "emails/base_email.html" %}
 
+{% block preheader %}New role: {{ job.title }} at {{ job.company }}.{% endblock %}
+
 {% block content %}
-<h2 style="text-align: center; color: #0f172a; margin-bottom: 20px;">New Role: {{ job.title }}</h2>
+<p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#bf5420; text-transform:uppercase; letter-spacing:0.05em;">New role just dropped</p>
+<h1 style="margin:0 0 20px 0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.25; color:#0e1c30; font-weight:700;">
+  {{ job.title }}
+</h1>
 
-<p>A new opportunity just dropped on MarTechJobs.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td style="padding:20px 22px; background:#faf6f0; border-radius:12px; border:1px solid #ece3d6;">
+      <p style="margin:0 0 4px 0; font-size:17px; font-weight:700; color:#0e1c30;">{{ job.company }}</p>
+      <p style="margin:0; font-size:14px; color:#7a7165;">{{ job.location }}</p>
+      {% if job.salary_range %}
+      <p style="margin:12px 0 0 0; font-size:14px; color:#1f7a4d; font-weight:700;">💰 {{ job.salary_range }}</p>
+      {% endif %}
+    </td>
+  </tr>
+</table>
 
-<div class="job-card">
-    <span class="job-title">{{ job.title }}</span>
-    <div class="job-company">{{ job.company }} • {{ job.location }}</div>
-    
-    {% if job.salary_range %}
-    <div style="margin-top: 8px; font-size: 13px; color: #059669; font-weight: 600;">
-        💰 {{ job.salary_range }}
-    </div>
-    {% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;">
+  <tr>
+    <td align="center">
+      <a href="{{ domain|default:'https://martechjobs.io' }}/job/{{ job.id }}/{{ job.slug }}/"
+         style="display:inline-block; background:#bf5420; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:15px 36px; border-radius:10px;">
+        View job &amp; apply →
+      </a>
+    </td>
+  </tr>
+</table>
 
-    <div style="margin-top: 12px;">
-        <a href="https://martechjobs.io/job/{{ job.id }}/{{ job.slug }}/" class="btn" style="width: 100%; text-align: center; box-sizing: border-box; color: #ffffff !important;">View Job & Apply</a>
-    </div>
-</div>
-
-<p style="text-align: center; margin-top: 30px;">
-    <a href="https://martechjobs.io" style="color: #4f46e5; text-decoration: none; font-weight: 600;">Browse all jobs &rarr;</a>
+<p style="margin:0; text-align:center; font-size:14px;">
+  <a href="{{ domain|default:'https://martechjobs.io' }}/jobs/" style="color:#bf5420; text-decoration:none; font-weight:600;">Browse all open roles →</a>
 </p>
 {% endblock %}

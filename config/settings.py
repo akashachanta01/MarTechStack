@@ -157,14 +157,26 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# SMTP server is env-driven so we can switch providers (Gmail -> Resend) by
+# changing Render env vars only, no code deploy. Defaults keep Gmail working.
+#   Resend:  EMAIL_HOST=smtp.resend.com  EMAIL_PORT=587  EMAIL_HOST_USER=resend
+#            EMAIL_HOST_PASSWORD=<resend api key>  DEFAULT_FROM_EMAIL="MarTechJobs <alerts@martechjobs.io>"
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com').strip()
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').strip().lower() == 'true'
 
 # SAFE DEFAULTS: Prevents 500 error if these variables are missing
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
+# EMAIL_HOST_USER is the SMTP *username* (Gmail: the address; Resend: "resend").
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com').strip()
+# Gmail App Passwords are 16 chars and NEVER contain spaces — Google only
+# *displays* them in groups of four. Strip any spaces so a copy-paste with the
+# display formatting (e.g. "evov hyih ilex xcox") still authenticates correctly.
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
+# The visible "From" address. With Resend this must be on a verified domain.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f'MarTechJobs <{EMAIL_HOST_USER}>').strip()
+# A real, monitored inbox for replies and admin notifications. Kept separate
+# from EMAIL_HOST_USER because the SMTP username may not be a real address.
+CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'martechjobs@gmail.com').strip()
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
@@ -172,3 +184,21 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
 # Strip trailing slashes to prevent url errors
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip().rstrip('/')
+
+# ==============================================
+# LOGGING — ensure app errors (e.g. email/SMTP failures) reach Render logs
+# ==============================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {"format": "[{levelname}] {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "simple"},
+    },
+    "loggers": {
+        "jobs": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+}

@@ -31,6 +31,7 @@ urlpatterns = [
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
     path('subscribe/', views.subscribe, name='subscribe'),
     path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
+    path('u/<str:token>/', views.unsubscribe_oneclick, name='unsubscribe_oneclick'),
 
     path('staff/review/', views.review_queue, name='review_queue'),
     path('staff/review/<int:job_id>/<str:action>/', views.review_action, name='review_action'),
