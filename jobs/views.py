@@ -695,7 +695,14 @@ def review_action(request, job_id, action):
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
 
 def about(request): return render(request, 'jobs/about.html')
-def for_employers(request): return render(request, 'jobs/for_employers.html')
+def for_employers(request):
+    base = Job.objects.filter(is_active=True, screening_status='approved')
+    ctx = {
+        'live_jobs': base.count(),
+        'company_count': base.values('company').distinct().count(),
+        'stack_count': Tool.objects.filter(jobs__in=base).distinct().count(),
+    }
+    return render(request, 'jobs/for_employers.html', ctx)
 def privacy(request): return render(request, 'jobs/privacy.html')
 def terms(request): return render(request, 'jobs/terms.html')
 
