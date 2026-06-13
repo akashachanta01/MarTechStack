@@ -1,9 +1,11 @@
 import time
 import re
-import dateutil.parser 
+import logging
+import dateutil.parser
 import requests
 import os
 import json
+from collections import defaultdict
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, urlunparse
 from typing import Any, Dict
@@ -19,6 +21,8 @@ from django.db.models import Q
 
 from jobs.models import Job, Tool
 from jobs.screener import MarTechScreener
+
+logger = logging.getLogger("jobs.fetch")
 
 class Command(BaseCommand):
     help = 'The "Direct-Apply" Hunter: Smart Deduplication + Geocoding + Clean URLs + Auto-Cleanup.'
@@ -58,10 +62,11 @@ class Command(BaseCommand):
 
         self.stdout.write(f"🔌 Search provider: {self.search_provider}")
 
-        self.client = OpenAI(api_key=self.openai_key) if self.openai_key else None
+        self.client = OpenAI(api_key=self.openai_key, timeout=30, max_retries=2) if self.openai_key else None
         self.screener = MarTechScreener()
         self.total_added = 0
-        
+        self.stats = defaultdict(int)  # per-source observability counters
+
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         self.cutoff_date = timezone.now() - timedelta(days=14)
         self.processed_tokens = set()
@@ -129,11 +134,21 @@ class Command(BaseCommand):
                 for link in links:
                     try:
                         self.analyze_and_fetch(link)
-                        time.sleep(0.5) 
-                    except Exception:
-                        pass
+                        time.sleep(0.5)
+                    except Exception as e:
+                        self.stats["link:error"] += 1
+                        logger.warning("Link processing failed for %s: %s", link, e)
 
+        # --- PER-SOURCE RUN SUMMARY (observability) ---
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
+        self.stdout.write("📊 Ingestion summary (source: outcome = count):")
+        if self.stats:
+            for key in sorted(self.stats):
+                self.stdout.write(f"   {key} = {self.stats[key]}")
+        else:
+            self.stdout.write("   (no jobs seen — check sources/keys)")
+        # Also log so it lands in the Render log aggregation, not just stdout.
+        logger.info("fetch_jobs summary: added=%s stats=%s", self.total_added, dict(self.stats))
 
     def search_google(self, query, num=100, tbs="qdr:d14"):
         if self.search_provider == 'serper':
@@ -256,7 +271,9 @@ class Command(BaseCommand):
                             "description": item.get('content'), "apply_url": item.get('absolute_url'), 
                             "work_arrangement": arr, "source": "Greenhouse"
                         })
-        except: pass
+        except Exception as e:
+            self.stats["Greenhouse:error"] += 1
+            logger.warning("Greenhouse board '%s' failed: %s", token, e)
 
     def fetch_lever_api(self, token):
         if token in self.processed_tokens: return
@@ -268,12 +285,17 @@ class Command(BaseCommand):
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
+                        sr = item.get('salaryRange') or {}
+                        salary = (f"{int(sr['min']):,} - {int(sr['max']):,} {sr.get('currency','')}".strip()
+                                  if sr.get('min') and sr.get('max') else None)
                         self.screen_and_upsert({
-                            "title": item.get('text'), "company": token.capitalize(), "location": clean_loc, 
-                            "description": item.get('description'), "apply_url": item.get('hostedUrl'), 
-                            "work_arrangement": arr, "source": "Lever"
+                            "title": item.get('text'), "company": token.capitalize(), "location": clean_loc,
+                            "description": item.get('description'), "apply_url": item.get('hostedUrl'),
+                            "work_arrangement": arr, "source": "Lever", "salary": salary
                         })
-        except: pass
+        except Exception as e:
+            self.stats["Lever:error"] += 1
+            logger.warning("Lever board '%s' failed: %s", token, e)
 
     def fetch_ashby_api(self, company):
         if company in self.processed_tokens: return
@@ -287,11 +309,13 @@ class Command(BaseCommand):
                     else: raw_loc = item.get('locationName') or "Remote"
                     clean_loc, arr = self._clean_location(raw_loc, item.get('isRemote', False))
                     self.screen_and_upsert({
-                        "title": item.get('title'), "company": company.capitalize(), "location": clean_loc, 
-                        "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'), 
-                        "work_arrangement": arr, "source": "Ashby"
+                        "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
+                        "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'),
+                        "work_arrangement": arr, "source": "Ashby", "salary": item.get('compensationTierSummary')
                     })
-        except: pass
+        except Exception as e:
+            self.stats["Ashby:error"] += 1
+            logger.warning("Ashby board '%s' failed: %s", company, e)
 
     def fetch_workable_api(self, sub):
         if sub in self.processed_tokens: return
@@ -309,7 +333,9 @@ class Command(BaseCommand):
                             "description": item.get('description'), "apply_url": item.get('url'), 
                             "work_arrangement": arr, "source": "Workable"
                         })
-        except: pass
+        except Exception as e:
+            self.stats["Workable:error"] += 1
+            logger.warning("Workable board '%s' failed: %s", sub, e)
 
     def fetch_smartrecruiters_api(self, company):
         if company in self.processed_tokens: return
@@ -332,7 +358,9 @@ class Command(BaseCommand):
                             "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
                             "work_arrangement": arr, "source": "SmartRecruiters"
                         })
-        except: pass
+        except Exception as e:
+            self.stats["SmartRecruiters:error"] += 1
+            logger.warning("SmartRecruiters board '%s' failed: %s", company, e)
 
     def fetch_generic_ai(self, url):
         if self._is_duplicate("", "", url): return 
@@ -361,34 +389,54 @@ class Command(BaseCommand):
         return f"https://www.google.com/s2/favicons?domain={company_name.lower().replace(' ', '')}.com&sz=128"
 
     def is_fresh(self, date_str):
+        # No date (common for some ATS APIs) -> keep, since these are curated
+        # boards. But an UNPARSEABLE date means a format we don't understand --
+        # fail closed so a source format change can't silently flood stale jobs.
         if not date_str: return True
-        try: 
+        try:
             dt = dateutil.parser.parse(date_str)
             if dt.tzinfo is None: dt = timezone.make_aware(dt)
             return dt >= self.cutoff_date
-        except: return True
+        except Exception:
+            return False
     
     def screen_and_upsert(self, job_data):
+        source = job_data.get("source", "?")
+        self.stats[f"{source}:seen"] += 1
         clean_url = self._clean_url(job_data.get("apply_url"))
-        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url): return
+        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url):
+            self.stats[f"{source}:dupe"] += 1
+            return
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), clean_url)
         score = float(analysis.get("score", 50.0))
-        if score <= 0: return
+        if score <= 0:
+            self.stats[f"{source}:rejected"] += 1
+            return
 
         status = analysis.get("status", "pending")
+        self.stats[f"{source}:{status}"] += 1
         signals = analysis.get("details", {}).get("signals", {})
-        
+
         raw_function = signals.get("function", "other")
         valid_functions = {"engineering", "operations", "data", "other"}
         fn = raw_function if raw_function in valid_functions else "other"
+        # role_type is employment type — the screener sometimes returns a
+        # specialty (e.g. "MOPs") here, which is NOT a valid choice. Validate
+        # against the real choices and default to full_time otherwise.
+        valid_role_types = {"full_time", "contract", "part_time", "temporary", "internship"}
+        raw_role = (signals.get("role_type") or "").strip().lower().replace("-", "_").replace(" ", "_")
+        role_type = raw_role if raw_role in valid_role_types else "full_time"
+        # Real salary from the ATS payload when available (never fabricated).
+        salary = (job_data.get("salary") or "").strip() or None
         job = Job.objects.create(
             title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
             location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
             description=job_data.get("description"), apply_url=clean_url,
-            role_type=signals.get("role_type", "full_time"), screening_status=status,
+            role_type=role_type, screening_status=status, salary_range=salary,
             screening_score=score, screening_reason=analysis.get("reason", ""),
             is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
             function=fn,
+            screening_details=analysis.get("details", {}),
         )
         for t in signals.get("stack", []):
             t_obj = self.tool_cache.get(self.screener._normalize(t))

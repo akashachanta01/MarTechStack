@@ -119,21 +119,38 @@ class Job(models.Model):
     def __str__(self): return f"{self.title} at {self.company}"
 
     def get_salary_min_max(self):
-        if not self.salary_range: return None, None
+        """Best-effort parse of the free-text salary into annual (min, max).
+
+        Handles k/M suffixes, decimals, comma thousands, and hourly rates
+        (annualized at 2080 h/yr). Filters implausible tokens (years, counts)
+        so we never publish a fabricated or nonsensical number.
+        """
+        if not self.salary_range:
+            return None, None
+        txt = self.salary_range.lower()
+        is_hourly = any(h in txt for h in ('/hr', '/hour', 'per hour', 'hourly', 'an hour'))
         try:
-            txt = self.salary_range.lower().replace(',', '').replace('.', '')
-            nums = re.findall(r'\d+', txt)
-            if not nums: return None, None
             vals = []
-            for n in nums:
-                val = int(n)
-                if val < 1000: val *= 1000
-                vals.append(val)
+            for num_str, suffix in re.findall(r'(\d[\d,]*(?:\.\d+)?)\s*([km])?', txt):
+                num = float(num_str.replace(',', ''))
+                if suffix == 'k':
+                    num *= 1_000
+                elif suffix == 'm':
+                    num *= 1_000_000
+                elif not is_hourly and num < 1000:
+                    # bare "150" in a salary range almost always means 150k
+                    num *= 1_000
+                vals.append(num)
+            if is_hourly:
+                vals = [v * 2080 for v in vals if 5 <= v <= 1000]
+            else:
+                vals = [v for v in vals if 10_000 <= v <= 2_000_000]
+            if not vals:
+                return None, None
             vals.sort()
-            if len(vals) >= 2: return vals[0], vals[-1]
-            if len(vals) == 1: return vals[0], vals[0]
-        except: pass
-        return None, None
+            return int(vals[0]), int(vals[-1])
+        except Exception:
+            return None, None
 
     def get_schema_country(self):
         # Best-effort ISO country code for Google Jobs structured data.
