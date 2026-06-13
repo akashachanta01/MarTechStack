@@ -321,7 +321,7 @@
             {% if job.is_featured %}<span class="pill pill-feat">★ Featured</span>{% endif %}
             {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
             <span class="pill pill-type">{{ job.get_role_type_display }}</span>
-            {% for t in job.tools.all|slice:":2" %}<span class="pill pill-stack">{{ t.name }}</span>{% endfor %}
+            <span class="pill pill-stack">{{ tool.name }}</span>{% for t in job.tools.all %}{%if t.id != tool.id %}<span class="pill pill-stack">{{ t.name }}</span>{% endif %}{% endfor %}
           </div>
         </div>
         <div class="jrow-right">

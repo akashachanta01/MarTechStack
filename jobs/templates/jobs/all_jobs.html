@@ -53,6 +53,8 @@
   .s-field input::placeholder { color: var(--ink3); }
   .s-go { background: var(--amber); color: #fff; border: 0; font-weight: 700; font-size: 14px; padding: 0 28px; border-radius: 11px; cursor: pointer; height: 52px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; font-family: 'Hanken Grotesk', sans-serif; transition: background .15s, transform .15s; }
   .s-go:hover { background: var(--amber2); transform: translateY(-1px); }
+  .s-clear { display: inline-flex; align-items: center; gap: 4px; height: 52px; padding: 0 14px; font-size: 13px; font-weight: 600; color: var(--ink3); text-decoration: none; border-radius: 10px; transition: color .15s, background .15s; white-space: nowrap; }
+  .s-clear:hover { color: var(--ink); background: var(--paper2); }
   .search-row2 { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .s-select-wrap { position: relative; flex: 1; min-width: 150px; }
   .s-select-wrap-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -164,6 +166,7 @@
           <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company" aria-label="Search jobs">
         </div>
         <button type="submit" class="s-go">Search</button>
+        {% if query or location_filter or current_function or selected_tool or current_arrangement %}<a href="{% url 'all_jobs' %}" class="s-clear" aria-label="Clear search filters">✕ Clear</a>{% endif %}
       </div>
       <div class="search-row2">
         <div class="s-select-wrap">

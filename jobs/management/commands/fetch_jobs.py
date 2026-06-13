@@ -378,13 +378,17 @@ class Command(BaseCommand):
         status = analysis.get("status", "pending")
         signals = analysis.get("details", {}).get("signals", {})
         
+        raw_function = signals.get("function", "other")
+        valid_functions = {"engineering", "operations", "data", "other"}
+        fn = raw_function if raw_function in valid_functions else "other"
         job = Job.objects.create(
             title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
             location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
             description=job_data.get("description"), apply_url=clean_url,
             role_type=signals.get("role_type", "full_time"), screening_status=status,
             screening_score=score, screening_reason=analysis.get("reason", ""),
-            is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}"
+            is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
+            function=fn,
         )
         for t in signals.get("stack", []):
             t_obj = self.tool_cache.get(self.screener._normalize(t))

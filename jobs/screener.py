@@ -135,12 +135,18 @@ class MarTechScreener:
 
         3. **Scoring:** 0 = Reject, 65 = Pending, 85-100 = Auto-Approve.
 
+        4. **Function:** Classify the role into one of: "engineering", "operations", "data", "other".
+           - engineering: hands-on technical build/integration work (developer, architect, engineer, implementation)
+           - operations: day-to-day platform use, campaign execution, admin, strategy (ops, admin, manager, specialist)
+           - data: analytics, reporting, measurement, BI, attribution (analyst, analytics, insights, reporting)
+           - other: doesn't clearly fit the above
+
         Output JSON:
         {{
             "decision": "APPROVE" | "REJECT" | "PENDING",
             "score": 0-100,
             "reason": "Clear explanation.",
-            "signals": {{ "stack": [], "role_type": "MOPs" }}
+            "signals": {{ "stack": [], "role_type": "MOPs", "function": "operations" }}
         }}
         """
 

@@ -85,6 +85,7 @@ class Job(models.Model):
     ROLE_TYPE_CHOICES = [('full_time', 'Full-time'), ('contract', 'Contract'), ('part_time', 'Part-time'), ('temporary', 'Temporary'), ('internship', 'Internship')]
     STATUS_CHOICES = [('pending', 'Pending Review'), ('approved', 'Approved'), ('rejected', 'Rejected')]
     WORK_ARRANGEMENT_CHOICES = [('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'On-site')]
+    FUNCTION_CHOICES = [('engineering', 'Engineering'), ('operations', 'Operations'), ('data', 'Data'), ('other', 'Other')]
 
     title = models.CharField(max_length=200)
     company = models.CharField(max_length=200)
@@ -94,6 +95,7 @@ class Job(models.Model):
     apply_url = models.URLField(max_length=500)
     slug = models.SlugField(max_length=250, null=True, blank=True)
     
+    function = models.CharField(max_length=20, choices=FUNCTION_CHOICES, default='other', db_index=True)
     role_type = models.CharField(max_length=20, choices=ROLE_TYPE_CHOICES, default='full_time')
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
