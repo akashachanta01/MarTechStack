@@ -246,6 +246,7 @@
     .nav-mega { position: absolute; top: 100%; left: 0; padding-top: 10px; display: none; z-index: 90; }
     .nav-mega-wrap:hover .nav-mega, .nav-mega-wrap:focus-within .nav-mega { display: block; }
     .nav-mega-inner { width: 580px; max-width: 92vw; background: #fff; border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow-lg); padding: 22px; animation: megaIn .16s ease-out; }
+    .nav-mega-inner.nav-mega-narrow { width: 300px; }
     @keyframes megaIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
     .nav-mega-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     .nav-mega-h { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin: 0 0 10px 10px; }
@@ -451,7 +452,40 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg>
             Free Tools
           </a></li>
-          <li><a href="{% url 'blog_list' %}">Blog</a></li>
+          <li class="nav-mega-wrap">
+            <a href="{% url 'blog_list' %}" class="nav-mega-trigger" aria-haspopup="true">
+              Blog
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </a>
+            <div class="nav-mega" role="menu">
+              <div class="nav-mega-inner nav-mega-narrow">
+                <div class="nav-mega-h">Browse the Blog</div>
+                <a class="nav-mega-link" href="{% url 'blog_list' %}?category=Tech+Stacks" role="menuitem">
+                  <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+                  Tech Stacks
+                </a>
+                <a class="nav-mega-link" href="{% url 'blog_list' %}?category=Career+Advice" role="menuitem">
+                  <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
+                  Career Advice
+                </a>
+                <a class="nav-mega-link" href="{% url 'blog_list' %}?category=Interview+Guides" role="menuitem">
+                  <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+                  Interview Guides
+                </a>
+                <a class="nav-mega-link" href="{% url 'blog_list' %}?category=Salary+Guides" role="menuitem">
+                  <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+                  Salary Guides
+                </a>
+                <a class="nav-mega-link" href="{% url 'blog_list' %}?category=Industry+News" role="menuitem">
+                  <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><line x1="18" y1="14" x2="10" y2="14"/><line x1="15" y1="18" x2="10" y2="18"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="10" x2="14" y2="10"/></svg></span>
+                  Industry News
+                </a>
+                <div class="nav-mega-foot">
+                  <a class="nav-mega-cta" href="{% url 'blog_list' %}" role="menuitem">View all posts →</a>
+                </div>
+              </div>
+            </div>
+          </li>
           <li><a href="{% url 'for_employers' %}" {% if request.resolver_match.url_name == 'for_employers' %}aria-current="page"{% endif %}>For Employers</a></li>
         </ul>
 
