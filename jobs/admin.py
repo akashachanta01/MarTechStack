@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.contrib import messages
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -158,6 +158,12 @@ class UserSubmissionAdmin(BaseJobAdmin):
 
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin): list_display = ("email", "created_at")
+
+@admin.register(SavedSearch)
+class SavedSearchAdmin(admin.ModelAdmin):
+    list_display = ("email", "label", "is_active", "created_at", "last_notified_at")
+    list_filter = ("is_active", "function", "arrangement")
+    search_fields = ("email", "label", "query", "tool", "location")
 
 @admin.register(BlockRule)
 class BlockRuleAdmin(admin.ModelAdmin): list_display = ("rule_type", "value", "enabled")

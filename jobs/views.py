@@ -16,7 +16,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
-from .models import Job, Tool, Category, Subscriber, BlogPost
+from .models import Job, Tool, Category, Subscriber, BlogPost, SavedSearch
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
 
@@ -701,13 +701,38 @@ def subscribe(request):
         if email:
             try: validate_email(email)
             except ValidationError: return JsonResponse({"success": False, "error": "Invalid email format."}, status=400)
-            sub, created = Subscriber.objects.get_or_create(email=email)
-            if created: 
+
+            # If the form carried search context (the "Be first to new X roles"
+            # bar), create a targeted SavedSearch alert. Otherwise it's a general
+            # newsletter signup -> Subscriber.
+            sq = request.POST.get("q", "").strip()[:200]
+            stool = request.POST.get("tool", "").strip()[:100]
+            sloc = request.POST.get("l", "").strip()[:120]
+            sfunc = request.POST.get("function", "").strip().lower()[:20]
+            sarr = request.POST.get("arrangement", "").strip().lower()[:20]
+            has_filters = any([sq, stool, sloc, sfunc, sarr])
+
+            newly = False
+            if has_filters:
+                parts = []
+                if sfunc: parts.append(sfunc.title())
+                if stool: parts.append(stool.replace('-', ' ').title())
+                if sq: parts.append(f'"{sq}"')
+                if sarr == 'remote': parts.append('Remote')
+                if sloc: parts.append(sloc)
+                label = " · ".join(parts) or "MarTech jobs"
+                _, newly = SavedSearch.objects.get_or_create(
+                    email=email, query=sq, tool=stool, location=sloc,
+                    function=sfunc, arrangement=sarr, defaults={'label': label},
+                )
+            else:
+                _, newly = Subscriber.objects.get_or_create(email=email)
+
+            if newly:
                 send_welcome_email(email)
                 user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
                 x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                if x_forwarded_for: ip = x_forwarded_for.split(',')[0]
-                else: ip = request.META.get('REMOTE_ADDR')
+                ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
                 send_admin_new_subscriber_alert(email, user_agent, ip)
             return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
