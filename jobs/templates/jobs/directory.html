@@ -1,57 +1,111 @@
 {% extends "jobs/base.html" %}
-{% block title %}MarTech Jobs Directory - Browse by Tech Stack & Location{% endblock %}
+{% block title %}MarTech Jobs Directory — Browse by Tech Stack & Location | MarTechJobs{% endblock %}
+{% block meta_description %}Browse marketing technology jobs by tech stack (Salesforce, HubSpot, Marketo, Braze) and location. Find MarTech, Marketing Ops, and RevOps roles near you or remote.{% endblock %}
+{% block meta_keywords %}martech jobs directory, marketing operations jobs by city, remote martech jobs, HubSpot jobs, Salesforce marketing jobs{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Directory","item":"https://martechjobs.io/directory/"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 py-16 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-serif font-bold text-slate-900 mb-4 text-center">MarTech Job Directory</h1>
-        <p class="text-center text-slate-600 mb-12">Browse roles by your specific technology stack and location.</p>
-        
-        <div class="grid md:grid-cols-2 gap-12">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 h-fit">
-                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#1f432d]">dns</span> Tech Stack Jobs
-                </h2>
-                <div class="grid grid-cols-2 gap-4">
-                    {% for tool in tools %}
-                    <a href="{% url 'tool_detail' tool.slug %}" class="text-sm text-slate-600 hover:text-[#1f432d] hover:underline flex justify-between group">
-                        <span>{{ tool.name }}</span>
-                        <span class="text-slate-300 group-hover:text-[#1f432d]">{{ tool.job_count }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
+<style>
+  .dir-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--rule); text-align: center; }
+  .dir-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,48px); font-weight: 800; color: var(--ink); margin: 12px 0 14px; }
+  .dir-hero p { font-size: 16px; color: var(--ink2); max-width: 520px; margin: 0 auto; }
 
-            <div class="space-y-12">
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#1f432d]">business</span> Top Tech Hubs
-                    </h2>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="{% url 'seo_loc_only' 'remote' %}" class="bg-[#1f432d] text-white px-3 py-1 rounded text-sm font-bold hover:bg-black transition shadow-md">Remote Marketing Jobs</a>
-                        {% for loc in top_cities %}
-                        <a href="{% url 'seo_loc_only' loc|slugify %}" class="bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1 rounded text-sm hover:border-[#1f432d] transition">
-                            {{ loc }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
+  .dir-content { padding: 48px 0 80px; }
+  .dir-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  @media(max-width:720px){ .dir-grid { grid-template-columns: 1fr; } }
 
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#1f432d]">public</span> United States
-                    </h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {% for state in states %}
-                        <a href="{% url 'seo_loc_only' state|slugify %}" class="text-sm text-slate-600 hover:text-[#1f432d] hover:underline">
-                            {{ state }} Jobs
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+  .dir-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 28px 32px; box-shadow: var(--shadow-sm); }
+  .dir-card h2 { font-weight: 700; font-size: 16px; color: var(--ink); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .dir-card h2 svg { color: var(--amber); width: 18px; height: 18px; }
+
+  .dir-tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  .dir-tool-link { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500; color: var(--ink2); padding: 6px 8px; border-radius: 6px; transition: all .14s; text-decoration: none; }
+  .dir-tool-link:hover { color: var(--amber); background: var(--amber-light); }
+  .dir-tool-link span { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink3); }
+  .dir-tool-link:hover span { color: var(--amber); }
+
+  .dir-locs-right { display: flex; flex-direction: column; gap: 28px; }
+  .dir-loc-group { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px 28px; box-shadow: var(--shadow-sm); }
+  .dir-loc-group h2 { font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .dir-loc-group h2 svg { color: var(--amber); width: 16px; height: 16px; }
+
+  .dir-hubs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dir-hub-primary { padding: 7px 14px; border-radius: 20px; background: var(--amber); color: #fff; font-size: 12px; font-weight: 700; text-decoration: none; transition: all .14s; }
+  .dir-hub-primary:hover { background: var(--amber2); transform: translateY(-1px); }
+  .dir-hub { padding: 6px 12px; border-radius: 20px; background: var(--card); border: 1px solid var(--rule2); color: var(--ink2); font-size: 12px; font-weight: 500; text-decoration: none; transition: all .14s; }
+  .dir-hub:hover { border-color: var(--amber); color: var(--amber); }
+
+  .dir-states { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px 8px; }
+  @media(max-width:480px){ .dir-states { grid-template-columns: repeat(2,1fr); } }
+  .dir-state-link { font-size: 12px; color: var(--ink2); padding: 5px 4px; text-decoration: none; transition: color .12s; }
+  .dir-state-link:hover { color: var(--amber); text-decoration: underline; }
+</style>
+
+<section class="dir-hero">
+  <div class="wrap">
+    <div class="eyebrow">Full Index</div>
+    <h1>MarTech Job Directory</h1>
+    <p>Browse marketing technology roles by your specific stack and location. Every link is a live search.</p>
+  </div>
+</section>
+
+<div class="dir-content">
+  <div class="wrap">
+    <div class="dir-grid">
+      <div class="dir-card">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          Jobs by Tech Stack
+        </h2>
+        <div class="dir-tools-grid">
+          {% for tool in tools %}
+          <a href="{% url 'tool_detail' tool.slug %}" class="dir-tool-link">
+            <span>{{ tool.name }}</span>
+            <span>{{ tool.job_count }}</span>
+          </a>
+          {% endfor %}
         </div>
-        
+      </div>
+
+      <div class="dir-locs-right">
+        <div class="dir-loc-group">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+            Top Tech Hubs
+          </h2>
+          <div class="dir-hubs">
+            <a href="{% url 'seo_loc_only' 'remote' %}" class="dir-hub-primary">🌐 Remote Jobs</a>
+            {% for loc in top_cities %}
+            <a href="{% url 'seo_loc_only' loc|slugify %}" class="dir-hub">{{ loc }}</a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="dir-loc-group">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+            United States — Jobs by State
+          </h2>
+          <div class="dir-states">
+            {% for state in states %}
+            <a href="{% url 'seo_loc_only' state|slugify %}" class="dir-state-link">{{ state }} Jobs</a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

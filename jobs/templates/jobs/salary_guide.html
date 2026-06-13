@@ -1,107 +1,150 @@
 {% extends "jobs/base.html" %}
 {% load humanize %}
 
-{% block title %}MarTech Salary Guide {% now "Y" %} — Real-time Pay Data{% endblock %}
-{% block meta_description %}The definitive salary guide for Marketing Operations and MarTech. Real-time data aggregated from live job postings for HubSpot, Salesforce, Marketo, and more.{% endblock %}
+{% block title %}MarTech Salary Guide {% now "Y" %} — Real-time Compensation Data | MarTechJobs{% endblock %}
+{% block meta_description %}The definitive {% now "Y" %} salary guide for Marketing Operations and MarTech professionals. Real-time compensation data aggregated from live job postings for HubSpot, Salesforce, Marketo, Braze and more.{% endblock %}
+{% block meta_keywords %}martech salary guide, marketing operations salary, HubSpot salary, Salesforce salary, marketing technology compensation {% now "Y" %}{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Salary Guide","item":"https://martechjobs.io/salary-guide/"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <style>
-  .sg-hero { background: var(--navy3); padding: 80px 0; color: white; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
-  .sg-hero-ey { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #f0a06a; margin-bottom: 16px; }
-  .sg-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(38px, 5vw, 64px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px; color: white; }
-  .sg-hero h1 em { font-style: italic; color: #f0a06a; }
-  .sg-hero p { font-family: 'Lato', sans-serif; font-size: 16px; color: rgba(255,255,255,0.7); max-width: 640px; margin: 0 auto; line-height: 1.7; font-weight: 300; }
+  .sg-hero { padding: 72px 0 60px; background: var(--navy3); color: #fff; text-align: center; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .sg-hero .eyebrow { color: var(--amber-accent); margin-bottom: 16px; }
+  .sg-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px,5vw,60px); font-weight: 800; line-height: 1.1; color: #fff; margin-bottom: 20px; }
+  .sg-hero h1 em { font-style: italic; color: var(--amber-accent); }
+  .sg-hero p { font-size: 16px; color: rgba(255,255,255,.7); max-width: 580px; margin: 0 auto; line-height: 1.75; }
 
-  .sg-content { background: var(--paper); padding: 80px 0; min-height: 50vh; }
-  .sg-wrap { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+  .sg-stats { display: flex; justify-content: center; gap: 40px; padding: 40px 0; flex-wrap: wrap; background: var(--navy2); border-bottom: 1px solid rgba(255,255,255,.07); }
+  .sg-stat { text-align: center; }
+  .sg-stat-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--amber-accent); display: block; }
+  .sg-stat-label { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,.5); margin-top: 4px; }
 
-  .sg-card { background: white; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; box-shadow: 4px 4px 0 var(--navy); }
+  .sg-content { padding: 60px 0 80px; }
+  .sg-inner { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+
+  .sg-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
   .sg-table { width: 100%; border-collapse: collapse; text-align: left; }
-  .sg-table th { background: var(--paper2); padding: 16px 24px; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink3); border-bottom: 1px solid var(--rule); }
-  .sg-table td { padding: 20px 24px; border-bottom: 1px solid var(--rule); font-family: 'Lato', sans-serif; vertical-align: middle; }
+  .sg-table th { background: var(--paper2); padding: 14px 20px; font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); border-bottom: 1px solid var(--rule); }
+  .sg-table td { padding: 18px 20px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
   .sg-table tr:last-child td { border-bottom: none; }
-  .sg-table tr:hover { background: #faf8f4; }
+  .sg-table tr:hover td { background: var(--paper); }
 
-  .sg-tool { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 15px; color: var(--ink); text-decoration: none; transition: color 0.15s; }
-  .sg-tool:hover { color: var(--navy); }
-  .sg-avatar { width: 32px; height: 32px; border-radius: 6px; background: var(--paper2); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--ink3); overflow: hidden; }
-  .sg-avatar img { width: 20px; height: 20px; object-fit: contain; }
+  .sg-tool-link { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 14px; color: var(--ink); text-decoration: none; transition: color .15s; }
+  .sg-tool-link:hover { color: var(--amber); }
+  .sg-avatar { width: 32px; height: 32px; border-radius: 7px; background: var(--amber-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 800; color: var(--amber); overflow: hidden; flex-shrink: 0; }
+  .sg-avatar img { width: 22px; height: 22px; object-fit: contain; }
 
   .sg-range { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--green); white-space: nowrap; }
-  .sg-count { font-size: 13px; color: var(--ink3); }
-  .sg-action { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); text-decoration: none; transition: color 0.15s; }
+  .sg-count { font-size: 12px; color: var(--ink3); font-family: 'Courier Prime', monospace; }
+  .sg-action { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); text-decoration: none; transition: color .15s; white-space: nowrap; }
   .sg-action:hover { color: var(--navy); }
 
-  .sg-note { text-align: center; font-family: 'Lato', sans-serif; font-size: 12px; color: var(--ink3); margin-top: 32px; font-style: italic; }
-  
-  @media(max-width: 640px) {
-      .sg-wrap { padding: 0 20px; }
-      .sg-table thead { display: none; }
-      .sg-table, .sg-table tbody, .sg-table tr, .sg-table td { display: block; width: 100%; }
-      .sg-table tr { border-bottom: 1px solid var(--rule); padding: 16px 0; }
-      .sg-table tr:last-child { border-bottom: none; }
-      .sg-table td { border: none; padding: 8px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-      .sg-tool { justify-content: center; }
+  .sg-note { text-align: center; font-size: 12px; color: var(--ink3); margin-top: 24px; font-style: italic; }
+
+  .sg-cta { background: var(--navy); color: #fff; padding: 60px 0; text-align: center; margin-top: 60px; border-radius: var(--radius); }
+  .sg-cta h2 { font-family: 'Playfair Display', serif; font-size: clamp(24px,3vw,38px); font-weight: 800; margin-bottom: 16px; color: #fff; }
+  .sg-cta p { font-size: 15px; color: rgba(255,255,255,.7); max-width: 520px; margin: 0 auto 28px; line-height: 1.7; }
+
+  @media(max-width:640px){
+    .sg-table thead { display: none; }
+    .sg-table, .sg-table tbody, .sg-table tr, .sg-table td { display: block; width: 100%; }
+    .sg-table tr { border-bottom: 1px solid var(--rule); padding: 16px 0; }
+    .sg-table tr:last-child { border-bottom: none; }
+    .sg-table td { border: none; padding: 8px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .sg-tool-link { justify-content: center; }
+    .sg-stats { gap: 24px; }
   }
 </style>
 
-<div class="sg-hero">
-    <div class="sg-hero-ey">Live Data • {% now "Y" %}</div>
+<section class="sg-hero">
+  <div class="wrap">
+    <div class="eyebrow">Live Data · {% now "Y" %}</div>
     <h1>MarTech <em>Salary Guide</em></h1>
     <p>Real-time compensation data aggregated from live Marketing Operations and Technology job listings. Transparent, data-driven, and always up to date.</p>
+  </div>
+</section>
+
+<div class="sg-stats">
+  <div class="sg-stat"><span class="sg-stat-val">$95k–$185k</span><span class="sg-stat-label">Typical Range</span></div>
+  <div class="sg-stat"><span class="sg-stat-val">15k+</span><span class="sg-stat-label">Professionals</span></div>
+  <div class="sg-stat"><span class="sg-stat-val">{% now "Y" %}</span><span class="sg-stat-label">Live Data</span></div>
+  <div class="sg-stat"><span class="sg-stat-val">200+</span><span class="sg-stat-label">Companies Hiring</span></div>
 </div>
 
 <div class="sg-content">
-    <div class="sg-wrap">
-        <div class="sg-card">
-            <table class="sg-table">
-                <thead>
-                    <tr>
-                        <th>Tech Stack</th>
-                        <th>Average Range</th>
-                        <th>Data Points</th>
-                        <th style="text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stat in salary_stats %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-tool">
-                                <div class="sg-avatar">
-                                    {% if stat.tool.logo_url %}
-                                        <img src="{{ stat.tool.logo_url }}" alt="{{ stat.tool.name }}">
-                                    {% else %}
-                                        {{ stat.tool.name|slice:":1" }}
-                                    {% endif %}
-                                </div>
-                                {{ stat.tool.name }}
-                            </a>
-                        </td>
-                        <td>
-                            <span class="sg-range">${{ stat.avg_min|intcomma }} – ${{ stat.avg_max|intcomma }}</span>
-                        </td>
-                        <td>
-                            <span class="sg-count">{{ stat.count }} jobs</span>
-                        </td>
-                        <td style="text-align: right;">
-                            <a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-action">View Jobs →</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 64px 20px; color: var(--ink3);">
-                            <div style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px;">Gathering Market Data...</div>
-                            Not enough salary data is currently available in the active job pool. Check back soon as more roles are posted.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="sg-note">
-            * Data is calculated dynamically based on the parsed salary ranges of currently active and recently approved job listings.
-        </div>
+  <div class="sg-inner">
+    <div class="sg-card">
+      <table class="sg-table">
+        <thead>
+          <tr>
+            <th>Tech Stack</th>
+            <th>Average Range</th>
+            <th>Data Points</th>
+            <th style="text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for stat in salary_stats %}
+          <tr>
+            <td>
+              <a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-tool-link">
+                <div class="sg-avatar">
+                  {% if stat.tool.logo_url %}<img src="{{ stat.tool.logo_url }}" alt="{{ stat.tool.name }}">{% else %}{{ stat.tool.name|slice:":1" }}{% endif %}
+                </div>
+                {{ stat.tool.name }}
+              </a>
+            </td>
+            <td><span class="sg-range">${{ stat.avg_min|intcomma }} – ${{ stat.avg_max|intcomma }}</span></td>
+            <td><span class="sg-count">{{ stat.count }} jobs</span></td>
+            <td style="text-align:right;"><a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-action">View Jobs →</a></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" style="text-align:center;padding:64px 20px;color:var(--ink3);">
+              <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:8px;">Gathering Market Data…</div>
+              Not enough salary data is currently available in the active job pool. Check back soon as more roles are posted.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+    <p class="sg-note">* Data is calculated dynamically from parsed salary ranges of active and recently approved job listings on MarTechJobs.</p>
+
+    <div class="sg-cta">
+      <h2>Ready to find your next role?</h2>
+      <p>Browse hand-curated MarTech positions from companies that know exactly what they need — and are paying well for it.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="/" class="btn btn-amber btn-lg">Browse Open Roles →</a>
+        <a href="{% url 'post_job' %}" class="btn btn-ghost-light btn-lg">Post a Job</a>
+      </div>
+    </div>
+
+    <div style="margin-top:48px;">
+      <h2 class="font-serif" style="font-size:1.4rem;font-weight:700;margin-bottom:20px;color:var(--ink);">Browse by Tech Stack</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
+        <a href="/?q=Salesforce" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Salesforce Jobs</a>
+        <a href="/?q=HubSpot" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">HubSpot Jobs</a>
+        <a href="/?q=Marketo" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Marketo Jobs</a>
+        <a href="/?q=Braze" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Braze Jobs</a>
+        <a href="/?q=Segment" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Segment Jobs</a>
+        <a href="/?q=Snowflake" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Snowflake Jobs</a>
+        <a href="/?q=analytics" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Analytics Jobs</a>
+        <a href="/?q=marketing+operations" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Marketing Ops</a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
