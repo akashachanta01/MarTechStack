@@ -34,3 +34,4 @@ Pillow==10.2.0
 stripe
 geopy
 google-auth
+redis==5.0.8
