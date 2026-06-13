@@ -69,6 +69,34 @@
 .s-remote-btn:hover { border-color: var(--rule2); color: var(--ink); }
 .s-remote-btn.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
 
+/* ---- Remote work-from dropdown ---- */
+.s-remote { position: relative; }
+.s-remote-trigger { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px; border: 1.5px solid var(--rule); border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--ink2); background: #fff; font-family: 'Hanken Grotesk', sans-serif; transition: all .15s; }
+.s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
+.s-remote-trigger.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
+.s-remote-trigger .chev { margin-left: 2px; transition: transform .2s; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.s-remote.open .s-remote-trigger .chev { transform: rotate(180deg); }
+.s-remote-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; max-width: 86vw; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 18px; z-index: 60; display: none; }
+.s-remote.open .s-remote-panel { display: block; animation: slideDown .16s ease-out; }
+.s-remote-panel h4 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.s-remote-panel .rp-desc { font-size: 13px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
+.s-remote-opt { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1.5px solid var(--rule); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: all .15s; }
+.s-remote-opt:hover { border-color: var(--rule2); background: var(--paper); }
+.s-remote-opt.sel { border-color: var(--green); background: var(--green-light); }
+.s-remote-opt-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); }
+.s-remote-opt-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.s-remote-opt.sel .s-remote-opt-ico { background: #fff; color: var(--green); }
+.s-remote-opt-body { flex: 1; min-width: 0; }
+.s-remote-opt-title { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.s-remote-opt-sub { font-size: 12px; color: var(--ink3); }
+.s-remote-opt-check { color: var(--green); flex-shrink: 0; opacity: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.s-remote-opt.sel .s-remote-opt-check { opacity: 1; }
+.s-remote-reglabel { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 14px 0 8px; }
+.s-remote-region { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-remote-region a { font-size: 12.5px; font-weight: 600; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; }
+.s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
+
 /* ---- Quick links ---- */
 .quick { margin-top: 22px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; font-size: 13px; align-items: center; position: relative; z-index: 1; }
 .quick .lbl { color: var(--ink3); font-weight: 500; }
@@ -378,17 +406,45 @@
           </select>
           <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </div>
-        {% if current_arrangement == 'remote' %}
-          <a class="s-remote-btn on" href="?{% if query %}q={{ query }}&{% endif %}{% if location_filter %}l={{ location_filter }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}#jl-listings" aria-pressed="true">
+        <div class="s-remote" id="s-remote">
+          <button type="button" class="s-remote-trigger {% if current_arrangement == 'remote' %}on{% endif %}" onclick="toggleRemotePanel(event)" aria-haspopup="true" aria-expanded="false">
             <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg>
-            Remote only ✓
-          </a>
-        {% else %}
-          <a class="s-remote-btn" href="?{% if query %}q={{ query }}&{% endif %}{% if location_filter %}l={{ location_filter }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote#jl-listings" aria-pressed="false">
-            <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg>
-            Remote only
-          </a>
-        {% endif %}
+            <span>{% if current_arrangement == 'remote' %}Remote · {% if location_filter %}{{ location_filter }}{% else %}Anywhere{% endif %}{% else %}Remote · Any{% endif %}</span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="s-remote-panel" role="menu">
+            <h4>Where can you work from?</h4>
+            <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
+
+            <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}#jl-listings" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+              <span class="s-remote-opt-body">
+                <span class="s-remote-opt-title">Any location</span>
+                <span class="s-remote-opt-sub">On-site, hybrid &amp; remote</span>
+              </span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+
+            <a class="s-remote-opt {% if current_arrangement == 'remote' and not location_filter %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote#jl-listings" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg></span>
+              <span class="s-remote-opt-body">
+                <span class="s-remote-opt-title">Fully remote — anywhere</span>
+                <span class="s-remote-opt-sub">Work from any country</span>
+              </span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+
+            <div class="s-remote-reglabel">Remote in a specific region</div>
+            <div class="s-remote-region">
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United States' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+States#jl-listings">United States</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United Kingdom' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+Kingdom#jl-listings">United Kingdom</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Canada' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Canada#jl-listings">Canada</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Germany' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Germany#jl-listings">Germany</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Australia' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Australia#jl-listings">Australia</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'India' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=India#jl-listings">India</a>
+            </div>
+          </div>
+        </div>
         {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
       </div>
     </form>
@@ -909,6 +965,28 @@ function toggleFaq(btn) {
     btn.setAttribute('aria-expanded', 'true');
   }
 }
+
+// Remote work-from dropdown
+function toggleRemotePanel(e) {
+  e.stopPropagation();
+  const r = document.getElementById('s-remote');
+  const open = r.classList.toggle('open');
+  r.querySelector('.s-remote-trigger').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', function(e) {
+  const r = document.getElementById('s-remote');
+  if (r && !r.contains(e.target)) {
+    r.classList.remove('open');
+    const t = r.querySelector('.s-remote-trigger');
+    if (t) t.setAttribute('aria-expanded', 'false');
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const r = document.getElementById('s-remote');
+    if (r) r.classList.remove('open');
+  }
+});
 
 // Inline subscribe forms
 document.addEventListener('DOMContentLoaded', function() {
