@@ -32,7 +32,8 @@
 {% block content %}
 <style>
   /* ---- Category hero ---- */
-  .cat-hero { position: relative; overflow: hidden; padding: 56px 0 52px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .cat-hero { position: relative; overflow: visible; padding: 56px 0 52px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .cat-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
   .cat-hero .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.30), transparent 64%); top: -300px; right: -140px; pointer-events: none; }
   .cat-eyebrow { position: relative; z-index: 1; }
   .cat-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.06; font-size: clamp(40px, 7vw, 72px); margin: 10px auto 0; position: relative; z-index: 1; color: var(--ink); }
@@ -139,7 +140,7 @@
 </style>
 
 <section class="cat-hero">
-  <div class="glow"></div>
+  <div class="cat-hero-bg"><div class="glow"></div></div>
   <div class="wrap">
     <div class="eyebrow cat-eyebrow">{{ category.eyebrow }}</div>
     <h1 class="cat-h1">{{ category.name }} <span class="em">Jobs</span></h1>
@@ -236,7 +237,7 @@
   <div class="wrap">
     <div class="cat-list-head">
       <h2>{{ category.name }} Jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
-      <a href="{% url 'job_list' %}?all=1#jl-listings" class="cat-viewall">Browse all jobs →</a>
+      <a href="{% url 'all_jobs' %}" class="cat-viewall">Browse all jobs →</a>
     </div>
 
     {% for job in jobs %}

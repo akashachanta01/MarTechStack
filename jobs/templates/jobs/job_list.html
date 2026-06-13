@@ -39,7 +39,8 @@
 @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(43,182,115,.04); } }
 
 /* ---- Hero Editorial ---- */
-.jl-hero { position: relative; overflow: hidden; padding: 60px 0 56px; text-align: center; background: var(--paper); }
+.jl-hero { position: relative; overflow: visible; padding: 60px 0 56px; text-align: center; background: var(--paper); }
+.jl-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .jl-hero .glow-amber { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -320px; right: -160px; pointer-events: none; }
 .jl-hero .glow-navy  { position: absolute; width: 440px; height: 440px; border-radius: 50%; background: radial-gradient(circle, rgba(27,46,75,.06), transparent 64%); bottom: -220px; left: -100px; pointer-events: none; }
 
@@ -359,8 +360,10 @@
 
 <!-- ===== HERO ===== -->
 <section class="jl-hero" aria-label="Site hero">
-  <div class="glow-amber"></div>
-  <div class="glow-navy"></div>
+  <div class="jl-hero-bg">
+    <div class="glow-amber"></div>
+    <div class="glow-navy"></div>
+  </div>
   <div class="wrap" style="position:relative;z-index:1">
     <div class="live-badge">
       <span class="live-dot"></span>
@@ -533,7 +536,7 @@
       <div class="jl-right">
         <span style="font-size:13px;color:var(--ink3)">{{ total_count }} result{{ total_count|pluralize }}</span>
         {% if limited %}
-        <a href="?all=1#jl-listings" class="jl-viewall">View all jobs
+        <a href="{% url 'all_jobs' %}" class="jl-viewall">View all jobs
           <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
         </a>
         {% endif %}
@@ -579,7 +582,7 @@
 
     {% if limited and total_count > 10 %}
     <div style="text-align:center;margin-top:32px">
-      <a href="?all=1#jl-listings" class="btn btn-amber btn-lg">View all {{ total_count }} jobs →</a>
+      <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">View all {{ total_count }} jobs →</a>
     </div>
     {% elif jobs.paginator.num_pages > 1 %}
     <nav class="pg-wrap" aria-label="Job listing pages">

@@ -372,7 +372,7 @@
         </a>
 
         <ul class="nav-links" role="list">
-          <li><a href="{% url 'job_list' %}" {% if request.resolver_match.url_name == 'job_list' %}aria-current="page"{% endif %}>Jobs</a></li>
+          <li><a href="{% url 'all_jobs' %}" {% if request.resolver_match.url_name == 'all_jobs' %}aria-current="page"{% endif %}>Jobs</a></li>
           <li><a href="{% url 'tools_hub' %}" class="tools-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg>
             Free Tools
@@ -394,7 +394,7 @@
 
       <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
         <ul>
-          <li><a href="{% url 'job_list' %}">Jobs</a></li>
+          <li><a href="{% url 'all_jobs' %}">Jobs</a></li>
           <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
           <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
           <li><a href="{% url 'directory' %}">Job Directory</a></li>

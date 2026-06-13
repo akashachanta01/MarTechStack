@@ -253,6 +253,65 @@ def category_detail(request, slug):
         "filter_qs": filter_qs,
     })
 
+def all_jobs(request):
+    """Dedicated browse-all-jobs board (the 'Jobs' nav destination)."""
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    tool_filter = request.GET.get("tool", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+    function = request.GET.get("function", "").strip().lower()
+    sort = request.GET.get("sort", "").strip().lower()
+
+    jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
+
+    # Optional function scope (Engineering / Operations / Data).
+    if function in CATEGORY_CONFIG:
+        config = CATEGORY_CONFIG[function]
+        cat_q = Q()
+        for kw in config["keywords"]:
+            cat_q |= Q(title__icontains=kw)
+        cat_q |= Q(tools__slug__in=config["tool_slugs"])
+        jobs = jobs.filter(cat_q)
+
+    if query:
+        jobs = jobs.filter(
+            Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
+        )
+    if tool_filter:
+        jobs = jobs.filter(tools__slug=tool_filter)
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+    if work_arrangement_filter:
+        jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+
+    if sort == "oldest":
+        jobs = jobs.order_by("created_at")
+    else:
+        jobs = jobs.order_by("-is_pinned", "-created_at")
+
+    jobs = jobs.distinct()
+    total_count = jobs.count()
+
+    paginator = Paginator(jobs, 25)
+    jobs_page = paginator.get_page(request.GET.get("page"))
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
+    return render(request, "jobs/all_jobs.html", {
+        "jobs": jobs_page,
+        "total_count": total_count,
+        "query": query,
+        "location_filter": location_query,
+        "selected_tool": tool_filter,
+        "current_arrangement": work_arrangement_filter,
+        "current_function": function,
+        "current_sort": sort,
+        "view_mode": request.GET.get("view", "list"),
+        "filter_qs": filter_qs,
+    })
+
 def blog_list(request):
     search_query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
