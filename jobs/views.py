@@ -439,12 +439,14 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
 
-    paginator = Paginator(jobs.order_by('-is_pinned', '-created_at'), 20)
+    jobs = jobs.order_by('-is_pinned', '-created_at')
+    total_count = jobs.count()
+    paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
 
-    return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, 'jobs': jobs_page,
-        'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc, 
+    return render(request, 'jobs/seo_landing.html', {
+        'tool': tool, 'jobs': jobs_page, 'total_count': total_count,
+        'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc,
         'is_seo_landing': True, 'location_name': location_name,
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
     })
@@ -691,6 +693,8 @@ def review_action(request, job_id, action):
 
 def about(request): return render(request, 'jobs/about.html')
 def for_employers(request): return render(request, 'jobs/for_employers.html')
+def privacy(request): return render(request, 'jobs/privacy.html')
+def terms(request): return render(request, 'jobs/terms.html')
 
 def contact(request):
     if request.method == "POST":

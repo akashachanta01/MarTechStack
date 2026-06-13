@@ -15,6 +15,8 @@ urlpatterns = [
 
     # --- STATIC PAGES ---
     path('about/', views.about, name='about'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
     path('for-employers/', views.for_employers, name='for_employers'),
     path('contact/', views.contact, name='contact'),
 

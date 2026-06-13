@@ -1,0 +1,69 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}Companies Hiring MarTech & Marketing Ops Talent | MarTechJobs{% endblock %}
+{% block meta_description %}Browse companies actively hiring Marketing Operations and MarTech professionals. See open roles by company, from startups to enterprise teams.{% endblock %}
+{% block meta_keywords %}companies hiring martech, marketing operations employers, martech companies, marketing ops jobs by company{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Companies","item":"https://martechjobs.io/companies/"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .cl-hero { padding: 52px 0 36px; border-bottom: 1px solid var(--rule); text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); }
+  .cl-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px,5vw,52px); font-weight: 800; color: var(--ink); margin: 10px 0 14px; letter-spacing: -.018em; }
+  .cl-hero h1 .em { color: var(--amber); }
+  .cl-hero p { font-size: 16px; color: var(--ink2); max-width: 540px; margin: 0 auto; line-height: 1.55; }
+  .cl-sec { padding: 44px 0 80px; }
+  .cl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media(max-width:880px){ .cl-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media(max-width:560px){ .cl-grid { grid-template-columns: 1fr; } }
+  .cl-card { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; }
+  .cl-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .cl-logo { width: 48px; height: 48px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 20px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .cl-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .cl-body { min-width: 0; }
+  .cl-name { font-size: 15.5px; font-weight: 700; color: var(--ink); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cl-count { font-size: 12.5px; color: var(--ink3); margin-top: 3px; }
+  .cl-count b { color: var(--amber); font-weight: 700; }
+  .cl-empty { text-align: center; padding: 60px 24px; color: var(--ink2); }
+</style>
+
+<section class="cl-hero">
+  <div class="wrap">
+    <h1>Companies <span class="em">Hiring</span></h1>
+    <p>Teams actively hiring Marketing Operations and MarTech talent right now. Click a company to see its open roles.</p>
+  </div>
+</section>
+
+<section class="cl-sec">
+  <div class="wrap">
+    {% if companies %}
+    <div class="cl-grid">
+      {% for c in companies %}
+      <a class="cl-card" href="{% url 'company_detail' c.company|slugify %}" aria-label="{{ c.company }} jobs">
+        <div class="cl-logo">
+          {% if c.company_logo %}<img src="{{ c.company_logo }}" alt="{{ c.company }} logo" loading="lazy">{% else %}{{ c.company|slice:":1" }}{% endif %}
+        </div>
+        <div class="cl-body">
+          <div class="cl-name">{{ c.company }}</div>
+          <div class="cl-count"><b>{{ c.job_count }}</b> open role{{ c.job_count|pluralize }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="cl-empty">No companies are hiring right now — check back soon, or <a href="{% url 'all_jobs' %}" style="color:var(--amber);font-weight:600;">browse all jobs</a>.</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

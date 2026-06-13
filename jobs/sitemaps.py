@@ -119,8 +119,11 @@ class StaticViewSitemap(Sitemap):
             'job_list', 
             'blog_list',
             'salary_guide',  
-            'directory',     
-            'company_list'   
+            'directory',
+            'company_list',
+            'all_jobs',
+            'privacy',
+            'terms',
         ]
 
     def location(self, item):

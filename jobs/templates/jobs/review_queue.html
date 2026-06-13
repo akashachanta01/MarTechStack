@@ -76,7 +76,7 @@
         </div>
         <div class="rq-filter-btns">
           <button type="submit" class="btn btn-amber" style="font-size:12px;padding:9px 18px;">Filter</button>
-          <a href="/review/" class="btn btn-ghost" style="font-size:12px;padding:9px 14px;">Reset</a>
+          <a href="{% url 'review_queue' %}" class="btn btn-ghost" style="font-size:12px;padding:9px 14px;">Reset</a>
         </div>
       </div>
     </form>
@@ -121,9 +121,9 @@
       </div>
 
       <div class="rq-actions">
-        <a href="/review/{{ job.id }}/approve/" class="btn btn-amber" style="font-size:12px;padding:8px 16px;">✓ Approve</a>
-        <a href="/review/{{ job.id }}/reject/" style="background:#c0392b;color:#fff;font-size:12px;padding:8px 16px;" class="btn">✗ Reject</a>
-        <a href="/review/{{ job.id }}/pending/" style="background:var(--navy);color:#fff;font-size:12px;padding:8px 16px;" class="btn">⟳ Pending</a>
+        <a href="{% url 'review_action' job.id 'approve' %}" class="btn btn-amber" style="font-size:12px;padding:8px 16px;">✓ Approve</a>
+        <a href="{% url 'review_action' job.id 'reject' %}" style="background:#c0392b;color:#fff;font-size:12px;padding:8px 16px;" class="btn">✗ Reject</a>
+        <a href="{% url 'review_action' job.id 'pending' %}" style="background:var(--navy);color:#fff;font-size:12px;padding:8px 16px;" class="btn">⟳ Pending</a>
       </div>
     </div>
     {% empty %}
