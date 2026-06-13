@@ -36,7 +36,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
-    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
     {"@type":"ListItem","position":3,"name":"{{ job.title|escapejs }} at {{ job.company|escapejs }}","item":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}
   ]
 }
@@ -98,7 +98,7 @@
   <nav class="jd-bc" aria-label="Breadcrumb">
     <ol>
       <li><a href="/">Home</a></li>
-      <li><a href="/">Jobs</a></li>
+      <li><a href="{% url 'all_jobs' %}">Jobs</a></li>
       <li aria-current="page">{{ job.title }}</li>
     </ol>
   </nav>
@@ -183,7 +183,7 @@
           <a href="/?q=revenue+operations" style="font-size:13px;color:var(--amber);font-weight:600;">Revenue Operations →</a>
           <a href="/?q=HubSpot" style="font-size:13px;color:var(--amber);font-weight:600;">HubSpot Jobs →</a>
           <a href="/?q=Salesforce" style="font-size:13px;color:var(--amber);font-weight:600;">Salesforce Jobs →</a>
-          <a href="/?remote=true" style="font-size:13px;color:var(--amber);font-weight:600;">Remote MarTech Jobs →</a>
+          <a href="{% url 'seo_loc_only' 'remote' %}" style="font-size:13px;color:var(--amber);font-weight:600;">Remote MarTech Jobs →</a>
         </div>
       </div>
     </aside>

@@ -105,6 +105,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'jobs.context_processors.global_seo_data',
+                'jobs.context_processors.seo_indexing',
             ],
         },
     },

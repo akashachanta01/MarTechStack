@@ -24,8 +24,12 @@ class ToolSitemap(Sitemap):
     
     def items(self):
         from .models import Tool
-        # EXPOSE ALL TOOLS (Even empty ones, to catch leads)
-        return Tool.objects.all().order_by('name')
+        # Only tools that have at least one live job. Empty tool pages are thin
+        # content and risk soft-404 / low-quality flags if submitted to Google.
+        return (
+            Tool.objects.filter(jobs__is_active=True, jobs__screening_status='approved')
+            .distinct().order_by('name')
+        )
 
     def location(self, obj):
         return reverse('tool_detail', args=[obj.slug])
@@ -119,8 +123,11 @@ class StaticViewSitemap(Sitemap):
             'job_list', 
             'blog_list',
             'salary_guide',  
-            'directory',     
-            'company_list'   
+            'directory',
+            'company_list',
+            'all_jobs',
+            'privacy',
+            'terms',
         ]
 
     def location(self, item):

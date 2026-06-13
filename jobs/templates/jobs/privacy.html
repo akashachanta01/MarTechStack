@@ -1,0 +1,47 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}Privacy Policy | MarTechJobs{% endblock %}
+{% block meta_description %}How MarTechJobs collects, uses, and protects your data. Our privacy policy for job seekers and email subscribers.{% endblock %}
+
+{% block content %}
+<style>
+  .legal-wrap { max-width: 760px; margin: 0 auto; padding: 56px 20px 80px; }
+  .legal-wrap h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px,5vw,46px); font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .legal-updated { font-family: 'Courier Prime', monospace; font-size: 12px; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 32px; }
+  .legal-wrap h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--ink); margin: 32px 0 12px; }
+  .legal-wrap p, .legal-wrap li { font-size: 15.5px; line-height: 1.7; color: var(--ink2); }
+  .legal-wrap ul { margin: 0 0 12px 20px; }
+  .legal-wrap a { color: var(--amber); font-weight: 600; }
+</style>
+
+<div class="legal-wrap">
+  <h1>Privacy Policy</h1>
+  <div class="legal-updated">Last updated: June 2026</div>
+
+  <p>MarTechJobs.io ("we", "us") is a job board for marketing technology professionals. This policy explains what data we collect and how we use it. We keep this deliberately short and plain.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Email address</strong> — only if you subscribe to job alerts. We use it solely to send you relevant MarTech job updates.</li>
+    <li><strong>Basic analytics</strong> — anonymized usage data (pages visited, approximate location) to improve the site. We do not sell this.</li>
+  </ul>
+
+  <h2>How we use your data</h2>
+  <ul>
+    <li>To send the job alerts you signed up for.</li>
+    <li>To understand which roles and pages are useful so we can improve the board.</li>
+  </ul>
+  <p>We never sell your email address or personal data to third parties.</p>
+
+  <h2>Job listings</h2>
+  <p>Job postings on MarTechJobs are aggregated from publicly available company career pages and applicant tracking systems. We link directly to the employer's official application page.</p>
+
+  <h2>Unsubscribing</h2>
+  <p>Every email includes a one-click unsubscribe link, and you can remove yourself anytime at our <a href="{% url 'unsubscribe' %}">unsubscribe page</a>. When you unsubscribe, your email is deleted from our list.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about your data? Reach us via the <a href="{% url 'contact' %}">contact page</a> and we'll respond promptly.</p>
+
+  <p style="margin-top:32px;font-size:13px;color:var(--ink3);">This is a standard privacy policy for a job board. For specific legal compliance (GDPR, CCPA), consult a professional.</p>
+</div>
+{% endblock %}

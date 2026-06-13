@@ -1,0 +1,47 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}Terms of Service | MarTechJobs{% endblock %}
+{% block meta_description %}The terms of service for using MarTechJobs.io, the job board for marketing technology professionals.{% endblock %}
+
+{% block content %}
+<style>
+  .legal-wrap { max-width: 760px; margin: 0 auto; padding: 56px 20px 80px; }
+  .legal-wrap h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px,5vw,46px); font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .legal-updated { font-family: 'Courier Prime', monospace; font-size: 12px; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 32px; }
+  .legal-wrap h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--ink); margin: 32px 0 12px; }
+  .legal-wrap p, .legal-wrap li { font-size: 15.5px; line-height: 1.7; color: var(--ink2); }
+  .legal-wrap ul { margin: 0 0 12px 20px; }
+  .legal-wrap a { color: var(--amber); font-weight: 600; }
+</style>
+
+<div class="legal-wrap">
+  <h1>Terms of Service</h1>
+  <div class="legal-updated">Last updated: June 2026</div>
+
+  <p>By using MarTechJobs.io ("the site"), you agree to these terms. We aim to keep them simple and fair.</p>
+
+  <h2>Using the site</h2>
+  <ul>
+    <li>Browsing jobs is, and always will be, free for job seekers.</li>
+    <li>You agree not to scrape, copy, or republish our listings or data without permission.</li>
+    <li>You agree not to misuse the site (automated abuse, attempts to disrupt service, etc.).</li>
+  </ul>
+
+  <h2>Job listings</h2>
+  <p>Listings are aggregated from publicly available sources and provided "as is." We do our best to keep them accurate and current, but we don't guarantee that any role is still open, accurate, or available. Always confirm details on the employer's official application page, which we link to directly.</p>
+
+  <h2>No employment relationship</h2>
+  <p>MarTechJobs is a discovery tool, not a recruiter or employer. We are not party to any application, interview, or hiring decision between you and an employer.</p>
+
+  <h2>Email alerts</h2>
+  <p>If you subscribe to alerts, you may unsubscribe at any time via the link in every email or our <a href="{% url 'unsubscribe' %}">unsubscribe page</a>.</p>
+
+  <h2>Changes</h2>
+  <p>We may update these terms occasionally. Continued use of the site means you accept the current version.</p>
+
+  <h2>Contact</h2>
+  <p>Questions? Reach us via the <a href="{% url 'contact' %}">contact page</a>.</p>
+
+  <p style="margin-top:32px;font-size:13px;color:var(--ink3);">These are standard terms for a job board. For specific legal needs, consult a professional.</p>
+</div>
+{% endblock %}

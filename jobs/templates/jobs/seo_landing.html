@@ -1,0 +1,164 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ custom_title }} | MarTechJobs{% endblock %}
+{% block meta_description %}{{ custom_desc }}{% endblock %}
+{% block meta_keywords %}{{ custom_title }}, marketing operations jobs, martech jobs, {{ location_name }} marketing jobs{% endblock %}
+
+{% block rel_prev_next %}
+  {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
+  {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
+{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
+    {"@type":"ListItem","position":3,"name":"{{ custom_title }}","item":"https://martechjobs.io{{ request.path }}"}
+  ]
+}
+</script>
+{% if total_count > 0 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{{ custom_title }}",
+  "numberOfItems": {{ total_count }},
+  "itemListElement": [{% for job in jobs|slice:":10" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+  .sl-hero { position: relative; overflow: hidden; padding: 44px 0 48px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .sl-hero .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -300px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+  .sl-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); position: relative; z-index: 1; margin-bottom: 18px; }
+  .sl-badge b { color: var(--amber); font-weight: 800; }
+  .sl-badge svg { width: 15px; height: 15px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
+  .sl-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.06; font-size: clamp(36px, 6vw, 64px); margin: 0 auto; position: relative; z-index: 1; color: var(--ink); max-width: 900px; }
+  .sl-h1 .text-martech-green, .sl-h1 .em { color: var(--amber); }
+  .sl-sub { margin: 18px auto 0; font-size: 17px; color: var(--ink2); max-width: 660px; line-height: 1.55; position: relative; z-index: 1; }
+  .sl-cta { margin-top: 26px; position: relative; z-index: 1; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  .sl-list-sec { padding: 36px 0 64px; }
+  .sl-list-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .sl-list-head h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--ink); }
+  .sl-list-head .count { color: var(--ink3); font-weight: 800; font-style: italic; font-size: 20px; }
+
+  .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; margin-bottom: 10px; }
+  .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
+  .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
+  .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .jrow-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .jrow-main { flex: 1; min-width: 0; }
+  .jrow-title { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jrow:hover .jrow-title { color: var(--navy); }
+  .jrow-meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink3); margin-top: 4px; flex-wrap: wrap; }
+  .jrow-meta .co { color: var(--ink2); font-weight: 600; }
+  .jrow-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .jrow-right { text-align: right; flex-shrink: 0; }
+  .jrow-salary { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); }
+  .jrow-salary.na { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); font-style: italic; }
+  @media (max-width: 640px) { .jrow-right { display: none; } }
+
+  .sl-empty { text-align: center; padding: 56px 24px; background: #fff; border: 1px dashed var(--rule2); border-radius: 12px; }
+  .sl-empty h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+  .sl-empty p { color: var(--ink2); margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
+
+  .sl-cross { border-top: 1px solid var(--rule); padding: 40px 0 8px; }
+  .sl-cross h3 { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 14px; }
+  .sl-cross-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .sl-cross-row a { font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; background: #fff; }
+  .sl-cross-row a:hover { border-color: var(--amber); color: var(--amber); }
+
+  .pg-wrap { display: flex; justify-content: center; gap: 5px; margin-top: 30px; }
+  .pg-btn { min-width: 40px; height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--rule); border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); background: #fff; text-decoration: none; transition: all .14s; }
+  .pg-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .pg-btn.cur { background: var(--amber); color: #fff; border-color: var(--amber); }
+</style>
+
+<section class="sl-hero">
+  <div class="glow"></div>
+  <div class="wrap">
+    <span class="sl-badge">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      <b>{{ total_count }}</b> open position{{ total_count|pluralize }} · Updated {% now "F j, Y" %}
+    </span>
+    <h1 class="sl-h1">{{ custom_header|safe }}</h1>
+    <p class="sl-sub">{{ custom_desc }}</p>
+    <div class="sl-cta">
+      <a href="{% url 'all_jobs' %}" class="btn btn-amber">Browse all jobs</a>
+      <a href="#sl-listings" class="btn btn-ghost">See {{ total_count }} role{{ total_count|pluralize }} ↓</a>
+    </div>
+  </div>
+</section>
+
+<section class="sl-list-sec" id="sl-listings">
+  <div class="wrap">
+    <div class="sl-list-head">
+      <h2>{{ custom_title }} <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
+    </div>
+
+    {% for job in jobs %}
+      <a class="jrow {% if job.is_featured %}feat{% endif %}" href="{% url 'job_detail' job.id job.slug %}" aria-label="{{ job.title }} at {{ job.company }}">
+        <div class="jrow-logo">
+          {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }} logo" loading="lazy">{% else %}{{ job.company|slice:":1" }}{% endif %}
+        </div>
+        <div class="jrow-main">
+          <div class="jrow-title">{{ job.title }}</div>
+          <div class="jrow-meta">
+            <span class="co">{{ job.company }}</span><span>·</span>
+            <span>{{ job.location|default:"Remote" }}</span><span>·</span>
+            <span>{{ job.created_at|timesince }} ago</span>
+          </div>
+          <div class="jrow-badges">
+            {% if job.is_featured %}<span class="pill pill-feat">★ Featured</span>{% endif %}
+            {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
+            <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+            {% for t in job.tools.all|slice:":2" %}<span class="pill pill-stack">{{ t.name }}</span>{% endfor %}
+          </div>
+        </div>
+        <div class="jrow-right">
+          {% if job.salary_range %}<div class="jrow-salary">{{ job.salary_range }}</div>{% else %}<div class="jrow-salary na">Salary not listed</div>{% endif %}
+        </div>
+      </a>
+    {% empty %}
+      <div class="sl-empty">
+        <h3>No {{ custom_title }} right now</h3>
+        <p>New roles land daily. Set a free alert and we'll email you the moment a matching role is posted.</p>
+        <button onclick="toggleModal('subscribe-modal')" class="btn btn-amber">Get free job alerts</button>
+      </div>
+    {% endfor %}
+
+    {% if jobs.paginator.num_pages > 1 %}
+    <nav class="pg-wrap" aria-label="Job listing pages">
+      {% if jobs.has_previous %}<a class="pg-btn" href="?page={{ jobs.previous_page_number }}" rel="prev" aria-label="Previous page">←</a>{% endif %}
+      {% for i in jobs.paginator.page_range %}
+        {% if i == jobs.number %}<span class="pg-btn cur" aria-current="page">{{ i }}</span>
+        {% elif i == 1 or i == jobs.paginator.num_pages or i >= jobs.number|add:"-2" and i <= jobs.number|add:"2" %}<a class="pg-btn" href="?page={{ i }}">{{ i }}</a>
+        {% elif i == jobs.number|add:"-3" or i == jobs.number|add:"3" %}<span class="pg-btn" style="border:0;pointer-events:none">…</span>{% endif %}
+      {% endfor %}
+      {% if jobs.has_next %}<a class="pg-btn" href="?page={{ jobs.next_page_number }}" rel="next" aria-label="Next page">→</a>{% endif %}
+    </nav>
+    {% endif %}
+
+    <!-- Internal linking: MarTech jobs in other locations -->
+    <div class="sl-cross">
+      <h3>MarTech jobs by city</h3>
+      <div class="sl-cross-row">
+        {% for city in cross_cities %}<a href="/{{ city|slugify }}/jobs/">{{ city }}</a>{% endfor %}
+      </div>
+      <h3>MarTech jobs by state</h3>
+      <div class="sl-cross-row">
+        {% for state in cross_states %}<a href="/{{ state|slugify }}/jobs/">{{ state }}</a>{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
