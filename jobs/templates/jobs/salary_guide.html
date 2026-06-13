@@ -77,10 +77,10 @@
 </section>
 
 <div class="sg-stats">
-  <div class="sg-stat"><span class="sg-stat-val">$95k–$185k</span><span class="sg-stat-label">Typical Range</span></div>
-  <div class="sg-stat"><span class="sg-stat-val">15k+</span><span class="sg-stat-label">Professionals</span></div>
-  <div class="sg-stat"><span class="sg-stat-val">{% now "Y" %}</span><span class="sg-stat-label">Live Data</span></div>
-  <div class="sg-stat"><span class="sg-stat-val">200+</span><span class="sg-stat-label">Companies Hiring</span></div>
+  {% if overall_max_k %}<div class="sg-stat"><span class="sg-stat-val">${{ overall_min_k }}k–${{ overall_max_k }}k</span><span class="sg-stat-label">Salary Range</span></div>{% endif %}
+  <div class="sg-stat"><span class="sg-stat-val">{{ stack_count }}</span><span class="sg-stat-label">Stacks Tracked</span></div>
+  <div class="sg-stat"><span class="sg-stat-val">{{ data_points }}</span><span class="sg-stat-label">Live Data Points</span></div>
+  <div class="sg-stat"><span class="sg-stat-val">{% now "Y" %}</span><span class="sg-stat-label">Updated</span></div>
 </div>
 
 <div class="sg-content">
@@ -127,23 +127,28 @@
       <h2>Ready to find your next role?</h2>
       <p>Browse hand-curated MarTech positions from companies that know exactly what they need — and are paying well for it.</p>
       <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
-        <a href="/" class="btn btn-amber btn-lg">Browse Open Roles →</a>
+        <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse Open Roles →</a>
         <a href="{% url 'post_job' %}" class="btn btn-ghost-light btn-lg">Post a Job</a>
       </div>
     </div>
 
+    {% if salary_stats %}
     <div style="margin-top:48px;">
       <h2 class="font-serif" style="font-size:1.4rem;font-weight:700;margin-bottom:20px;color:var(--ink);">Browse by Tech Stack</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
-        <a href="/?q=Salesforce" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Salesforce Jobs</a>
-        <a href="/?q=HubSpot" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">HubSpot Jobs</a>
-        <a href="/?q=Marketo" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Marketo Jobs</a>
-        <a href="/?q=Braze" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Braze Jobs</a>
-        <a href="/?q=Segment" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Segment Jobs</a>
-        <a href="/?q=Snowflake" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Snowflake Jobs</a>
-        <a href="/?q=analytics" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Analytics Jobs</a>
-        <a href="/?q=marketing+operations" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">Marketing Ops</a>
+        {% for stat in salary_stats|slice:":10" %}
+        <a href="{% url 'tool_detail' stat.tool.slug %}" class="pill pill-stack" style="padding:10px 14px;border-radius:var(--radius-sm);">{{ stat.tool.name }} Jobs</a>
+        {% endfor %}
       </div>
+    </div>
+    {% endif %}
+
+    <!-- Cross-link to written salary guides on the blog -->
+    <div style="margin-top:40px;background:var(--paper2);border:1px solid var(--rule);border-radius:var(--radius);padding:28px 32px;text-align:center;">
+      <div class="eyebrow" style="margin-bottom:8px;">More salary content</div>
+      <h2 class="font-serif" style="font-size:1.4rem;font-weight:700;margin-bottom:8px;color:var(--ink);">Want the written deep-dives?</h2>
+      <p style="font-size:14px;color:var(--ink2);line-height:1.6;margin-bottom:18px;max-width:520px;margin-left:auto;margin-right:auto;">Read our salary guide articles — negotiation tips, role-by-role breakdowns, and how MarTech pay is trending.</p>
+      <a href="{% url 'blog_list' %}?category=Salary+Guides" class="btn btn-navy">Read salary guide articles →</a>
     </div>
   </div>
 </div>

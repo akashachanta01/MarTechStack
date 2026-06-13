@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}MarTech Jobs — {{ jobs.paginator.count }}+ Marketing Technology Careers{% endblock %}
-{% block meta_description %}Find {{ jobs.paginator.count }}+ verified MarTech jobs. Hand-curated roles in Marketing Ops, RevOps, Lifecycle/CRM, CDP &amp; analytics across Salesforce, HubSpot, Marketo, Braze and 200+ companies. Refreshed daily, every link verified.{% endblock %}
+{% block meta_description %}Find {{ jobs.paginator.count }}+ verified MarTech jobs. Hand-curated roles in Marketing Ops, RevOps, Lifecycle/CRM, CDP &amp; analytics across Salesforce, HubSpot, Marketo, Braze and more. Refreshed daily, every link verified.{% endblock %}
 {% block meta_keywords %}marketing technology jobs, MarTech careers, marketing operations jobs, HubSpot jobs, Salesforce marketing jobs, Marketo jobs, Braze jobs, RevOps jobs, marketing automation jobs{% endblock %}
 
 {% block extra_schema %}
@@ -238,14 +238,14 @@
 .stack-count span { display: block; font-size: 9px; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ---- Salary guide teaser ---- */
-.salary-sec { padding: 72px 0; border-bottom: 1px solid var(--rule); background: var(--navy3); }
-.salary-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+.salary-sec { padding: 44px 0; border-bottom: 1px solid var(--rule); background: var(--navy3); }
+.salary-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
 .salary-left .eyebrow { color: var(--amber-accent); }
-.salary-h { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4vw, 44px); font-weight: 800; color: #fff; margin: 14px 0; line-height: 1.1; }
+.salary-h { font-family: 'Playfair Display', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 800; color: #fff; margin: 10px 0; line-height: 1.1; }
 .salary-h em { font-style: italic; color: var(--amber-accent); }
-.salary-sub { font-size: 15px; color: rgba(255,255,255,.6); line-height: 1.65; margin-bottom: 28px; }
+.salary-sub { font-size: 15px; color: rgba(255,255,255,.6); line-height: 1.6; margin-bottom: 22px; }
 .sal-roles { border: 1px solid rgba(255,255,255,.1); border-radius: 12px; overflow: hidden; }
-.sal-row { display: flex; align-items: center; padding: 0 20px; height: 62px; border-bottom: 1px solid rgba(255,255,255,.07); transition: background .15s; cursor: pointer; text-decoration: none; }
+.sal-row { display: flex; align-items: center; padding: 0 18px; height: 52px; border-bottom: 1px solid rgba(255,255,255,.07); transition: background .15s; cursor: pointer; text-decoration: none; }
 .sal-row:last-child { border-bottom: none; }
 .sal-row:hover { background: rgba(255,255,255,.05); }
 .sal-role-name { font-size: 14px; color: rgba(255,255,255,.8); flex: 1; }
@@ -378,7 +378,7 @@
     </div>
 
     <h1 class="jl-h1">Where marketing<br>technologists find <em>great work</em></h1>
-    <p class="jl-sub">Skip the noise. Browse hand-curated MarTech roles across Salesforce, Adobe, HubSpot, Braze &amp; 200+ companies — refreshed daily, every link verified, zero recruiter spam.</p>
+    <p class="jl-sub">Skip the noise. Browse hand-curated MarTech roles across Salesforce, Adobe, HubSpot, Braze &amp; more — refreshed daily, every link verified, zero recruiter spam.</p>
 
     <!-- Search card -->
     <form method="get" action="{% url 'job_list' %}#jl-listings" class="searchcard" role="search" aria-label="Search MarTech jobs">
@@ -473,8 +473,8 @@
     <!-- Trust stats -->
     <div class="stat-row">
       <span><span class="stat-ck"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6"/></svg></span> Every link verified daily</span>
-      <span><span class="stat-ck"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6"/></svg></span> <b>200+</b> companies hiring</span>
-      <span><span class="stat-ck"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6"/></svg></span> <b>15K+</b> free job alerts</span>
+      <span><span class="stat-ck"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6"/></svg></span> <b>{{ total_count }}</b> live MarTech roles</span>
+      <span><span class="stat-ck"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4 12 9 17 20 6"/></svg></span> Free daily job alerts</span>
     </div>
   </div>
 </section>
@@ -715,7 +715,7 @@
       <div>
         <div class="eyebrow" style="color:var(--amber-accent)">Free Resource · 2026</div>
         <h2 class="salary-h" id="salary-h">Know your<br><em>market value.</em></h2>
-        <p class="salary-sub">We analyzed 2,400+ job postings to benchmark real compensation across every major MarTech role. Updated quarterly.</p>
+        <p class="salary-sub">Real compensation benchmarks across every major MarTech role — calculated from live job postings and refreshed continuously.</p>
         <a href="{% url 'salary_guide' %}" class="btn btn-amber btn-lg">Explore Salary Guide →</a>
       </div>
       <div>
@@ -832,7 +832,7 @@
           <span class="faq-chev"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
         </button>
         <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <p itemprop="text">The board refreshes daily, pulling fresh MarTech roles from 200+ companies and verifying each one before it goes live.</p>
+          <p itemprop="text">The board refreshes daily, pulling fresh MarTech roles from companies actively hiring and verifying each one before it goes live.</p>
         </div>
       </div>
       <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">

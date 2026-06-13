@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Find the best Marketing Operations, Technology, and Analytics jobs. Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze and 200+ companies — refreshed daily, every link verified.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Find the best Marketing Operations, Technology, and Analytics jobs. Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze and more — refreshed daily, every link verified.{% endblock %}">
     <meta name="robots" content="{% block meta_robots %}{% if page_noindex %}noindex, follow{% else %}{{ robots_directive|default:'index, follow' }}{% endif %}{% endblock %}">
     <meta name="author" content="MarTechJobs">
     <meta name="keywords" content="{% block meta_keywords %}marketing technology jobs, marketing ops jobs, martech careers, HubSpot jobs, Salesforce jobs, Marketo jobs, RevOps jobs, marketing operations{% endblock %}">
@@ -67,7 +67,7 @@
     <meta property="og:site_name" content="MarTechJobs" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:title" content="{% block og_title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}" />
-    <meta property="og:description" content="{% block og_desc %}Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze &amp; 200+ companies — refreshed daily, every link verified.{% endblock %}" />
+    <meta property="og:description" content="{% block og_desc %}Hand-curated MarTech roles across Salesforce, HubSpot, Marketo, Braze &amp; more — refreshed daily, every link verified.{% endblock %}" />
     <meta property="og:url" content="{{ canonical_url|default:'https://martechjobs.io' }}{% if not canonical_url %}{{ request.path }}{% endif %}" />
     <meta property="og:image" content="{% block og_image %}https://martechjobs.io{% static 'logo-512.png' %}{% endblock %}" />
     <meta property="og:image:width" content="512" />
@@ -245,22 +245,22 @@
     .nav-mega-wrap:hover .nav-mega-trigger { color: var(--ink); background: var(--amber-light); }
     .nav-mega { position: absolute; top: 100%; left: 0; padding-top: 10px; display: none; z-index: 90; }
     .nav-mega-wrap:hover .nav-mega, .nav-mega-wrap:focus-within .nav-mega { display: block; }
-    .nav-mega-inner { width: 580px; max-width: 92vw; background: #fff; border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow-lg); padding: 22px; animation: megaIn .16s ease-out; }
-    .nav-mega-inner.nav-mega-narrow { width: 300px; }
+    .nav-mega-inner { width: 480px; max-width: 92vw; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 14px; animation: megaIn .16s ease-out; }
+    .nav-mega-inner.nav-mega-narrow { width: 256px; }
     @keyframes megaIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-    .nav-mega-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .nav-mega-h { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin: 0 0 10px 10px; }
-    .nav-mega .nav-mega-link { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); white-space: nowrap; transition: all .14s; }
+    .nav-mega-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .nav-mega-h { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin: 2px 0 6px 8px; }
+    .nav-mega .nav-mega-link { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink2); white-space: nowrap; transition: all .14s; }
     .nav-mega .nav-mega-link:hover { background: var(--amber-light); color: var(--amber); }
-    .nav-mega-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); font-family: 'Playfair Display', serif; font-weight: 800; font-size: 12px; }
+    .nav-mega-ico { width: 26px; height: 26px; border-radius: 7px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); font-family: 'Playfair Display', serif; font-weight: 800; font-size: 11px; }
     .nav-mega .nav-mega-link:hover .nav-mega-ico { background: #fff; color: var(--amber); }
-    .nav-mega-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .nav-mega .nav-mega-all { display: inline-flex; align-items: center; gap: 5px; margin: 6px 0 0 10px; padding: 6px 0; font-size: 13px; font-weight: 700; color: var(--amber); }
+    .nav-mega-ico svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-mega .nav-mega-all { display: inline-flex; align-items: center; gap: 5px; margin: 4px 0 0 8px; padding: 4px 0; font-size: 12.5px; font-weight: 700; color: var(--amber); }
     .nav-mega .nav-mega-all:hover { background: none; gap: 9px; }
-    .nav-mega-foot { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 10px; }
-    .nav-mega .nav-mega-remote { display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border: 1px solid #f0c6a8; background: var(--amber-light); border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--amber); transition: all .15s; }
+    .nav-mega-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+    .nav-mega .nav-mega-remote { display: flex; align-items: center; justify-content: center; gap: 8px; height: 38px; border: 1px solid #f0c6a8; background: var(--amber-light); border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--amber); transition: all .15s; }
     .nav-mega .nav-mega-remote:hover { background: #fff; }
-    .nav-mega .nav-mega-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 10px; background: var(--amber); color: #fff; font-size: 15px; font-weight: 700; transition: all .15s; }
+    .nav-mega .nav-mega-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 9px; background: var(--amber); color: #fff; font-size: 14px; font-weight: 700; transition: all .15s; }
     .nav-mega .nav-mega-cta:hover { background: var(--amber2); color: #fff; }
     @media (max-width: 1040px) { .nav-mega { display: none !important; } }
     .nav-links a.tools-link { color: var(--amber); font-weight: 700; }
@@ -290,32 +290,32 @@
     /* ============================================================
        FOOTER
     ============================================================ */
-    .footer { background: var(--navy3); color: rgba(255,255,255,.62); padding: 64px 0 30px; margin-top: 80px; }
+    .footer { background: var(--paper2); color: var(--ink2); padding: 64px 0 30px; margin-top: 80px; border-top: 1px solid var(--rule); }
     .ft-grid {
       display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px;
-      padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 26px;
+      padding-bottom: 48px; border-bottom: 1px solid var(--rule); margin-bottom: 26px;
     }
-    .ft-tag { font-size: 13px; color: rgba(255,255,255,.42); line-height: 1.65; margin: 14px 0 20px; max-width: 240px; }
+    .ft-tag { font-size: 13px; color: var(--ink3); line-height: 1.65; margin: 14px 0 20px; max-width: 240px; }
     .ft-nl { display: flex; gap: 7px; }
-    .ft-nl input { flex: 1; height: 42px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12);
-      border-radius: 6px; padding: 0 14px; font-size: 13.5px; color: #fff; outline: none; transition: border .2s;
+    .ft-nl input { flex: 1; height: 42px; background: #fff; border: 1px solid var(--rule2);
+      border-radius: 6px; padding: 0 14px; font-size: 13.5px; color: var(--ink); outline: none; transition: border .2s;
       font-family: 'Hanken Grotesk', sans-serif; }
     .ft-nl input:focus { border-color: var(--amber); }
-    .ft-nl input::placeholder { color: rgba(255,255,255,.32); }
+    .ft-nl input::placeholder { color: var(--ink3); }
     .ft-nl button { height: 42px; padding: 0 16px; background: var(--amber); color: #fff; border: none; border-radius: 6px;
       font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: all .2s; }
     .ft-nl button:hover { background: var(--amber2); transform: translateY(-1px); }
-    .ft-nl-msg { font-family: 'Courier Prime', monospace; font-size: 10.5px; color: rgba(255,255,255,.28); margin-top: 7px; min-height: 16px; }
+    .ft-nl-msg { font-family: 'Courier Prime', monospace; font-size: 10.5px; color: var(--ink3); margin-top: 7px; min-height: 16px; }
     .ft-ct { font-family: 'Courier Prime', monospace; font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
-      text-transform: uppercase; color: rgba(255,255,255,.34); margin-bottom: 16px; }
+      text-transform: uppercase; color: var(--ink3); margin-bottom: 16px; }
     .ft-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .ft-col a { font-size: 13.5px; color: rgba(255,255,255,.52); transition: all .15s; text-decoration: none; display: inline-block; }
-    .ft-col a:hover { color: #fff; transform: translateX(2px); }
+    .ft-col a { font-size: 13.5px; color: var(--ink2); transition: all .15s; text-decoration: none; display: inline-block; }
+    .ft-col a:hover { color: var(--amber); transform: translateX(2px); }
     .ft-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-      font-size: 12px; color: rgba(255,255,255,.32); }
+      font-size: 12px; color: var(--ink3); }
     .ft-bottom .legal { display: flex; gap: 18px; flex-wrap: wrap; }
-    .ft-bottom a { color: rgba(255,255,255,.32); text-decoration: none; transition: color .12s; }
-    .ft-bottom a:hover { color: rgba(255,255,255,.7); }
+    .ft-bottom a { color: var(--ink3); text-decoration: none; transition: color .12s; }
+    .ft-bottom a:hover { color: var(--ink); }
 
     @media (max-width: 900px) { .ft-grid { grid-template-columns: 1fr 1fr 1fr; } }
     @media (max-width: 560px) { .ft-grid { grid-template-columns: 1fr 1fr; } }
@@ -510,7 +510,7 @@
           <li><a href="{% url 'all_jobs' %}">Jobs</a></li>
           <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
           <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
-          <li><a href="{% url 'directory' %}">Job Directory</a></li>
+          <li><a href="{% url 'directory' %}">Jobs by Tool</a></li>
           <li><a href="{% url 'tools_hub' %}" class="tools-link">⚡ Free Tools</a></li>
           <li><a href="{% url 'blog_list' %}">Blog</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
@@ -551,9 +551,9 @@
                 <rect x="9" y="21.7" width="12" height="4.6" rx="2.3" fill="#fff" opacity=".82"/>
                 <rect x="9" y="28.4" width="15" height="4.6" rx="2.3" fill="#fff" opacity=".55"/>
                 <text x="48" y="25" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="22" letter-spacing="-.4">
-                  <tspan fill="#ffffff">MarTech</tspan><tspan fill="#f0a06a">Jobs</tspan>
+                  <tspan fill="#0e1c30">MarTech</tspan><tspan fill="#bf5420">Jobs</tspan>
                 </text>
-                <text x="49" y="38" font-family="'Courier Prime',monospace" font-weight="700" font-size="8.5" fill="rgba(255,255,255,.38)" letter-spacing=".18em">MARTECHJOBS.IO</text>
+                <text x="49" y="38" font-family="'Courier Prime',monospace" font-weight="700" font-size="8.5" fill="#9a9389" letter-spacing=".18em">MARTECHJOBS.IO</text>
               </svg>
             </a>
             <p class="ft-tag">The niche job board for marketing technology professionals. Curated, focused, and vendor-neutral.</p>
@@ -625,7 +625,7 @@
             <a href="{% url 'terms' %}">Terms of Service</a>
             <a href="{% url 'job_feed' %}">RSS Feed</a>
           </div>
-          <span style="font-size:12px;color:rgba(255,255,255,.2);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.06em">BUILT FOR MARKETING OPS, REVOPS &amp; MARTECH ENGINEERS</span>
+          <span style="color:var(--ink3);font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:.06em">BUILT FOR MARKETING OPS, REVOPS &amp; MARTECH ENGINEERS</span>
         </div>
       </div>
     </footer>

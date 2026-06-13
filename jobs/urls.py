@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 from .feeds import LatestJobsFeed
 
@@ -42,7 +43,9 @@ urlpatterns = [
     path('companies/<str:company_slug>/', views.company_detail, name='company_detail'),
 
     # --- NEW: DIRECTORY (Fixes Orphan Pages) ---
-    path('directory/', views.directory, name='directory'),
+    path('jobs-by-tool/', views.directory, name='directory'),
+    # 301 the old /directory/ URL to the new SEO-friendly path
+    path('directory/', RedirectView.as_view(pattern_name='directory', permanent=True)),
 
     # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),

@@ -481,8 +481,20 @@ def salary_guide(request):
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
         cache.set('salary_guide_data_v2', data, 3600)
-        
-    return render(request, 'jobs/salary_guide.html', {'salary_stats': data})
+
+    # Real aggregates computed from the data — no fabricated numbers.
+    stack_count = len(data)
+    data_points = sum(s['count'] for s in data)
+    overall_min_k = (min((s['avg_min'] for s in data), default=0)) // 1000
+    overall_max_k = (max((s['avg_max'] for s in data), default=0)) // 1000
+
+    return render(request, 'jobs/salary_guide.html', {
+        'salary_stats': data,
+        'stack_count': stack_count,
+        'data_points': data_points,
+        'overall_min_k': overall_min_k,
+        'overall_max_k': overall_max_k,
+    })
 
 def unsubscribe(request):
     if request.method == "POST":
@@ -756,7 +768,13 @@ def company_detail(request, company_slug):
     })
 
 def directory(request):
-    tools = Tool.objects.all().annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True))).order_by('-job_count')
+    # "MarTech Jobs by Tool" hub — only tools that have live roles (no thin
+    # empty pages), most-popular first.
+    tools = (
+        Tool.objects.annotate(job_count=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved')))
+        .filter(job_count__gt=0)
+        .order_by('-job_count')
+    )
     
     # 50 States Matrix for Programmatic SEO
     states = [
@@ -779,7 +797,7 @@ def directory(request):
     
     return render(request, 'jobs/directory.html', {
         'tools': tools,
+        'tool_count': tools.count(),
         'states': states,
         'top_cities': top_cities,
-        'seo_title': "MarTech Jobs Directory - Browse by Tech Stack & Location"
     })
