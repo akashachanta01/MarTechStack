@@ -707,10 +707,14 @@ def contact(request):
         form = ContactForm(request.POST)
         if form.is_valid():
             cleaned = form.cleaned_data
-            reply_to = [cleaned["email"]]
-            recipient = "martechjobs@gmail.com"
-            email = EmailMultiAlternatives(subject=f"Contact form: {cleaned['subject']}", body=cleaned["message"], from_email=settings.DEFAULT_FROM_EMAIL, to=[recipient], reply_to=reply_to)
-            try: email.send(fail_silently=False); messages.success(request, "Thanks for reaching out! We'll get back to you soon."); return redirect("contact")
+            reply_to = [cleaned["email"]] if cleaned.get("email") else None
+            topic = cleaned.get("subject") or "General feedback"
+            recipient = getattr(settings, "CONTACT_EMAIL", "martechjobs@gmail.com")
+            body = cleaned["message"]
+            if not reply_to:
+                body += "\n\n(No email provided — anonymous feedback.)"
+            email = EmailMultiAlternatives(subject=f"Feedback: {topic}", body=body, from_email=settings.DEFAULT_FROM_EMAIL, to=[recipient], reply_to=reply_to)
+            try: email.send(fail_silently=False); messages.success(request, "Thanks for the feedback — it genuinely helps shape what we build next."); return redirect("contact")
             except: messages.error(request, "We couldn't send your message right now. Please try again.")
     else: form = ContactForm()
     return render(request, "jobs/contact.html", {"form": form})

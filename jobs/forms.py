@@ -84,24 +84,23 @@ class JobPostForm(HoneypotMixin, forms.ModelForm):
 class ContactForm(HoneypotMixin, forms.Form):
     email = forms.EmailField(
         label="Email",
+        required=False,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500',
-            'placeholder': 'you@example.com'
+            'placeholder': 'you@example.com (optional — only if you want a reply)'
         })
     )
     subject = forms.CharField(
-        label="Subject",
+        label="Topic",
         max_length=120,
+        required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500',
-            'placeholder': 'How can we help?'
+            'placeholder': "What's this about? Bug, idea, listing issue…"
         })
     )
     message = forms.CharField(
-        label="Message",
+        label="Feedback",
         widget=forms.Textarea(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200',
             'rows': 6,
-            'placeholder': 'Tell us more about what you need...'
+            'placeholder': "What's working, what's broken, what you wish existed…"
         })
     )
