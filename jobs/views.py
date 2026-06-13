@@ -489,6 +489,27 @@ def unsubscribe(request):
             else: messages.warning(request, "⚠️ That email was not found in our list.")
     return render(request, "jobs/unsubscribe.html")
 
+@csrf_exempt
+def unsubscribe_oneclick(request, token):
+    """
+    RFC 8058 one-click unsubscribe target referenced by the List-Unsubscribe
+    header. The token is a signed payload of the email so we can't be tricked
+    into unsubscribing arbitrary addresses. Gmail/Apple Mail POST here directly;
+    humans clicking the header link arrive via GET.
+    """
+    from django.core import signing
+    try:
+        email = signing.loads(token, salt="unsubscribe", max_age=60 * 60 * 24 * 365)
+    except signing.BadSignature:
+        return render(request, "jobs/unsubscribe.html", {"oneclick_error": True})
+
+    Subscriber.objects.filter(email=email).delete()
+    # POST (mail-client one-click) just needs a 200; GET shows confirmation.
+    if request.method == "POST":
+        return HttpResponse("Unsubscribed", status=200)
+    messages.success(request, f"✅ {email} has been unsubscribed. Sorry to see you go!")
+    return render(request, "jobs/unsubscribe.html", {"oneclick_done": True})
+
 TOOL_TAGLINES = {
     "salesforce": "Salesforce Marketing Cloud, CRM administration, and platform roles — the backbone of enterprise marketing and revenue operations.",
     "hubspot": "HubSpot Marketing Hub, Ops, and automation roles — for the people who run inbound and lifecycle on HubSpot.",

@@ -2,6 +2,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from django.core import signing
 from .models import Subscriber
 import threading
 import logging
@@ -9,9 +10,24 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-def send_html_email(subject, template_name, context, to_email=None, bcc_list=None):
+DOMAIN = getattr(settings, "DOMAIN_URL", "https://martechjobs.io")
+
+
+def _unsubscribe_url(email):
+    """Signed, per-recipient one-click unsubscribe URL."""
+    token = signing.dumps(email, salt="unsubscribe")
+    return f"{DOMAIN}/u/{token}/"
+
+
+def send_html_email(subject, template_name, context, to_email=None, bcc_list=None,
+                    unsubscribe_email=None):
     """
     Helper to send HTML emails with a Plain Text fallback.
+
+    Adds deliverability headers (List-Unsubscribe + one-click, Reply-To). These
+    are what Gmail/Yahoo now look for to keep bulk mail OUT of spam. When a
+    single recipient is known (welcome email), we attach a personalized signed
+    unsubscribe link so one-click works.
     """
     # Guard: if SMTP credentials are missing, nothing will ever send. Surface
     # this loudly rather than failing silently per-message.
@@ -22,24 +38,37 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
         )
         return False
 
+    # Personalized unsubscribe link for the template + headers.
+    unsub_url = _unsubscribe_url(unsubscribe_email) if unsubscribe_email else f"{DOMAIN}/unsubscribe/"
+    context = {**context, "unsubscribe_url": unsub_url, "domain": DOMAIN}
+
     # 1. Render HTML
     html_content = render_to_string(template_name, context)
     # 2. Create Plain Text version (for spam filters)
     text_content = strip_tags(html_content)
 
-    # 3. Setup Email
+    # 3. Deliverability headers
+    reply_to = getattr(settings, "EMAIL_HOST_USER", None)
+    headers = {
+        "List-Unsubscribe": f"<{unsub_url}>, <mailto:{reply_to}?subject=unsubscribe>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
+
+    # 4. Setup Email
     msg = EmailMultiAlternatives(
         subject=subject,
         body=text_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=to_email if to_email else [settings.DEFAULT_FROM_EMAIL],
-        bcc=bcc_list if bcc_list else []
+        bcc=bcc_list if bcc_list else [],
+        reply_to=[reply_to] if reply_to else None,
+        headers=headers,
     )
 
-    # 4. Attach HTML
+    # 5. Attach HTML
     msg.attach_alternative(html_content, "text/html")
 
-    # 5. Send
+    # 6. Send
     try:
         msg.send(fail_silently=False)
         return True
@@ -55,13 +84,14 @@ def send_welcome_email(to_email):
     doesn't kill the process before the SMTP handshake finishes.
     """
     success = send_html_email(
-        subject="Welcome to MarTechJobs Alerts! 🚀",
+        subject="You're in — welcome to MarTechJobs",
         template_name="emails/welcome.html",
         context={},
-        to_email=[to_email]
+        to_email=[to_email],
+        unsubscribe_email=to_email,
     )
     if success:
-        print(f"✅ Welcome email sent to {to_email}")
+        logger.info("Welcome email sent to %s", to_email)
 
 def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
     """
