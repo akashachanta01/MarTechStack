@@ -463,12 +463,12 @@
 
           <!-- Job Types -->
           <div class="ft-col">
-            <div class="ft-ct">Job Types</div>
+            <div class="ft-ct">Categories</div>
             <ul>
-              <li><a href="/?q=Marketing+Operations">Marketing Operations</a></li>
-              <li><a href="/?q=Revenue+Operations">Revenue Operations</a></li>
-              <li><a href="/?q=Lifecycle+CRM">Lifecycle / CRM</a></li>
-              <li><a href="/?q=CDP+Architect">CDP Architect</a></li>
+              <li><a href="{% url 'category_detail' 'engineering' %}">Engineering Jobs</a></li>
+              <li><a href="{% url 'category_detail' 'operations' %}">Operations Jobs</a></li>
+              <li><a href="{% url 'category_detail' 'data' %}">Data &amp; Analytics Jobs</a></li>
+              <li><a href="/?q=Lifecycle">Lifecycle / CRM</a></li>
               <li><a href="/?q=Demand+Generation">Demand Generation</a></li>
               <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote MarTech Jobs</a></li>
               <li><a href="/?rtype=contract">Contract Roles</a></li>
@@ -481,9 +481,11 @@
             <ul>
               <li><a href="{% url 'seo_loc_only' 'united-states' %}">United States</a></li>
               <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote / Global</a></li>
-              {% for loc in available_countries|slice:":5" %}
-              <li><a href="{% url 'seo_loc_only' loc|slugify %}">{{ loc }}</a></li>
-              {% endfor %}
+              <li><a href="{% url 'seo_loc_only' 'united-kingdom' %}">United Kingdom</a></li>
+              <li><a href="{% url 'seo_loc_only' 'canada' %}">Canada</a></li>
+              <li><a href="{% url 'seo_loc_only' 'germany' %}">Germany</a></li>
+              <li><a href="{% url 'seo_loc_only' 'australia' %}">Australia</a></li>
+              <li><a href="{% url 'seo_loc_only' 'india' %}">India</a></li>
             </ul>
           </div>
 

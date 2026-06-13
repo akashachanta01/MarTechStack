@@ -418,7 +418,7 @@ def post_job(request):
                         except: tool = Tool.objects.filter(name__iexact=name).first()
                     if tool: job.tools.add(tool)
 
-            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2')
+            cache.delete('popular_tech_stacks_v3'); cache.delete('available_countries_v2')
             if plan == 'featured':
                 if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
                 checkout_session = stripe.checkout.Session.create(
@@ -449,7 +449,7 @@ def stripe_webhook(request):
         if job_id and session.get('payment_status') == 'paid':
             try: 
                 job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
-                cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
+                cache.delete('popular_tech_stacks_v3'); cache.delete('available_countries_v2'); send_job_alert(job)
             except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
@@ -491,7 +491,7 @@ def review_action(request, job_id, action):
     if action == "approve": 
         if job.screening_status != "approved":
             job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save()
-            cache.delete('popular_tech_stacks_v2'); cache.delete('available_countries_v2'); send_job_alert(job)
+            cache.delete('popular_tech_stacks_v3'); cache.delete('available_countries_v2'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     return redirect(request.META.get("HTTP_REFERER", "review_queue"))
