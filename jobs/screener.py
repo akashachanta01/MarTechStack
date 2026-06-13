@@ -20,7 +20,14 @@ class MarTechScreener:
     def __init__(self, model: str = "gpt-4o-mini"):
         self.model = model
         api_key = os.environ.get("OPENAI_API_KEY")
-        self.client = OpenAI(api_key=api_key) if api_key else None
+        # Timeout + retries so a hung OpenAI request can't stall the daily run.
+        self.client = OpenAI(api_key=api_key, timeout=30, max_retries=2) if api_key else None
+
+        # Manual blocklist (admin-managed). Loaded once per run.
+        try:
+            self.block_rules = [(r.rule_type, r.value) for r in BlockRule.objects.filter(enabled=True)]
+        except Exception:
+            self.block_rules = []
         
         self.hunt_roles = []
         self.hunt_tools = []
@@ -56,6 +63,29 @@ class MarTechScreener:
     def _normalize(self, text: str) -> str:
         return (text or "").strip().lower()
 
+    def _is_blocked(self, title, company, apply_url) -> bool:
+        if not self.block_rules:
+            return False
+        t = (title or "").lower(); c = (company or "").lower(); u = (apply_url or "").lower()
+        for rule_type, value in self.block_rules:
+            v = (value or "").strip()
+            if not v:
+                continue
+            vl = v.lower()
+            if rule_type == "company" and vl in c:
+                return True
+            if rule_type == "domain" and vl in u:
+                return True
+            if rule_type == "keyword" and vl in t:
+                return True
+            if rule_type == "regex":
+                try:
+                    if re.search(v, f"{title} {company}", re.IGNORECASE):
+                        return True
+                except re.error:
+                    pass
+        return False
+
     def _quick_kill(self, title: str, company: str) -> Optional[dict]:
         t_low = title.lower()
         c_low = company.lower()
@@ -82,6 +112,8 @@ class MarTechScreener:
         return None
 
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
+        if self._is_blocked(title, company, apply_url):
+            return {"status": "rejected", "score": 0.0, "reason": "Blocked by admin BlockRule.", "details": {"stage": "blocklist"}}
         quick_reject = self._quick_kill(title, company)
         if quick_reject:
             return quick_reject

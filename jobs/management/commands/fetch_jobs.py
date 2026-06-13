@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"🔌 Search provider: {self.search_provider}")
 
-        self.client = OpenAI(api_key=self.openai_key) if self.openai_key else None
+        self.client = OpenAI(api_key=self.openai_key, timeout=30, max_retries=2) if self.openai_key else None
         self.screener = MarTechScreener()
         self.total_added = 0
         
