@@ -50,6 +50,9 @@ urlpatterns = [
     # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
 
+    # --- JOB-TITLE PAGES (single-segment, curated titles only) ---
+    path('<slug:title_slug>-jobs/', views.title_jobs, name='title_jobs'),
+
     # --- PROGRAMMATIC SEO (Must be last) ---
     path('<str:location_slug>/<slug:tool_slug>-jobs/', views.seo_landing_page, name='seo_tool_loc'),
     path('<str:location_slug>/jobs/', views.seo_landing_page, name='seo_loc_only'),

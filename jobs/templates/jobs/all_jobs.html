@@ -333,6 +333,19 @@
   </div>
 </section>
 
+{% if popular_titles %}
+<section style="border-top:1px solid var(--rule);padding:40px 0 64px;background:var(--paper2);">
+  <div class="wrap">
+    <div style="font-family:'Courier Prime',monospace;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:16px;">Browse MarTech jobs by role</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      {% for r in popular_titles %}
+      <a href="/{{ r.slug }}-jobs/" style="font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--rule);color:var(--ink2);text-decoration:none;background:#fff;transition:all .15s;" onmouseover="this.style.borderColor='var(--amber)';this.style.color='var(--amber)'" onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink2)'">{{ r.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <script>
 function toggleRemotePanel(e) {
   e.stopPropagation();

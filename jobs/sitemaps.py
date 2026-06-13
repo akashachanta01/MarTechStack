@@ -117,12 +117,12 @@ class StaticViewSitemap(Sitemap):
 
     def items(self):
         return [
-            'about', 
-            'for_employers', 
-            'post_job', 
-            'job_list', 
+            'about',
+            'for_employers',
+            'post_job',
+            'job_list',
             'blog_list',
-            'salary_guide',  
+            'salary_guide',
             'directory',
             'company_list',
             'all_jobs',
@@ -132,3 +132,17 @@ class StaticViewSitemap(Sitemap):
 
     def location(self, item):
         return reverse(item)
+
+
+class TitleJobsSitemap(Sitemap):
+    """Programmatic job-title pages (/<title>-jobs/)."""
+    priority = 0.8
+    changefreq = 'daily'
+    protocol = 'https'
+
+    def items(self):
+        from jobs.views import TITLE_JOBS
+        return list(TITLE_JOBS.keys())
+
+    def location(self, slug):
+        return f'/{slug}-jobs/'

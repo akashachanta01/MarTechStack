@@ -56,6 +56,108 @@ TOOL_MAPPING = {
 SEO_CROSS_CITIES = ["New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston", "Los Angeles", "Denver", "Atlanta", "London"]
 SEO_CROSS_STATES = ["California", "Texas", "New York", "Florida", "Illinois", "Pennsylvania", "Washington", "Colorado"]
 
+# --- JOB-TITLE PAGES (programmatic SEO for high-intent title queries) ---
+# Curated only: keeps these pages high-quality and prevents arbitrary slugs
+# from generating thin pages. Each has unique intro copy for SEO.
+TITLE_JOBS = {
+    "marketing-operations-manager": {
+        "name": "Marketing Operations Manager",
+        "kw": ["marketing operations manager", "marketing ops manager", "mops manager", "manager, marketing operations"],
+        "intro": "Marketing Operations Managers own the marketing tech stack, campaign operations, lead lifecycle, and reporting — the connective tissue between marketing, sales, and data.",
+        "skills": "Marketo, HubSpot, Salesforce, lead routing, attribution, reporting",
+    },
+    "marketing-operations-specialist": {
+        "name": "Marketing Operations Specialist",
+        "kw": ["marketing operations specialist", "marketing ops specialist", "mops specialist", "marketing operations analyst"],
+        "intro": "Marketing Operations Specialists run day-to-day campaign execution, list management, automation builds, and QA inside the marketing automation platform.",
+        "skills": "HubSpot, Marketo, email QA, segmentation, workflows",
+    },
+    "revenue-operations-manager": {
+        "name": "Revenue Operations Manager",
+        "kw": ["revenue operations manager", "revops manager", "revenue operations", "manager, revenue operations"],
+        "intro": "Revenue Operations (RevOps) Managers align marketing, sales, and customer success operations — owning the funnel, the CRM, forecasting, and the go-to-market tech stack.",
+        "skills": "Salesforce, CRM, forecasting, lead-to-revenue, GTM stack",
+    },
+    "marketing-automation-specialist": {
+        "name": "Marketing Automation Specialist",
+        "kw": ["marketing automation specialist", "marketing automation manager", "automation specialist"],
+        "intro": "Marketing Automation Specialists build and optimize nurture programs, triggered journeys, scoring, and integrations across the automation platform.",
+        "skills": "Marketo, Pardot, HubSpot, lead scoring, nurture programs",
+    },
+    "salesforce-administrator": {
+        "name": "Salesforce Administrator",
+        "kw": ["salesforce administrator", "salesforce admin", "sfdc administrator"],
+        "intro": "Salesforce Administrators configure and maintain the CRM — objects, automation, permissions, reports, and integrations that keep revenue teams running.",
+        "skills": "Salesforce, flows, reports, data hygiene, integrations",
+    },
+    "salesforce-marketing-cloud-developer": {
+        "name": "Salesforce Marketing Cloud Developer",
+        "kw": ["marketing cloud developer", "sfmc developer", "salesforce marketing cloud"],
+        "intro": "Salesforce Marketing Cloud Developers build journeys, AMPscript/SSJS, data extensions, and integrations on SFMC for enterprise lifecycle marketing.",
+        "skills": "SFMC, AMPscript, SSJS, Journey Builder, SQL",
+    },
+    "hubspot-administrator": {
+        "name": "HubSpot Administrator",
+        "kw": ["hubspot administrator", "hubspot admin", "hubspot specialist", "hubspot manager"],
+        "intro": "HubSpot Administrators own the HubSpot portal — workflows, properties, reporting, and the CRM/marketing integrations that power inbound and lifecycle.",
+        "skills": "HubSpot, workflows, CRM, reporting, integrations",
+    },
+    "marketo-specialist": {
+        "name": "Marketo Specialist",
+        "kw": ["marketo specialist", "marketo admin", "marketo developer", "marketo consultant"],
+        "intro": "Marketo Specialists build smart campaigns, programs, scoring, and integrations in Adobe Marketo Engage for demand generation and lifecycle teams.",
+        "skills": "Marketo, smart campaigns, scoring, tokens, integrations",
+    },
+    "lifecycle-marketing-manager": {
+        "name": "Lifecycle Marketing Manager",
+        "kw": ["lifecycle marketing manager", "lifecycle marketing", "crm marketing manager", "retention marketing manager"],
+        "intro": "Lifecycle Marketing Managers own retention and engagement across email, push, and in-app — building journeys that move customers from onboarding to loyalty.",
+        "skills": "Braze, Iterable, Klaviyo, segmentation, retention",
+    },
+    "crm-manager": {
+        "name": "CRM Manager",
+        "kw": ["crm manager", "crm marketing manager", "customer relationship management manager"],
+        "intro": "CRM Managers own the customer database and direct-marketing programs — segmentation, campaigns, and the platforms that drive repeat engagement.",
+        "skills": "CRM, segmentation, email, campaign management",
+    },
+    "marketing-analytics-manager": {
+        "name": "Marketing Analytics Manager",
+        "kw": ["marketing analytics manager", "marketing analytics", "marketing data analyst", "analytics manager marketing"],
+        "intro": "Marketing Analytics Managers turn campaign and product data into insight — owning attribution, dashboards, experimentation, and the measurement stack.",
+        "skills": "GA4, SQL, attribution, dashboards, experimentation",
+    },
+    "demand-generation-manager": {
+        "name": "Demand Generation Manager",
+        "kw": ["demand generation manager", "demand gen manager", "demand generation"],
+        "intro": "Demand Generation Managers drive pipeline — owning multi-channel campaigns, lead funnels, and the operations and analytics that scale them.",
+        "skills": "Marketo, HubSpot, paid, ABM, pipeline analytics",
+    },
+    "email-marketing-manager": {
+        "name": "Email Marketing Manager",
+        "kw": ["email marketing manager", "email marketing specialist", "email marketing"],
+        "intro": "Email Marketing Managers own the email channel end to end — strategy, segmentation, automation, deliverability, and performance.",
+        "skills": "Klaviyo, Iterable, HubSpot, deliverability, segmentation",
+    },
+    "marketing-technologist": {
+        "name": "Marketing Technologist",
+        "kw": ["marketing technologist", "martech engineer", "marketing technology manager", "martech manager"],
+        "intro": "Marketing Technologists architect and integrate the marketing stack — connecting platforms, data, and tooling so campaigns run reliably at scale.",
+        "skills": "CDP, integrations, APIs, tag management, data",
+    },
+    "growth-marketing-manager": {
+        "name": "Growth Marketing Manager",
+        "kw": ["growth marketing manager", "growth marketer", "growth manager marketing"],
+        "intro": "Growth Marketing Managers run experiments across acquisition, activation, and retention — pairing creative testing with analytics and automation.",
+        "skills": "experimentation, analytics, lifecycle, paid, automation",
+    },
+    "campaign-operations-manager": {
+        "name": "Campaign Operations Manager",
+        "kw": ["campaign operations manager", "campaign manager", "campaign operations"],
+        "intro": "Campaign Operations Managers run the campaign engine — builds, QA, scheduling, and the cross-team process that gets marketing live on time.",
+        "skills": "Marketo, HubSpot, QA, project management, workflows",
+    },
+}
+
 def job_list(request):
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip()
@@ -379,7 +481,40 @@ def all_jobs(request):
         "current_sort": sort,
         "view_mode": request.GET.get("view", "list"),
         "filter_qs": filter_qs,
+        "popular_titles": [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items()],
     })
+
+def title_jobs(request, title_slug):
+    """Programmatic job-title landing page (e.g. /marketing-operations-manager-jobs/)."""
+    cfg = TITLE_JOBS.get(title_slug)
+    if not cfg:
+        raise Http404("Unknown role")
+
+    q = Q()
+    for kw in cfg["kw"]:
+        q |= Q(title__icontains=kw)
+    jobs = (
+        Job.objects.filter(is_active=True, screening_status="approved")
+        .filter(q).prefetch_related("tools").distinct()
+        .order_by("-is_pinned", "-created_at")
+    )
+    total_count = jobs.count()
+    paginator = Paginator(jobs, 20)
+    jobs_page = paginator.get_page(request.GET.get("page"))
+
+    related = [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items() if s != title_slug][:9]
+
+    return render(request, "jobs/title_jobs.html", {
+        "jobs": jobs_page,
+        "total_count": total_count,
+        "title_name": cfg["name"],
+        "title_slug": title_slug,
+        "intro": cfg["intro"],
+        "skills": cfg.get("skills", ""),
+        "related_titles": related,
+        "page_noindex": total_count == 0,
+    })
+
 
 def blog_list(request):
     search_query = request.GET.get('q', '').strip()
