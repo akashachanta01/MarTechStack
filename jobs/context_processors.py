@@ -8,15 +8,28 @@ def global_seo_data(request):
     on EVERY page of the website (for the footer).
     """
     
-    # 1. POPULAR TECH STACKS (Top 20 for Footer)
-    popular_tech_stacks = cache.get('popular_tech_stacks_v2')
+    # 1. POPULAR TECH STACKS (deduped by vendor for a diverse footer)
+    popular_tech_stacks = cache.get('popular_tech_stacks_v3')
     if popular_tech_stacks is None:
-        # We fetch more here (16-20) to fill the footer grid
-        popular_tech_stacks = Tool.objects.filter(
-            jobs__is_active=True, 
+        raw_stacks = Tool.objects.filter(
+            jobs__is_active=True,
             jobs__screening_status='approved'
-        ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:20]
-        cache.set('popular_tech_stacks_v2', list(popular_tech_stacks), 3600)
+        ).values('name', 'slug').annotate(count=Count('jobs')).order_by('-count')[:40]
+
+        # Keep only the top stack per vendor family (first word of the name)
+        # so the footer isn't dominated by e.g. 5 Adobe / 4 Salesforce products.
+        seen_vendors = set()
+        deduped = []
+        for stack in raw_stacks:
+            vendor = stack['name'].split()[0].lower() if stack['name'] else ''
+            if vendor in seen_vendors:
+                continue
+            seen_vendors.add(vendor)
+            deduped.append(stack)
+            if len(deduped) >= 12:
+                break
+        popular_tech_stacks = deduped
+        cache.set('popular_tech_stacks_v3', popular_tech_stacks, 3600)
 
     # 2. POPULAR LOCATIONS
     available_countries = cache.get('available_countries_v2')

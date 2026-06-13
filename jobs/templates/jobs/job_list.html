@@ -69,6 +69,34 @@
 .s-remote-btn:hover { border-color: var(--rule2); color: var(--ink); }
 .s-remote-btn.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
 
+/* ---- Remote work-from dropdown ---- */
+.s-remote { position: relative; }
+.s-remote-trigger { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px; border: 1.5px solid var(--rule); border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--ink2); background: #fff; font-family: 'Hanken Grotesk', sans-serif; transition: all .15s; }
+.s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
+.s-remote-trigger.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
+.s-remote-trigger .chev { margin-left: 2px; transition: transform .2s; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.s-remote.open .s-remote-trigger .chev { transform: rotate(180deg); }
+.s-remote-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; max-width: 86vw; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 18px; z-index: 60; display: none; }
+.s-remote.open .s-remote-panel { display: block; animation: slideDown .16s ease-out; }
+.s-remote-panel h4 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.s-remote-panel .rp-desc { font-size: 13px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
+.s-remote-opt { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1.5px solid var(--rule); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: all .15s; }
+.s-remote-opt:hover { border-color: var(--rule2); background: var(--paper); }
+.s-remote-opt.sel { border-color: var(--green); background: var(--green-light); }
+.s-remote-opt-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); }
+.s-remote-opt-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.s-remote-opt.sel .s-remote-opt-ico { background: #fff; color: var(--green); }
+.s-remote-opt-body { flex: 1; min-width: 0; }
+.s-remote-opt-title { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.s-remote-opt-sub { font-size: 12px; color: var(--ink3); }
+.s-remote-opt-check { color: var(--green); flex-shrink: 0; opacity: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.s-remote-opt.sel .s-remote-opt-check { opacity: 1; }
+.s-remote-reglabel { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 14px 0 8px; }
+.s-remote-region { display: flex; flex-wrap: wrap; gap: 6px; }
+.s-remote-region a { font-size: 12.5px; font-weight: 600; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; }
+.s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
+
 /* ---- Quick links ---- */
 .quick { margin-top: 22px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; font-size: 13px; align-items: center; position: relative; z-index: 1; }
 .quick .lbl { color: var(--ink3); font-weight: 500; }
@@ -105,6 +133,10 @@
 .jl-head .eyebrow { margin-bottom: 4px; }
 .jl-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .sort-form select { border: 1.5px solid var(--rule); border-radius: 8px; padding: 8px 28px 8px 12px; font-size: 13px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; appearance: none; -webkit-appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23857e75' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.jl-viewall { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--rule); border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--amber); background: #fff; transition: all .15s; }
+.jl-viewall:hover { border-color: var(--amber); background: var(--amber-light); }
+.jl-viewall svg { transition: transform .15s; }
+.jl-viewall:hover svg { transform: translateX(2px); }
 
 /* Alert bar */
 .alert-bar { display: flex; align-items: center; gap: 14px; background: var(--amber-light); border: 1px solid rgba(191,84,32,.2); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; }
@@ -374,17 +406,45 @@
           </select>
           <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink3);pointer-events:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </div>
-        {% if current_arrangement == 'remote' %}
-          <a class="s-remote-btn on" href="?{% if query %}q={{ query }}&{% endif %}{% if location_filter %}l={{ location_filter }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}#jl-listings" aria-pressed="true">
+        <div class="s-remote" id="s-remote">
+          <button type="button" class="s-remote-trigger {% if current_arrangement == 'remote' %}on{% endif %}" onclick="toggleRemotePanel(event)" aria-haspopup="true" aria-expanded="false">
             <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg>
-            Remote only ✓
-          </a>
-        {% else %}
-          <a class="s-remote-btn" href="?{% if query %}q={{ query }}&{% endif %}{% if location_filter %}l={{ location_filter }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote#jl-listings" aria-pressed="false">
-            <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg>
-            Remote only
-          </a>
-        {% endif %}
+            <span>{% if current_arrangement == 'remote' %}Remote · {% if location_filter %}{{ location_filter }}{% else %}Anywhere{% endif %}{% else %}Remote · Any{% endif %}</span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="s-remote-panel" role="menu">
+            <h4>Where can you work from?</h4>
+            <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
+
+            <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}#jl-listings" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+              <span class="s-remote-opt-body">
+                <span class="s-remote-opt-title">Any location</span>
+                <span class="s-remote-opt-sub">On-site, hybrid &amp; remote</span>
+              </span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+
+            <a class="s-remote-opt {% if current_arrangement == 'remote' and not location_filter %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote#jl-listings" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg></span>
+              <span class="s-remote-opt-body">
+                <span class="s-remote-opt-title">Fully remote — anywhere</span>
+                <span class="s-remote-opt-sub">Work from any country</span>
+              </span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+
+            <div class="s-remote-reglabel">Remote in a specific region</div>
+            <div class="s-remote-region">
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United States' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+States#jl-listings">United States</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United Kingdom' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+Kingdom#jl-listings">United Kingdom</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Canada' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Canada#jl-listings">Canada</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Germany' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Germany#jl-listings">Germany</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Australia' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Australia#jl-listings">Australia</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'India' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=India#jl-listings">India</a>
+            </div>
+          </div>
+        </div>
         {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
       </div>
     </form>
@@ -417,46 +477,25 @@
       <p class="lanes-sub">Pick a track and jump straight to the roles that fit.</p>
     </div>
     <div class="lanes-grid">
-      <a href="?q=Marketing+Operations#jl-listings" class="lane-card">
-        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+      <a href="{% url 'category_detail' 'engineering' %}" class="lane-card">
+        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
         <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">Marketing Ops</span><span class="lane-count">Most popular</span></div>
-          <p class="lane-desc">MOps managers, platform admins, automation architects</p>
+          <div class="lane-top"><span class="lane-name">Engineering</span><span class="lane-count">High demand</span></div>
+          <p class="lane-desc">Marketing engineers, developers, solution architects, integrations</p>
         </div>
       </a>
-      <a href="?q=Revenue+Operations#jl-listings" class="lane-card">
-        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><rect x="7" y="11" width="3" height="5"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="13" width="3" height="3"/></svg></div>
+      <a href="{% url 'category_detail' 'operations' %}" class="lane-card">
+        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
         <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">RevOps</span><span class="lane-count">Fast-growing</span></div>
-          <p class="lane-desc">Revenue operations directors, analysts, architects</p>
+          <div class="lane-top"><span class="lane-name">Operations</span><span class="lane-count">Most popular</span></div>
+          <p class="lane-desc">MOps &amp; RevOps managers, platform admins, lifecycle, demand gen</p>
         </div>
       </a>
-      <a href="?q=Lifecycle+CRM#jl-listings" class="lane-card">
-        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-        <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">Lifecycle / CRM</span><span class="lane-count">High demand</span></div>
-          <p class="lane-desc">Email, SMS, push, retention — Braze, Klaviyo, Iterable</p>
-        </div>
-      </a>
-      <a href="?q=CDP#jl-listings" class="lane-card">
+      <a href="{% url 'category_detail' 'data' %}" class="lane-card">
         <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
         <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">CDP &amp; Data</span><span class="lane-count">Emerging</span></div>
-          <p class="lane-desc">Segment, Snowflake, analytics engineers, identity</p>
-        </div>
-      </a>
-      <a href="?q=Demand+Generation#jl-listings" class="lane-card">
-        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg></div>
-        <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">Demand Gen</span><span class="lane-count">Always open</span></div>
-          <p class="lane-desc">Paid, ABM, pipeline — Marketo, Pardot, HubSpot</p>
-        </div>
-      </a>
-      <a href="?q=Analytics#jl-listings" class="lane-card">
-        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg></div>
-        <div class="lane-body">
-          <div class="lane-top"><span class="lane-name">Analytics</span><span class="lane-count">Growing</span></div>
-          <p class="lane-desc">GA4, Amplitude, Mixpanel, attribution, BI</p>
+          <div class="lane-top"><span class="lane-name">Data</span><span class="lane-count">Fast-growing</span></div>
+          <p class="lane-desc">Analytics engineers, CDP, BI — Segment, Snowflake, GA4, attribution</p>
         </div>
       </a>
     </div>
@@ -492,18 +531,12 @@
         <h2 id="jl-h">Roles worth a closer look</h2>
       </div>
       <div class="jl-right">
-        <span style="font-size:13px;color:var(--ink3)">{{ jobs.paginator.count }} result{{ jobs.paginator.count|pluralize }}</span>
-        <form method="get" class="sort-form">
-          <select name="sort" aria-label="Sort jobs" onchange="this.form.submit()">
-            <option value="" {% if not current_sort %}selected{% endif %}>Newest first</option>
-            <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
-          </select>
-          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-          {% if location_filter %}<input type="hidden" name="l" value="{{ location_filter }}">{% endif %}
-          {% if selected_tool %}<input type="hidden" name="tool" value="{{ selected_tool }}">{% endif %}
-          {% if current_rtype %}<input type="hidden" name="rtype" value="{{ current_rtype }}">{% endif %}
-          {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
-        </form>
+        <span style="font-size:13px;color:var(--ink3)">{{ total_count }} result{{ total_count|pluralize }}</span>
+        {% if limited %}
+        <a href="?all=1#jl-listings" class="jl-viewall">View all jobs
+          <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
+        </a>
+        {% endif %}
       </div>
     </div>
 
@@ -544,7 +577,11 @@
     </div>
     {% endfor %}
 
-    {% if jobs.paginator.num_pages > 1 %}
+    {% if limited and total_count > 10 %}
+    <div style="text-align:center;margin-top:32px">
+      <a href="?all=1#jl-listings" class="btn btn-amber btn-lg">View all {{ total_count }} jobs →</a>
+    </div>
+    {% elif jobs.paginator.num_pages > 1 %}
     <nav class="pg-wrap" aria-label="Job listing pages">
       {% if jobs.has_previous %}
       <a class="pg-btn" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.previous_page_number }}#jl-listings" aria-label="Previous page">←</a>
@@ -715,51 +752,6 @@
   </div>
 </section>
 
-<!-- ===== REMOTE JOBS ===== -->
-<section class="remote-sec" aria-labelledby="remote-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <div>
-        <div class="eyebrow muted">Work from anywhere</div>
-        <h2 id="remote-h">Popular remote searches</h2>
-        <p class="sub">Top remote MarTech roles searched this week</p>
-      </div>
-      <a href="{% url 'seo_loc_only' 'remote' %}" class="sec-link">All remote →</a>
-    </div>
-    <div class="remote-grid">
-      <a href="{% url 'seo_tool_loc' 'remote' 'salesforce' %}" class="rcard"><div class="rcard-stack">Salesforce</div><div class="rcard-title">Remote Salesforce Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-      <a href="{% url 'seo_tool_loc' 'remote' 'hubspot' %}" class="rcard"><div class="rcard-stack">HubSpot</div><div class="rcard-title">Remote HubSpot Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-      <a href="{% url 'seo_tool_loc' 'remote' 'braze' %}" class="rcard"><div class="rcard-stack">Braze</div><div class="rcard-title">Remote Braze Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-      <a href="{% url 'seo_tool_loc' 'remote' 'marketo' %}" class="rcard"><div class="rcard-stack">Marketo</div><div class="rcard-title">Remote Marketo Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-      <a href="{% url 'seo_tool_loc' 'remote' 'adobe' %}" class="rcard"><div class="rcard-stack">Adobe Experience Cloud</div><div class="rcard-title">Remote Adobe Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-      <a href="{% url 'seo_tool_loc' 'remote' 'klaviyo' %}" class="rcard"><div class="rcard-stack">Klaviyo</div><div class="rcard-title">Remote Klaviyo Jobs</div><div class="rcard-foot"><span class="pill pill-remote">Remote</span></div></a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== BROWSE BY LOCATION ===== -->
-<section class="loc-sec" aria-labelledby="loc-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <div>
-        <div class="eyebrow muted">Browse by location</div>
-        <h2 id="loc-h">MarTech jobs near you</h2>
-        <p class="sub">Roles in your city or country</p>
-      </div>
-    </div>
-    <div class="loc-grid">
-      <a href="{% url 'seo_loc_only' 'united-states' %}" class="lcard"><span class="lcard-name">🇺🇸 United States</span></a>
-      <a href="{% url 'seo_loc_only' 'remote' %}" class="lcard"><span class="lcard-name">🌐 Remote / Global</span></a>
-      <a href="{% url 'seo_loc_only' 'united-kingdom' %}" class="lcard"><span class="lcard-name">🇬🇧 United Kingdom</span></a>
-      <a href="{% url 'seo_loc_only' 'australia' %}" class="lcard"><span class="lcard-name">🇦🇺 Australia</span></a>
-      <a href="{% url 'seo_loc_only' 'canada' %}" class="lcard"><span class="lcard-name">🇨🇦 Canada</span></a>
-      <a href="{% url 'seo_loc_only' 'germany' %}" class="lcard"><span class="lcard-name">🇩🇪 Germany</span></a>
-      <a href="{% url 'seo_loc_only' 'india' %}" class="lcard"><span class="lcard-name">🇮🇳 India</span></a>
-      <a href="{% url 'seo_loc_only' 'spain' %}" class="lcard"><span class="lcard-name">🇪🇸 Spain</span></a>
-    </div>
-  </div>
-</section>
-
 <!-- ===== TESTIMONIALS ===== -->
 <section class="testi-sec" aria-labelledby="testi-h">
   <div class="wrap">
@@ -791,44 +783,6 @@
         <div class="tcard-author">
           <div class="tcard-avatar tint-green">MT</div>
           <div><div class="tcard-name">Marcus T.</div><div class="tcard-role">Marketing Operations Director</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== FOR EMPLOYERS ===== -->
-<section class="emp-sec" aria-labelledby="emp-h">
-  <div class="wrap">
-    <div class="emp-inner">
-      <div>
-        <div class="eyebrow">For Employers</div>
-        <h2 class="emp-h" id="emp-h">Hire <em>MarTech talent</em><br>faster than anywhere else.</h2>
-        <p class="emp-sub">Our audience is 100% marketing technology professionals. No generalist applicants — just candidates who already know your stack and speak your language.</p>
-        <div class="emp-perks">
-          <div class="emp-perk"><div class="emp-perk-ico">✓</div><span>15,000+ active, qualified job seekers</span></div>
-          <div class="emp-perk"><div class="emp-perk-ico">✓</div><span>Weekly newsletter to 15K subscribers every Tuesday</span></div>
-          <div class="emp-perk"><div class="emp-perk-ico">✓</div><span>Listings indexed by tech stack — maximum SEO reach</span></div>
-          <div class="emp-perk"><div class="emp-perk-ico">✓</div><span>Trusted by Braze, Cloudflare, Valtech and 200+ companies</span></div>
-          <div class="emp-perk"><div class="emp-perk-ico">✓</div><span>Average 18 days to hire vs 42 days industry average</span></div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a href="{% url 'post_job' %}" class="btn btn-amber btn-lg">Post a Job</a>
-          <a href="{% url 'for_employers' %}" class="btn btn-ghost btn-lg">See pricing →</a>
-        </div>
-      </div>
-      <div>
-        <div class="emp-card">
-          <div class="emp-card-head">
-            <span>Live job posting analytics</span>
-            <span class="emp-card-live"><div class="emp-card-live-dot"></div>Live now</span>
-          </div>
-          <div class="emp-card-row"><span class="k">Total impressions (7 days)</span><span class="v">4,817</span></div>
-          <div class="emp-card-row"><span class="k">Job page views</span><span class="v">1,284</span></div>
-          <div class="emp-card-row"><span class="k">Apply button clicks</span><span class="v good">87 applicants</span></div>
-          <div class="emp-card-row"><span class="k">Newsletter reach</span><span class="v">15,000+ subscribers</span></div>
-          <div class="emp-card-row"><span class="k">Avg. days to hire</span><span class="v good">18 days</span></div>
-          <div class="emp-card-row"><span class="k">Candidate quality score</span><span class="v good">MarTech-specific ↑</span></div>
         </div>
       </div>
     </div>
@@ -928,6 +882,28 @@ function toggleFaq(btn) {
     btn.setAttribute('aria-expanded', 'true');
   }
 }
+
+// Remote work-from dropdown
+function toggleRemotePanel(e) {
+  e.stopPropagation();
+  const r = document.getElementById('s-remote');
+  const open = r.classList.toggle('open');
+  r.querySelector('.s-remote-trigger').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', function(e) {
+  const r = document.getElementById('s-remote');
+  if (r && !r.contains(e.target)) {
+    r.classList.remove('open');
+    const t = r.querySelector('.s-remote-trigger');
+    if (t) t.setAttribute('aria-expanded', 'false');
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const r = document.getElementById('s-remote');
+    if (r) r.classList.remove('open');
+  }
+});
 
 // Inline subscribe forms
 document.addEventListener('DOMContentLoaded', function() {
