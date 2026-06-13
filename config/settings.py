@@ -187,6 +187,28 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip().rstrip('/')
 
 # ==============================================
+# CACHE
+# On multi-worker Render the default per-process LocMemCache makes cache
+# invalidation and rate-limiting incorrect across workers. Use a shared Redis
+# cache when REDIS_URL is set (Django 4.2 has a built-in backend — no extra
+# dependency); otherwise fall back to LocMemCache so local/dev still works.
+# ==============================================
+REDIS_URL = os.environ.get('REDIS_URL', '').strip()
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+# ==============================================
 # LOGGING — ensure app errors (e.g. email/SMTP failures) reach Render logs
 # ==============================================
 LOGGING = {
