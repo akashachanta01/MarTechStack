@@ -149,6 +149,31 @@ class Job(models.Model):
                 return code
         return "US"
 
+    # Country names we strip off the end of a location string when parsing
+    # the city/region for JobPosting schema.
+    _COUNTRY_NAMES = {
+        "united states", "usa", "u.s.", "u.s.a.", "us", "united kingdom", "uk",
+        "u.k.", "canada", "australia", "germany", "france", "netherlands",
+        "ireland", "spain", "singapore", "mexico", "brazil", "india",
+    }
+
+    def get_address_parts(self):
+        """
+        Best-effort split of the free-text location into city/region for
+        JobPosting structured data. Returns {} for remote/unknown so we never
+        emit a fake "Remote" city. Never fabricates street address or postal code.
+        """
+        loc = (self.location or "").strip()
+        if not loc or any(k in loc.lower() for k in ("remote", "anywhere", "worldwide", "wfh")):
+            return {"locality": "", "region": ""}
+        parts = [p.strip() for p in loc.split(",") if p.strip()]
+        if parts and parts[-1].lower() in self._COUNTRY_NAMES:
+            parts = parts[:-1]
+        return {
+            "locality": parts[0] if parts else "",
+            "region": parts[1] if len(parts) > 1 else "",
+        }
+
     def get_schema_valid_through(self):
         return (self.created_at + timedelta(days=90)).strftime('%Y-%m-%d')
 
