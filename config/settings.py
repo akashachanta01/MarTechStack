@@ -162,8 +162,11 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # SAFE DEFAULTS: Prevents 500 error if these variables are missing
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com').strip()
+# Gmail App Passwords are 16 chars and NEVER contain spaces — Google only
+# *displays* them in groups of four. Strip any spaces so a copy-paste with the
+# display formatting (e.g. "evov hyih ilex xcox") still authenticates correctly.
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
 DEFAULT_FROM_EMAIL = f'MarTechJobs <{EMAIL_HOST_USER}>'
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
