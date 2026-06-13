@@ -571,10 +571,11 @@
     // ---- Modal ----
     function toggleModal(id) {
       const el = document.getElementById(id);
-      el.classList.toggle('open');
-      if (el.tagName !== 'DIV' || !el.style.display) {
-        if (el.style.display === 'flex') { el.style.display = 'none'; } else { el.style.display = 'flex'; }
-      }
+      const opening = !el.classList.contains('open');
+      el.classList.toggle('open', opening);
+      // Remove any lingering inline style so CSS classes take over
+      el.style.display = '';
+      document.body.style.overflow = opening ? 'hidden' : '';
     }
 
     // ---- Mobile menu ----

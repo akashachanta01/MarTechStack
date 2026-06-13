@@ -61,6 +61,8 @@
 .s-field input::placeholder { color: var(--ink3); }
 .s-go { background: var(--amber); color: #fff; border: 0; font-weight: 700; font-size: 14px; padding: 0 28px; border-radius: 11px; cursor: pointer; height: 52px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; font-family: 'Hanken Grotesk', sans-serif; transition: background .15s, transform .15s; }
 .s-go:hover { background: var(--amber2); transform: translateY(-1px); }
+.s-clear { display: inline-flex; align-items: center; gap: 4px; height: 52px; padding: 0 14px; font-size: 13px; font-weight: 600; color: var(--ink3); text-decoration: none; border-radius: 10px; transition: color .15s, background .15s; white-space: nowrap; }
+.s-clear:hover { color: var(--ink); background: var(--paper2); }
 .search-row2 { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .s-select-wrap { position: relative; flex: 1; min-width: 150px; }
 .s-select-wrap-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -378,9 +380,10 @@
       <div class="search-row1">
         <div class="s-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company — e.g. &ldquo;Marketo&rdquo;, &ldquo;RevOps&rdquo;, &ldquo;Braze&rdquo;" aria-label="Search jobs">
+          <input type="search" name="q" id="jl-q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company — e.g. &ldquo;Marketo&rdquo;, &ldquo;RevOps&rdquo;, &ldquo;Braze&rdquo;" aria-label="Search jobs">
         </div>
         <button type="submit" class="s-go">Search Jobs</button>
+        {% if query or location_filter or selected_tool or current_arrangement %}<a href="{% url 'job_list' %}" class="s-clear" aria-label="Clear search filters">✕ Clear</a>{% endif %}
       </div>
       <div class="search-row2">
         <div class="s-select-wrap">
@@ -884,5 +887,23 @@ document.addEventListener('DOMContentLoaded', function() {
     handleSubscribe('nl-subscribe-form', 'nl-sub-msg');
   }
 });
+
+// Auto-detect user location and pre-select if no filter is active
+(function() {
+  const sel = document.querySelector('select[name="l"]');
+  if (!sel || sel.value) return; // skip if already filtered
+  fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+    .then(r => r.json())
+    .then(d => {
+      const country = d.country_name || '';
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value && country.toLowerCase().includes(sel.options[i].value.toLowerCase())) {
+          sel.value = sel.options[i].value;
+          break;
+        }
+      }
+    })
+    .catch(() => {}); // silently ignore errors — show unfiltered list
+})();
 </script>
 {% endblock %}

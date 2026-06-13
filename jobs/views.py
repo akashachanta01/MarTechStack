@@ -245,12 +245,17 @@ def category_detail(request, slug):
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
-    # Scope to the category: title keyword match OR carries a category tool.
+    # Prefer stored function field; fall back to keyword+tool matching for
+    # legacy jobs that haven't been classified yet (function='other').
+    classified = jobs.filter(function=slug)
+    unclassified = jobs.filter(function="other")
     cat_q = Q()
     for kw in config["keywords"]:
         cat_q |= Q(title__icontains=kw)
     cat_q |= Q(tools__slug__in=config["tool_slugs"])
-    jobs = jobs.filter(cat_q)
+    unclassified = unclassified.filter(cat_q)
+    from django.db.models import QuerySet
+    jobs = (classified | unclassified)
 
     # Optional user refinements within the category.
     if query:
@@ -311,13 +316,14 @@ def all_jobs(request):
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
     # Optional function scope (Engineering / Operations / Data).
+    # Prefer stored function field; fall back to keyword matching for unclassified jobs.
     if function in CATEGORY_CONFIG:
         config = CATEGORY_CONFIG[function]
         cat_q = Q()
         for kw in config["keywords"]:
             cat_q |= Q(title__icontains=kw)
         cat_q |= Q(tools__slug__in=config["tool_slugs"])
-        jobs = jobs.filter(cat_q)
+        jobs = jobs.filter(Q(function=function) | (Q(function="other") & cat_q))
 
     if query:
         jobs = jobs.filter(
