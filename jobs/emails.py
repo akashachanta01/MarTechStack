@@ -48,7 +48,7 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
     text_content = strip_tags(html_content)
 
     # 3. Deliverability headers
-    reply_to = getattr(settings, "EMAIL_HOST_USER", None)
+    reply_to = getattr(settings, "CONTACT_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
     headers = {
         "List-Unsubscribe": f"<{unsub_url}>, <mailto:{reply_to}?subject=unsubscribe>",
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
@@ -98,7 +98,7 @@ def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
     Send admin alert synchronously.
     """
     try:
-        admin_email = getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com')
+        admin_email = getattr(settings, 'CONTACT_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com')
         subject = f"🔔 New Subscriber: {subscriber_email}"
         body = f"""
 New subscriber: {subscriber_email}
