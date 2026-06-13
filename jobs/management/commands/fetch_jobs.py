@@ -16,11 +16,13 @@ from geopy.exc import GeocoderTimedOut
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.utils.text import slugify
 from django.conf import settings
 from django.db.models import Q
 
-from jobs.models import Job, Tool
+from jobs.models import Job, Tool, Category
 from jobs.screener import MarTechScreener
+from jobs.tool_catalog import resolve_tool_name
 
 logger = logging.getLogger("jobs.fetch")
 
@@ -72,6 +74,10 @@ class Command(BaseCommand):
         self.MAX_APPROVED_PER_COMPANY = 4
 
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
+        # Default category for auto-created tools (valid stacks not yet in the DB).
+        self.default_category, _ = Category.objects.get_or_create(
+            name="MarTech", defaults={"slug": "martech"}
+        )
         self.cutoff_date = timezone.now() - timedelta(days=14)
         self.processed_tokens = set()
 
@@ -451,12 +457,35 @@ class Command(BaseCommand):
             function=fn,
             screening_details=analysis.get("details", {}),
         )
-        for t in signals.get("stack", []):
-            t_obj = self.tool_cache.get(self.screener._normalize(t))
-            if t_obj: job.tools.add(t_obj)
-        if status == "approved": 
+        for raw in signals.get("stack", []):
+            tool = self._resolve_tool(raw)
+            if tool:
+                job.tools.add(tool)
+        if status == "approved":
             self.total_added += 1
             self.stdout.write(self.style.SUCCESS(f"   ✅ {job.title}"))
+
+    def _resolve_tool(self, raw):
+        """Normalize a raw stack name to a canonical Tool, auto-creating valid
+        but missing ones. Unrecognized names are dropped (prevents junk tools)."""
+        canon = resolve_tool_name(raw)
+        if not canon:
+            # Fall back to an exact existing-tool match before giving up.
+            existing = self.tool_cache.get(self.screener._normalize(raw))
+            return existing
+        key = canon.lower()
+        tool = self.tool_cache.get(key)
+        if tool:
+            return tool
+        tool, created = Tool.objects.get_or_create(
+            name=canon,
+            defaults={"slug": slugify(canon), "category": self.default_category},
+        )
+        self.tool_cache[key] = tool
+        if created:
+            self.stats["tool:created"] += 1
+            logger.info("Auto-created canonical tool: %s", canon)
+        return tool
 
     def resolve_location_automatically(self, raw_loc):
         if not raw_loc or len(raw_loc) < 3: return raw_loc
