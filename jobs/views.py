@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.cache import cache
 from django.utils.text import slugify
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages 
 from django.core.validators import validate_email
@@ -150,6 +150,107 @@ def job_list(request):
         "filter_qs": filter_qs,
         "limited": limited,
         "total_count": total_count,
+    })
+
+# --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
+CATEGORY_CONFIG = {
+    "engineering": {
+        "name": "Engineering",
+        "eyebrow": "Build the systems",
+        "description": "Marketing-engineering, CDP, integrations, and growth-engineering roles — the people who build and own the systems behind the funnel.",
+        "placeholder": "Search engineering jobs…",
+        "keywords": ["engineer", "developer", "architect", "technologist", "integration",
+                     "engineering", "implementation", "devops", "platform"],
+        "tool_slugs": ["segment", "dbt", "snowflake", "ga4", "mparticle", "customer-io",
+                       "rudderstack", "amplitude", "bigquery"],
+    },
+    "operations": {
+        "name": "Operations",
+        "eyebrow": "Run the stack",
+        "description": "Marketing Ops, RevOps, lifecycle, and campaign operations — the people who run the platforms and orchestrate the funnel.",
+        "placeholder": "Search operations jobs…",
+        "keywords": ["operations", "ops", "admin", "administrator", "lifecycle", "campaign",
+                     "marketing automation", "revops", "demand gen", "demand generation",
+                     "crm manager", "manager, marketing"],
+        "tool_slugs": ["hubspot", "marketo", "salesforce", "braze", "klaviyo", "pardot",
+                       "iterable", "marketing-cloud", "eloqua"],
+    },
+    "data": {
+        "name": "Data",
+        "eyebrow": "Turn data into growth",
+        "description": "Analytics engineering, BI, and data roles — the people who turn marketing data into insight and measurable growth.",
+        "placeholder": "Search data jobs…",
+        "keywords": ["data", "analytics", "analyst", "insight", "reporting", "intelligence",
+                     "measurement", "attribution", "business intelligence"],
+        "tool_slugs": ["snowflake", "segment", "ga4", "amplitude", "looker", "bigquery",
+                       "tableau", "mixpanel", "dbt"],
+    },
+}
+
+def category_detail(request, slug):
+    config = CATEGORY_CONFIG.get(slug)
+    if not config:
+        raise Http404("Unknown category")
+
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    tool_filter = request.GET.get("tool", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+
+    jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
+
+    # Scope to the category: title keyword match OR carries a category tool.
+    cat_q = Q()
+    for kw in config["keywords"]:
+        cat_q |= Q(title__icontains=kw)
+    cat_q |= Q(tools__slug__in=config["tool_slugs"])
+    jobs = jobs.filter(cat_q)
+
+    # Optional user refinements within the category.
+    if query:
+        jobs = jobs.filter(
+            Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
+        )
+    if tool_filter:
+        jobs = jobs.filter(tools__slug=tool_filter)
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+    if work_arrangement_filter:
+        jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+
+    jobs = jobs.order_by("-is_pinned", "-created_at").distinct()
+    total_count = jobs.count()
+
+    paginator = Paginator(jobs, 25)
+    jobs_page = paginator.get_page(request.GET.get("page"))
+
+    # Top tech stacks within this category (only those that have live jobs).
+    top_stacks = (
+        Tool.objects.filter(slug__in=config["tool_slugs"])
+        .annotate(job_count=Count("jobs", filter=Q(jobs__is_active=True, jobs__screening_status="approved")))
+        .filter(job_count__gt=0)
+        .order_by("-job_count")[:6]
+    )
+
+    # Tool options for the in-page filter dropdown.
+    category_tools = Tool.objects.filter(slug__in=config["tool_slugs"]).order_by("name")
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
+    return render(request, "jobs/category.html", {
+        "category": config,
+        "category_slug": slug,
+        "jobs": jobs_page,
+        "total_count": total_count,
+        "query": query,
+        "location_filter": location_query,
+        "selected_tool": tool_filter,
+        "current_arrangement": work_arrangement_filter,
+        "top_stacks": top_stacks,
+        "category_tools": category_tools,
+        "filter_qs": filter_qs,
     })
 
 def blog_list(request):

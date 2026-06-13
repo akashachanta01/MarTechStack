@@ -38,6 +38,9 @@ urlpatterns = [
     # --- NEW: DIRECTORY (Fixes Orphan Pages) ---
     path('directory/', views.directory, name='directory'),
 
+    # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
+    path('category/<slug:slug>/', views.category_detail, name='category_detail'),
+
     # --- PROGRAMMATIC SEO (Must be last) ---
     path('<str:location_slug>/<slug:tool_slug>-jobs/', views.seo_landing_page, name='seo_tool_loc'),
     path('<str:location_slug>/jobs/', views.seo_landing_page, name='seo_loc_only'),

@@ -477,21 +477,21 @@
       <p class="lanes-sub">Pick a track and jump straight to the roles that fit.</p>
     </div>
     <div class="lanes-grid">
-      <a href="?q=Engineering#jl-listings" class="lane-card">
+      <a href="{% url 'category_detail' 'engineering' %}" class="lane-card">
         <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
         <div class="lane-body">
           <div class="lane-top"><span class="lane-name">Engineering</span><span class="lane-count">High demand</span></div>
           <p class="lane-desc">Marketing engineers, developers, solution architects, integrations</p>
         </div>
       </a>
-      <a href="?q=Operations#jl-listings" class="lane-card">
+      <a href="{% url 'category_detail' 'operations' %}" class="lane-card">
         <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
         <div class="lane-body">
           <div class="lane-top"><span class="lane-name">Operations</span><span class="lane-count">Most popular</span></div>
           <p class="lane-desc">MOps &amp; RevOps managers, platform admins, lifecycle, demand gen</p>
         </div>
       </a>
-      <a href="?q=Data#jl-listings" class="lane-card">
+      <a href="{% url 'category_detail' 'data' %}" class="lane-card">
         <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
         <div class="lane-body">
           <div class="lane-top"><span class="lane-name">Data</span><span class="lane-count">Fast-growing</span></div>
