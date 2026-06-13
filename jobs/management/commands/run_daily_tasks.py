@@ -29,6 +29,7 @@ class Command(BaseCommand):
 
         # 4. ALERTS (Email subscribers today's new roles — skips if none)
         self._run("\n[4/6] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
+        self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
 
         # 5. CONTENT ENGINE (Automated Blog)
         self._run("\n[5/6] ✍️ Running AI Blog Engine...", 'generate_blog')

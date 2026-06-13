@@ -530,6 +530,10 @@
       </div>
       <form id="jl-alert-form" class="alert-bar-form">
         {% csrf_token %}
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        {% if selected_tool %}<input type="hidden" name="tool" value="{{ selected_tool }}">{% endif %}
+        {% if location_filter %}<input type="hidden" name="l" value="{{ location_filter }}">{% endif %}
+        {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
         <input type="email" name="email" required placeholder="your@email.com" aria-label="Email for job alerts">
         <button type="submit">Get Alerts</button>
       </form>

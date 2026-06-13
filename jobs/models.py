@@ -222,6 +222,31 @@ class Subscriber(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.email
 
+class SavedSearch(models.Model):
+    """A targeted job alert: an email + the filters it should match on.
+
+    Created when someone subscribes from a filtered/search context (the
+    'Be first to new X roles' bar). New matching jobs are emailed daily via
+    send_saved_search_alerts — separate from the general Subscriber digest.
+    """
+    email = models.EmailField(db_index=True)
+    query = models.CharField(max_length=200, blank=True, default="")
+    tool = models.CharField(max_length=100, blank=True, default="")        # tool slug
+    location = models.CharField(max_length=120, blank=True, default="")
+    function = models.CharField(max_length=20, blank=True, default="")     # engineering/operations/data
+    arrangement = models.CharField(max_length=20, blank=True, default="")  # remote/hybrid/onsite
+    label = models.CharField(max_length=200, blank=True, default="")       # human-readable summary
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Saved searches"
+        indexes = [models.Index(fields=["email", "is_active"], name="jobs_ss_email_active_idx")]
+
+    def __str__(self):
+        return f"{self.email} · {self.label or 'all MarTech'}"
+
 class BlockRule(models.Model):
     RULE_TYPES = [("domain", "Domain"), ("company", "Company"), ("keyword", "Keyword"), ("regex", "Regex")]
     rule_type = models.CharField(max_length=20, choices=RULE_TYPES, db_index=True)
