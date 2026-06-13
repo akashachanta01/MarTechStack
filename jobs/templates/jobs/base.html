@@ -237,6 +237,31 @@
       background: none; border: none; cursor: pointer; text-decoration: none;
     }
     .nav-links a:hover, .nav-links button:hover { color: var(--ink); background: var(--amber-light); }
+
+    /* ---- Jobs mega-menu ---- */
+    .nav-mega-wrap { position: relative; }
+    .nav-mega-trigger .chev { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2.5; transition: transform .2s; }
+    .nav-mega-wrap:hover .nav-mega-trigger .chev { transform: rotate(180deg); }
+    .nav-mega-wrap:hover .nav-mega-trigger { color: var(--ink); background: var(--amber-light); }
+    .nav-mega { position: absolute; top: 100%; left: 0; padding-top: 10px; display: none; z-index: 90; }
+    .nav-mega-wrap:hover .nav-mega, .nav-mega-wrap:focus-within .nav-mega { display: block; }
+    .nav-mega-inner { width: 580px; max-width: 92vw; background: #fff; border: 1px solid var(--rule); border-radius: 16px; box-shadow: var(--shadow-lg); padding: 22px; animation: megaIn .16s ease-out; }
+    @keyframes megaIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .nav-mega-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .nav-mega-h { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin: 0 0 10px 10px; }
+    .nav-mega .nav-mega-link { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); white-space: nowrap; transition: all .14s; }
+    .nav-mega .nav-mega-link:hover { background: var(--amber-light); color: var(--amber); }
+    .nav-mega-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); font-family: 'Playfair Display', serif; font-weight: 800; font-size: 12px; }
+    .nav-mega .nav-mega-link:hover .nav-mega-ico { background: #fff; color: var(--amber); }
+    .nav-mega-ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-mega .nav-mega-all { display: inline-flex; align-items: center; gap: 5px; margin: 6px 0 0 10px; padding: 6px 0; font-size: 13px; font-weight: 700; color: var(--amber); }
+    .nav-mega .nav-mega-all:hover { background: none; gap: 9px; }
+    .nav-mega-foot { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 10px; }
+    .nav-mega .nav-mega-remote { display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border: 1px solid #f0c6a8; background: var(--amber-light); border-radius: 10px; font-size: 14px; font-weight: 700; color: var(--amber); transition: all .15s; }
+    .nav-mega .nav-mega-remote:hover { background: #fff; }
+    .nav-mega .nav-mega-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 10px; background: var(--amber); color: #fff; font-size: 15px; font-weight: 700; transition: all .15s; }
+    .nav-mega .nav-mega-cta:hover { background: var(--amber2); color: #fff; }
+    @media (max-width: 1040px) { .nav-mega { display: none !important; } }
     .nav-links a.tools-link { color: var(--amber); font-weight: 700; }
     .nav-links a.tools-link:hover { background: var(--amber-light); color: var(--amber2); }
     .nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -380,7 +405,48 @@
         </a>
 
         <ul class="nav-links" role="list">
-          <li><a href="{% url 'all_jobs' %}" {% if request.resolver_match.url_name == 'all_jobs' %}aria-current="page"{% endif %}>Jobs</a></li>
+          <li class="nav-mega-wrap">
+            <a href="{% url 'all_jobs' %}" class="nav-mega-trigger" {% if request.resolver_match.url_name == 'all_jobs' %}aria-current="page"{% endif %} aria-haspopup="true">
+              Jobs
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </a>
+            <div class="nav-mega" role="menu">
+              <div class="nav-mega-inner">
+                <div class="nav-mega-cols">
+                  <div>
+                    <div class="nav-mega-h">By Category</div>
+                    <a class="nav-mega-link" href="{% url 'category_detail' 'engineering' %}" role="menuitem">
+                      <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+                      Engineering
+                    </a>
+                    <a class="nav-mega-link" href="{% url 'category_detail' 'operations' %}" role="menuitem">
+                      <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+                      Operations
+                    </a>
+                    <a class="nav-mega-link" href="{% url 'category_detail' 'data' %}" role="menuitem">
+                      <span class="nav-mega-ico"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+                      Data &amp; Analytics
+                    </a>
+                    <a class="nav-mega-all" href="{% url 'all_jobs' %}" role="menuitem">All jobs →</a>
+                  </div>
+                  <div>
+                    <div class="nav-mega-h">By Tool</div>
+                    {% for stack in popular_tech_stacks|slice:":5" %}
+                    <a class="nav-mega-link" href="{% url 'tool_detail' stack.slug %}" role="menuitem">
+                      <span class="nav-mega-ico">{{ stack.name|slice:":1" }}</span>
+                      {{ stack.name }}
+                    </a>
+                    {% endfor %}
+                    <a class="nav-mega-all" href="{% url 'directory' %}" role="menuitem">All stacks →</a>
+                  </div>
+                </div>
+                <div class="nav-mega-foot">
+                  <a class="nav-mega-remote" href="{% url 'seo_loc_only' 'remote' %}" role="menuitem">✈ Work from Anywhere</a>
+                  <a class="nav-mega-cta" href="{% url 'all_jobs' %}" role="menuitem">Browse all jobs →</a>
+                </div>
+              </div>
+            </div>
+          </li>
           <li><a href="{% url 'tools_hub' %}" class="tools-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg>
             Free Tools
