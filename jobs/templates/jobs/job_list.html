@@ -637,12 +637,12 @@
             <div class="nl-avatar tint-green" style="background:var(--green-light);color:var(--green)">S</div>
             <div class="nl-avatar tint-ink" style="background:#efece7;color:var(--ink)">J</div>
           </div>
-          <span>Joined by <b style="color:rgba(255,255,255,.8)">15,000+</b> marketing technologists</span>
+          <span>Join MarTech specialists who get the best roles <b style="color:rgba(255,255,255,.8)">first</b></span>
         </div>
         <div class="nl-badges">
           <span class="nl-badge">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
-            Every Tuesday
+            New roles daily
           </span>
           <span class="nl-badge">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
@@ -720,11 +720,11 @@
       </div>
       <div>
         <div class="sal-roles">
-          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">Marketing Operations Manager</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:58%"></div></div><span class="sal-range">$85K–$130K</span><span class="sal-lvl">Mid</span></a>
-          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">Salesforce Architect</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:88%"></div></div><span class="sal-range">$140K–$200K</span><span class="sal-lvl">Senior</span></a>
-          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">Marketing Technologist</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:64%"></div></div><span class="sal-range">$90K–$145K</span><span class="sal-lvl">Mid</span></a>
-          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">Revenue Operations Director</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:100%"></div></div><span class="sal-range">$160K–$230K</span><span class="sal-lvl">Director</span></a>
-          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">AEM Developer</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:72%"></div></div><span class="sal-range">$110K–$160K</span><span class="sal-lvl">Mid–Sr</span></a>
+          {% for s in salary_preview %}
+          <a href="{% url 'tool_detail' s.slug %}" class="sal-row"><span class="sal-role-name">{{ s.name }}</span><div class="sal-bar-wrap"><div class="sal-bar" style="width:{{ s.pct }}%"></div></div><span class="sal-range">{{ s.range }}</span></a>
+          {% empty %}
+          <a href="{% url 'salary_guide' %}" class="sal-row"><span class="sal-role-name">Real pay ranges by tech stack</span><span class="sal-range">Live data</span></a>
+          {% endfor %}
           <a href="{% url 'salary_guide' %}" class="sal-footer-link">View all roles with full data →</a>
         </div>
       </div>
@@ -732,38 +732,29 @@
   </div>
 </section>
 
-<!-- ===== TESTIMONIALS ===== -->
-<section class="testi-sec" aria-labelledby="testi-h">
+<!-- ===== WHY MARTECHJOBS ===== -->
+<section class="testi-sec" aria-labelledby="why-h">
   <div class="wrap">
     <div class="sec-head" style="text-align:center;flex-direction:column;align-items:center">
-      <div class="eyebrow muted">Trusted by professionals</div>
-      <h2 id="testi-h">Careers found here</h2>
-      <p class="sub">From the people who got the jobs</p>
+      <div class="eyebrow muted">Why MarTechJobs</div>
+      <h2 id="why-h">Built for specialists, not the algorithm</h2>
+      <p class="sub">What you won't get on a generalist board</p>
     </div>
     <div class="testi-grid">
       <div class="tcard">
-        <div class="tcard-stars" style="color:#f59e0b">★★★★★</div>
-        <p class="tcard-quote">"I'd been searching on LinkedIn for 3 months and getting nowhere. Found my Salesforce architect role on MarTechJobs within two weeks. The audience here actually knows what a Marketing Cloud implementation is."</p>
-        <div class="tcard-author">
-          <div class="tcard-avatar tint-navy">RS</div>
-          <div><div class="tcard-name">Rahul S.</div><div class="tcard-role">Salesforce Architect, Accenture</div></div>
-        </div>
+        <div style="width:42px;height:42px;border-radius:11px;background:var(--amber-light);color:var(--amber);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <div class="tcard-name" style="font-size:17px;margin-bottom:8px">100% MarTech, zero noise</div>
+        <p class="tcard-quote" style="font-style:normal">Every role is screened and organized by tool — Salesforce, HubSpot, Marketo, Braze. No "social media ninja" listings to scroll past.</p>
       </div>
       <div class="tcard">
-        <div class="tcard-stars" style="color:#f59e0b">★★★★★</div>
-        <p class="tcard-quote">"Every other job board was full of generic 'digital marketing' roles. Here, every listing is actually relevant to what I do. Landed my Braze consultant position in 10 days flat."</p>
-        <div class="tcard-author">
-          <div class="tcard-avatar tint-amber">KL</div>
-          <div><div class="tcard-name">Katie L.</div><div class="tcard-role">Senior Braze Consultant, Deloitte</div></div>
-        </div>
+        <div style="width:42px;height:42px;border-radius:11px;background:var(--green-light);color:var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <div class="tcard-name" style="font-size:17px;margin-bottom:8px">Every link verified</div>
+        <p class="tcard-quote" style="font-style:normal">We check listings daily and pull dead or filled roles — so you're not applying to jobs that closed weeks ago.</p>
       </div>
       <div class="tcard">
-        <div class="tcard-stars" style="color:#f59e0b">★★★★★</div>
-        <p class="tcard-quote">"The salary guide alone was worth bookmarking this site. I used it to negotiate $22K more than my initial offer. Then found my next role here too. It's the only MarTech-specific board I trust."</p>
-        <div class="tcard-author">
-          <div class="tcard-avatar tint-green">MT</div>
-          <div><div class="tcard-name">Marcus T.</div><div class="tcard-role">Marketing Operations Director</div></div>
-        </div>
+        <div style="width:42px;height:42px;border-radius:11px;background:var(--violet-light);color:var(--violet);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+        <div class="tcard-name" style="font-size:17px;margin-bottom:8px">Free for job seekers, always</div>
+        <p class="tcard-quote" style="font-style:normal">Browse, search, and get alerts at no cost — and we stay vendor-neutral. No pay-to-play rankings, ever.</p>
       </div>
     </div>
   </div>
@@ -823,7 +814,7 @@
           <span class="faq-chev"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
         </button>
         <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <p itemprop="text">Yes. Sign up for free job alerts and we'll email you matching positions every week. Unsubscribe anytime with one click.</p>
+          <p itemprop="text">Yes. Sign up for free job alerts and we'll email you new MarTech roles. Unsubscribe anytime with one click.</p>
         </div>
       </div>
       <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
@@ -841,7 +832,7 @@
           <span class="faq-chev"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
         </button>
         <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <p itemprop="text">Use <a href="{% url 'post_job' %}">Post a Job</a> to reach 15,000+ marketing-technology professionals. Listings are reviewed for relevance and go live within a day. See our <a href="{% url 'for_employers' %}">employer page</a> for pricing.</p>
+          <p itemprop="text">Use <a href="{% url 'post_job' %}">Post a Job</a> to reach marketing-technology specialists. Listings are reviewed for relevance and go live within a day. See our <a href="{% url 'for_employers' %}">employer page</a> for pricing.</p>
         </div>
       </div>
     </div>

@@ -139,7 +139,23 @@ def job_list(request):
 
     featured_stacks = _build_featured_stacks()
 
+    # Real salary preview for the homepage teaser. Reuse the cached salary-guide
+    # aggregates if present; never trigger the expensive computation here.
+    salary_cache = cache.get('salary_guide_data_v2') or []
+    salary_preview = []
+    if salary_cache:
+        top = salary_cache[:5]
+        max_val = max((s['avg_max'] for s in top), default=1) or 1
+        for s in top:
+            salary_preview.append({
+                'name': s['tool'].name,
+                'slug': s['tool'].slug,
+                'range': f"${s['avg_min']//1000}K–${s['avg_max']//1000}K",
+                'pct': max(35, int(s['avg_max'] / max_val * 100)),
+            })
+
     return render(request, "jobs/job_list.html", {
+        "salary_preview": salary_preview,
         "jobs": jobs_page,
         "query": query,
         "location_filter": location_query,
