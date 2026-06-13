@@ -2,88 +2,118 @@
 {% load static %}
 
 {% block title %}Contact Us — MarTechJobs{% endblock %}
-
-{% block meta_description %}Reach out to the MarTechJobs team with questions, feedback, or partnership inquiries.{% endblock %}
+{% block meta_description %}Reach out to the MarTechJobs team with questions, feedback, or partnership inquiries. We typically respond within one business day.{% endblock %}
 
 {% block content %}
-<div class="relative bg-white border-b border-slate-200 overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold font-mono uppercase tracking-wider text-slate-500 mb-8 shadow-sm">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#1f432d]"></span>
-            Support & Partnerships
+<style>
+  .contact-hero { padding: 72px 0 48px; border-bottom: 1px solid var(--rule); text-align: center; }
+  .contact-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,4vw,48px); font-weight: 800; color: var(--ink); margin: 14px 0 16px; }
+  .contact-hero p { font-size: 16px; color: var(--ink2); max-width: 480px; margin: 0 auto; line-height: 1.7; }
+
+  .contact-body { padding: 52px 0 80px; }
+  .contact-grid { display: grid; grid-template-columns: 1fr 340px; gap: 40px; }
+  @media(max-width:760px){ .contact-grid { grid-template-columns: 1fr; } }
+
+  .contact-form-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 36px; box-shadow: var(--shadow); }
+  .contact-form-card h2 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .contact-form-card .sub { font-size: 13px; color: var(--ink3); margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
+  .form-label .req { color: var(--amber); }
+  .contact-form-card input, .contact-form-card textarea {
+    width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--rule2); background: var(--paper); color: var(--ink);
+    font-size: 14px; font-family: 'Hanken Grotesk', sans-serif; outline: none;
+    transition: border-color .15s;
+  }
+  .contact-form-card input:focus, .contact-form-card textarea:focus { border-color: var(--amber); }
+  .contact-form-card textarea { resize: vertical; min-height: 130px; }
+  .form-err { font-size: 11px; color: #c0392b; font-weight: 700; margin-top: 4px; }
+
+  .contact-sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .contact-info-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .contact-info-card h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
+  .contact-info-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+  .contact-info-row:last-child { margin-bottom: 0; }
+  .contact-info-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--amber-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--amber); }
+  .contact-info-icon svg { width: 16px; height: 16px; }
+  .contact-info-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .contact-info-val { font-size: 12px; color: var(--ink3); }
+</style>
+
+<section class="contact-hero">
+  <div class="wrap">
+    <div class="eyebrow">Support &amp; Partnerships</div>
+    <h1>Contact the MarTechJobs Team</h1>
+    <p>Have a question about a listing, the newsletter, or partnerships? Send us a note and we'll follow up.</p>
+  </div>
+</section>
+
+<div class="contact-body">
+  <div class="wrap">
+    <div class="contact-grid">
+      <div class="contact-form-card">
+        <h2>Send a message</h2>
+        <p class="sub">We typically respond within one business day.</p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {{ form.website }}
+          <div class="form-group">
+            <label class="form-label">Email <span class="req">*</span></label>
+            {{ form.email }}
+            {% if form.email.errors %}<p class="form-err">{{ form.email.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject <span class="req">*</span></label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<p class="form-err">{{ form.subject.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message <span class="req">*</span></label>
+            {{ form.message }}
+            {% if form.message.errors %}<p class="form-err">{{ form.message.errors.0 }}</p>{% endif %}
+          </div>
+          <button type="submit" class="btn btn-amber btn-block btn-lg" style="margin-top:8px;">Send Message →</button>
+        </form>
+      </div>
+
+      <aside class="contact-sidebar">
+        <div class="contact-info-card">
+          <h3>Other ways to connect</h3>
+          <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.6;">For urgent inquiries, include as much detail as possible so we can route your message quickly.</p>
+          <div class="contact-info-row">
+            <div class="contact-info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+            <div>
+              <div class="contact-info-label">Response Time</div>
+              <div class="contact-info-val">Typically within 1 business day</div>
+            </div>
+          </div>
+          <div class="contact-info-row">
+            <div class="contact-info-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <div>
+              <div class="contact-info-label">Newsletter</div>
+              <div class="contact-info-val">Weekly digest every Tuesday for MarTech pros</div>
+            </div>
+          </div>
         </div>
-        <h1 class="text-5xl md:text-6xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-6">
-            Contact the MarTechJobs Team
-        </h1>
-        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-            Have a question about a listing, the newsletter, or partnerships? Send us a note and we will follow up.
-        </p>
+
+        <div class="contact-info-card" style="background:var(--navy);border-color:var(--navy2);">
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--amber-accent);margin-bottom:8px;">Want to hire?</div>
+          <p style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:16px;line-height:1.6;">Post your Marketing Ops or RevOps role free and reach 15k+ specialists.</p>
+          <a href="{% url 'post_job' %}" class="btn btn-amber btn-block">Post a Job →</a>
+        </div>
+      </aside>
     </div>
+  </div>
 </div>
 
-<div class="bg-[#f8f9fa] py-12 border-t border-slate-100">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            <div class="lg:col-span-7">
-                <div class="bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-lg p-8 md:p-10">
-                    <div class="mb-8 border-b border-slate-100 pb-6">
-                        <h2 class="text-2xl font-serif font-bold text-slate-900">Send a message</h2>
-                        <p class="text-slate-500 text-sm mt-1">We typically respond within one business day.</p>
-                    </div>
-
-                    <form method="post" class="space-y-6" novalidate>
-                        {% csrf_token %}
-                        {{ form.website }}
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Email <span class="text-red-500">*</span></label>
-                            {{ form.email }}
-                            {% if form.email.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.email.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Subject <span class="text-red-500">*</span></label>
-                            {{ form.subject }}
-                            {% if form.subject.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.subject.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Message <span class="text-red-500">*</span></label>
-                            {{ form.message }}
-                            {% if form.message.errors %}<p class="text-red-600 text-xs mt-1 font-bold">{{ form.message.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div class="pt-4">
-                            <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold text-lg py-4 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-[#1f432d]">
-                                Send Message
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="lg:col-span-5">
-                <div class="bg-white border border-slate-200 rounded-xl p-8">
-                    <h3 class="text-xl font-serif font-bold text-slate-900 mb-4">Other ways to connect</h3>
-                    <p class="text-sm text-slate-500 mb-6">
-                        For urgent inquiries, include as much detail as possible so we can route your message quickly.
-                    </p>
-                    <div class="space-y-4 text-sm">
-                        <div class="flex items-start gap-3">
-                            <span class="material-symbols-outlined text-[#1f432d]">schedule</span>
-                            <div>
-                                <p class="font-bold text-slate-900">Response time</p>
-                                <p class="text-slate-500">Typically within 1 business day.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <span class="material-symbols-outlined text-[#1f432d]">campaign</span>
-                            <div>
-                                <p class="font-bold text-slate-900">Newsletter</p>
-                                <p class="text-slate-500">Every Tuesday for MarTech pros.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('#id_email, #id_subject, #id_message').forEach(el => {
+    el.style.cssText = 'width:100%;padding:10px 14px;border-radius:6px;border:1px solid var(--rule2);background:var(--paper);color:var(--ink);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;';
+    if(el.tagName === 'TEXTAREA') el.rows = 6;
+  });
+});
+</script>
 {% endblock %}

@@ -1,241 +1,196 @@
 {% extends "jobs/base.html" %}
 
 {% block title %}
-    {% if tool.seo_title %}
-        {{ tool.seo_title }}
-    {% elif custom_title %}
-        {{ custom_title }} | MarTechJobs
-    {% else %}
-        {{ tool.name }} Jobs & Career Opportunities {% now "Y" %} — MarTechJobs
+    {% if tool.seo_title %}{{ tool.seo_title }}
+    {% elif custom_title %}{{ custom_title }} | MarTechJobs
+    {% else %}{{ tool.name }} Jobs & Career Opportunities {% now "Y" %} — MarTechJobs
     {% endif %}
 {% endblock %}
 
 {% block meta_description %}
-    {% if custom_desc %}
-        {{ custom_desc }}
-    {% else %}
-        Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. We curate {{ tool.name }} jobs from top companies including Consultants, Admins, and Architects.
+    {% if custom_desc %}{{ custom_desc }}
+    {% else %}Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. Hand-curated {{ tool.name }} jobs from top companies — Consultants, Admins, and Architects.
     {% endif %}
 {% endblock %}
+
+{% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing operations, {{ tool.name }} careers, martech {{ tool.name }}{% endblock %}
 
 {% block rel_prev_next %}
-    {% if jobs.has_previous %}
-        <link rel="prev" href="?page={{ jobs.previous_page_number }}" />
-    {% endif %}
-    {% if jobs.has_next %}
-        <link rel="next" href="?page={{ jobs.next_page_number }}" />
-    {% endif %}
+    {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
+    {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
 {% endblock %}
 
-{% block content %}
+{% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
-  "itemListElement": [{
-    "@type": "ListItem",
-    "position": 1,
-    "name": "Home",
-    "item": "{{ request.scheme }}://{{ request.get_host }}/"
-  },{
-    "@type": "ListItem",
-    "position": 2,
-    "name": "Tech Stacks",
-    "item": "{{ request.scheme }}://{{ request.get_host }}/"
-  },{
-    "@type": "ListItem",
-    "position": 3,
-    "name": "{% if tool %}{{ tool.name }}{% else %}{{ location_name|default:'MarTech' }}{% endif %} Jobs",
-    "item": "{{ request.build_absolute_uri }}"
-  }]
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"{{ request.scheme }}://{{ request.get_host }}/"},
+    {"@type":"ListItem","position":2,"name":"Tech Stacks","item":"{{ request.scheme }}://{{ request.get_host }}/"},
+    {"@type":"ListItem","position":3,"name":"{% if tool %}{{ tool.name }}{% else %}{{ location_name|default:'MarTech' }}{% endif %} Jobs","item":"{{ request.build_absolute_uri }}"}
+  ]
 }
 </script>
+{% if jobs.paginator.count > 0 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "{% if tool %}{{ tool.name }}{% endif %} Jobs on MarTechJobs",
+  "numberOfItems": {{ jobs.paginator.count }},
+  "itemListElement": [{% for job in jobs|slice:":10" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+}
+</script>
+{% endif %}
+{% endblock %}
 
-<div class="relative bg-white border-b border-slate-100 overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
-    
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        
-        <div class="mb-10">
-            <a href="/" class="inline-flex items-center text-sm font-bold text-slate-400 hover:text-martech-green transition group">
-                <span class="mr-1.5 transition-transform group-hover:-translate-x-1">&larr;</span> View all MarTech Jobs
-            </a>
-        </div>
+{% block content %}
+<style>
+  .td-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--rule); }
+  .td-hero-inner { max-width: 780px; margin: 0 auto; padding: 0 32px; text-align: center; }
+  .td-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink3); margin-bottom: 28px; transition: color .15s; }
+  .td-back:hover { color: var(--amber); }
+  .td-logo { width: 80px; height: 80px; border-radius: var(--radius); border: 1px solid var(--rule); background: var(--card); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .td-logo img { max-width: 60px; max-height: 60px; object-fit: contain; }
+  .td-logo-mono { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--amber); }
+  .td-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,48px); font-weight: 800; color: var(--ink); margin-bottom: 16px; line-height: 1.2; }
+  .td-hero h1 em { font-style: italic; color: var(--amber); }
+  .td-hero p { font-size: 16px; color: var(--ink2); line-height: 1.7; }
 
-        <div class="flex flex-col items-center text-center max-w-3xl mx-auto">
-            
-            {% if tool %}
-                {% if tool.logo_url %}
-                <div class="flex-shrink-0 w-24 h-24 bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center shadow-sm mb-8">
-                    <img src="{{ tool.logo_url }}" alt="{{ tool.name }} Logo" class="max-w-full max-h-full object-contain">
-                </div>
-                {% else %}
-                <div class="flex-shrink-0 w-24 h-24 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-3xl font-serif font-bold text-slate-400 shadow-inner mb-8">
-                    {{ tool.name|slice:":1" }}
-                </div>
-                {% endif %}
-            {% endif %}
+  .td-jobs { padding: 40px 0 80px; }
+  .td-jobs-wrap { max-width: 780px; margin: 0 auto; padding: 0 32px; }
+  .td-jobs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .td-jobs-header h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
+  .td-count-badge { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; background: var(--card); border: 1px solid var(--rule); padding: 4px 10px; border-radius: 4px; color: var(--ink3); }
 
-            <div>
-                <h1 class="text-5xl md:text-6xl font-serif font-medium text-slate-900 mb-6 leading-tight">
-                    {% if tool and tool.seo_h1 and not is_seo_landing %}
-                        {{ tool.seo_h1 }}
-                    {% elif custom_header %}
-                        {{ custom_header|safe }}
-                    {% else %}
-                        Top <span class="text-martech-green">{% if tool %}{{ tool.name }}{% else %}MarTech{% endif %}</span> Jobs
-                    {% endif %}
-                </h1>
-                
-                {% if tool and tool.description and not is_seo_landing %}
-                    <div class="prose prose-slate max-w-2xl text-slate-600 font-light leading-relaxed mb-6 mx-auto">
-                        {{ tool.description|safe }}
-                    </div>
-                {% else %}
-                    <p class="text-lg text-slate-600 max-w-2xl mb-8 font-light leading-relaxed mx-auto">
-                        {% if custom_desc %}
-                            {{ custom_desc }}
-                        {% else %}
-                            Browse the best Marketing Operations and MarTech roles requiring <strong>{{ tool.name }}</strong> expertise. 
-                            We curate {{ tool.name }} jobs from top companies to help you find your next career move.
-                        {% endif %}
-                    </p>
-                {% endif %}
-            </div>
-        </div>
+  .td-job-row { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; transition: all .18s; margin-bottom: 12px; }
+  .td-job-row:hover { box-shadow: var(--shadow); transform: translateY(-1px); border-color: var(--rule2); }
+  .td-job-inner { display: flex; gap: 16px; align-items: flex-start; }
+  .td-job-logo { width: 46px; height: 46px; border-radius: 9px; border: 1px solid var(--rule); background: var(--paper); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; color: var(--ink3); overflow: hidden; }
+  .td-job-logo img { max-width: 36px; max-height: 36px; object-fit: contain; }
+  .td-job-body { flex: 1; min-width: 0; }
+  .td-job-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 2px; line-height: 1.3; }
+  .td-job-title a:hover { color: var(--amber); }
+  .td-job-co { font-size: 13px; color: var(--ink3); margin-bottom: 8px; }
+  .td-job-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .td-job-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .td-job-salary { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  @media(max-width:540px){ .td-job-right { display: none; } }
 
+  .td-empty { background: var(--card); border: 1px dashed var(--rule2); border-radius: var(--radius); padding: 60px 24px; text-align: center; }
+  .td-empty h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .td-empty p { font-size: 14px; color: var(--ink2); line-height: 1.65; max-width: 420px; margin: 0 auto 24px; }
+
+  .td-cross-links { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--rule); }
+  .td-cross-links h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
+  .td-cross-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .td-cross-link { font-size: 12px; font-weight: 500; color: var(--ink2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--rule2); background: var(--card); transition: all .14s; text-decoration: none; }
+  .td-cross-link:hover { border-color: var(--amber); color: var(--amber); }
+
+  .td-pagination { display: flex; justify-content: center; gap: 4px; margin-top: 32px; }
+  .td-page-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--rule2); background: var(--card); font-size: 13px; font-weight: 600; color: var(--ink2); transition: all .14s; text-decoration: none; }
+  .td-page-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .td-page-current { background: var(--amber); color: #fff; border-color: var(--amber); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+</style>
+
+<section class="td-hero">
+  <div class="td-hero-inner">
+    <a href="/" class="td-back">← View all MarTech Jobs</a>
+
+    {% if tool %}
+      {% if tool.logo_url %}
+        <div class="td-logo"><img src="{{ tool.logo_url }}" alt="{{ tool.name }} logo"></div>
+      {% else %}
+        <div class="td-logo"><span class="td-logo-mono">{{ tool.name|slice:":1" }}</span></div>
+      {% endif %}
+    {% endif %}
+
+    <h1>
+      {% if tool and tool.seo_h1 and not is_seo_landing %}
+        {{ tool.seo_h1 }}
+      {% elif custom_header %}
+        {{ custom_header|safe }}
+      {% else %}
+        Top <em>{% if tool %}{{ tool.name }}{% else %}MarTech{% endif %}</em> Jobs
+      {% endif %}
+    </h1>
+
+    {% if tool and tool.description and not is_seo_landing %}
+      <div style="color:var(--ink2);font-size:15px;line-height:1.7;">{{ tool.description|safe }}</div>
+    {% else %}
+      <p>{% if custom_desc %}{{ custom_desc }}{% else %}Browse the best Marketing Operations and MarTech roles requiring <strong>{{ tool.name }}</strong> expertise. Hand-curated from top companies, refreshed daily.{% endif %}</p>
+    {% endif %}
+  </div>
+</section>
+
+<div class="td-jobs">
+  <div class="td-jobs-wrap">
+    <div class="td-jobs-header">
+      <h2>Active Roles</h2>
+      <span class="td-count-badge">{{ jobs.paginator.count|default:0 }} found</span>
     </div>
-</div>
 
-<div class="bg-slate-50 py-16 min-h-[50vh]">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-        
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-serif font-bold text-slate-900">Active Roles</h2>
-            <span class="text-xs font-bold bg-white border border-slate-200 px-2 py-1 rounded text-slate-500">{{ jobs.paginator.count|default:0 }} Found</span>
+    {% for job in jobs %}
+    <div class="td-job-row" itemscope itemtype="https://schema.org/JobPosting">
+      <meta itemprop="title" content="{{ job.title }}">
+      <meta itemprop="datePosted" content="{{ job.created_at|date:'Y-m-d' }}">
+      <div class="td-job-inner">
+        <div class="td-job-logo tint-amber">
+          {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }}">{% else %}{{ job.company|slice:":1" }}{% endif %}
         </div>
+        <div class="td-job-body">
+          <div class="td-job-title"><a href="{% url 'job_detail' job.id job.slug %}">{{ job.title }}</a></div>
+          <div class="td-job-co" itemprop="hiringOrganization" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">{{ job.company }}</span></div>
+          <div class="td-job-pills">
+            <span class="pill pill-loc">{{ job.location|default:"Remote" }}</span>
+            <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+            {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
+          </div>
+        </div>
+        <div class="td-job-right">
+          {% if job.salary_range %}<div class="td-job-salary">{{ job.salary_range }}</div>{% endif %}
+          <a href="{% url 'job_detail' job.id job.slug %}" class="btn btn-amber" style="font-size:11px;padding:7px 14px;">Apply →</a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="td-empty">
+      <div style="font-size:32px;margin-bottom:12px;">🔔</div>
+      <h3>No active {% if tool %}{{ tool.name }}{% endif %} jobs{% if location_name %} in {{ location_name }}{% endif %} right now</h3>
+      <p>Top-tier marketing operations roles fill up fast. Join 15,000+ professionals and get notified the moment a new role is posted.</p>
+      <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber">Set Job Alert</button>
+      <div style="margin-top:20px;"><a href="{% url 'job_list' %}" style="font-size:13px;color:var(--amber);font-weight:600;">Browse All Open Jobs →</a></div>
+    </div>
+    {% endfor %}
 
-        {% for job in jobs %}
-            <div class="bg-white border border-black rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
-                
-                <div class="flex flex-col md:flex-row gap-4 items-start">
-                    
-                    <div class="flex-shrink-0">
-                        {% if job.company_logo %}
-                            <div class="w-14 h-14 border border-slate-100 rounded-md p-2 flex items-center justify-center bg-white">
-                                <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
-                            </div>
-                        {% else %}
-                            <div class="w-14 h-14 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center text-xl font-serif font-bold text-slate-400">
-                                {{ job.company|slice:":1" }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="flex-grow">
-                        <h3 class="text-xl font-serif font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2">
-                            <a href="{% url 'job_detail' job.id job.slug %}" class="hover:underline decoration-2 decoration-slate-300 underline-offset-4">
-                                {{ job.title }}
-                            </a>
-                            {% if job.is_featured %}
-                                <span class="bg-[#1f432d] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">New</span>
-                            {% endif %}
-                        </h3>
-                        <p class="text-sm text-slate-500 font-medium mb-2">{{ job.company }}</p>
-                        
-                        <div class="flex flex-wrap gap-2">
-                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                {{ job.location|default:"Remote" }}
-                            </div>
-
-                            {% if job.salary_range %}
-                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                {{ job.salary_range }}
-                            </div>
-                            {% endif %}
-
-                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {{ job.get_role_type_display|upper }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col justify-between items-end gap-3 min-w-[140px] self-stretch py-1">
-                        <div class="flex gap-1.5">
-                            {% for t in job.tools.all|slice:":2" %}
-                            <span class="{{ t.color_class }} px-2 py-0.5 rounded text-[10px] font-bold border opacity-90 shadow-sm">
-                                {{ t.name }}
-                            </span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="w-full border-t border-gray-200 my-1"></div>
-
-                        <a href="{% url 'job_detail' job.id job.slug %}" class="bg-[#1f432d] hover:bg-green-900 text-white font-bold py-2 px-5 rounded shadow-sm text-xs transition-colors whitespace-nowrap">
-                            Apply Now
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-        {% empty %}
-            <div class="text-center py-20 bg-white border border-dashed border-slate-300 rounded-xl px-4 shadow-sm">
-                <div class="mx-auto w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
-                    <span class="material-symbols-outlined text-4xl text-green-700">notifications_active</span>
-                </div>
-                <h3 class="text-2xl font-bold text-slate-900 font-serif mb-3">No active {% if tool %}{{ tool.name }}{% endif %} jobs in {{ location_name|default:"this area"|title }} right now.</h3>
-                <p class="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
-                    Top-tier marketing operations roles fill up fast. Join 15,000+ professionals and get notified the moment a new role matching your criteria is posted.
-                </p>
-                <button onclick="toggleModal('subscribe-modal')" class="bg-[#1f432d] text-white font-bold py-3.5 px-10 rounded-md hover:bg-green-900 transition shadow-lg hover:-translate-y-0.5 transform">
-                    Set Job Alert
-                </button>
-                <div class="mt-8 pt-6 border-t border-slate-100">
-                    <a href="{% url 'job_list' %}" class="text-[#1f432d] font-bold hover:underline text-sm flex items-center justify-center gap-1">Browse All Open Jobs <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
-                </div>
-            </div>
+    {% if tool and not location_name or location_name == 'Global/Remote' or location_name == 'Remote' %}
+    {% if cross_cities or cross_states %}
+    <div class="td-cross-links">
+      <h3>Browse {{ tool.name }} Jobs by Location</h3>
+      <div class="td-cross-grid">
+        {% for city in cross_cities %}
+        <a href="{% url 'seo_tool_loc' city|slugify tool.slug %}" class="td-cross-link">{{ tool.name }} Jobs in {{ city }}</a>
         {% endfor %}
-
-        {% if tool and not location_name or location_name == 'Global/Remote' or location_name == 'Remote' %}
-        <div class="mt-16 pt-8 border-t border-slate-200">
-            <h3 class="text-xl font-serif font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span class="material-symbols-outlined text-[#1f432d]">travel_explore</span> Browse {{ tool.name }} Jobs by Location
-            </h3>
-            <div class="flex flex-wrap gap-2.5">
-                {% for city in cross_cities %}
-                <a href="{% url 'seo_tool_loc' city|slugify tool.slug %}" class="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded shadow-sm hover:border-[#1f432d] hover:text-[#1f432d] transition">
-                    {{ tool.name }} Jobs in {{ city }}
-                </a>
-                {% endfor %}
-                {% for state in cross_states %}
-                <a href="{% url 'seo_tool_loc' state|slugify tool.slug %}" class="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded shadow-sm hover:border-[#1f432d] hover:text-[#1f432d] transition">
-                    {{ tool.name }} Jobs in {{ state }}
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        {% if jobs and jobs.paginator.num_pages > 1 %}
-        <div class="mt-10 flex justify-center">
-            <div class="inline-flex rounded-md shadow-sm">
-                {% if jobs.has_previous %}
-                    <a href="?page={{ jobs.previous_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 font-medium text-xs text-gray-700">Previous</a>
-                {% endif %}
-                
-                <span class="py-2 px-4 bg-gray-50 border-t border-b border-gray-300 font-medium text-xs text-gray-700">
-                    Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
-                </span>
-
-                {% if jobs.has_next %}
-                    <a href="?page={{ jobs.next_page_number }}" class="py-2 px-4 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 font-medium text-xs text-gray-700">Next</a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
+        {% for state in cross_states %}
+        <a href="{% url 'seo_tool_loc' state|slugify tool.slug %}" class="td-cross-link">{{ tool.name }} Jobs in {{ state }}</a>
+        {% endfor %}
+      </div>
     </div>
+    {% endif %}
+    {% endif %}
+
+    {% if jobs.paginator.num_pages > 1 %}
+    <div class="td-pagination">
+      {% if jobs.has_previous %}
+        <a href="?page={{ jobs.previous_page_number }}" class="td-page-btn">← Prev</a>
+      {% endif %}
+      <span class="td-page-current">{{ jobs.number }} / {{ jobs.paginator.num_pages }}</span>
+      {% if jobs.has_next %}
+        <a href="?page={{ jobs.next_page_number }}" class="td-page-btn">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

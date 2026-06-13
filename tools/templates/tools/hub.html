@@ -2,8 +2,9 @@
 
 {% block title %}{{ seo_title }}{% endblock %}
 {% block meta_description %}{{ seo_description }}{% endblock %}
+{% block meta_keywords %}free martech tools, marketing operations tools, UTM builder, Salesforce ID converter, salary calculator, resume scanner{% endblock %}
 
-{% block content %}
+{% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -11,122 +12,120 @@
   "name": "Free MarTech Tools Suite",
   "description": "A collection of free calculators, generators, and productivity tools for Marketing Operations professionals.",
   "url": "https://martechjobs.io/tools/",
-  "publisher": {
-    "@type": "Organization",
-    "name": "MarTechJobs"
-  }
+  "publisher": {"@type":"Organization","name":"MarTechJobs","url":"https://martechjobs.io"}
 }
 </script>
+{% endblock %}
 
-<div class="bg-slate-50 min-h-screen py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div class="text-center max-w-3xl mx-auto mb-16">
-            <span class="text-xs font-bold bg-[#1f432d]/10 text-[#1f432d] px-3 py-1 rounded-full uppercase tracking-wide">Engineering as Marketing</span>
-            <h1 class="text-4xl md:text-6xl font-serif font-bold text-slate-900 mt-6 mb-6">
-                The Free <span class="text-[#1f432d]">MarTech</span> Tool Suite
-            </h1>
-            <p class="text-xl text-slate-600 font-light leading-relaxed">
-                We built these 12 micro-tools to solve daily headaches for Marketing Ops, Admins, and Analysts. No login required. 100% free forever.
-            </p>
-        </div>
+{% block content %}
+<style>
+  .tools-hero { padding: 72px 0 56px; border-bottom: 1px solid var(--rule); text-align: center; }
+  .tools-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px,5vw,58px); font-weight: 800; color: var(--ink); margin: 16px 0 20px; }
+  .tools-hero h1 em { font-style: italic; color: var(--amber); }
+  .tools-hero p { font-size: 17px; color: var(--ink2); max-width: 560px; margin: 0 auto; line-height: 1.75; }
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <a href="{% url 'sql_generator' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-purple-700 text-2xl">database</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Text-to-SQL AI</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Convert plain English into complex SQL queries for Snowflake, BigQuery, and Salesforce SOQL.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+  .tools-grid-section { padding: 56px 0; }
+  .tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media(max-width:900px){ .tools-grid { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:560px){ .tools-grid { grid-template-columns: 1fr; } }
 
-            <a href="{% url 'resume_scanner' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-blue-700 text-2xl">document_scanner</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">ATS Resume Scanner</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Check your resume against MarTech job descriptions. Find missing hard skills instantly.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+  .tool-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 28px; transition: all .2s; display: block; text-decoration: none; }
+  .tool-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); border-color: var(--amber); }
+  .tool-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 22px; transition: transform .2s; }
+  .tool-card:hover .tool-icon { transform: scale(1.1); }
+  .tool-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 10px; transition: color .15s; }
+  .tool-card:hover h3 { color: var(--amber); }
+  .tool-card p { font-size: 13px; color: var(--ink2); line-height: 1.65; margin-bottom: 18px; }
+  .tool-link { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--amber); }
+  .tool-card:hover .tool-link { color: var(--amber2); }
 
-            <a href="{% url 'utm_builder' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-sky-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-sky-700 text-2xl">link</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Bulk UTM Builder</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Generate clean, trackable URLs for GA4 and HubSpot. Standardize your campaign tagging.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+  .tools-nl { background: var(--navy); border-radius: var(--radius); padding: 48px; text-align: center; margin-top: 60px; color: #fff; position: relative; overflow: hidden; }
+  .tools-nl h2 { font-family: 'Playfair Display', serif; font-size: clamp(22px,3vw,34px); font-weight: 800; color: #fff; margin-bottom: 14px; }
+  .tools-nl p { font-size: 15px; color: rgba(255,255,255,.72); max-width: 500px; margin: 0 auto 28px; line-height: 1.7; }
+</style>
 
-            <a href="{% url 'salary_calculator' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-green-700 text-2xl">payments</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Salary Calculator</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Estimate your exact market value based on real-time data, role type, and tech stack proficiency.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+<section class="tools-hero">
+  <div class="wrap">
+    <div class="eyebrow">Engineering as Marketing</div>
+    <h1>The Free <em>MarTech</em> Tool Suite</h1>
+    <p>Built to solve daily headaches for Marketing Ops pros, Admins, and Analysts. No login required. 100% free forever.</p>
+  </div>
+</section>
 
-            <a href="{% url 'roas_calculator' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-emerald-700 text-2xl">trending_up</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">ROAS Calculator</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Measure campaign effectiveness instantly. Calculate your exact Return on Ad Spend multipliers.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+<section class="tools-grid-section">
+  <div class="wrap">
+    <div class="tools-grid">
 
-            <a href="{% url 'sf_id_converter' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-indigo-700 text-2xl">transform</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Salesforce ID Converter</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Convert 15-character case-sensitive IDs to 18-character API-safe IDs for VLOOKUPs.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+      <a href="{% url 'sql_generator' %}" class="tool-card">
+        <div class="tool-icon" style="background:#ede9ff;">🗄️</div>
+        <h3>Text-to-SQL AI</h3>
+        <p>Convert plain English into complex SQL queries for Snowflake, BigQuery, and Salesforce SOQL.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
-            <a href="{% url 'consultant_calculator' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-rose-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-rose-700 text-2xl">calculate</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Consultant Rate Tool</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Freelancing? Calculate your optimal hourly rate based on platform specialization and demand.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+      <a href="{% url 'resume_scanner' %}" class="tool-card">
+        <div class="tool-icon" style="background:#dbeafe;">📄</div>
+        <h3>ATS Resume Scanner</h3>
+        <p>Check your resume against MarTech job descriptions. Find missing hard skills instantly.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
-            <a href="{% url 'jd_generator' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-white text-2xl">edit_document</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">AI Job Description Gen</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Hiring? Draft a highly technical, customized MOPs job description in 5 seconds to attract top talent.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+      <a href="{% url 'utm_builder' %}" class="tool-card">
+        <div class="tool-icon" style="background:#e0f2fe;">🔗</div>
+        <h3>Bulk UTM Builder</h3>
+        <p>Generate clean, trackable URLs for GA4 and HubSpot. Standardize your campaign tagging in seconds.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
-            <a href="{% url 'subject_line_tester' %}" class="group bg-white p-8 rounded-xl border border-slate-200 hover:border-[#1f432d] hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-orange-700 text-2xl">mail</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-3 font-serif group-hover:text-[#1f432d] transition-colors">Subject Line Tester</h3>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Get an AI grade on your email subject lines before you hit send. Increase open rates instantly.</p>
-                <span class="text-sm font-bold text-[#1f432d] uppercase tracking-wider">Launch Tool &rarr;</span>
-            </a>
+      <a href="{% url 'salary_calculator' %}" class="tool-card">
+        <div class="tool-icon" style="background:var(--green-light);">💰</div>
+        <h3>Salary Calculator</h3>
+        <p>Estimate your exact market value based on real-time data, role type, and tech stack proficiency.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
-        </div>
+      <a href="{% url 'roas_calculator' %}" class="tool-card">
+        <div class="tool-icon" style="background:#d1fae5;">📈</div>
+        <h3>ROAS Calculator</h3>
+        <p>Measure campaign effectiveness instantly. Calculate your exact Return on Ad Spend multipliers.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
-        <div class="mt-20 bg-[#1f432d] rounded-2xl p-10 text-center text-white shadow-2xl relative overflow-hidden">
-            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-            <div class="relative z-10">
-                <h2 class="text-3xl font-serif font-bold mb-4">Want more tools like these?</h2>
-                <p class="text-green-100 mb-8 max-w-2xl mx-auto">Join 15,000+ MarTech professionals who get our newest tools, salary updates, and top job picks delivered every Tuesday.</p>
-                <button onclick="toggleModal('subscribe-modal')" class="bg-white text-[#1f432d] font-bold py-4 px-10 rounded-lg hover:bg-slate-100 transition shadow-lg hover:-translate-y-1 transform">
-                    Join the Newsletter for Free
-                </button>
-            </div>
-        </div>
+      <a href="{% url 'sf_id_converter' %}" class="tool-card">
+        <div class="tool-icon" style="background:var(--amber-light);">🔄</div>
+        <h3>Salesforce ID Converter</h3>
+        <p>Convert 15-character case-sensitive IDs to 18-character API-safe IDs for VLOOKUPs and reports.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
+
+      <a href="{% url 'consultant_calculator' %}" class="tool-card">
+        <div class="tool-icon" style="background:#ffe4e6;">🧮</div>
+        <h3>Consultant Rate Tool</h3>
+        <p>Freelancing? Calculate your optimal hourly rate based on platform specialization and market demand.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
+
+      <a href="{% url 'jd_generator' %}" class="tool-card">
+        <div class="tool-icon" style="background:#1a1714;color:#fff;">✍️</div>
+        <h3>AI Job Description Gen</h3>
+        <p>Hiring? Draft a highly technical, customized MOPs job description in 5 seconds to attract top talent.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
+
+      <a href="{% url 'subject_line_tester' %}" class="tool-card">
+        <div class="tool-icon" style="background:#ffedd5;">📧</div>
+        <h3>Subject Line Tester</h3>
+        <p>Get an AI grade on your email subject lines before you hit send. Increase open rates instantly.</p>
+        <span class="tool-link">Launch Tool →</span>
+      </a>
 
     </div>
-</div>
+
+    <div class="tools-nl">
+      <h2>Want more tools like these?</h2>
+      <p>Join 15,000+ MarTech professionals who get our newest tools, salary updates, and top job picks delivered every Tuesday.</p>
+      <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber btn-lg">Join the Newsletter — Free</button>
+    </div>
+  </div>
+</section>
 {% endblock %}
