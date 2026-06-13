@@ -437,14 +437,75 @@ def unsubscribe(request):
             else: messages.warning(request, "⚠️ That email was not found in our list.")
     return render(request, "jobs/unsubscribe.html")
 
+TOOL_TAGLINES = {
+    "salesforce": "Salesforce Marketing Cloud, CRM administration, and platform roles — the backbone of enterprise marketing and revenue operations.",
+    "hubspot": "HubSpot Marketing Hub, Ops, and automation roles — for the people who run inbound and lifecycle on HubSpot.",
+    "marketo": "Marketo campaign, lead-scoring, and marketing-ops roles for demand-gen and automation specialists.",
+    "braze": "Braze lifecycle, push, and in-app messaging roles — cross-channel engagement at scale.",
+    "adobe": "Adobe Experience Platform, AEP, and AEM roles for enterprise experience and data teams.",
+    "klaviyo": "Klaviyo email & SMS roles focused on DTC retention and lifecycle marketing.",
+    "segment": "Segment CDP, tracking, and identity roles — the data plumbing behind modern marketing.",
+    "snowflake": "Snowflake warehouse, modeling, and BI roles for analytics-engineering and data teams.",
+}
+
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
-    jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
-    paginator = Paginator(jobs, 20)
+
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+    sort = request.GET.get("sort", "").strip().lower()
+
+    jobs = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).prefetch_related("tools")
+
+    if query:
+        jobs = jobs.filter(Q(title__icontains=query) | Q(company__icontains=query))
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+    if work_arrangement_filter:
+        jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+
+    if sort == "oldest":
+        jobs = jobs.order_by("created_at")
+    else:
+        jobs = jobs.order_by("-is_pinned", "-created_at")
+
+    jobs = jobs.distinct()
+    total_count = jobs.count()
+
+    paginator = Paginator(jobs, 25)
     jobs_page = paginator.get_page(request.GET.get('page'))
+
+    # "Often paired with" — tools that co-occur on the same jobs as this tool.
+    paired_job_ids = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).values_list("id", flat=True)
+    often_paired = (
+        Tool.objects.filter(jobs__id__in=list(paired_job_ids)).exclude(id=tool.id)
+        .annotate(pair_count=Count("jobs", filter=Q(jobs__id__in=list(paired_job_ids))))
+        .order_by("-pair_count").distinct()[:6]
+    )
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
     return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, 'jobs': jobs_page, 'location_name': 'Global/Remote',
-        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
+        'tool': tool,
+        'jobs': jobs_page,
+        'total_count': total_count,
+        'query': query,
+        'location_filter': location_query,
+        'current_arrangement': work_arrangement_filter,
+        'current_sort': sort,
+        'view_mode': request.GET.get("view", "list"),
+        'often_paired': often_paired,
+        'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
+        'filter_qs': filter_qs,
+        'location_name': 'Global/Remote',
+        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES,
     })
 
 def job_detail(request, id, slug):

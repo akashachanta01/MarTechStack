@@ -1,23 +1,12 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}
-    {% if tool.seo_title %}{{ tool.seo_title }}
-    {% elif custom_title %}{{ custom_title }} | MarTechJobs
-    {% else %}{{ tool.name }} Jobs & Career Opportunities {% now "Y" %} — MarTechJobs
-    {% endif %}
-{% endblock %}
-
-{% block meta_description %}
-    {% if custom_desc %}{{ custom_desc }}
-    {% else %}Browse the best Marketing Operations and MarTech roles requiring {{ tool.name }} expertise. Hand-curated {{ tool.name }} jobs from top companies — Consultants, Admins, and Architects.
-    {% endif %}
-{% endblock %}
-
-{% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing operations, {{ tool.name }} careers, martech {{ tool.name }}{% endblock %}
+{% block title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs — {{ total_count }} Open Roles {% now "Y" %} | MarTechJobs{% endif %}{% endblock %}
+{% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse {{ total_count }} hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
+{% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing jobs, {{ tool.name }} careers, {{ tool.name }} marketing operations{% endblock %}
 
 {% block rel_prev_next %}
-    {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
-    {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
+  {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
+  {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
 {% endblock %}
 
 {% block extra_schema %}
@@ -26,19 +15,19 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {"@type":"ListItem","position":1,"name":"Home","item":"{{ request.scheme }}://{{ request.get_host }}/"},
-    {"@type":"ListItem","position":2,"name":"Tech Stacks","item":"{{ request.scheme }}://{{ request.get_host }}/"},
-    {"@type":"ListItem","position":3,"name":"{% if tool %}{{ tool.name }}{% else %}{{ location_name|default:'MarTech' }}{% endif %} Jobs","item":"{{ request.build_absolute_uri }}"}
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
+    {"@type":"ListItem","position":3,"name":"{{ tool.name }} Jobs","item":"https://martechjobs.io{% url 'tool_detail' tool.slug %}"}
   ]
 }
 </script>
-{% if jobs.paginator.count > 0 %}
+{% if total_count > 0 %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  "name": "{% if tool %}{{ tool.name }}{% endif %} Jobs on MarTechJobs",
-  "numberOfItems": {{ jobs.paginator.count }},
+  "name": "{{ tool.name }} Jobs",
+  "numberOfItems": {{ total_count }},
   "itemListElement": [{% for job in jobs|slice:":10" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
 }
 </script>
@@ -47,150 +36,343 @@
 
 {% block content %}
 <style>
-  .td-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--rule); }
-  .td-hero-inner { max-width: 780px; margin: 0 auto; padding: 0 32px; text-align: center; }
-  .td-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink3); margin-bottom: 28px; transition: color .15s; }
-  .td-back:hover { color: var(--amber); }
-  .td-logo { width: 80px; height: 80px; border-radius: var(--radius); border: 1px solid var(--rule); background: var(--card); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; overflow: hidden; box-shadow: var(--shadow-sm); }
-  .td-logo img { max-width: 60px; max-height: 60px; object-fit: contain; }
-  .td-logo-mono { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--amber); }
-  .td-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,48px); font-weight: 800; color: var(--ink); margin-bottom: 16px; line-height: 1.2; }
-  .td-hero h1 em { font-style: italic; color: var(--amber); }
-  .td-hero p { font-size: 16px; color: var(--ink2); line-height: 1.7; }
+  .td-hero { position: relative; overflow: visible; padding: 44px 0 48px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .td-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .td-hero .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -300px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+  .td-topline { display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; margin-bottom: 18px; }
+  .td-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); }
+  .td-badge b { color: var(--amber); font-weight: 800; }
+  .td-badge svg { width: 15px; height: 15px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
+  .td-updated { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--ink3); }
+  @media(max-width:760px){ .td-updated { display: none; } }
+  .td-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.05; font-size: clamp(40px, 7vw, 76px); margin: 0 auto; position: relative; z-index: 1; color: var(--ink); }
+  .td-h1 .em { color: var(--amber); }
+  .td-sub { margin: 18px auto 0; font-size: 17px; color: var(--ink2); max-width: 680px; line-height: 1.55; position: relative; z-index: 1; }
 
-  .td-jobs { padding: 40px 0 80px; }
-  .td-jobs-wrap { max-width: 780px; margin: 0 auto; padding: 0 32px; }
-  .td-jobs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .td-jobs-header h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--ink); }
-  .td-count-badge { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; background: var(--card); border: 1px solid var(--rule); padding: 4px 10px; border-radius: 4px; color: var(--ink3); }
+  .searchcard { max-width: 1040px; margin: 30px auto 0; background: #fff; border: 1px solid var(--rule); border-radius: 16px; padding: 14px; box-shadow: var(--shadow-lg); text-align: left; position: relative; z-index: 2; }
+  .search-row1 { display: flex; gap: 8px; }
+  .s-field { display: flex; align-items: center; gap: 10px; flex: 1; height: 52px; border: 1.5px solid var(--rule); border-radius: 11px; padding: 0 15px; transition: border-color .15s; min-width: 0; }
+  .s-field:focus-within { border-color: var(--navy); }
+  .s-field svg { color: var(--ink3); flex-shrink: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .s-field input { border: 0; outline: 0; font-size: 15px; width: 100%; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: none; }
+  .s-field input::placeholder { color: var(--ink3); }
+  .s-go { background: var(--amber); color: #fff; border: 0; font-weight: 700; font-size: 14px; padding: 0 28px; border-radius: 11px; cursor: pointer; height: 52px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; font-family: 'Hanken Grotesk', sans-serif; transition: background .15s, transform .15s; }
+  .s-go:hover { background: var(--amber2); transform: translateY(-1px); }
+  .search-row2 { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .s-select-wrap { position: relative; flex: 1; min-width: 150px; }
+  .s-select-wrap-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .s-select { width: 100%; appearance: none; -webkit-appearance: none; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 32px 0 36px; font-size: 13.5px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; cursor: pointer; transition: border-color .15s; }
+  .s-select:focus { border-color: var(--navy); outline: 0; }
+  .s-chev { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .s-fixed { display: flex; align-items: center; gap: 9px; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 16px; font-size: 13.5px; font-weight: 700; color: var(--ink); background: var(--amber-light); flex: 1; min-width: 150px; }
+  .s-fixed svg { width: 14px; height: 14px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
 
-  .td-job-row { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; transition: all .18s; margin-bottom: 12px; }
-  .td-job-row:hover { box-shadow: var(--shadow); transform: translateY(-1px); border-color: var(--rule2); }
-  .td-job-inner { display: flex; gap: 16px; align-items: flex-start; }
-  .td-job-logo { width: 46px; height: 46px; border-radius: 9px; border: 1px solid var(--rule); background: var(--paper); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; color: var(--ink3); overflow: hidden; }
-  .td-job-logo img { max-width: 36px; max-height: 36px; object-fit: contain; }
-  .td-job-body { flex: 1; min-width: 0; }
-  .td-job-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 2px; line-height: 1.3; }
-  .td-job-title a:hover { color: var(--amber); }
-  .td-job-co { font-size: 13px; color: var(--ink3); margin-bottom: 8px; }
-  .td-job-pills { display: flex; flex-wrap: wrap; gap: 5px; }
-  .td-job-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  .td-job-salary { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; }
-  @media(max-width:540px){ .td-job-right { display: none; } }
+  .s-remote { position: relative; flex: 1; min-width: 150px; }
+  .s-remote-trigger { display: flex; align-items: center; gap: 8px; width: 100%; height: 46px; padding: 0 14px; border: 1.5px solid var(--rule); border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--ink2); background: #fff; font-family: 'Hanken Grotesk', sans-serif; transition: all .15s; }
+  .s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
+  .s-remote-trigger.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .s-remote-trigger .lbl { flex: 1; text-align: left; }
+  .s-remote-trigger .chev { transition: transform .2s; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .s-remote.open .s-remote-trigger .chev { transform: rotate(180deg); }
+  .s-remote-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; max-width: 86vw; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 18px; z-index: 60; display: none; text-align: left; }
+  .s-remote.open .s-remote-panel { display: block; }
+  .s-remote-panel h4 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .s-remote-panel .rp-desc { font-size: 13px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
+  .s-remote-opt { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1.5px solid var(--rule); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: all .15s; }
+  .s-remote-opt:hover { border-color: var(--rule2); background: var(--paper); }
+  .s-remote-opt.sel { border-color: var(--green); background: var(--green-light); }
+  .s-remote-opt-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); }
+  .s-remote-opt-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .s-remote-opt.sel .s-remote-opt-ico { background: #fff; color: var(--green); }
+  .s-remote-opt-body { flex: 1; min-width: 0; }
+  .s-remote-opt-title { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+  .s-remote-opt-sub { font-size: 12px; color: var(--ink3); }
+  .s-remote-opt-check { color: var(--green); flex-shrink: 0; opacity: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .s-remote-opt.sel .s-remote-opt-check { opacity: 1; }
+  .s-remote-reglabel { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 14px 0 8px; }
+  .s-remote-region { display: flex; flex-wrap: wrap; gap: 6px; }
+  .s-remote-region a { font-size: 12.5px; font-weight: 600; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; }
+  .s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+  .s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
 
-  .td-empty { background: var(--card); border: 1px dashed var(--rule2); border-radius: var(--radius); padding: 60px 24px; text-align: center; }
-  .td-empty h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
-  .td-empty p { font-size: 14px; color: var(--ink2); line-height: 1.65; max-width: 420px; margin: 0 auto 24px; }
+  /* often paired with */
+  .td-paired { margin-top: 28px; position: relative; z-index: 1; }
+  .td-paired-lbl { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); margin-bottom: 14px; }
+  .td-paired-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .td-paired-chip { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 9px 16px 9px 9px; text-decoration: none; transition: all .15s; box-shadow: var(--shadow-sm); }
+  .td-paired-chip:hover { border-color: var(--amber); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .td-paired-ico { width: 28px; height: 28px; border-radius: 7px; background: var(--violet-light); color: var(--violet); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 12px; overflow: hidden; flex-shrink: 0; }
+  .td-paired-ico img { width: 20px; height: 20px; object-fit: contain; }
+  .td-paired-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .td-paired-count { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink3); }
 
-  .td-cross-links { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--rule); }
-  .td-cross-links h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
-  .td-cross-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-  .td-cross-link { font-size: 12px; font-weight: 500; color: var(--ink2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--rule2); background: var(--card); transition: all .14s; text-decoration: none; }
-  .td-cross-link:hover { border-color: var(--amber); color: var(--amber); }
+  .td-list-sec { padding: 36px 0 80px; }
+  .td-list-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 14px; }
+  .td-list-head h2 { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+  .td-list-head h2 .count { color: var(--ink3); font-weight: 800; font-style: italic; font-size: 22px; }
+  .td-controls { display: flex; align-items: center; gap: 12px; }
+  .td-sort-lbl { font-size: 13px; color: var(--ink3); }
+  .sort-form { position: relative; }
+  .sort-form select { border: 1.5px solid var(--rule); border-radius: 8px; padding: 8px 30px 8px 14px; font-size: 13px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .sort-form .sc { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink3); width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .td-views { display: flex; border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .td-view-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #fff; color: var(--ink3); border: 0; cursor: pointer; transition: all .14s; }
+  .td-view-btn + .td-view-btn { border-left: 1.5px solid var(--rule); }
+  .td-view-btn:hover { color: var(--ink); }
+  .td-view-btn.active { background: var(--navy); color: #fff; }
+  .td-view-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  .td-pagination { display: flex; justify-content: center; gap: 4px; margin-top: 32px; }
-  .td-page-btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--rule2); background: var(--card); font-size: 13px; font-weight: 600; color: var(--ink2); transition: all .14s; text-decoration: none; }
-  .td-page-btn:hover { border-color: var(--amber); color: var(--amber); }
-  .td-page-current { background: var(--amber); color: #fff; border-color: var(--amber); padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .td-activefilters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .td-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--amber-light); border: 1px solid #f0c6a8; color: var(--amber); font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+  .td-chip a { display: inline-flex; color: var(--amber); }
+  .td-chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .td-clear { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); text-decoration: none; }
+  .td-clear:hover { color: var(--amber); }
+
+  .td-rows.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media(max-width:760px){ .td-rows.grid { grid-template-columns: 1fr; } }
+
+  .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; margin-bottom: 10px; }
+  .td-rows.grid .jrow { margin-bottom: 0; }
+  .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
+  .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
+  .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .jrow-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .jrow-main { flex: 1; min-width: 0; }
+  .jrow-title { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.3; transition: color .12s; }
+  .jrow:hover .jrow-title { color: var(--navy); }
+  .jrow-meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink3); margin-top: 4px; flex-wrap: wrap; }
+  .jrow-meta .co { color: var(--ink2); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .jrow-meta .co svg { color: var(--green); width: 13px; height: 13px; }
+  .jrow-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .jrow-right { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .jrow-salary { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); }
+  .jrow-salary.na { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); font-style: italic; }
+  .jrow-apply { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; opacity: 0; transform: translateX(-4px); transition: all .18s; }
+  .jrow:hover .jrow-apply { opacity: 1; transform: none; }
+
+  .td-empty { text-align: center; padding: 60px 24px; background: #fff; border: 1px dashed var(--rule2); border-radius: 12px; }
+  .td-empty h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+  .td-empty p { color: var(--ink2); margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
+
+  .pg-wrap { display: flex; justify-content: center; gap: 5px; margin-top: 30px; }
+  .pg-btn { min-width: 40px; height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--rule); border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); background: #fff; text-decoration: none; transition: all .14s; }
+  .pg-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .pg-btn.cur { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+  @media (max-width: 640px) {
+    .jrow-right { display: none; }
+    .search-row2 { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+    .td-views { display: none; }
+  }
 </style>
 
 <section class="td-hero">
-  <div class="td-hero-inner">
-    <a href="/" class="td-back">← View all MarTech Jobs</a>
+  <div class="td-hero-bg"><div class="glow"></div></div>
+  <div class="wrap">
+    <div class="td-topline">
+      <span class="td-badge">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        <b>{{ total_count }}</b> open position{{ total_count|pluralize }}
+      </span>
+      <span class="td-updated">Updated {% now "F j, Y" %}</span>
+    </div>
+    <h1 class="td-h1">{{ tool.name }} <span class="em">Jobs</span></h1>
+    {% if tool_tagline %}<p class="td-sub">{{ tool_tagline }}</p>{% else %}<p class="td-sub">Hand-curated {{ tool.name }} roles across Marketing Operations, RevOps, and analytics. Refreshed daily, every link verified.</p>{% endif %}
 
-    {% if tool %}
-      {% if tool.logo_url %}
-        <div class="td-logo"><img src="{{ tool.logo_url }}" alt="{{ tool.name }} logo"></div>
-      {% else %}
-        <div class="td-logo"><span class="td-logo-mono">{{ tool.name|slice:":1" }}</span></div>
-      {% endif %}
-    {% endif %}
+    <form method="get" action="{% url 'tool_detail' tool.slug %}" class="searchcard" role="search" aria-label="Search {{ tool.name }} jobs">
+      <div class="search-row1">
+        <div class="s-field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Search {{ tool.name }} jobs…" aria-label="Search {{ tool.name }} jobs">
+        </div>
+        <button type="submit" class="s-go">Search</button>
+      </div>
+      <div class="search-row2">
+        <a class="s-select-wrap" href="{% url 'all_jobs' %}" style="text-decoration:none;">
+          <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          <div class="s-select" style="display:flex;align-items:center;">All Functions</div>
+          <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </a>
+        <div class="s-select-wrap">
+          <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <select class="s-select" name="l" aria-label="Filter by location" onchange="this.form.submit()">
+            <option value="">All Locations</option>
+            <option {% if location_filter == 'Remote' %}selected{% endif %}>Remote</option>
+            <option {% if location_filter == 'United States' %}selected{% endif %}>United States</option>
+            <option {% if location_filter == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
+            <option {% if location_filter == 'Canada' %}selected{% endif %}>Canada</option>
+            <option {% if location_filter == 'Germany' %}selected{% endif %}>Germany</option>
+            <option {% if location_filter == 'India' %}selected{% endif %}>India</option>
+            <option {% if location_filter == 'Australia' %}selected{% endif %}>Australia</option>
+          </select>
+          <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="s-fixed">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          {{ tool.name }}
+        </div>
+        <div class="s-remote" id="s-remote">
+          <button type="button" class="s-remote-trigger {% if current_arrangement == 'remote' %}on{% endif %}" onclick="toggleRemotePanel(event)" aria-haspopup="true" aria-expanded="false">
+            <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg>
+            <span class="lbl">{% if current_arrangement == 'remote' %}Remote · {% if location_filter %}{{ location_filter }}{% else %}Anywhere{% endif %}{% else %}Remote · Any{% endif %}</span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="s-remote-panel" role="menu">
+            <h4>Where can you work from?</h4>
+            <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
+            <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+              <span class="s-remote-opt-body"><span class="s-remote-opt-title">Any location</span><span class="s-remote-opt-sub">On-site, hybrid &amp; remote</span></span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+            <a class="s-remote-opt {% if current_arrangement == 'remote' and not location_filter %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote" role="menuitem">
+              <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg></span>
+              <span class="s-remote-opt-body"><span class="s-remote-opt-title">Fully remote — anywhere</span><span class="s-remote-opt-sub">Work from any country</span></span>
+              <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </a>
+            <div class="s-remote-reglabel">Remote in a specific region</div>
+            <div class="s-remote-region">
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United States' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=United+States">United States</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United Kingdom' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=United+Kingdom">United Kingdom</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Canada' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Canada">Canada</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Germany' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Germany">Germany</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Australia' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Australia">Australia</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'India' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=India">India</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
 
-    <h1>
-      {% if tool and tool.seo_h1 and not is_seo_landing %}
-        {{ tool.seo_h1 }}
-      {% elif custom_header %}
-        {{ custom_header|safe }}
-      {% else %}
-        Top <em>{% if tool %}{{ tool.name }}{% else %}MarTech{% endif %}</em> Jobs
-      {% endif %}
-    </h1>
-
-    {% if tool and tool.description and not is_seo_landing %}
-      <div style="color:var(--ink2);font-size:15px;line-height:1.7;">{{ tool.description|safe }}</div>
-    {% else %}
-      <p>{% if custom_desc %}{{ custom_desc }}{% else %}Browse the best Marketing Operations and MarTech roles requiring <strong>{{ tool.name }}</strong> expertise. Hand-curated from top companies, refreshed daily.{% endif %}</p>
+    {% if often_paired %}
+    <div class="td-paired">
+      <div class="td-paired-lbl">Often paired with</div>
+      <div class="td-paired-row">
+        {% for stack in often_paired %}
+        <a href="{% url 'tool_detail' stack.slug %}" class="td-paired-chip">
+          <span class="td-paired-ico">{% if stack.logo_url %}<img src="{{ stack.logo_url }}" alt="{{ stack.name }}">{% else %}{{ stack.name|slice:":2" }}{% endif %}</span>
+          <span class="td-paired-name">{{ stack.name }}</span>
+          <span class="td-paired-count">{{ stack.pair_count }} jobs</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
     {% endif %}
   </div>
 </section>
 
-<div class="td-jobs">
-  <div class="td-jobs-wrap">
-    <div class="td-jobs-header">
-      <h2>Active Roles</h2>
-      <span class="td-count-badge">{{ jobs.paginator.count|default:0 }} found</span>
+<section class="td-list-sec">
+  <div class="wrap">
+    <div class="td-list-head">
+      <h2>{{ tool.name }} Jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
+      <div class="td-controls">
+        <span class="td-sort-lbl">Sort:</span>
+        <form method="get" class="sort-form">
+          <select name="sort" aria-label="Sort jobs" onchange="this.form.submit()">
+            <option value="" {% if not current_sort %}selected{% endif %}>Newest</option>
+            <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest</option>
+          </select>
+          <svg class="sc" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+          {% if location_filter %}<input type="hidden" name="l" value="{{ location_filter }}">{% endif %}
+          {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
+          {% if view_mode == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
+        </form>
+        <div class="td-views" role="group" aria-label="View mode">
+          <a class="td-view-btn {% if view_mode != 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=grid'|cut:'view=grid' }}&{% endif %}view=list" aria-label="List view">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </a>
+          <a class="td-view-btn {% if view_mode == 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=list'|cut:'view=list' }}&{% endif %}view=grid" aria-label="Grid view">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </a>
+        </div>
+      </div>
     </div>
 
+    <div class="td-activefilters">
+      <span class="td-chip">{{ tool.name }} <a href="{% url 'all_jobs' %}" aria-label="Remove {{ tool.name }} filter"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></a></span>
+      {% if query or location_filter or current_arrangement %}
+      <a href="{% url 'tool_detail' tool.slug %}" class="td-clear">Clear filters</a>
+      {% else %}
+      <a href="{% url 'all_jobs' %}" class="td-clear">Clear all</a>
+      {% endif %}
+    </div>
+
+    <div class="td-rows {% if view_mode == 'grid' %}grid{% endif %}">
     {% for job in jobs %}
-    <div class="td-job-row" itemscope itemtype="https://schema.org/JobPosting">
-      <meta itemprop="title" content="{{ job.title }}">
-      <meta itemprop="datePosted" content="{{ job.created_at|date:'Y-m-d' }}">
-      <div class="td-job-inner">
-        <div class="td-job-logo tint-amber">
-          {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }}">{% else %}{{ job.company|slice:":1" }}{% endif %}
+      <a class="jrow {% if job.is_featured %}feat{% endif %}" href="{% url 'job_detail' job.id job.slug %}" aria-label="{{ job.title }} at {{ job.company }}">
+        <div class="jrow-logo">
+          {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }} logo" loading="lazy">{% else %}{{ job.company|slice:":1" }}{% endif %}
         </div>
-        <div class="td-job-body">
-          <div class="td-job-title"><a href="{% url 'job_detail' job.id job.slug %}">{{ job.title }}</a></div>
-          <div class="td-job-co" itemprop="hiringOrganization" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">{{ job.company }}</span></div>
-          <div class="td-job-pills">
-            <span class="pill pill-loc">{{ job.location|default:"Remote" }}</span>
-            <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+        <div class="jrow-main">
+          <div class="jrow-title">{{ job.title }}</div>
+          <div class="jrow-meta">
+            <span class="co">{{ job.company }}
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            </span>
+            <span>·</span>
+            <svg style="width:11px;height:11px;color:var(--ink3);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>{{ job.location|default:"Remote" }}</span>
+            <span>·</span>
+            <span>{{ job.created_at|timesince }} ago</span>
+          </div>
+          <div class="jrow-badges">
+            {% if job.is_featured %}<span class="pill pill-feat">★ Featured</span>{% endif %}
             {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
+            <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+            {% for t in job.tools.all|slice:":2" %}<span class="pill pill-stack">{{ t.name }}</span>{% endfor %}
           </div>
         </div>
-        <div class="td-job-right">
-          {% if job.salary_range %}<div class="td-job-salary">{{ job.salary_range }}</div>{% endif %}
-          <a href="{% url 'job_detail' job.id job.slug %}" class="btn btn-amber" style="font-size:11px;padding:7px 14px;">Apply →</a>
+        <div class="jrow-right">
+          {% if job.salary_range %}<div class="jrow-salary">{{ job.salary_range }}</div>{% else %}<div class="jrow-salary na">Salary not listed</div>{% endif %}
+          <span class="jrow-apply">Apply now
+            <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
+          </span>
         </div>
-      </div>
-    </div>
+      </a>
     {% empty %}
-    <div class="td-empty">
-      <div style="font-size:32px;margin-bottom:12px;">🔔</div>
-      <h3>No active {% if tool %}{{ tool.name }}{% endif %} jobs{% if location_name %} in {{ location_name }}{% endif %} right now</h3>
-      <p>Top-tier marketing operations roles fill up fast. Join 15,000+ professionals and get notified the moment a new role is posted.</p>
-      <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber">Set Job Alert</button>
-      <div style="margin-top:20px;"><a href="{% url 'job_list' %}" style="font-size:13px;color:var(--amber);font-weight:600;">Browse All Open Jobs →</a></div>
-    </div>
-    {% endfor %}
-
-    {% if tool and not location_name or location_name == 'Global/Remote' or location_name == 'Remote' %}
-    {% if cross_cities or cross_states %}
-    <div class="td-cross-links">
-      <h3>Browse {{ tool.name }} Jobs by Location</h3>
-      <div class="td-cross-grid">
-        {% for city in cross_cities %}
-        <a href="{% url 'seo_tool_loc' city|slugify tool.slug %}" class="td-cross-link">{{ tool.name }} Jobs in {{ city }}</a>
-        {% endfor %}
-        {% for state in cross_states %}
-        <a href="{% url 'seo_tool_loc' state|slugify tool.slug %}" class="td-cross-link">{{ tool.name }} Jobs in {{ state }}</a>
-        {% endfor %}
+      <div class="td-empty">
+        <h3>No {{ tool.name }} jobs match right now</h3>
+        <p>Top {{ tool.name }} roles fill fast. Set a free alert and we'll email you the moment a new one is posted.</p>
+        <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber">Set {{ tool.name }} Job Alert</button>
       </div>
+    {% endfor %}
     </div>
-    {% endif %}
-    {% endif %}
 
     {% if jobs.paginator.num_pages > 1 %}
-    <div class="td-pagination">
+    <nav class="pg-wrap" aria-label="Job listing pages">
       {% if jobs.has_previous %}
-        <a href="?page={{ jobs.previous_page_number }}" class="td-page-btn">← Prev</a>
+      <a class="pg-btn" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.previous_page_number }}" aria-label="Previous page">←</a>
       {% endif %}
-      <span class="td-page-current">{{ jobs.number }} / {{ jobs.paginator.num_pages }}</span>
+      {% for i in jobs.paginator.page_range %}
+        {% if i == jobs.number %}
+          <span class="pg-btn cur" aria-current="page">{{ i }}</span>
+        {% elif i == 1 or i == jobs.paginator.num_pages or i >= jobs.number|add:"-2" and i <= jobs.number|add:"2" %}
+          <a class="pg-btn" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ i }}">{{ i }}</a>
+        {% elif i == jobs.number|add:"-3" or i == jobs.number|add:"3" %}
+          <span class="pg-btn" style="border:0;pointer-events:none">…</span>
+        {% endif %}
+      {% endfor %}
       {% if jobs.has_next %}
-        <a href="?page={{ jobs.next_page_number }}" class="td-page-btn">Next →</a>
+      <a class="pg-btn" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.next_page_number }}" aria-label="Next page" rel="next">→</a>
       {% endif %}
-    </div>
+    </nav>
     {% endif %}
   </div>
-</div>
+</section>
+
+<script>
+function toggleRemotePanel(e) {
+  e.stopPropagation();
+  const r = document.getElementById('s-remote');
+  const open = r.classList.toggle('open');
+  r.querySelector('.s-remote-trigger').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.addEventListener('click', function(e) {
+  const r = document.getElementById('s-remote');
+  if (r && !r.contains(e.target)) { r.classList.remove('open'); const t = r.querySelector('.s-remote-trigger'); if (t) t.setAttribute('aria-expanded', 'false'); }
+});
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { const r = document.getElementById('s-remote'); if (r) r.classList.remove('open'); } });
+</script>
 {% endblock %}
