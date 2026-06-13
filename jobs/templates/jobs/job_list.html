@@ -238,14 +238,14 @@
 .stack-count span { display: block; font-size: 9px; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; }
 
 /* ---- Salary guide teaser ---- */
-.salary-sec { padding: 72px 0; border-bottom: 1px solid var(--rule); background: var(--navy3); }
-.salary-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+.salary-sec { padding: 44px 0; border-bottom: 1px solid var(--rule); background: var(--navy3); }
+.salary-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
 .salary-left .eyebrow { color: var(--amber-accent); }
-.salary-h { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4vw, 44px); font-weight: 800; color: #fff; margin: 14px 0; line-height: 1.1; }
+.salary-h { font-family: 'Playfair Display', serif; font-size: clamp(28px, 3.6vw, 40px); font-weight: 800; color: #fff; margin: 10px 0; line-height: 1.1; }
 .salary-h em { font-style: italic; color: var(--amber-accent); }
-.salary-sub { font-size: 15px; color: rgba(255,255,255,.6); line-height: 1.65; margin-bottom: 28px; }
+.salary-sub { font-size: 15px; color: rgba(255,255,255,.6); line-height: 1.6; margin-bottom: 22px; }
 .sal-roles { border: 1px solid rgba(255,255,255,.1); border-radius: 12px; overflow: hidden; }
-.sal-row { display: flex; align-items: center; padding: 0 20px; height: 62px; border-bottom: 1px solid rgba(255,255,255,.07); transition: background .15s; cursor: pointer; text-decoration: none; }
+.sal-row { display: flex; align-items: center; padding: 0 18px; height: 52px; border-bottom: 1px solid rgba(255,255,255,.07); transition: background .15s; cursor: pointer; text-decoration: none; }
 .sal-row:last-child { border-bottom: none; }
 .sal-row:hover { background: rgba(255,255,255,.05); }
 .sal-role-name { font-size: 14px; color: rgba(255,255,255,.8); flex: 1; }
@@ -715,7 +715,7 @@
       <div>
         <div class="eyebrow" style="color:var(--amber-accent)">Free Resource · 2026</div>
         <h2 class="salary-h" id="salary-h">Know your<br><em>market value.</em></h2>
-        <p class="salary-sub">We analyzed 2,400+ job postings to benchmark real compensation across every major MarTech role. Updated quarterly.</p>
+        <p class="salary-sub">Real compensation benchmarks across every major MarTech role — calculated from live job postings and refreshed continuously.</p>
         <a href="{% url 'salary_guide' %}" class="btn btn-amber btn-lg">Explore Salary Guide →</a>
       </div>
       <div>
