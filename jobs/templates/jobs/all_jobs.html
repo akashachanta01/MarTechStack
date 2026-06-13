@@ -1,13 +1,9 @@
 {% extends "jobs/base.html" %}
+{% load static %}
 
-{% block title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs — {{ total_count }} Open Roles {% now "Y" %} | MarTechJobs{% endif %}{% endblock %}
-{% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse {{ total_count }} hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
-{% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing jobs, {{ tool.name }} careers, {{ tool.name }} marketing operations{% endblock %}
-
-{% block rel_prev_next %}
-  {% if jobs.has_previous %}<link rel="prev" href="?page={{ jobs.previous_page_number }}" />{% endif %}
-  {% if jobs.has_next %}<link rel="next" href="?page={{ jobs.next_page_number }}" />{% endif %}
-{% endblock %}
+{% block title %}Browse All MarTech Jobs — {{ total_count }} Open Roles | MarTechJobs{% endblock %}
+{% block meta_description %}Browse every open marketing-technology role — Marketing Ops, RevOps, Lifecycle, CDP, and analytics. Curated, vendor-neutral, and verified daily on MarTechJobs.{% endblock %}
+{% block meta_keywords %}martech jobs, marketing technology jobs, marketing operations jobs, revops jobs, browse martech roles{% endblock %}
 
 {% block extra_schema %}
 <script type="application/ld+json">
@@ -16,8 +12,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
-    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
-    {"@type":"ListItem","position":3,"name":"{{ tool.name }} Jobs","item":"https://martechjobs.io{% url 'tool_detail' tool.slug %}"}
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"}
   ]
 }
 </script>
@@ -26,7 +21,7 @@
 {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  "name": "{{ tool.name }} Jobs",
+  "name": "MarTech Jobs",
   "numberOfItems": {{ total_count }},
   "itemListElement": [{% for job in jobs|slice:":10" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
 }
@@ -36,18 +31,18 @@
 
 {% block content %}
 <style>
-  .td-hero { position: relative; overflow: visible; padding: 44px 0 48px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
-  .td-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
-  .td-hero .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -300px; left: 50%; transform: translateX(-50%); pointer-events: none; }
-  .td-topline { display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; margin-bottom: 18px; }
-  .td-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); }
-  .td-badge b { color: var(--amber); font-weight: 800; }
-  .td-badge svg { width: 15px; height: 15px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
-  .td-updated { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--ink3); }
-  @media(max-width:760px){ .td-updated { display: none; } }
-  .td-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.05; font-size: clamp(40px, 7vw, 76px); margin: 0 auto; position: relative; z-index: 1; color: var(--ink); }
-  .td-h1 .em { color: var(--amber); }
-  .td-sub { margin: 18px auto 0; font-size: 17px; color: var(--ink2); max-width: 680px; line-height: 1.55; position: relative; z-index: 1; }
+  .aj-hero { position: relative; overflow: visible; padding: 44px 0 48px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .aj-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .aj-hero .glow { position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -300px; left: 50%; transform: translateX(-50%); pointer-events: none; }
+  .aj-topline { display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; margin-bottom: 18px; }
+  .aj-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); }
+  .aj-badge b { color: var(--amber); font-weight: 800; }
+  .aj-badge svg { width: 15px; height: 15px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
+  .aj-updated { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--ink3); }
+  @media(max-width:760px){ .aj-updated { display: none; } }
+  .aj-h1 { font-family: 'Playfair Display', serif; font-weight: 800; letter-spacing: -.018em; line-height: 1.05; font-size: clamp(40px, 7vw, 76px); margin: 0 auto; position: relative; z-index: 1; color: var(--ink); }
+  .aj-h1 .em { color: var(--amber); }
+  .aj-sub { margin: 18px auto 0; font-size: 17px; color: var(--ink2); max-width: 660px; line-height: 1.55; position: relative; z-index: 1; }
 
   .searchcard { max-width: 1040px; margin: 30px auto 0; background: #fff; border: 1px solid var(--rule); border-radius: 16px; padding: 14px; box-shadow: var(--shadow-lg); text-align: left; position: relative; z-index: 2; }
   .search-row1 { display: flex; gap: 8px; }
@@ -64,9 +59,8 @@
   .s-select { width: 100%; appearance: none; -webkit-appearance: none; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 32px 0 36px; font-size: 13.5px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; cursor: pointer; transition: border-color .15s; }
   .s-select:focus { border-color: var(--navy); outline: 0; }
   .s-chev { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-  .s-fixed { display: flex; align-items: center; gap: 9px; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 16px; font-size: 13.5px; font-weight: 700; color: var(--ink); background: var(--amber-light); flex: 1; min-width: 150px; }
-  .s-fixed svg { width: 14px; height: 14px; color: var(--amber); fill: none; stroke: currentColor; stroke-width: 2; }
 
+  /* remote dropdown */
   .s-remote { position: relative; flex: 1; min-width: 150px; }
   .s-remote-trigger { display: flex; align-items: center; gap: 8px; width: 100%; height: 46px; padding: 0 14px; border: 1.5px solid var(--rule); border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--ink2); background: #fff; font-family: 'Hanken Grotesk', sans-serif; transition: all .15s; }
   .s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
@@ -95,45 +89,28 @@
   .s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
   .s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
 
-  /* often paired with */
-  .td-paired { margin-top: 28px; position: relative; z-index: 1; }
-  .td-paired-lbl { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); margin-bottom: 14px; }
-  .td-paired-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-  .td-paired-chip { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 9px 16px 9px 9px; text-decoration: none; transition: all .15s; box-shadow: var(--shadow-sm); }
-  .td-paired-chip:hover { border-color: var(--amber); transform: translateY(-2px); box-shadow: var(--shadow); }
-  .td-paired-ico { width: 28px; height: 28px; border-radius: 7px; background: var(--violet-light); color: var(--violet); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 12px; overflow: hidden; flex-shrink: 0; }
-  .td-paired-ico img { width: 20px; height: 20px; object-fit: contain; }
-  .td-paired-name { font-size: 14px; font-weight: 700; color: var(--ink); }
-  .td-paired-count { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink3); }
-
-  .td-list-sec { padding: 36px 0 80px; }
-  .td-list-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 14px; }
-  .td-list-head h2 { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
-  .td-list-head h2 .count { color: var(--ink3); font-weight: 800; font-style: italic; font-size: 22px; }
-  .td-controls { display: flex; align-items: center; gap: 12px; }
-  .td-sort-lbl { font-size: 13px; color: var(--ink3); }
+  /* listings */
+  .aj-list-sec { padding: 36px 0 80px; }
+  .aj-list-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 14px; }
+  .aj-list-head h2 { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+  .aj-list-head h2 .count { color: var(--ink3); font-weight: 800; font-style: italic; font-size: 22px; }
+  .aj-controls { display: flex; align-items: center; gap: 12px; }
+  .aj-sort-lbl { font-size: 13px; color: var(--ink3); }
   .sort-form { position: relative; }
   .sort-form select { border: 1.5px solid var(--rule); border-radius: 8px; padding: 8px 30px 8px 14px; font-size: 13px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; appearance: none; -webkit-appearance: none; cursor: pointer; }
   .sort-form .sc { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink3); width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-  .td-views { display: flex; border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; }
-  .td-view-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #fff; color: var(--ink3); border: 0; cursor: pointer; transition: all .14s; }
-  .td-view-btn + .td-view-btn { border-left: 1.5px solid var(--rule); }
-  .td-view-btn:hover { color: var(--ink); }
-  .td-view-btn.active { background: var(--navy); color: #fff; }
-  .td-view-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .aj-views { display: flex; border: 1.5px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .aj-view-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: #fff; color: var(--ink3); border: 0; cursor: pointer; transition: all .14s; }
+  .aj-view-btn + .aj-view-btn { border-left: 1.5px solid var(--rule); }
+  .aj-view-btn:hover { color: var(--ink); }
+  .aj-view-btn.active { background: var(--navy); color: #fff; }
+  .aj-view-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  .td-activefilters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-  .td-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--amber-light); border: 1px solid #f0c6a8; color: var(--amber); font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
-  .td-chip a { display: inline-flex; color: var(--amber); }
-  .td-chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-  .td-clear { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); text-decoration: none; }
-  .td-clear:hover { color: var(--amber); }
-
-  .td-rows.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  @media(max-width:760px){ .td-rows.grid { grid-template-columns: 1fr; } }
+  .aj-rows.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media(max-width:760px){ .aj-rows.grid { grid-template-columns: 1fr; } }
 
   .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; margin-bottom: 10px; }
-  .td-rows.grid .jrow { margin-bottom: 0; }
+  .aj-rows.grid .jrow { margin-bottom: 0; }
   .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
   .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
   .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
@@ -151,9 +128,9 @@
   .jrow-apply { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; opacity: 0; transform: translateX(-4px); transition: all .18s; }
   .jrow:hover .jrow-apply { opacity: 1; transform: none; }
 
-  .td-empty { text-align: center; padding: 60px 24px; background: #fff; border: 1px dashed var(--rule2); border-radius: 12px; }
-  .td-empty h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
-  .td-empty p { color: var(--ink2); margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .aj-empty { text-align: center; padding: 70px 20px; }
+  .aj-empty h3 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+  .aj-empty p { color: var(--ink2); margin-bottom: 20px; }
 
   .pg-wrap { display: flex; justify-content: center; gap: 5px; margin-top: 30px; }
   .pg-btn { min-width: 40px; height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--rule); border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); background: #fff; text-decoration: none; transition: all .14s; }
@@ -163,37 +140,42 @@
   @media (max-width: 640px) {
     .jrow-right { display: none; }
     .search-row2 { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-    .td-views { display: none; }
+    .aj-views { display: none; }
   }
 </style>
 
-<section class="td-hero">
-  <div class="td-hero-bg"><div class="glow"></div></div>
+<section class="aj-hero">
+  <div class="aj-hero-bg"><div class="glow"></div></div>
   <div class="wrap">
-    <div class="td-topline">
-      <span class="td-badge">
+    <div class="aj-topline">
+      <span class="aj-badge">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         <b>{{ total_count }}</b> open position{{ total_count|pluralize }}
       </span>
-      <span class="td-updated">Updated {% now "F j, Y" %}</span>
+      <span class="aj-updated">Updated {% now "F j, Y" %}</span>
     </div>
-    <h1 class="td-h1">{{ tool.name }} <span class="em">Jobs</span></h1>
-    {% if tool_tagline %}<p class="td-sub">{{ tool_tagline }}</p>{% else %}<p class="td-sub">Hand-curated {{ tool.name }} roles across Marketing Operations, RevOps, and analytics. Refreshed daily, every link verified.</p>{% endif %}
+    <h1 class="aj-h1">MarTech <span class="em">Jobs</span></h1>
+    <p class="aj-sub">Every marketing-technology role worth applying to — Marketing Ops, RevOps, Lifecycle, CDP, and analytics. Curated, vendor-neutral, and verified daily.</p>
 
-    <form method="get" action="{% url 'tool_detail' tool.slug %}" class="searchcard" role="search" aria-label="Search {{ tool.name }} jobs">
+    <form method="get" action="{% url 'all_jobs' %}" class="searchcard" role="search" aria-label="Search MarTech jobs">
       <div class="search-row1">
         <div class="s-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Search {{ tool.name }} jobs…" aria-label="Search {{ tool.name }} jobs">
+          <input type="search" name="q" value="{{ query|default:'' }}" placeholder="Job title, skill, or company" aria-label="Search jobs">
         </div>
         <button type="submit" class="s-go">Search</button>
       </div>
       <div class="search-row2">
-        <a class="s-select-wrap" href="{% url 'all_jobs' %}" style="text-decoration:none;">
+        <div class="s-select-wrap">
           <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-          <div class="s-select" style="display:flex;align-items:center;">All Functions</div>
+          <select class="s-select" name="function" aria-label="Filter by function" onchange="this.form.submit()">
+            <option value="">All Functions</option>
+            <option value="engineering" {% if current_function == 'engineering' %}selected{% endif %}>Engineering</option>
+            <option value="operations" {% if current_function == 'operations' %}selected{% endif %}>Operations</option>
+            <option value="data" {% if current_function == 'data' %}selected{% endif %}>Data &amp; Analytics</option>
+          </select>
           <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </a>
+        </div>
         <div class="s-select-wrap">
           <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           <select class="s-select" name="l" aria-label="Filter by location" onchange="this.form.submit()">
@@ -208,9 +190,15 @@
           </select>
           <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </div>
-        <div class="s-fixed">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          {{ tool.name }}
+        <div class="s-select-wrap">
+          <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <select class="s-select" name="tool" aria-label="Filter by tool" onchange="this.form.submit()">
+            <option value="">All Tools &amp; Stacks</option>
+            {% for t in popular_tech_stacks %}
+            <option value="{{ t.slug }}" {% if selected_tool == t.slug %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+          <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="s-remote" id="s-remote">
           <button type="button" class="s-remote-trigger {% if current_arrangement == 'remote' %}on{% endif %}" onclick="toggleRemotePanel(event)" aria-haspopup="true" aria-expanded="false">
@@ -221,53 +209,38 @@
           <div class="s-remote-panel" role="menu">
             <h4>Where can you work from?</h4>
             <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
-            <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}" role="menuitem">
+            <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}" role="menuitem">
               <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
               <span class="s-remote-opt-body"><span class="s-remote-opt-title">Any location</span><span class="s-remote-opt-sub">On-site, hybrid &amp; remote</span></span>
               <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </a>
-            <a class="s-remote-opt {% if current_arrangement == 'remote' and not location_filter %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote" role="menuitem">
+            <a class="s-remote-opt {% if current_arrangement == 'remote' and not location_filter %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote" role="menuitem">
               <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18a14 14 0 010-18"/></svg></span>
               <span class="s-remote-opt-body"><span class="s-remote-opt-title">Fully remote — anywhere</span><span class="s-remote-opt-sub">Work from any country</span></span>
               <svg class="s-remote-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </a>
             <div class="s-remote-reglabel">Remote in a specific region</div>
             <div class="s-remote-region">
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'United States' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=United+States">United States</a>
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'United Kingdom' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=United+Kingdom">United Kingdom</a>
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'Canada' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Canada">Canada</a>
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'Germany' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Germany">Germany</a>
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'Australia' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=Australia">Australia</a>
-              <a class="{% if current_arrangement == 'remote' and location_filter == 'India' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}arrangement=remote&l=India">India</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United States' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+States">United States</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'United Kingdom' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=United+Kingdom">United Kingdom</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Canada' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Canada">Canada</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Germany' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Germany">Germany</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'Australia' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=Australia">Australia</a>
+              <a class="{% if current_arrangement == 'remote' and location_filter == 'India' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if current_function %}function={{ current_function }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}arrangement=remote&l=India">India</a>
             </div>
           </div>
         </div>
       </div>
     </form>
-
-    {% if often_paired %}
-    <div class="td-paired">
-      <div class="td-paired-lbl">Often paired with</div>
-      <div class="td-paired-row">
-        {% for stack in often_paired %}
-        <a href="{% url 'tool_detail' stack.slug %}" class="td-paired-chip">
-          <span class="td-paired-ico">{% if stack.logo_url %}<img src="{{ stack.logo_url }}" alt="{{ stack.name }}">{% else %}{{ stack.name|slice:":2" }}{% endif %}</span>
-          <span class="td-paired-name">{{ stack.name }}</span>
-          <span class="td-paired-count">{{ stack.pair_count }} jobs</span>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
   </div>
 </section>
 
-<section class="td-list-sec">
+<section class="aj-list-sec">
   <div class="wrap">
-    <div class="td-list-head">
-      <h2>{{ tool.name }} Jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
-      <div class="td-controls">
-        <span class="td-sort-lbl">Sort:</span>
+    <div class="aj-list-head">
+      <h2>{% if current_function %}{{ current_function|capfirst }} Jobs{% else %}All Jobs{% endif %} <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
+      <div class="aj-controls">
+        <span class="aj-sort-lbl">Sort:</span>
         <form method="get" class="sort-form">
           <select name="sort" aria-label="Sort jobs" onchange="this.form.submit()">
             <option value="" {% if not current_sort %}selected{% endif %}>Newest</option>
@@ -275,31 +248,24 @@
           </select>
           <svg class="sc" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+          {% if current_function %}<input type="hidden" name="function" value="{{ current_function }}">{% endif %}
           {% if location_filter %}<input type="hidden" name="l" value="{{ location_filter }}">{% endif %}
+          {% if selected_tool %}<input type="hidden" name="tool" value="{{ selected_tool }}">{% endif %}
           {% if current_arrangement %}<input type="hidden" name="arrangement" value="{{ current_arrangement }}">{% endif %}
           {% if view_mode == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
         </form>
-        <div class="td-views" role="group" aria-label="View mode">
-          <a class="td-view-btn {% if view_mode != 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=grid'|cut:'view=grid' }}&{% endif %}view=list" aria-label="List view">
+        <div class="aj-views" role="group" aria-label="View mode">
+          <a class="aj-view-btn {% if view_mode != 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=grid'|cut:'view=grid' }}&{% endif %}view=list" aria-label="List view">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           </a>
-          <a class="td-view-btn {% if view_mode == 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=list'|cut:'view=list' }}&{% endif %}view=grid" aria-label="Grid view">
+          <a class="aj-view-btn {% if view_mode == 'grid' %}active{% endif %}" href="?{% if filter_qs %}{{ filter_qs|cut:'&view=list'|cut:'view=list' }}&{% endif %}view=grid" aria-label="Grid view">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </a>
         </div>
       </div>
     </div>
 
-    <div class="td-activefilters">
-      <span class="td-chip">{{ tool.name }} <a href="{% url 'all_jobs' %}" aria-label="Remove {{ tool.name }} filter"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></a></span>
-      {% if query or location_filter or current_arrangement %}
-      <a href="{% url 'tool_detail' tool.slug %}" class="td-clear">Clear filters</a>
-      {% else %}
-      <a href="{% url 'all_jobs' %}" class="td-clear">Clear all</a>
-      {% endif %}
-    </div>
-
-    <div class="td-rows {% if view_mode == 'grid' %}grid{% endif %}">
+    <div class="aj-rows {% if view_mode == 'grid' %}grid{% endif %}">
     {% for job in jobs %}
       <a class="jrow {% if job.is_featured %}feat{% endif %}" href="{% url 'job_detail' job.id job.slug %}" aria-label="{{ job.title }} at {{ job.company }}">
         <div class="jrow-logo">
@@ -332,10 +298,10 @@
         </div>
       </a>
     {% empty %}
-      <div class="td-empty">
-        <h3>No {{ tool.name }} jobs match right now</h3>
-        <p>Top {{ tool.name }} roles fill fast. Set a free alert and we'll email you the moment a new one is posted.</p>
-        <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber">Set {{ tool.name }} Job Alert</button>
+      <div class="aj-empty">
+        <h3>No jobs match your filters</h3>
+        <p>Try broadening your search or clearing filters.</p>
+        <a href="{% url 'all_jobs' %}" class="btn btn-amber">Clear filters →</a>
       </div>
     {% endfor %}
     </div>

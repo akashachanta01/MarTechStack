@@ -18,6 +18,9 @@ urlpatterns = [
     path('for-employers/', views.for_employers, name='for_employers'),
     path('contact/', views.contact, name='contact'),
 
+    # --- BROWSE ALL JOBS (Jobs nav destination) ---
+    path('jobs/', views.all_jobs, name='all_jobs'),
+
     # --- SEO STRATEGY IMPLEMENTATION ---
     path('jobs/<slug:slug>/', views.tool_detail, name='tool_detail'),
     path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),

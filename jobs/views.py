@@ -137,6 +137,8 @@ def job_list(request):
     params.pop("page", None)
     filter_qs = params.urlencode()
 
+    featured_stacks = _build_featured_stacks()
+
     return render(request, "jobs/job_list.html", {
         "jobs": jobs_page,
         "query": query,
@@ -150,7 +152,51 @@ def job_list(request):
         "filter_qs": filter_qs,
         "limited": limited,
         "total_count": total_count,
+        "featured_stacks": featured_stacks,
     })
+
+# Curated "Browse by stack" cards: preferred slug -> short role line.
+STACK_META = {
+    "salesforce": "Marketing Cloud, CRM, Admin",
+    "hubspot": "Marketing Hub, Ops, automation",
+    "marketo": "Campaigns, lead scoring, MOps",
+    "braze": "Lifecycle, push, in-app",
+    "adobe": "Experience Platform, AEP, AEM",
+    "klaviyo": "Email & SMS, DTC retention",
+    "segment": "CDP, tracking, identity",
+    "snowflake": "Warehouse, modeling, BI",
+}
+_STACK_TINTS = ["tint-navy", "tint-amber", "tint-violet", "tint-ink", "tint-green"]
+
+def _build_featured_stacks(limit=8):
+    """Data-driven homepage stack cards: real slugs + live job counts."""
+    approved = Q(jobs__is_active=True, jobs__screening_status="approved")
+    found = {
+        t.slug: t for t in Tool.objects.filter(slug__in=list(STACK_META.keys()))
+        .annotate(job_count=Count("jobs", filter=approved))
+    }
+    cards = []
+    for slug, role in STACK_META.items():
+        tool = found.get(slug)
+        if not tool or not tool.job_count:
+            continue
+        cards.append({"slug": tool.slug, "name": tool.name, "role": role, "count": tool.job_count})
+
+    # Fill any remaining slots with the next most popular tools.
+    if len(cards) < limit:
+        used = {c["slug"] for c in cards}
+        extra = (
+            Tool.objects.annotate(job_count=Count("jobs", filter=approved))
+            .filter(job_count__gt=0).exclude(slug__in=used).order_by("-job_count")[: limit - len(cards)]
+        )
+        for tool in extra:
+            cards.append({"slug": tool.slug, "name": tool.name, "role": "MarTech roles", "count": tool.job_count})
+
+    cards = cards[:limit]
+    for i, card in enumerate(cards):
+        card["tint"] = _STACK_TINTS[i % len(_STACK_TINTS)]
+        card["initial"] = card["name"][:1]
+    return cards
 
 # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
 CATEGORY_CONFIG = {
@@ -250,6 +296,65 @@ def category_detail(request, slug):
         "current_arrangement": work_arrangement_filter,
         "top_stacks": top_stacks,
         "category_tools": category_tools,
+        "filter_qs": filter_qs,
+    })
+
+def all_jobs(request):
+    """Dedicated browse-all-jobs board (the 'Jobs' nav destination)."""
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    tool_filter = request.GET.get("tool", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+    function = request.GET.get("function", "").strip().lower()
+    sort = request.GET.get("sort", "").strip().lower()
+
+    jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
+
+    # Optional function scope (Engineering / Operations / Data).
+    if function in CATEGORY_CONFIG:
+        config = CATEGORY_CONFIG[function]
+        cat_q = Q()
+        for kw in config["keywords"]:
+            cat_q |= Q(title__icontains=kw)
+        cat_q |= Q(tools__slug__in=config["tool_slugs"])
+        jobs = jobs.filter(cat_q)
+
+    if query:
+        jobs = jobs.filter(
+            Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
+        )
+    if tool_filter:
+        jobs = jobs.filter(tools__slug=tool_filter)
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+    if work_arrangement_filter:
+        jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+
+    if sort == "oldest":
+        jobs = jobs.order_by("created_at")
+    else:
+        jobs = jobs.order_by("-is_pinned", "-created_at")
+
+    jobs = jobs.distinct()
+    total_count = jobs.count()
+
+    paginator = Paginator(jobs, 25)
+    jobs_page = paginator.get_page(request.GET.get("page"))
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
+    return render(request, "jobs/all_jobs.html", {
+        "jobs": jobs_page,
+        "total_count": total_count,
+        "query": query,
+        "location_filter": location_query,
+        "selected_tool": tool_filter,
+        "current_arrangement": work_arrangement_filter,
+        "current_function": function,
+        "current_sort": sort,
+        "view_mode": request.GET.get("view", "list"),
         "filter_qs": filter_qs,
     })
 
@@ -378,14 +483,75 @@ def unsubscribe(request):
             else: messages.warning(request, "⚠️ That email was not found in our list.")
     return render(request, "jobs/unsubscribe.html")
 
+TOOL_TAGLINES = {
+    "salesforce": "Salesforce Marketing Cloud, CRM administration, and platform roles — the backbone of enterprise marketing and revenue operations.",
+    "hubspot": "HubSpot Marketing Hub, Ops, and automation roles — for the people who run inbound and lifecycle on HubSpot.",
+    "marketo": "Marketo campaign, lead-scoring, and marketing-ops roles for demand-gen and automation specialists.",
+    "braze": "Braze lifecycle, push, and in-app messaging roles — cross-channel engagement at scale.",
+    "adobe": "Adobe Experience Platform, AEP, and AEM roles for enterprise experience and data teams.",
+    "klaviyo": "Klaviyo email & SMS roles focused on DTC retention and lifecycle marketing.",
+    "segment": "Segment CDP, tracking, and identity roles — the data plumbing behind modern marketing.",
+    "snowflake": "Snowflake warehouse, modeling, and BI roles for analytics-engineering and data teams.",
+}
+
 def tool_detail(request, slug):
     tool = get_object_or_404(Tool, slug=slug)
-    jobs = Job.objects.filter(tools=tool, is_active=True, screening_status='approved').order_by('-is_pinned', '-created_at')
-    paginator = Paginator(jobs, 20)
+
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+    sort = request.GET.get("sort", "").strip().lower()
+
+    jobs = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).prefetch_related("tools")
+
+    if query:
+        jobs = jobs.filter(Q(title__icontains=query) | Q(company__icontains=query))
+    if location_query:
+        jobs = jobs.filter(location__icontains=location_query)
+    if work_arrangement_filter:
+        jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
+
+    if sort == "oldest":
+        jobs = jobs.order_by("created_at")
+    else:
+        jobs = jobs.order_by("-is_pinned", "-created_at")
+
+    jobs = jobs.distinct()
+    total_count = jobs.count()
+
+    paginator = Paginator(jobs, 25)
     jobs_page = paginator.get_page(request.GET.get('page'))
+
+    # "Often paired with" — tools that co-occur on the same jobs as this tool.
+    paired_job_ids = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).values_list("id", flat=True)
+    often_paired = (
+        Tool.objects.filter(jobs__id__in=list(paired_job_ids)).exclude(id=tool.id)
+        .annotate(pair_count=Count("jobs", filter=Q(jobs__id__in=list(paired_job_ids))))
+        .order_by("-pair_count").distinct()[:6]
+    )
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    filter_qs = params.urlencode()
+
     return render(request, 'jobs/tool_detail.html', {
-        'tool': tool, 'jobs': jobs_page, 'location_name': 'Global/Remote',
-        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
+        'tool': tool,
+        'jobs': jobs_page,
+        'total_count': total_count,
+        'query': query,
+        'location_filter': location_query,
+        'current_arrangement': work_arrangement_filter,
+        'current_sort': sort,
+        'view_mode': request.GET.get("view", "list"),
+        'often_paired': often_paired,
+        'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
+        'filter_qs': filter_qs,
+        'location_name': 'Global/Remote',
+        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES,
     })
 
 def job_detail(request, id, slug):

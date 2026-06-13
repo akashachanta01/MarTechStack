@@ -19,10 +19,10 @@
     <link rel="canonical" href="https://martechjobs.io{{ request.path }}" />
     {% block rel_prev_next %}{% endblock %}
 
-    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=4.0">
-    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'favicon-48.png' %}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192.png' %}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}?v=5.0">
+    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'favicon-48.png' %}?v=5.0">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192.png' %}?v=5.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}?v=5.0">
 
     <!-- Organisation structured data -->
     <script type="application/ld+json">
@@ -372,7 +372,7 @@
         </a>
 
         <ul class="nav-links" role="list">
-          <li><a href="{% url 'job_list' %}" {% if request.resolver_match.url_name == 'job_list' %}aria-current="page"{% endif %}>Jobs</a></li>
+          <li><a href="{% url 'all_jobs' %}" {% if request.resolver_match.url_name == 'all_jobs' %}aria-current="page"{% endif %}>Jobs</a></li>
           <li><a href="{% url 'tools_hub' %}" class="tools-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 4 14 11 14 10 22 20 9 13 9 13 2"/></svg>
             Free Tools
@@ -394,7 +394,7 @@
 
       <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
         <ul>
-          <li><a href="{% url 'job_list' %}">Jobs</a></li>
+          <li><a href="{% url 'all_jobs' %}">Jobs</a></li>
           <li><a href="{% url 'seo_loc_only' 'remote' %}">Remote Jobs</a></li>
           <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
           <li><a href="{% url 'directory' %}">Job Directory</a></li>

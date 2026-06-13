@@ -39,7 +39,8 @@
 @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(43,182,115,.04); } }
 
 /* ---- Hero Editorial ---- */
-.jl-hero { position: relative; overflow: hidden; padding: 60px 0 56px; text-align: center; background: var(--paper); }
+.jl-hero { position: relative; overflow: visible; padding: 60px 0 56px; text-align: center; background: var(--paper); }
+.jl-hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .jl-hero .glow-amber { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(240,160,106,.28), transparent 64%); top: -320px; right: -160px; pointer-events: none; }
 .jl-hero .glow-navy  { position: absolute; width: 440px; height: 440px; border-radius: 50%; background: radial-gradient(circle, rgba(27,46,75,.06), transparent 64%); bottom: -220px; left: -100px; pointer-events: none; }
 
@@ -359,8 +360,10 @@
 
 <!-- ===== HERO ===== -->
 <section class="jl-hero" aria-label="Site hero">
-  <div class="glow-amber"></div>
-  <div class="glow-navy"></div>
+  <div class="jl-hero-bg">
+    <div class="glow-amber"></div>
+    <div class="glow-navy"></div>
+  </div>
   <div class="wrap" style="position:relative;z-index:1">
     <div class="live-badge">
       <span class="live-dot"></span>
@@ -533,7 +536,7 @@
       <div class="jl-right">
         <span style="font-size:13px;color:var(--ink3)">{{ total_count }} result{{ total_count|pluralize }}</span>
         {% if limited %}
-        <a href="?all=1#jl-listings" class="jl-viewall">View all jobs
+        <a href="{% url 'all_jobs' %}" class="jl-viewall">View all jobs
           <svg style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
         </a>
         {% endif %}
@@ -579,7 +582,7 @@
 
     {% if limited and total_count > 10 %}
     <div style="text-align:center;margin-top:32px">
-      <a href="?all=1#jl-listings" class="btn btn-amber btn-lg">View all {{ total_count }} jobs →</a>
+      <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">View all {{ total_count }} jobs →</a>
     </div>
     {% elif jobs.paginator.num_pages > 1 %}
     <nav class="pg-wrap" aria-label="Job listing pages">
@@ -671,6 +674,7 @@
 </div>
 
 <!-- ===== BROWSE BY STACK ===== -->
+{% if featured_stacks %}
 <section class="stacks-sec" aria-labelledby="stacks-h">
   <div class="wrap">
     <div class="stacks-head">
@@ -679,54 +683,22 @@
         <h2 id="stacks-h">Jobs by MarTech tool</h2>
         <p class="stacks-sub">Filter the board down to the platforms you already know.</p>
       </div>
-      <a href="{% url 'directory' %}" class="sec-link">All stacks
+      <a href="{% url 'all_jobs' %}" class="sec-link">All stacks
         <svg style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
       </a>
     </div>
     <div class="stacks-grid">
-      <a href="{% url 'tool_detail' 'salesforce' %}" class="stack-card">
-        <div class="stack-mono tint-navy">S</div>
-        <div class="stack-info"><div class="stack-name">Salesforce</div><div class="stack-role">Marketing Cloud, CRM, Admin</div></div>
-        <div class="stack-count">128<span>jobs</span></div>
+      {% for stack in featured_stacks %}
+      <a href="{% url 'tool_detail' stack.slug %}" class="stack-card">
+        <div class="stack-mono {{ stack.tint }}">{{ stack.initial }}</div>
+        <div class="stack-info"><div class="stack-name">{{ stack.name }}</div><div class="stack-role">{{ stack.role }}</div></div>
+        <div class="stack-count">{{ stack.count }}<span>jobs</span></div>
       </a>
-      <a href="{% url 'tool_detail' 'hubspot' %}" class="stack-card">
-        <div class="stack-mono tint-amber">H</div>
-        <div class="stack-info"><div class="stack-name">HubSpot</div><div class="stack-role">Marketing Hub, Ops, automation</div></div>
-        <div class="stack-count">90<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'marketo' %}" class="stack-card">
-        <div class="stack-mono tint-violet">M</div>
-        <div class="stack-info"><div class="stack-name">Marketo</div><div class="stack-role">Campaigns, lead scoring, MOps</div></div>
-        <div class="stack-count">71<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'braze' %}" class="stack-card">
-        <div class="stack-mono tint-ink">B</div>
-        <div class="stack-info"><div class="stack-name">Braze</div><div class="stack-role">Lifecycle, push, in-app</div></div>
-        <div class="stack-count">52<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'adobe' %}" class="stack-card">
-        <div class="stack-mono tint-amber">A</div>
-        <div class="stack-info"><div class="stack-name">Adobe</div><div class="stack-role">Experience Platform, AEP, AEM</div></div>
-        <div class="stack-count">47<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'klaviyo' %}" class="stack-card">
-        <div class="stack-mono tint-green">K</div>
-        <div class="stack-info"><div class="stack-name">Klaviyo</div><div class="stack-role">Email &amp; SMS, DTC retention</div></div>
-        <div class="stack-count">33<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'segment' %}" class="stack-card">
-        <div class="stack-mono tint-navy">S</div>
-        <div class="stack-info"><div class="stack-name">Segment</div><div class="stack-role">CDP, tracking, identity</div></div>
-        <div class="stack-count">166<span>jobs</span></div>
-      </a>
-      <a href="{% url 'tool_detail' 'snowflake' %}" class="stack-card">
-        <div class="stack-mono tint-violet">S</div>
-        <div class="stack-info"><div class="stack-name">Snowflake</div><div class="stack-role">Warehouse, modeling, BI</div></div>
-        <div class="stack-count">71<span>jobs</span></div>
-      </a>
+      {% endfor %}
     </div>
   </div>
 </section>
+{% endif %}
 
 <!-- ===== SALARY GUIDE ===== -->
 <section class="salary-sec" aria-labelledby="salary-h">
