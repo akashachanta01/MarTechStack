@@ -4,12 +4,24 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from .models import Subscriber
 import threading
+import logging
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 def send_html_email(subject, template_name, context, to_email=None, bcc_list=None):
     """
     Helper to send HTML emails with a Plain Text fallback.
     """
+    # Guard: if SMTP credentials are missing, nothing will ever send. Surface
+    # this loudly rather than failing silently per-message.
+    if not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
+        logger.error(
+            "Email NOT sent ('%s'): EMAIL_HOST_PASSWORD is empty. "
+            "Set a Gmail App Password in the environment.", subject
+        )
+        return False
+
     # 1. Render HTML
     html_content = render_to_string(template_name, context)
     # 2. Create Plain Text version (for spam filters)
@@ -18,21 +30,23 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
     # 3. Setup Email
     msg = EmailMultiAlternatives(
         subject=subject,
-        body=text_content, 
+        body=text_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=to_email if to_email else [settings.DEFAULT_FROM_EMAIL],
         bcc=bcc_list if bcc_list else []
     )
-    
+
     # 4. Attach HTML
     msg.attach_alternative(html_content, "text/html")
-    
+
     # 5. Send
     try:
         msg.send(fail_silently=False)
         return True
     except Exception as e:
-        print(f"❌ Email Error ({subject}): {e}")
+        # Log the FULL exception (with traceback) so SMTP/auth failures are
+        # diagnosable in the Render logs instead of a one-line print.
+        logger.exception("Email send failed ('%s'): %s", subject, e)
         return False
 
 def send_welcome_email(to_email):
