@@ -200,6 +200,7 @@
 }
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script>
     async function generateJD() {
         const btn = document.getElementById('genBtn');
@@ -231,7 +232,8 @@
             const data = await response.json();
 
             if (data.html) {
-                aiContainer.innerHTML = data.html;
+                // Sanitize the model's HTML before inserting — never trust LLM output.
+                aiContainer.innerHTML = DOMPurify.sanitize(data.html);
             } else {
                 alert("Error generating text: " + (data.error || "Unknown error"));
             }
