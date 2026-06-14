@@ -91,6 +91,19 @@ class BlogSitemap(Sitemap):
     def location(self, obj):
         return reverse('post_detail', args=[obj.slug])
 
+class RoleSalarySitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from jobs.views import TITLE_JOBS
+        return list(TITLE_JOBS.keys())
+
+    def location(self, slug):
+        return f"/{slug}-salary/"
+
+
 class InterviewGuideSitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.8

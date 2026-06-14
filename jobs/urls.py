@@ -57,6 +57,9 @@ urlpatterns = [
     # suffix disambiguates from the -jobs/ catch-all below) ---
     path('<slug:tool_slug>-interview-questions/', views.tool_interview, name='tool_interview'),
 
+    # --- PER-ROLE SALARY PAGES (-salary/ suffix disambiguates) ---
+    path('<slug:role_slug>-salary/', views.role_salary, name='role_salary'),
+
     # --- JOB-TITLE PAGES (single-segment, curated titles only) ---
     # RevOps killed (screener excludes it) — 301 the old indexed URL to the
     # closest relevant page so we don't drop the link equity into a 404.
