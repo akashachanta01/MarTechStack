@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
-from .models import UserProfile
+from .models import UserProfile, ProWaitlistEntry
 
 
 class UserProfileInline(admin.StackedInline):
@@ -43,3 +43,27 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+
+
+@admin.register(ProWaitlistEntry)
+class ProWaitlistAdmin(admin.ModelAdmin):
+    """Dedicated 'Pro Waitlist' list: everyone who clicked Join the waitlist,
+    newest first, with email + join date. Read-only, searchable, exportable."""
+    list_display = ('email', 'full_name', 'pro_waitlist_at')
+    ordering = ('-pro_waitlist_at',)
+    search_fields = ('user__email', 'user__first_name', 'user__last_name')
+    list_select_related = ('user',)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(pro_waitlist=True)
+
+    @admin.display(description='Email', ordering='user__email')
+    def email(self, obj):
+        return obj.user.email
+
+    @admin.display(description='Name')
+    def full_name(self, obj):
+        return obj.user.get_full_name() or '—'
+
+    def has_add_permission(self, request):
+        return False
