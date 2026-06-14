@@ -1,0 +1,78 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block title %}Email Addresses | MarTechJobs{% endblock %}
+{% block auth_content %}
+<div style="width:100%;max-width:480px;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:6px;">Email addresses</h1>
+    <p style="font-size:14px;color:var(--ink3);">Manage the email addresses linked to your account.</p>
+  </div>
+
+  {% if messages %}
+  {% for message in messages %}
+  <div class="msg-banner {% if message.tags == 'success' %}msg-success{% else %}msg-info{% endif %}" style="margin-bottom:16px;">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <div class="auth-card">
+    {% if emailaddresses %}
+    <form method="post" action="{% url 'account_email' %}">
+      {% csrf_token %}
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+        {% for emailaddress in emailaddresses %}
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--rule2);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="email" value="{{ emailaddress.email }}" {% if emailaddress.primary %}checked{% endif %}>
+          <span style="flex:1;font-size:14px;font-weight:600;color:var(--ink);">{{ emailaddress.email }}</span>
+          {% if emailaddress.verified %}
+          <span class="pill pill-remote">Verified</span>
+          {% else %}
+          <span class="pill" style="background:var(--amber-light);color:var(--amber);">Unverified</span>
+          {% endif %}
+          {% if emailaddress.primary %}<span class="pill pill-type">Primary</span>{% endif %}
+        </label>
+        {% endfor %}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button type="submit" name="action_primary" class="btn btn-ghost">Make Primary</button>
+        <button type="submit" name="action_send" class="btn btn-ghost">Re-send Verification</button>
+        <button type="submit" name="action_remove" class="btn btn-ghost" id="email-remove-btn" style="color:#c2410c;">Remove</button>
+      </div>
+    </form>
+    {% else %}
+    <p style="font-size:14px;color:var(--ink3);">You don't have any email address set up yet.</p>
+    {% endif %}
+
+    {% if can_add_email %}
+    <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--rule);">
+      <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:14px;">Add email address</h2>
+      <form method="post" action="{% url 'account_email' %}">
+        {% csrf_token %}
+        <div class="auth-field">
+          {{ form.email }}
+          {% for error in form.email.errors %}<p style="color:#b91c1c;font-size:12px;margin-top:4px;">{{ error }}</p>{% endfor %}
+        </div>
+        <button type="submit" name="action_add" class="btn btn-amber btn-block" style="padding:13px;">Add Email</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <p style="text-align:center;margin-top:18px;font-size:13px;">
+    <a href="{% url 'accounts_dashboard' %}" style="color:var(--ink3);font-weight:600;">← Back to dashboard</a>
+  </p>
+</div>
+<style>
+.auth-card{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow);}
+.auth-field{margin-bottom:14px;}
+.auth-field input{width:100%;padding:12px 14px;border:1.5px solid var(--rule2);border-radius:8px;font-family:'Hanken Grotesk',sans-serif;font-size:15px;color:var(--ink);background:var(--paper);outline:none;transition:border .15s;}
+.auth-field input:focus{border-color:var(--amber);}
+</style>
+<script>
+(function(){
+  var btn = document.getElementById('email-remove-btn');
+  if (btn) btn.addEventListener('click', function(e){
+    if (!confirm('Do you really want to remove the selected email address?')) e.preventDefault();
+  });
+})();
+</script>
+{% endblock %}
