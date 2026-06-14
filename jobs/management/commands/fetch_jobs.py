@@ -457,7 +457,15 @@ class Command(BaseCommand):
             resp = requests.post("https://api.ashbyhq.com/posting-api/job-board/" + company, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("ashby", company, company.capitalize())
+                cutoff = timezone.now() - timedelta(days=14)
                 for item in resp.json().get('jobs', []):
+                    published = item.get('publishedAt') or item.get('updatedAt') or ''
+                    if published:
+                        try:
+                            if dateutil.parser.parse(published).replace(tzinfo=None) < cutoff.replace(tzinfo=None):
+                                continue
+                        except Exception:
+                            pass
                     loc_obj = item.get('location') or {}
                     if isinstance(loc_obj, str): raw_loc = loc_obj
                     else: raw_loc = item.get('locationName') or "Remote"

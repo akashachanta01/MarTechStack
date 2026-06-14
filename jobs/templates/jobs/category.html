@@ -1,8 +1,8 @@
 {% extends "jobs/base.html" %}
 {% load static %}
 
-{% block title %}{{ category.name }} MarTech Jobs — {{ total_count }} Open Roles | MarTechJobs{% endblock %}
-{% block meta_description %}{{ category.description }} Browse {{ total_count }} {{ category.name|lower }} MarTech roles, refreshed daily.{% endblock %}
+{% block title %}{{ category.name }} MarTech Jobs | MarTechJobs{% endblock %}
+{% block meta_description %}{{ category.description }} Browse {{ category.name|lower }} MarTech roles, refreshed daily.{% endblock %}
 {% block meta_keywords %}{{ category.name|lower }} martech jobs, marketing {{ category.name|lower }} jobs, {{ category.name|lower }} marketing operations careers{% endblock %}
 
 {% block extra_schema %}
