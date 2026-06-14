@@ -1,0 +1,26 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% block title %}Continue with Google | MarTechJobs{% endblock %}
+{% block auth_content %}
+<div style="width:100%;max-width:420px;text-align:center;">
+  <div class="auth-card">
+    {% if process == "connect" %}
+    <h1 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px;">Connect {{ provider.name }}</h1>
+    <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:22px;">You're about to connect a {{ provider.name }} account to your MarTechJobs profile.</p>
+    {% else %}
+    <h1 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px;">Sign in via {{ provider.name }}</h1>
+    <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:22px;">You're about to sign in using your {{ provider.name }} account.</p>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-amber btn-block" style="padding:14px;">Continue</button>
+    </form>
+  </div>
+  <p style="text-align:center;margin-top:18px;font-size:13px;">
+    <a href="{% url 'account_login' %}" style="color:var(--ink3);font-weight:600;">← Cancel</a>
+  </p>
+</div>
+<style>
+.auth-card{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow);}
+</style>
+{% endblock %}
