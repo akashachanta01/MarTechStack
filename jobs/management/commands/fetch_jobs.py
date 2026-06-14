@@ -201,6 +201,9 @@ class Command(BaseCommand):
             self.stdout.write("   (no jobs seen — check sources/keys)")
         # Also log so it lands in the Render log aggregation, not just stdout.
         logger.info("fetch_jobs summary: added=%s stats=%s", self.total_added, dict(self.stats))
+        # Bust the salary-guide cache so the next page load reflects new salary data.
+        from django.core.cache import cache as django_cache
+        django_cache.delete('salary_guide_data_v2')
 
     def search_google(self, query, num=100, tbs="qdr:d14"):
         if self.search_provider == 'serper':
