@@ -1,3 +1,11 @@
+from django.conf import settings
+
+
+def feature_flags(request):
+    """Expose toggles templates need (e.g. whether to show the Google button)."""
+    return {'google_oauth_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False)}
+
+
 def saved_job_ids(request):
     if request.user.is_authenticated:
         try:

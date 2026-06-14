@@ -78,6 +78,8 @@ INSTALLED_APPS = [
     # --- ALLAUTH ---
     'allauth',
     'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     # ---------------
     'jobs',
     'tools',
@@ -116,6 +118,7 @@ TEMPLATES = [
                 'jobs.context_processors.global_seo_data',
                 'jobs.context_processors.seo_indexing',
                 'accounts.context_processors.saved_job_ids',
+                'accounts.context_processors.feature_flags',
             ],
         },
     },
@@ -211,12 +214,42 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+# Low-friction signups: don't gate accounts behind email verification. We send
+# our own branded welcome email on signup instead (accounts/signals.py).
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 LOGIN_REDIRECT_URL = '/accounts/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'
+
+# ==============================================
+# GOOGLE OAUTH (django-allauth socialaccount)
+# Activates automatically when the two env vars are set on Render — no code
+# change needed. Get them from Google Cloud Console → Credentials → OAuth
+# client (Web application). Authorized redirect URI:
+#   https://martechjobs.io/accounts/google/login/callback/
+# ==============================================
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '').strip()
+GOOGLE_OAUTH_SECRET = os.environ.get('GOOGLE_OAUTH_SECRET', '').strip()
+GOOGLE_OAUTH_ENABLED = bool(GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_SECRET)
+
+# Go straight to Google on click (skip allauth's intermediate confirm page).
+SOCIALACCOUNT_LOGIN_ON_GET = True
+# Google has already verified the email, so don't re-verify.
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    }
+}
+if GOOGLE_OAUTH_ENABLED:
+    SOCIALACCOUNT_PROVIDERS['google']['APPS'] = [{
+        'client_id': GOOGLE_OAUTH_CLIENT_ID,
+        'secret': GOOGLE_OAUTH_SECRET,
+        'key': '',
+    }]
 
 # ==============================================
 # CACHE
