@@ -61,6 +61,21 @@ EVAL_SET = [
     ("Salesforce Account Executive", "Salesforce", "reject"),
     ("Adobe Photoshop Designer", "Adobe", "reject"),
     ("HubSpot Sales Representative", "HubSpot", "reject"),
+    # --- generic title, in-scope JD (description-signal gate) -------------
+    # 4-tuples carry an explicit description so we exercise the desc_signal
+    # fallback (title alone would fail the gate).
+    ("Technical Consultant", "Acme SaaS",
+     "Own our Marketo instance and Tealium tag management. Build campaign "
+     "automation, lead routing, and analytics dashboards across the marketing stack.",
+     "martech"),
+    ("Senior Analyst", "Acme SaaS",
+     "Implement and maintain Adobe Experience Platform and Google Tag Manager "
+     "data collection for the marketing team; build attribution reporting.",
+     "martech"),
+    # generic title whose JD only name-drops one ubiquitous tool in passing -> reject
+    ("Marketing Manager", "Acme SaaS",
+     "Lead brand campaigns and PR. Manage agencies and events. We use Salesforce.",
+     "reject"),
 ]
 
 
@@ -70,12 +85,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--no-ai", action="store_true", help="Only deterministic stages (no GPT calls)")
 
-    def _deterministic_verdict(self, s, title, company):
+    def _deterministic_verdict(self, s, title, company, description=""):
         if s._is_blocked(title, company, ""):
             return "rejected"
         if s._quick_kill(title, company):
             return "rejected"
-        if not any(kw in s._normalize(title) for kw in s.gate_terms):
+        has_title = any(kw in s._normalize(title) for kw in s.gate_terms)
+        desc_norm = s._normalize(description)
+        desc_signal = len({t for t in s.desc_signal_tools if t in desc_norm}) >= 2
+        if not has_title and not desc_signal:
             return "rejected"
         return "kept"  # would go to GPT — treated as kept in --no-ai mode
 
@@ -87,12 +105,17 @@ class Command(BaseCommand):
         # Confusion counts (positive class = 'martech' = kept)
         tp = fp = tn = fn = 0
         errors = []
-        for title, company, label in EVAL_SET:
+        for row in EVAL_SET:
+            if len(row) == 4:
+                title, company, description, label = row
+            else:
+                title, company, label = row
+                description = f"{title} role at {company}."
             if no_ai:
-                verdict = self._deterministic_verdict(s, title, company)
+                verdict = self._deterministic_verdict(s, title, company, description)
                 kept = verdict != "rejected"
             else:
-                res = s.screen(title, company, "", f"{title} role at {company}.", "")
+                res = s.screen(title, company, "", description, "")
                 kept = res.get("status") != "rejected"
 
             if label == "martech" and kept:

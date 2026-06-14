@@ -11,7 +11,7 @@
 "Marketing Automation Specialist" OR "Marketing Automation Manager" OR "Marketing Automation Developer" OR "Campaign Operations"
 
 # --- ROLES: MARTECH ENGINEERING ---
-"Marketing Engineer" OR "MarTech Engineer" OR "CDP Engineer" OR "Customer Data Platform" OR "Marketing Solutions Architect" OR "Analytics Engineer"
+"Marketing Engineer" OR "MarTech Engineer" OR "CDP Engineer" OR "Marketing Data Engineer" OR "Customer Data Platform" OR "Marketing Solutions Architect" OR "Analytics Engineer"
 "Tag Management" OR "Tagging Specialist" OR "Web Analytics Implementation" OR "Marketing Integration Engineer"
 
 # --- ROLES: MARKETING ANALYTICS / DATA ---

@@ -73,6 +73,22 @@ class MarTechScreener:
             "marketing cloud", "sfmc",
         }
         self.gate_terms = set(self.REQUIRED_KEYWORDS) | _GATE_ROLE_TERMS | _GATE_TOOL_TERMS
+
+        # Specialist, IN-SCOPE tools whose presence in a job DESCRIPTION is a
+        # strong MarTech signal even when the title is generic ("Marketing
+        # Manager" whose JD is all Marketo/Segment). Deliberately excludes the
+        # ubiquitous tools (bare Salesforce/HubSpot/Google Analytics appear in
+        # nearly every marketing JD) and the out-of-scope lifecycle messaging
+        # tools (Braze/Iterable/Klaviyo) so we don't flood GPT with noise.
+        self.desc_signal_tools = {
+            "marketo", "pardot", "oracle eloqua", "eloqua",
+            "salesforce marketing cloud", "sfmc", "adobe journey optimizer",
+            "adobe campaign", "twilio segment", "segment", "tealium",
+            "mparticle", "rudderstack", "hightouch", "census", "actioniq",
+            "salesforce data cloud", "adobe experience platform",
+            "adobe experience manager", "adobe analytics", "google tag manager",
+            "tag manager", "optimizely", "amplitude", "mixpanel", "heap",
+        }
         # Ensure we have a clean list of just tools for the prompt and check
         self.tool_list_clean = [t.lower() for t in self.hunt_tools if len(t) > 2]
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
@@ -159,9 +175,24 @@ class MarTechScreener:
         # "Salesforce/HubSpot" somewhere), which is why generic roles slipped in.
         title_norm = self._normalize(title)
         has_keyword = any(kw in title_norm for kw in self.gate_terms)
+
+        # Description-signal fallback: a lot of real MarTech roles ship with a
+        # generic title ("Marketing Manager", "Technical Consultant", "Senior
+        # Analyst") but a JD that is unmistakably built around an in-scope
+        # specialist platform. If the title misses but the DESCRIPTION names
+        # >= 2 distinct specialist tools, let GPT make the final call instead of
+        # hard-rejecting. We require two distinct hits (not one) because a single
+        # passing mention ("we use Marketo") is often incidental, whereas two
+        # specialist tools signals the role actually owns the stack.
+        desc_signal = False
         if not has_keyword:
-            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No MarTech term in TITLE.", "details": {"stage": "fast_fail"}}
-        
+            desc_norm = self._normalize(description)
+            hits = {t for t in self.desc_signal_tools if t in desc_norm}
+            desc_signal = len(hits) >= 2
+
+        if not has_keyword and not desc_signal:
+            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No MarTech term in TITLE or specialist tools in JD.", "details": {"stage": "fast_fail"}}
+
         if not self.client:
             return {"status": "pending", "score": 50.0, "reason": "OPENAI_API_KEY missing.", "details": {"stage": "api_missing"}}
 
@@ -221,6 +252,17 @@ class MarTechScreener:
 
         IMPORTANT: A tool name in the title is a POSITIVE signal ONLY when paired
         with one of the three accepted families. NEVER auto-approve on a tool alone.
+
+        GENERIC TITLES: Some real MarTech roles ship with a vague title
+        ("Marketing Manager", "Technical Consultant", "Senior Analyst",
+        "Solutions Consultant") but a JD that is clearly built around owning an
+        in-scope platform (Marketo, Eloqua, SFMC, Segment, Tealium, mParticle,
+        Adobe Experience Platform/AEM, GTM, etc.). In that case, judge by the JD,
+        not the title: APPROVE only if the day-to-day responsibilities are
+        genuinely Marketing Operations / Automation / Campaign Ops, MarTech
+        engineering, or marketing analytics. If the JD only mentions the tool in
+        passing, or the primary function is one of the EXCLUDED families above,
+        REJECT.
 
         ALSO:
         - Detect stack: tools actually used (from the menu or clearly named).
