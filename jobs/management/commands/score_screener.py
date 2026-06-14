@@ -18,23 +18,27 @@ from jobs.screener import MarTechScreener
 # (title, company, label)  — keep descriptions minimal; the title gate + prompt
 # are what we're testing. Expand this set with real misclassifications over time.
 EVAL_SET = [
-    # --- should KEEP (martech) ---
+    # --- should KEEP (in scope: Marketing Ops + Automation + Campaign Ops, Eng, Data) ---
     ("Marketing Operations Manager", "Acme SaaS", "martech"),
     ("Senior Marketing Ops Specialist", "Acme SaaS", "martech"),
-    ("Revenue Operations Manager", "Acme SaaS", "martech"),
-    ("RevOps Analyst", "Acme SaaS", "martech"),
     ("Salesforce Administrator", "Acme SaaS", "martech"),
     ("Marketo Specialist", "Acme SaaS", "martech"),
     ("HubSpot Developer", "Acme SaaS", "martech"),
     ("Marketing Automation Manager", "Acme SaaS", "martech"),
-    ("Lifecycle Marketing Manager", "Acme SaaS", "martech"),
-    ("CRM Marketing Manager", "Acme SaaS", "martech"),
+    ("Campaign Operations Manager", "Acme SaaS", "martech"),
     ("Marketing Analytics Manager", "Acme SaaS", "martech"),
     ("Marketing Technologist", "Acme SaaS", "martech"),
-    ("Demand Generation Manager", "Acme SaaS", "martech"),
-    ("Email Marketing Manager", "Acme SaaS", "martech"),
+    ("MarTech Engineer", "Acme SaaS", "martech"),
     ("CDP Engineer", "Acme SaaS", "martech"),
     ("Salesforce Marketing Cloud Developer", "Acme SaaS", "martech"),
+    # --- should REJECT: explicitly out-of-scope marketing-adjacent roles ---
+    ("Revenue Operations Manager", "Acme SaaS", "reject"),
+    ("RevOps Analyst", "Acme SaaS", "reject"),
+    ("Lifecycle Marketing Manager", "Acme SaaS", "reject"),
+    ("CRM Marketing Manager", "Acme SaaS", "reject"),
+    ("Demand Generation Manager", "Acme SaaS", "reject"),
+    ("Email Marketing Manager", "Acme SaaS", "reject"),
+    ("Growth Marketing Manager", "Acme SaaS", "reject"),
     # --- should REJECT (noise) ---
     ("Senior Software Engineer", "Acme SaaS", "reject"),
     ("Backend Engineer", "Acme SaaS", "reject"),

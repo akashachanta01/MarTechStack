@@ -57,14 +57,11 @@ class MarTechScreener:
         # names only — deliberately NO bare "marketing"/"manager"/"data".
         _GATE_ROLE_TERMS = {
             "marketing operations", "marketing ops", "mops", "marops",
-            "revops", "revenue operations", "marketing automation",
-            "lifecycle marketing", "lifecycle", "retention marketing",
-            "crm manager", "crm marketing", "martech", "marketing technology",
-            "marketing technologist", "demand generation", "demand gen",
-            "marketing analytics", "campaign operations", "campaign manager",
-            "email marketing", "growth marketing", "customer data platform",
-            "cdp", "marketing engineer", "marketing data", "solutions architect",
-            "marketing systems", "gtm operations", "go-to-market operations",
+            "marketing automation", "campaign operations", "campaign manager",
+            "martech", "marketing technology", "marketing technologist",
+            "marketing analytics", "marketing data", "marketing engineer",
+            "customer data platform", "cdp", "solutions architect",
+            "marketing systems",
         }
         _GATE_TOOL_TERMS = {
             "salesforce", "hubspot", "marketo", "pardot", "eloqua", "braze",
@@ -175,11 +172,14 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description, location):
         prompt = f"""
-        You are a STRICT Senior MarTech Recruiter for a high-precision job board.
-        Decide if this is a genuine MARKETING TECHNOLOGY role — i.e. one of:
-        Marketing Operations, Revenue Operations (RevOps), MarTech engineering /
-        integration, lifecycle / CRM, or marketing analytics. These are the people
-        who RUN, BUILD, or MEASURE the marketing technology stack.
+        You are a STRICT Senior MarTech Recruiter for a high-precision, NARROWLY
+        scoped job board. We accept ONLY three role families:
+          1. MARKETING OPERATIONS — Marketing Ops/MOps, Marketing Automation
+             (Marketo/HubSpot/Braze platform work), and Campaign Operations.
+          2. MARTECH ENGINEERING — hands-on build/integration of the marketing
+             stack (marketing/MarTech engineer, integration developer, CDP engineer).
+          3. MARKETING ANALYTICS / DATA — analytics, measurement, attribution,
+             tagging, BI for marketing.
 
         JOB CONTEXT:
         - Title: {title}
@@ -188,37 +188,45 @@ class MarTechScreener:
 
         VALID TOOLS MENU (for stack detection): [{self.tool_menu_str}]
 
-        DECISION RULES (precision over recall — when unsure, prefer PENDING/REJECT):
+        DECISION RULES (precision over recall — when unsure, prefer REJECT):
 
-        APPROVE (85-100) ONLY if the role is clearly Marketing Ops / RevOps /
-        MarTech engineering / lifecycle-CRM / marketing analytics, and is hands-on
-        with marketing tools, data, or operations.
-        Good examples: "Salesforce Administrator", "Marketo Specialist", "HubSpot
-        Developer", "Marketing Operations Manager", "Lifecycle Marketing Manager",
-        "Marketing Analytics Manager", "RevOps Manager".
+        APPROVE (85-100) ONLY if the role's PRIMARY function is one of the three
+        families above and it's hands-on with marketing tools, data, or operations.
+        Good examples: "Salesforce Administrator", "Marketo Specialist",
+        "Marketing Operations Manager", "Marketing Automation Manager",
+        "Campaign Operations Manager", "MarTech Engineer", "Marketing Analytics Manager".
 
-        REJECT (0) if it is ANY of:
+        REJECT (0) — IMPORTANT, this board explicitly EXCLUDES these even though
+        they are marketing-adjacent:
+        - Revenue Operations / RevOps / Sales Operations
+        - Lifecycle Marketing / Retention / CRM Marketing Manager / Email Marketing Manager
+        - Growth Marketing / Growth Operations
+        - Demand Generation / Demand Gen
+        (If the role's PRIMARY function is one of the above, REJECT it — even if it
+        uses Marketo/HubSpot/Braze. Only approve when the primary function is truly
+        Marketing Operations, Marketing Automation, Campaign Operations, MarTech
+        engineering, or marketing analytics.)
+
+        ALSO REJECT (0):
         - Creative / content / design / copywriting / video / brand / PR / social /
           community / events / SEO / SEM / paid-media-buying
         - Sales / account management / customer success / SDR / BDR / recruiting
-        - Generic software engineering, data science, or product roles that are NOT
-          specifically about the marketing stack (even at a MarTech vendor)
-        - A role where a tool NAME appears but the job is not ops/eng/analytics —
-          e.g. "Adobe Photoshop Designer", "Salesforce Account Executive",
-          "Google Ads Buyer", "HubSpot Sales Rep".
+        - Generic software engineering, data science, or product roles not specific
+          to the marketing stack (even at a MarTech vendor)
+        - Tool name in title but wrong role (e.g. "Adobe Photoshop Designer",
+          "Salesforce Account Executive", "HubSpot Sales Rep").
 
-        PENDING (50-70) if genuinely ambiguous.
+        PENDING (50-70) only if genuinely ambiguous.
 
         IMPORTANT: A tool name in the title is a POSITIVE signal ONLY when paired
-        with an operations / engineering / analytics role. NEVER auto-approve on a
-        tool name alone.
+        with one of the three accepted families. NEVER auto-approve on a tool alone.
 
         ALSO:
         - Detect stack: tools actually used (from the menu or clearly named).
         - Classify function into exactly one of:
           * "engineering": hands-on build/integration (developer, architect, engineer, implementation)
-          * "operations": platform use, campaign execution, admin, strategy (ops, admin, manager, specialist)
-          * "data": analytics, reporting, measurement, BI, attribution (analyst, insights)
+          * "operations": Marketing Operations, Marketing Automation, Campaign Operations
+          * "data": analytics, reporting, measurement, BI, attribution, tagging
           * "other": doesn't clearly fit
 
         Output JSON:
