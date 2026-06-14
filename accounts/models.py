@@ -11,6 +11,8 @@ class UserProfile(models.Model):
     preferred_location = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=500, blank=True)
     linkedin_url = models.URLField(blank=True)
+    pro_waitlist = models.BooleanField(default=False)
+    pro_waitlist_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

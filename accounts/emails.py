@@ -20,6 +20,32 @@ def send_account_welcome_email(user):
         logger.warning("Account welcome email failed for %s: %s", user.email, e)
 
 
+def send_pro_waitlist_alert(user):
+    """Notify the founder when a user joins the Go Pro waitlist (demand signal).
+    Non-fatal."""
+    try:
+        admin_email = (getattr(settings, 'CONTACT_EMAIL', None)
+                       or getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com'))
+        from .models import UserProfile
+        total = UserProfile.objects.filter(pro_waitlist=True).count()
+        body = (
+            "New Go Pro waitlist signup\n\n"
+            f"Name:  {user.get_full_name() or '—'}\n"
+            f"Email: {user.email}\n"
+            f"When:  {timezone.now()}\n"
+            f"Total on waitlist: {total}\n"
+        )
+        msg = EmailMultiAlternatives(
+            subject=f"⭐ Go Pro waitlist: {user.email}",
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[admin_email],
+        )
+        msg.send(fail_silently=True)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning("Pro waitlist alert failed: %s", e)
+
+
 def send_admin_new_user_alert(user):
     """Notify the founder that a new account was created. Non-fatal."""
     try:

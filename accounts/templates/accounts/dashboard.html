@@ -189,11 +189,17 @@
     </div>
 
     <div class="dash-sidebar-foot">
-      <div class="dash-gopro">
+      <div class="dash-gopro" id="gopro-card">
+        {% if pro_waitlist %}
+        <span class="label">You're on the list</span>
+        <span class="title">Go Pro ⭐</span>
+        <span class="sub" style="margin-bottom:0;">We'll email you the moment Pro launches.</span>
+        {% else %}
         <span class="label">Coming Soon</span>
         <span class="title">Go Pro</span>
         <span class="sub">Priority alerts, salary insights, and profile boost.</span>
-        <a href="#">Join the waitlist</a>
+        <a href="#" id="gopro-join" onclick="joinProWaitlist(event)">Join the waitlist</a>
+        {% endif %}
       </div>
       <div class="dash-signout">
         <a href="{% url 'account_logout' %}">
@@ -308,4 +314,21 @@
 
   </main>
 </div>
+
+<script>
+function joinProWaitlist(e) {
+  e.preventDefault();
+  fetch('{% url "join_pro_waitlist" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      var card = document.getElementById('gopro-card');
+      card.innerHTML = '<span class="label">You\'re on the list</span>'
+        + '<span class="title">Go Pro &#11088;</span>'
+        + '<span class="sub" style="margin-bottom:0;">We\'ll email you the moment Pro launches.</span>';
+    }
+  }).catch(function(){});
+}
+</script>
 {% endblock %}
