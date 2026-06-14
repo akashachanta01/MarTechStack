@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.contrib import messages
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -25,10 +25,12 @@ def auto_tag_tools(modeladmin, request, queryset):
         if added_count > 0: affected_jobs += 1
     modeladmin.message_user(request, f"✅ Scanned {queryset.count()} jobs. Updated Tech Stack for {affected_jobs} jobs.", messages.SUCCESS)
 
-@admin.action(description="🗑️ DELETE ALL 'Rejected' Jobs")
+@admin.action(description="🗑️ Delete selected rejected jobs")
 def delete_all_rejected(modeladmin, request, queryset):
-    count, _ = Job.objects.filter(screening_status='rejected').delete()
-    modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs.", messages.WARNING)
+    to_delete = queryset.filter(screening_status='rejected')
+    count = to_delete.count()
+    to_delete.delete()
+    modeladmin.message_user(request, f"🧹 Deleted {count} rejected jobs.", messages.WARNING)
 
 # --- 2. HELPERS ---
 
@@ -159,5 +161,19 @@ class UserSubmissionAdmin(BaseJobAdmin):
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin): list_display = ("email", "created_at")
 
+@admin.register(SavedSearch)
+class SavedSearchAdmin(admin.ModelAdmin):
+    list_display = ("email", "label", "is_active", "created_at", "last_notified_at")
+    list_filter = ("is_active", "function", "arrangement")
+    search_fields = ("email", "label", "query", "tool", "location")
+
 @admin.register(BlockRule)
 class BlockRuleAdmin(admin.ModelAdmin): list_display = ("rule_type", "value", "enabled")
+
+@admin.register(CompanySource)
+class CompanySourceAdmin(admin.ModelAdmin):
+    list_display = ("name", "ats_type", "token", "enabled", "last_added_count", "last_seen_count", "consecutive_empty", "last_polled_at")
+    list_filter = ("ats_type", "enabled")
+    list_editable = ("enabled",)
+    search_fields = ("name", "token", "board_url")
+    ordering = ("-last_added_count", "name")

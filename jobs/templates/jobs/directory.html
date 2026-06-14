@@ -1,57 +1,109 @@
 {% extends "jobs/base.html" %}
-{% block title %}MarTech Jobs Directory - Browse by Tech Stack & Location{% endblock %}
+
+{% block title %}MarTech Jobs by Tool — Browse by Marketing Technology Stack | MarTechJobs{% endblock %}
+{% block meta_description %}Browse MarTech jobs by tool — Salesforce, HubSpot, Marketo, Braze, Segment and more. Find Marketing Ops, RevOps & MarTech engineering roles by the stack you specialize in.{% endblock %}
+{% block meta_keywords %}martech jobs by tool, marketing technology stack jobs, HubSpot jobs, Salesforce marketing jobs, Marketo jobs, Braze jobs, marketing ops jobs by tool{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs by Tool","item":"https://martechjobs.io/jobs-by-tool/"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 py-16 min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-serif font-bold text-slate-900 mb-4 text-center">MarTech Job Directory</h1>
-        <p class="text-center text-slate-600 mb-12">Browse roles by your specific technology stack and location.</p>
-        
-        <div class="grid md:grid-cols-2 gap-12">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 h-fit">
-                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#1f432d]">dns</span> Tech Stack Jobs
-                </h2>
-                <div class="grid grid-cols-2 gap-4">
-                    {% for tool in tools %}
-                    <a href="{% url 'tool_detail' tool.slug %}" class="text-sm text-slate-600 hover:text-[#1f432d] hover:underline flex justify-between group">
-                        <span>{{ tool.name }}</span>
-                        <span class="text-slate-300 group-hover:text-[#1f432d]">{{ tool.job_count }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
+<style>
+  .jbt-hero { padding: 60px 0 40px; text-align: center; background: linear-gradient(180deg, var(--amber-light), var(--paper)); border-bottom: 1px solid var(--rule); }
+  .jbt-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px,5vw,56px); font-weight: 800; letter-spacing: -.02em; color: var(--ink); margin: 12px 0 14px; }
+  .jbt-hero h1 .em { color: var(--amber); }
+  .jbt-hero p { font-size: 16.5px; color: var(--ink2); max-width: 580px; margin: 0 auto; line-height: 1.6; }
+  .jbt-badge { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--ink2); box-shadow: var(--shadow-sm); margin-top: 22px; }
+  .jbt-badge b { color: var(--amber); font-weight: 800; }
 
-            <div class="space-y-12">
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#1f432d]">business</span> Top Tech Hubs
-                    </h2>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="{% url 'seo_loc_only' 'remote' %}" class="bg-[#1f432d] text-white px-3 py-1 rounded text-sm font-bold hover:bg-black transition shadow-md">Remote Marketing Jobs</a>
-                        {% for loc in top_cities %}
-                        <a href="{% url 'seo_loc_only' loc|slugify %}" class="bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1 rounded text-sm hover:border-[#1f432d] transition">
-                            {{ loc }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
+  .jbt-sec { padding: 44px 0 40px; }
+  .jbt-sec-head { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 18px; }
 
-                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[#1f432d]">public</span> United States
-                    </h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {% for state in states %}
-                        <a href="{% url 'seo_loc_only' state|slugify %}" class="text-sm text-slate-600 hover:text-[#1f432d] hover:underline">
-                            {{ state }} Jobs
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+  .jbt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media(max-width:900px){ .jbt-grid { grid-template-columns: repeat(3,1fr); } }
+  @media(max-width:680px){ .jbt-grid { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:430px){ .jbt-grid { grid-template-columns: 1fr; } }
+  .jbt-card { display: flex; align-items: center; gap: 13px; background: #fff; border: 1px solid var(--rule); border-radius: 13px; padding: 16px 18px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; }
+  .jbt-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .jbt-ico { width: 42px; height: 42px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 17px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .jbt-ico img { width: 26px; height: 26px; object-fit: contain; }
+  .jbt-body { min-width: 0; }
+  .jbt-name { font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jbt-count { font-size: 12.5px; color: var(--ink3); margin-top: 2px; }
+  .jbt-count b { color: var(--amber); font-weight: 700; }
+
+  .jbt-locs { border-top: 1px solid var(--rule); padding: 40px 0 80px; }
+  .jbt-loc-group { margin-bottom: 26px; }
+  .jbt-hubs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .jbt-hub-primary { padding: 8px 15px; border-radius: 999px; background: var(--amber); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; transition: all .14s; }
+  .jbt-hub-primary:hover { background: var(--amber2); transform: translateY(-1px); }
+  .jbt-hub { padding: 7px 13px; border-radius: 999px; background: #fff; border: 1px solid var(--rule2); color: var(--ink2); font-size: 13px; font-weight: 600; text-decoration: none; transition: all .14s; }
+  .jbt-hub:hover { border-color: var(--amber); color: var(--amber); }
+  .jbt-states { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px 12px; }
+  @media(max-width:680px){ .jbt-states { grid-template-columns: repeat(2,1fr); } }
+  .jbt-state-link { font-size: 13px; color: var(--ink2); padding: 5px 2px; text-decoration: none; transition: color .12s; }
+  .jbt-state-link:hover { color: var(--amber); text-decoration: underline; }
+</style>
+
+<section class="jbt-hero">
+  <div class="wrap">
+    <div class="eyebrow">Browse by Tool</div>
+    <h1>MarTech Jobs <span class="em">by Tool</span></h1>
+    <p>Find Marketing Ops, RevOps, and MarTech engineering roles by the stack you specialize in — every tool, every live opening, one page.</p>
+    {% if tool_count %}<div class="jbt-badge"><b>{{ tool_count }}</b> tools hiring right now</div>{% endif %}
+  </div>
+</section>
+
+<section class="jbt-sec">
+  <div class="wrap">
+    <div class="jbt-sec-head">All tools &amp; stacks</div>
+    {% if tools %}
+    <div class="jbt-grid">
+      {% for tool in tools %}
+      <a href="{% url 'tool_detail' tool.slug %}" class="jbt-card" aria-label="{{ tool.name }} jobs">
+        <div class="jbt-ico">{% if tool.logo_url %}<img src="{{ tool.logo_url }}" alt="{{ tool.name }} logo" loading="lazy">{% else %}{{ tool.name|slice:":1" }}{% endif %}</div>
+        <div class="jbt-body">
+          <div class="jbt-name">{{ tool.name }}</div>
+          <div class="jbt-count"><b>{{ tool.job_count }}</b> open role{{ tool.job_count|pluralize }}</div>
         </div>
-        
+      </a>
+      {% endfor %}
     </div>
-</div>
+    {% else %}
+    <p style="color:var(--ink2);">No tools have live roles right now — <a href="{% url 'all_jobs' %}" style="color:var(--amber);font-weight:600;">browse all jobs</a>.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="jbt-locs">
+  <div class="wrap">
+    <div class="jbt-loc-group">
+      <div class="jbt-sec-head">Browse by location</div>
+      <div class="jbt-hubs">
+        <a href="{% url 'seo_loc_only' 'remote' %}" class="jbt-hub-primary">🌐 Remote Jobs</a>
+        {% for loc in top_cities %}
+        <a href="{% url 'seo_loc_only' loc|slugify %}" class="jbt-hub">{{ loc }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="jbt-loc-group">
+      <div class="jbt-sec-head">MarTech jobs by U.S. state</div>
+      <div class="jbt-states">
+        {% for state in states %}
+        <a href="{% url 'seo_loc_only' state|slugify %}" class="jbt-state-link">{{ state }} Jobs</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

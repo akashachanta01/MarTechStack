@@ -1,7 +1,28 @@
 from django import forms
 from .models import Job, Tool
 
-class JobPostForm(forms.ModelForm):
+
+class HoneypotMixin(forms.Form):
+    # Spam trap: invisible to humans, but bots auto-fill it. Submissions
+    # with this field filled are rejected.
+    website = forms.CharField(
+        required=False,
+        label="",
+        widget=forms.TextInput(attrs={
+            'style': 'position:absolute;left:-9999px;top:-9999px;',
+            'tabindex': '-1',
+            'autocomplete': 'off',
+            'aria-hidden': 'true',
+        })
+    )
+
+    def clean_website(self):
+        if self.cleaned_data.get('website'):
+            raise forms.ValidationError("Submission rejected.")
+        return ''
+
+
+class JobPostForm(HoneypotMixin, forms.ModelForm):
     # Strategy: Simple 2-Tier Structure
     PLAN_CHOICES = [
         ('free', 'Standard Listing - Free'),
@@ -60,27 +81,26 @@ class JobPostForm(forms.ModelForm):
         }
 
 
-class ContactForm(forms.Form):
+class ContactForm(HoneypotMixin, forms.Form):
     email = forms.EmailField(
         label="Email",
+        required=False,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500',
-            'placeholder': 'you@example.com'
+            'placeholder': 'you@example.com (optional — only if you want a reply)'
         })
     )
     subject = forms.CharField(
-        label="Subject",
+        label="Topic",
         max_length=120,
+        required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500',
-            'placeholder': 'How can we help?'
+            'placeholder': "What's this about? Bug, idea, listing issue…"
         })
     )
     message = forms.CharField(
-        label="Message",
+        label="Feedback",
         widget=forms.Textarea(attrs={
-            'class': 'w-full rounded-xl border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200',
             'rows': 6,
-            'placeholder': 'Tell us more about what you need...'
+            'placeholder': "What's working, what's broken, what you wish existed…"
         })
     )

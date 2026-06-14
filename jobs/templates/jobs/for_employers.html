@@ -1,103 +1,241 @@
 {% extends "jobs/base.html" %}
 {% load static %}
 
-{% block title %}Hire Experts — MarTechJobs{% endblock %}
+{% block title %}Post a MarTech Job — Hire Marketing Ops & RevOps Talent | MarTechJobs{% endblock %}
+{% block meta_description %}Post your Marketing Operations, RevOps, or MarTech engineering role on the niche job board built only for marketing technology specialists. Free to post, listed on Google for Jobs, and emailed to subscribers who know Salesforce, HubSpot & Marketo.{% endblock %}
+{% block meta_keywords %}post marketing operations job, hire martech talent, marketing technology recruiter, RevOps hiring, HubSpot jobs hiring, Salesforce marketing hiring, post a job free, marketing ops job board{% endblock %}
+
+{% block og_title %}Post a MarTech Job — Hire Specialists, Not Generalists{% endblock %}
+{% block og_desc %}The niche job board for Marketing Ops, RevOps & MarTech engineering. Free to post, on Google for Jobs, emailed to specialists.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"For Employers","item":"https://martechjobs.io/for-employers/"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How much does it cost to post a job?","acceptedAnswer":{"@type":"Answer","text":"Posting a standard 30-day listing is currently free. No credit card, no sales call, no contract."}},
+    {"@type":"Question","name":"Who will see my job posting?","acceptedAnswer":{"@type":"Answer","text":"A focused audience of marketing technology specialists — Marketing Operations, RevOps, MarTech engineers, and analytics professionals who work in tools like Salesforce, HubSpot, Marketo, and Braze. We don't carry generalist marketing roles, so your listing isn't buried."}},
+    {"@type":"Question","name":"Will my job appear on Google for Jobs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every listing is published with valid JobPosting structured data, so it's eligible to appear directly in Google for Jobs and Google Search."}},
+    {"@type":"Question","name":"How long does a listing stay live?","acceptedAnswer":{"@type":"Answer","text":"Listings run for 30 days. Each one gets its own SEO-optimized page and is emailed to matched subscribers."}},
+    {"@type":"Question","name":"What kinds of roles can I post?","acceptedAnswer":{"@type":"Answer","text":"Marketing Operations, Revenue Operations, MarTech engineering and integration, lifecycle and email automation, marketing analytics, and CDP/data-stack roles — remote or on-site, anywhere."}}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="relative bg-white border-b border-slate-100 overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+<style>
+  .emp-hero { padding: 80px 0 64px; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper)); }
+  .emp-hero-inner { max-width: 760px; margin: 0 auto; padding: 0 32px; text-align: center; }
+  .emp-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(34px,5.5vw,62px); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; color: var(--ink); margin: 16px 0 22px; }
+  .emp-hero h1 .em { color: var(--amber); }
+  .emp-hero p { font-size: 18px; color: var(--ink2); line-height: 1.7; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .emp-hero-cta { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .emp-trust { font-size: 13px; color: var(--ink3); }
 
-    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-        
-        <h1 class="text-5xl md:text-7xl font-serif font-bold text-slate-900 mb-8 leading-none tracking-tight">
-            Stop sorting through <br/><span class="text-slate-300">irrelevant resumes.</span>
-        </h1>
-        
-        <p class="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed mb-12">
-            You don't need another generic job board that sends you 500 unqualified candidates. You need a signal in the noise.
-        </p>
+  .emp-stats { padding: 44px 0; border-bottom: 1px solid var(--rule); background: var(--card); }
+  .emp-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; text-align: center; }
+  @media(max-width:600px){ .emp-stats-grid { grid-template-columns: 1fr; gap: 24px; } }
+  @media(max-width:560px){ .emp-plan { padding: 32px 24px; max-width: 100%; } }
+  .emp-stat-val { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 800; color: var(--amber); display: block; line-height: 1; }
+  .emp-stat-label { font-size: 13.5px; color: var(--ink2); margin-top: 8px; line-height: 1.4; }
 
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="{% url 'post_job' %}" class="bg-[#1f432d] hover:bg-green-900 text-white font-bold py-4 px-10 rounded-lg shadow-xl transition-all transform hover:-translate-y-1 text-lg">
-                Post a Job
-            </a>
-            <span class="text-sm text-slate-400 font-mono">No credit card required.</span>
-        </div>
+  .emp-compare { padding: 72px 0; border-bottom: 1px solid var(--rule); }
+  .emp-section-head { text-align: center; max-width: 620px; margin: 0 auto 44px; }
+  .emp-section-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px,3.4vw,42px); font-weight: 800; color: var(--ink); margin-bottom: 14px; letter-spacing: -.01em; }
+  .emp-section-head p { font-size: 16px; color: var(--ink2); line-height: 1.6; }
+  .emp-compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+  @media(max-width:720px){ .emp-compare-grid { grid-template-columns: 1fr; } }
+  .emp-col { border-radius: 16px; padding: 32px; border: 1px solid var(--rule); }
+  .emp-col.bad { background: var(--paper2); }
+  .emp-col.good { background: var(--card); box-shadow: var(--shadow); border-color: #f0c6a8; }
+  .emp-col h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .emp-col .lead { font-size: 14px; color: var(--ink3); margin-bottom: 18px; line-height: 1.6; }
+  .emp-row { display: flex; align-items: flex-start; gap: 11px; font-size: 14.5px; color: var(--ink2); line-height: 1.5; margin-bottom: 12px; }
+  .emp-row svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .emp-row.x svg { stroke: #c0392b; }
+  .emp-row.v svg { stroke: var(--green); }
+
+  .emp-includes { padding: 72px 0; border-bottom: 1px solid var(--rule); background: var(--paper2); }
+  .emp-feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  @media(max-width:820px){ .emp-feat-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:540px){ .emp-feat-grid { grid-template-columns: 1fr; } }
+  .emp-feat-card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 24px; }
+  .emp-feat-ico { width: 40px; height: 40px; border-radius: 10px; background: var(--amber-light); color: var(--amber); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .emp-feat-ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .emp-feat-card h4 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .emp-feat-card p { font-size: 13.5px; color: var(--ink2); line-height: 1.55; }
+
+  .emp-pricing { padding: 72px 0; border-bottom: 1px solid var(--rule); text-align: center; }
+  .emp-plan { display: inline-block; background: var(--card); border: 2px solid var(--amber); border-radius: 16px; padding: 40px 48px; max-width: 440px; width: 100%; text-align: left; box-shadow: var(--shadow-lg); }
+  .emp-plan h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 8px; font-family: 'Courier Prime', monospace; }
+  .emp-plan-price { font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 800; color: var(--ink); line-height: 1; margin-bottom: 6px; }
+  .emp-plan-price span { font-size: 19px; color: var(--ink3); font-weight: 400; }
+  .emp-plan-note { font-size: 13px; color: var(--ink3); margin-bottom: 24px; }
+  .emp-plan-features { display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+  .emp-feat-line { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--ink2); line-height: 1.45; }
+  .emp-feat-line::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; }
+
+  .emp-faq { padding: 72px 0; border-bottom: 1px solid var(--rule); }
+  .emp-faq-wrap { max-width: 720px; margin: 0 auto; }
+  .emp-faq-item { border-bottom: 1px solid var(--rule); padding: 22px 0; }
+  .emp-faq-item h4 { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .emp-faq-item p { font-size: 15px; color: var(--ink2); line-height: 1.65; }
+
+  .emp-final { padding: 80px 0; text-align: center; }
+</style>
+
+<!-- HERO -->
+<section class="emp-hero">
+  <div class="emp-hero-inner">
+    <div class="eyebrow">For Employers &amp; Recruiters</div>
+    <h1>Hire MarTech specialists who <span class="em">actually know your stack</span></h1>
+    <p>Post your Marketing Ops, RevOps, or MarTech engineering role on the job board built only for marketing technology professionals — and skip the flood of unqualified applicants.</p>
+    <div class="emp-hero-cta">
+      <a href="{% url 'post_job' %}" class="btn btn-amber btn-lg">Post a Job — Free</a>
+      <span class="emp-trust">No credit card · No sales call · Live in minutes</span>
     </div>
-</div>
+  </div>
+</section>
 
-<div class="bg-slate-50 py-20 border-b border-slate-200">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-2 gap-16 items-center">
-            
-            <div>
-                <h2 class="text-3xl font-serif font-bold text-slate-900 mb-6">The "Generalist" Trap</h2>
-                <div class="space-y-4 text-slate-600 leading-relaxed">
-                    <p>
-                        When you post a Marketing Ops role on LinkedIn or Indeed, you get flooded with applications from:
-                    </p>
-                    <ul class="list-disc pl-5 space-y-2">
-                        <li>Social Media Managers who "know tech."</li>
-                        <li>General Marketers who once sent an email.</li>
-                        <li>Sales reps looking to pivot.</li>
-                    </ul>
-                    <p class="font-bold text-slate-900 pt-2">
-                        You waste hours filtering them out just to find the one person who actually knows SQL and Salesforce.
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-white p-8 rounded-xl border border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <h2 class="text-3xl font-serif font-bold text-slate-900 mb-6">The Specialist Advantage</h2>
-                <div class="space-y-4 text-slate-600 leading-relaxed">
-                    <p>
-                        MarTechJobs is different. Our audience is strictly curated.
-                    </p>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-green-700">check_circle</span>
-                            <span>Certified Administrators (Salesforce, HubSpot, Marketo)</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-green-700">check_circle</span>
-                            <span>Marketing Engineers & Developers</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-green-700">check_circle</span>
-                            <span>Analytics & Data Pros</span>
-                        </div>
-                    </div>
-                    <p class="bg-green-50 text-green-800 p-4 rounded-lg mt-6 text-sm font-bold border border-green-100">
-                        "I posted here and got 5 applications. All 5 were qualified. I hired one." 
-                        <span class="block font-normal text-xs text-green-600 mt-1">— Recent Employer</span>
-                    </p>
-                </div>
-            </div>
-
-        </div>
+<!-- REAL STATS -->
+<section class="emp-stats">
+  <div class="wrap">
+    <div class="emp-stats-grid">
+      <div><span class="emp-stat-val">{{ live_jobs }}</span><div class="emp-stat-label">Live MarTech roles on the board right now</div></div>
+      <div><span class="emp-stat-val">{{ stack_count }}</span><div class="emp-stat-label">Tech stacks covered — Salesforce, HubSpot, Marketo &amp; more</div></div>
+      <div><span class="emp-stat-val">100%</span><div class="emp-stat-label">Niche — only Marketing Ops, RevOps &amp; MarTech roles</div></div>
     </div>
-</div>
+  </div>
+</section>
 
-<div class="bg-white py-24 text-center">
-    <div class="max-w-3xl mx-auto px-4">
-        <h2 class="text-3xl font-bold font-serif text-slate-900 mb-6">Simple, Transparent Hiring.</h2>
-        <p class="text-lg text-slate-500 mb-10 leading-relaxed">
-            We believe in removing barriers. Posting a job is completely free for a standard 30-day listing.
-            No sales calls, no contracts, no hidden fees.
-        </p>
-        
-        <div class="inline-block p-8 border-2 border-slate-100 rounded-xl hover:border-black transition-colors bg-slate-50">
-            <h3 class="text-2xl font-bold text-slate-900 mb-2">Standard Listing</h3>
-            <div class="text-5xl font-serif font-bold text-slate-900 mb-6">Free</div>
-            <ul class="text-left space-y-3 text-slate-600 mb-8 text-sm">
-                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Live for 30 days</li>
-                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Included in Google Jobs</li>
-                <li class="flex gap-2"><span class="text-green-600 font-bold">✓</span> Access to 15k+ MarTech Pros</li>
-            </ul>
-            <a href="{% url 'post_job' %}" class="block w-full py-4 px-8 bg-black text-white font-bold rounded-lg hover:bg-slate-800 transition">
-                Post Your Job Now
-            </a>
-        </div>
+<!-- THE PROBLEM / THE FIX -->
+<section class="emp-compare">
+  <div class="wrap">
+    <div class="emp-section-head">
+      <h2>Stop sorting through irrelevant resumes</h2>
+      <p>Post a Marketing Ops role on a generalist board and you'll spend hours filtering. Here's the difference.</p>
     </div>
-</div>
+    <div class="emp-compare-grid">
+      <div class="emp-col bad">
+        <h3>Generalist job boards</h3>
+        <p class="lead">You post one technical role and get buried in applications from:</p>
+        <div class="emp-row x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Social media managers who "know tech"</div>
+        <div class="emp-row x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>General marketers who once sent a campaign</div>
+        <div class="emp-row x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Sales reps looking to pivot into anything</div>
+        <div class="emp-row x"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Hours of screening to find one real specialist</div>
+      </div>
+      <div class="emp-col good">
+        <h3>MarTechJobs</h3>
+        <p class="lead">A self-selected audience of practitioners who actually run the stack:</p>
+        <div class="emp-row v"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Marketing Ops &amp; RevOps specialists</div>
+        <div class="emp-row v"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Certified Salesforce, HubSpot &amp; Marketo admins</div>
+        <div class="emp-row v"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>MarTech engineers &amp; integration developers</div>
+        <div class="emp-row v"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Analytics, CDP &amp; data-stack professionals</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT EVERY LISTING INCLUDES -->
+<section class="emp-includes">
+  <div class="wrap">
+    <div class="emp-section-head">
+      <h2>Every listing works harder for you</h2>
+      <p>One post, multiple distribution channels — all included, all free.</p>
+    </div>
+    <div class="emp-feat-grid">
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+        <h4>On Google for Jobs</h4>
+        <p>Each listing ships with valid JobPosting structured data, so it's eligible to surface directly in Google for Jobs and Search.</p>
+      </div>
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <h4>Emailed to specialists</h4>
+        <p>New roles go out in our job-alert digest to subscribers who chose to hear about MarTech openings — not a cold blast.</p>
+      </div>
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <h4>Its own SEO page</h4>
+        <p>Every job gets a clean, fast, mobile-optimized landing page built to rank — working for you the whole 30 days.</p>
+      </div>
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h4>Quality over volume</h4>
+        <p>Because the audience is niche, you hear from fewer — but far more relevant — candidates.</p>
+      </div>
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+        <h4>Direct apply</h4>
+        <p>Candidates apply straight on your official page — we link out, we don't gate or middleman your funnel.</p>
+      </div>
+      <div class="emp-feat-card">
+        <div class="emp-feat-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+        <h4>Live in minutes</h4>
+        <p>No account setup marathon, no sales call. Fill out the form and your role is live.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="emp-pricing">
+  <div class="wrap">
+    <div class="emp-section-head">
+      <h2>Free to post — really</h2>
+      <p>We're growing the best niche audience in MarTech, so posting is free while we do. No catch, no contract.</p>
+    </div>
+    <div class="emp-plan">
+      <h3>Standard Listing</h3>
+      <div class="emp-plan-price">Free <span>/ 30 days</span></div>
+      <div class="emp-plan-note">No credit card required.</div>
+      <div class="emp-plan-features">
+        <div class="emp-feat-line">30 days live in front of a niche MarTech audience</div>
+        <div class="emp-feat-line">Published to Google for Jobs structured data</div>
+        <div class="emp-feat-line">Included in subscriber job-alert emails</div>
+        <div class="emp-feat-line">Dedicated, SEO-optimized listing page</div>
+        <div class="emp-feat-line">Direct apply link to your own page</div>
+      </div>
+      <a href="{% url 'post_job' %}" class="btn btn-amber btn-block btn-lg">Post your job now →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="emp-faq">
+  <div class="wrap">
+    <div class="emp-section-head"><h2>Employer FAQ</h2></div>
+    <div class="emp-faq-wrap">
+      <div class="emp-faq-item"><h4>How much does it cost to post a job?</h4><p>A standard 30-day listing is currently free — no credit card, no sales call, no contract.</p></div>
+      <div class="emp-faq-item"><h4>Who will see my job posting?</h4><p>A focused audience of marketing technology specialists — Marketing Ops, RevOps, MarTech engineers, and analytics pros who work in tools like Salesforce, HubSpot, Marketo, and Braze. We don't carry generalist marketing roles, so your listing isn't buried.</p></div>
+      <div class="emp-faq-item"><h4>Will my job appear on Google for Jobs?</h4><p>Yes. Every listing is published with valid JobPosting structured data, so it's eligible to appear directly in Google for Jobs and Google Search.</p></div>
+      <div class="emp-faq-item"><h4>How long does a listing stay live?</h4><p>Listings run for 30 days. Each gets its own SEO-optimized page and is included in our subscriber job-alert emails.</p></div>
+      <div class="emp-faq-item"><h4>What kinds of roles can I post?</h4><p>Marketing Operations, Revenue Operations, MarTech engineering and integration, lifecycle and email automation, marketing analytics, and CDP/data-stack roles — remote or on-site, anywhere.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="emp-final">
+  <div class="wrap" style="max-width:660px;">
+    <h2 class="font-serif" style="font-size:clamp(26px,3.4vw,42px);font-weight:800;color:var(--ink);margin-bottom:16px;letter-spacing:-.01em;">Ready to find your specialist?</h2>
+    <p style="font-size:16px;color:var(--ink2);line-height:1.7;margin-bottom:32px;">Put your role in front of people who already know your stack — on the job board built only for marketing technology.</p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'post_job' %}" class="btn btn-amber btn-lg">Post a Job — Free →</a>
+      <a href="{% url 'contact' %}" class="btn btn-ghost btn-lg">Talk to us first</a>
+    </div>
+  </div>
+</section>
 {% endblock %}

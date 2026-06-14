@@ -27,8 +27,7 @@ class Command(BaseCommand):
             "this position has been filled", 
             "no longer accepting applications", 
             "page you are looking for doesn't exist",
-            "job listing has expired",
-            "search for more jobs"
+            "job listing has expired"
         ]
 
         for job in active_jobs:
@@ -61,11 +60,12 @@ class Command(BaseCommand):
                             break
 
             except requests.exceptions.Timeout:
-                # Be lenient on timeouts (might be temporary)
-                pass
+                pass  # temporary; don't penalise
+            except requests.exceptions.ConnectionError:
+                # DNS failure / refused connection — board is gone
+                reason = "Connection failed (board may be removed)"
             except Exception as e:
-                # Other errors (DNS, etc) might be permanent
-                pass
+                self.stdout.write(self.style.WARNING(f"\n   ⚠ Check error for {job.apply_url}: {e}"))
 
             # 2. ACTION: REJECT IF DEAD
             if reason:

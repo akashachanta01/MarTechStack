@@ -2,113 +2,147 @@
 {% block title %}Review Queue — MarTechJobs.io{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <div class="flex items-start justify-between gap-4">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">Review Queue</h1>
-      <p class="mt-1 text-gray-600">Approve/reject jobs screened by the Brain. This is staff-only.</p>
-    </div>
+<style>
+  .rq-wrap { max-width: var(--maxw); margin: 0 auto; padding: 36px 32px 80px; }
+  .rq-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .rq-header h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .rq-header p { font-size: 13px; color: var(--ink3); }
+  .rq-header-links { display: flex; gap: 8px; }
 
-    <div class="flex gap-2">
-      <a href="/admin/" class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold">Admin</a>
-      <a href="/" class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold">Back to site</a>
+  .rq-filter { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; }
+  .rq-filter-grid { display: grid; grid-template-columns: 180px 1fr auto; gap: 16px; align-items: end; }
+  @media(max-width:640px){ .rq-filter-grid { grid-template-columns: 1fr; } }
+  .rq-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink3); margin-bottom: 6px; }
+  .rq-filter select, .rq-filter input { width: 100%; padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid var(--rule2); background: var(--paper); color: var(--ink); font-size: 13px; font-family: inherit; outline: none; }
+  .rq-filter select:focus, .rq-filter input:focus { border-color: var(--amber); }
+  .rq-filter-btns { display: flex; gap: 8px; }
+
+  .rq-list { display: flex; flex-direction: column; gap: 14px; }
+  .rq-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+  .rq-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+  .rq-title { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .rq-meta { font-size: 12px; color: var(--ink3); margin-bottom: 6px; }
+  .rq-link { font-size: 11px; font-family: 'Courier Prime', monospace; font-weight: 700; color: var(--amber); }
+  .rq-score { text-align: right; }
+  .rq-score-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1; }
+  .rq-score-label { font-size: 10px; color: var(--ink3); margin-bottom: 2px; font-family: 'Courier Prime', monospace; text-transform: uppercase; letter-spacing: .08em; }
+  .rq-score-status { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+
+  .rq-reason { font-size: 13px; color: var(--ink2); line-height: 1.6; margin-bottom: 16px; }
+  .rq-reason strong { color: var(--ink); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; color: var(--ink3); }
+
+  .rq-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  @media(max-width:560px){ .rq-detail-grid { grid-template-columns: 1fr; } }
+  .rq-detail-box { background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .rq-detail-box-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink3); margin-bottom: 8px; }
+  .rq-tool-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .rq-tool-chip { background: var(--card); border: 1px solid var(--rule2); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: var(--ink2); }
+  .rq-pre { font-size: 11px; color: var(--ink2); white-space: pre-wrap; word-break: break-all; font-family: 'Courier Prime', monospace; line-height: 1.5; }
+
+  .rq-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+
+  .rq-empty { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 48px 24px; text-align: center; color: var(--ink3); font-size: 14px; }
+
+  .rq-pagination { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--ink3); }
+  .rq-pagination-btns { display: flex; gap: 8px; }
+</style>
+
+<div class="rq-wrap">
+  <div class="rq-header">
+    <div>
+      <h1>Review Queue</h1>
+      <p>Approve/reject jobs screened by the Brain. Staff-only.</p>
+    </div>
+    <div class="rq-header-links">
+      <a href="/admin/" class="btn btn-ghost" style="font-size:12px;padding:8px 14px;">Admin</a>
+      <a href="/" class="btn btn-ghost" style="font-size:12px;padding:8px 14px;">Back to site</a>
     </div>
   </div>
 
-  <div class="mt-6 bg-white border border-gray-200 rounded-2xl p-6">
-    <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-      <div>
-        <label class="block text-sm font-semibold text-gray-700">Status</label>
-        <select name="status" class="mt-1 w-full rounded-xl border-gray-300">
-          <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
-          <option value="approved" {% if status == "approved" %}selected{% endif %}>Approved</option>
-          <option value="rejected" {% if status == "rejected" %}selected{% endif %}>Rejected</option>
-        </select>
-      </div>
-      <div class="md:col-span-2">
-        <label class="block text-sm font-semibold text-gray-700">Search</label>
-        <input type="text" name="q" value="{{ q }}" placeholder="title, company, url..."
-               class="mt-1 w-full rounded-xl border-gray-300" />
-      </div>
-      <div class="flex gap-3">
-        <button class="rounded-xl bg-indigo-600 px-5 py-3 text-white font-semibold hover:bg-indigo-700" type="submit">Filter</button>
-        <a class="px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 font-semibold" href="/review/">Reset</a>
+  <div class="rq-filter">
+    <form method="get">
+      <div class="rq-filter-grid">
+        <div>
+          <label class="rq-label">Status</label>
+          <select name="status">
+            <option value="pending" {% if status == "pending" %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if status == "approved" %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status == "rejected" %}selected{% endif %}>Rejected</option>
+          </select>
+        </div>
+        <div>
+          <label class="rq-label">Search</label>
+          <input type="text" name="q" value="{{ q }}" placeholder="title, company, url…">
+        </div>
+        <div class="rq-filter-btns">
+          <button type="submit" class="btn btn-amber" style="font-size:12px;padding:9px 18px;">Filter</button>
+          <a href="{% url 'review_queue' %}" class="btn btn-ghost" style="font-size:12px;padding:9px 14px;">Reset</a>
+        </div>
       </div>
     </form>
   </div>
 
-  <div class="mt-8 space-y-4">
+  <div class="rq-list">
     {% for job in jobs %}
-      <div class="bg-white border border-gray-200 rounded-2xl p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="text-lg font-bold text-gray-900">{{ job.title }}</div>
-            <div class="text-sm text-gray-600">{{ job.company }}{% if job.location %} • {{ job.location }}{% endif %}</div>
-            <div class="mt-2 text-xs text-gray-500 break-all">
-              <a class="text-indigo-600 hover:underline" href="{{ job.apply_url }}" target="_blank" rel="noreferrer">Apply link</a>
-              • Created {{ job.created_at|date:"M j, Y" }}
-            </div>
-          </div>
-
-          <div class="text-right">
-            <div class="text-xs text-gray-500">Score</div>
-            <div class="text-2xl font-bold text-gray-900">
-              {% if job.screening_score %}{{ job.screening_score|floatformat:1 }}{% else %}-{% endif %}
-            </div>
-            <div class="mt-1 text-xs text-gray-500">Status: {{ job.screening_status }}</div>
-          </div>
+    <div class="rq-card">
+      <div class="rq-card-top">
+        <div>
+          <div class="rq-title">{{ job.title }}</div>
+          <div class="rq-meta">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %} · Posted {{ job.created_at|date:"M j, Y" }}</div>
+          <a class="rq-link" href="{{ job.apply_url }}" target="_blank" rel="noreferrer">Apply link ↗</a>
         </div>
-
-        <div class="mt-4">
-          <div class="text-sm font-semibold text-gray-900">Reason</div>
-          <div class="text-sm text-gray-700 mt-1">{{ job.screening_reason|default:"(no reason stored)" }}</div>
-        </div>
-
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <div class="text-sm font-semibold text-gray-900">Tools</div>
-            <div class="mt-2 flex flex-wrap gap-2">
-              {% for tool in job.tools.all %}
-                <span class="rounded-full bg-white border border-gray-200 px-3 py-1 text-xs font-semibold">{{ tool.name }}</span>
-              {% empty %}
-                <span class="text-sm text-gray-500">None</span>
-              {% endfor %}
-            </div>
-          </div>
-
-          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <div class="text-sm font-semibold text-gray-900">Screening details</div>
-            <pre class="mt-2 text-xs text-gray-700 whitespace-pre-wrap break-words">{{ job.screening_details|default:"{}" }}</pre>
-          </div>
-        </div>
-
-        <div class="mt-5 flex flex-wrap gap-2">
-          <a href="/review/{{ job.id }}/approve/" class="rounded-xl bg-emerald-600 px-4 py-2 text-white font-semibold hover:bg-emerald-700">Approve</a>
-          <a href="/review/{{ job.id }}/reject/" class="rounded-xl bg-rose-600 px-4 py-2 text-white font-semibold hover:bg-rose-700">Reject</a>
-          <a href="/review/{{ job.id }}/pending/" class="rounded-xl bg-gray-900 px-4 py-2 text-white font-semibold hover:bg-black">Pending</a>
+        <div class="rq-score">
+          <div class="rq-score-label">Score</div>
+          <div class="rq-score-val">{% if job.screening_score %}{{ job.screening_score|floatformat:1 }}{% else %}—{% endif %}</div>
+          <div class="rq-score-status">{{ job.screening_status }}</div>
         </div>
       </div>
+
+      <div class="rq-reason">
+        <strong>Reason</strong>
+        {{ job.screening_reason|default:"(no reason stored)" }}
+      </div>
+
+      <div class="rq-detail-grid">
+        <div class="rq-detail-box">
+          <div class="rq-detail-box-title">Tools</div>
+          <div class="rq-tool-chips">
+            {% for tool in job.tools.all %}
+              <span class="rq-tool-chip">{{ tool.name }}</span>
+            {% empty %}
+              <span style="font-size:12px;color:var(--ink3);">None</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="rq-detail-box">
+          <div class="rq-detail-box-title">Screening Details</div>
+          <pre class="rq-pre">{{ job.screening_details|default:"{}" }}</pre>
+        </div>
+      </div>
+
+      <div class="rq-actions">
+        <a href="{% url 'review_action' job.id 'approve' %}" class="btn btn-amber" style="font-size:12px;padding:8px 16px;">✓ Approve</a>
+        <a href="{% url 'review_action' job.id 'reject' %}" style="background:#c0392b;color:#fff;font-size:12px;padding:8px 16px;" class="btn">✗ Reject</a>
+        <a href="{% url 'review_action' job.id 'pending' %}" style="background:var(--navy);color:#fff;font-size:12px;padding:8px 16px;" class="btn">⟳ Pending</a>
+      </div>
+    </div>
     {% empty %}
-      <div class="bg-white border border-gray-200 rounded-2xl p-8 text-gray-700">
-        No jobs in this queue.
-      </div>
+    <div class="rq-empty">No jobs in this queue.</div>
     {% endfor %}
   </div>
 
   {% if jobs.paginator.num_pages > 1 %}
-    <div class="mt-8 flex items-center justify-between">
-      <div class="text-sm text-gray-600">Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</div>
-      <div class="flex gap-2">
-        {% if jobs.has_previous %}
-          <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
-             href="?page={{ jobs.previous_page_number }}&status={{ status }}&q={{ q|urlencode }}">Prev</a>
-        {% endif %}
-        {% if jobs.has_next %}
-          <a class="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50"
-             href="?page={{ jobs.next_page_number }}&status={{ status }}&q={{ q|urlencode }}">Next</a>
-        {% endif %}
-      </div>
+  <div class="rq-pagination">
+    <span>Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}</span>
+    <div class="rq-pagination-btns">
+      {% if jobs.has_previous %}
+        <a class="btn btn-ghost" style="font-size:12px;padding:8px 14px;" href="?page={{ jobs.previous_page_number }}&status={{ status }}&q={{ q|urlencode }}">← Prev</a>
+      {% endif %}
+      {% if jobs.has_next %}
+        <a class="btn btn-ghost" style="font-size:12px;padding:8px 14px;" href="?page={{ jobs.next_page_number }}&status={{ status }}&q={{ q|urlencode }}">Next →</a>
+      {% endif %}
     </div>
+  </div>
   {% endif %}
 </div>
 {% endblock %}

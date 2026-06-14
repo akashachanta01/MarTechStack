@@ -5,33 +5,37 @@ import time
 class Command(BaseCommand):
     help = 'MASTER COMMAND: Runs all daily maintenance, ingestion, and content tasks in order.'
 
+    def _run(self, label, command_name):
+        # Isolate each step so one failure doesn't abort the whole daily run.
+        self.stdout.write(label)
+        try:
+            call_command(command_name)
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"❌ Step '{command_name}' failed: {e}"))
+
     def handle(self, *args, **options):
         self.stdout.write("🚀 STARTING DAILY AUTOPILOT SEQUENCE...")
 
         # 1. CLEANUP (Clear the deck)
-        self.stdout.write("\n[1/5] 🧹 Checking for Dead Links & Expired Roles...")
-        call_command('check_dead_links')   
-        call_command('expire_featured')    
-        call_command('clean_stale_jobs')   
+        self._run("\n[1/5] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
+        self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
+        self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
 
         # 2. INGESTION (Get new jobs)
-        self.stdout.write("\n[2/5] 🏹 Hunting via API (Deep Search)...")
-        call_command('fetch_jobs')
+        self._run("\n[2/6] 🏹 Hunting via API (Deep Search)...", 'fetch_jobs')
 
         # 3. POLISH (Images)
-        self.stdout.write("\n[3/5] 🎨 Backfilling Logos...")
-        call_command('update_logos')
-        
-        # 4. CONTENT ENGINE (Automated Blog)
-        self.stdout.write("\n[4/5] ✍️ Running AI Blog Engine...")
-        call_command('generate_blog')
-        
-        # 5. INDEXING (Ping Google)
+        self._run("\n[3/6] 🎨 Backfilling Logos...", 'update_logos')
+
+        # 4. ALERTS (Email subscribers today's new roles — skips if none)
+        self._run("\n[4/6] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
+        self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
+
+        # 5. CONTENT ENGINE (Automated Blog)
+        self._run("\n[5/6] ✍️ Running AI Blog Engine...", 'generate_blog')
+
+        # 6. INDEXING (Ping Google)
         # This forces Google to crawl the new jobs and the new blog post.
-        self.stdout.write("\n[5/5] 📡 Pinging Google Indexing API...")
-        try:
-            call_command('index_jobs')
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Indexing Failed: {e}"))
-        
+        self._run("\n[6/6] 📡 Pinging Google Indexing API...", 'index_jobs')
+
         self.stdout.write(self.style.SUCCESS("\n✨ AUTOPILOT COMPLETE. System is fresh."))

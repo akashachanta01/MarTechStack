@@ -1,20 +1,35 @@
 {% extends "emails/base_email.html" %}
 
+{% block preheader %}{{ count }} new MarTech roles just landed on the board.{% endblock %}
+
 {% block content %}
-<h2 style="text-align: center; color: #0f172a; margin-bottom: 10px;">{{ count }} New MarTech Roles</h2>
-<p style="text-align: center; color: #64748b; margin-bottom: 30px;">Fresh picks for your stack.</p>
+<h1 style="margin:0 0 6px 0; font-family:Georgia,'Times New Roman',serif; font-size:28px; line-height:1.2; color:#0e1c30; font-weight:700; text-align:center;">
+  {{ count }} new MarTech roles
+</h1>
+<p style="margin:0 0 28px 0; text-align:center; font-size:15px; color:#7a7165;">Fresh picks for your stack.</p>
 
 {% for job in jobs %}
-<div class="job-card">
-    <span class="job-title">{{ job.title }}</span>
-    <div class="job-company">{{ job.company }} • {{ job.location }}</div>
-    <div style="margin-top: 10px;">
-        <a href="https://martechjobs.io/job/{{ job.id }}/{{ job.slug }}/" style="color: #4f46e5; font-weight: 700; font-size: 14px; text-decoration: none;">View Job &rarr;</a>
-    </div>
-</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px 0;">
+  <tr>
+    <td style="padding:18px 20px; background:#faf6f0; border-radius:12px; border:1px solid #ece3d6;">
+      <a href="{{ domain|default:'https://martechjobs.io' }}/job/{{ job.id }}/{{ job.slug }}/" style="text-decoration:none;">
+        <span style="display:block; font-size:16px; font-weight:700; color:#0e1c30; margin-bottom:4px;">{{ job.title }}</span>
+        <span style="display:block; font-size:14px; color:#7a7165;">{{ job.company }} · {{ job.location }}</span>
+      </a>
+      <a href="{{ domain|default:'https://martechjobs.io' }}/job/{{ job.id }}/{{ job.slug }}/" style="display:inline-block; margin-top:10px; font-size:14px; font-weight:700; color:#bf5420; text-decoration:none;">View job →</a>
+    </td>
+  </tr>
+</table>
 {% endfor %}
 
-<div style="text-align: center;">
-    <a href="https://martechjobs.io" class="btn" style="color: #ffffff !important;">Browse Board</a>
-</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0 0;">
+  <tr>
+    <td align="center">
+      <a href="{{ domain|default:'https://martechjobs.io' }}/jobs/"
+         style="display:inline-block; background:#bf5420; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:15px 36px; border-radius:10px;">
+        Browse the full board →
+      </a>
+    </td>
+  </tr>
+</table>
 {% endblock %}

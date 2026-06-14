@@ -1,323 +1,268 @@
 {% extends "jobs/base.html" %}
 {% load static %}
 
-{% block title %}Post a Job — MarTechJobs{% endblock %}
+{% block title %}Post a Job — Reach MarTech Specialists | MarTechJobs{% endblock %}
+{% block meta_description %}Post your Marketing Operations, RevOps, or MarTech role on the niche job board for marketing technology. Free 30-day listing, on Google for Jobs, reaching specialists in HubSpot, Salesforce, Marketo and more.{% endblock %}
 
 {% block content %}
-<div class="relative bg-white border-b border-slate-200 overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold font-mono uppercase tracking-wider text-slate-500 mb-8 shadow-sm">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#1f432d]"></span>
-            Hire the Top 1% of MarTech Talent
+<style>
+  .pj-hero { padding: 64px 0 40px; border-bottom: 1px solid var(--rule); text-align: center; }
+  .pj-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px,5vw,56px); font-weight: 800; color: var(--ink); margin: 14px 0 16px; }
+  .pj-hero p { font-size: 16px; color: var(--ink2); max-width: 520px; margin: 0 auto; line-height: 1.7; }
+
+  .pj-body { padding: 48px 0 80px; }
+  .pj-grid { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; }
+  @media(max-width:900px){ .pj-grid { grid-template-columns: 1fr; } .pj-preview { display: none !important; } }
+
+  .pj-form-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 36px; box-shadow: var(--shadow); }
+  .pj-form-card h2 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .pj-form-card .sub { font-size: 13px; color: var(--ink3); margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
+
+  .pj-section { margin-bottom: 28px; }
+  .pj-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media(max-width:560px){ .pj-row { grid-template-columns: 1fr; } }
+  .form-group { margin-bottom: 20px; }
+  .form-label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 7px; }
+  .form-label .req { color: var(--amber); }
+  .form-hint { font-size: 11px; color: var(--ink3); margin-top: 4px; font-family: 'Courier Prime', monospace; }
+  .form-err { font-size: 11px; color: #c0392b; font-weight: 700; margin-top: 4px; }
+
+  .pj-form-card input[type="text"],
+  .pj-form-card input[type="email"],
+  .pj-form-card input[type="url"],
+  .pj-form-card select,
+  .pj-form-card textarea {
+    width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--rule2); background: var(--paper); color: var(--ink);
+    font-size: 14px; font-family: 'Hanken Grotesk', sans-serif; outline: none;
+    transition: border-color .15s;
+  }
+  .pj-form-card input:focus, .pj-form-card select:focus, .pj-form-card textarea:focus { border-color: var(--amber); background: var(--card); }
+  .pj-form-card textarea { resize: vertical; min-height: 200px; }
+
+  .pj-errors { background: #fdf2f2; border: 1px solid #f5c6cb; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
+  .pj-errors h4 { font-size: 13px; font-weight: 700; color: #8b1a2b; margin-bottom: 8px; }
+  .pj-errors ul { list-style: disc; padding-left: 16px; font-size: 12px; color: #8b1a2b; }
+
+  .pj-preview { }
+  .pj-preview-sticky { position: sticky; top: 84px; }
+  .pj-preview-card { background: var(--paper); border: 1px solid var(--rule2); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .pj-preview-header { background: var(--paper2); border-bottom: 1px solid var(--rule); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .pj-preview-label { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); }
+  .pj-preview-body { padding: 20px; }
+  .pj-prev-row { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
+  .pj-prev-top { display: flex; gap: 12px; align-items: flex-start; }
+  .pj-prev-logo { width: 44px; height: 44px; border-radius: 8px; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--amber); flex-shrink: 0; overflow: hidden; }
+  .pj-prev-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .pj-prev-title { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+  .pj-prev-co { font-size: 12px; color: var(--ink3); margin-bottom: 8px; }
+  .pj-prev-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+</style>
+
+<section class="pj-hero">
+  <div class="wrap">
+    <div class="eyebrow">Hire the Top 1% of MarTech Talent</div>
+    <h1>Post a Job</h1>
+    <p>Connect with specialized professionals in Marketing Ops, CRM, Analytics, and Growth. Free to post — no credit card required.</p>
+  </div>
+</section>
+
+<div class="pj-body">
+  <div class="wrap">
+    <div class="pj-grid">
+      <div class="pj-form-card">
+        <h2>Job Details</h2>
+        <p class="sub">Fill out the information below to create your listing. We review all listings before going live.</p>
+
+        {% if form.errors %}
+        <div class="pj-errors">
+          <h4>Please fix the following errors:</h4>
+          <ul>{% for field in form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}</ul>
         </div>
-        <h1 class="text-6xl md:text-7xl font-serif font-medium text-slate-900 tracking-tight leading-tight mb-6">
-            Post a Job
-        </h1>
-        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-light leading-relaxed">
-            Connect with specialized professionals in Marketing Ops, CRM, Analytics, and Growth.
-        </p>
-    </div>
-</div>
+        {% endif %}
 
-<div class="bg-[#f8f9fa] min-h-screen pb-20 pt-10 border-t border-slate-100">
-    <div class="max-w-[1400px] mx-auto px-4 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            
-            <div class="lg:col-span-7">
-                <div class="bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-lg p-8 md:p-10 relative z-10">
-                    
-                    <div class="mb-8 border-b border-slate-100 pb-6">
-                        <h2 class="text-2xl font-serif font-bold text-slate-900">Job Details</h2>
-                        <p class="text-slate-500 text-sm mt-1">Fill out the information below to create your listing.</p>
-                    </div>
+        <form method="post" enctype="multipart/form-data" id="job-form" novalidate>
+          {% csrf_token %}
+          {{ form.website }}
+          <input type="hidden" name="plan" value="free">
 
-                    {% if form.errors %}
-                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-8 rounded-sm">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
-                                <div class="mt-2 text-sm text-red-700">
-                                    <ul class="list-disc pl-5 space-y-1">
-                                        {% for field in form %}
-                                            {% for error in field.errors %}
-                                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                                            {% endfor %}
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <form method="post" enctype="multipart/form-data" class="space-y-8" id="job-form" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" name="plan" value="free">
-
-                        <div class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Job Title <span class="text-red-500">*</span></label>
-                                {{ form.title }}
-                                {% if form.title.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.title.errors.0 }}</p> {% endif %}
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Company Name <span class="text-red-500">*</span></label>
-                                    {{ form.company }}
-                                    {% if form.company.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.company.errors.0 }}</p> {% endif %}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Logo URL</label>
-                                    {{ form.company_logo }}
-                                    {% if form.company_logo.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.company_logo.errors.0 }}</p> {% endif %}
-                                    <p class="text-[10px] text-slate-400 mt-1">Link to a square image (png/jpg)</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Location <span class="text-red-500">*</span></label>
-                                    {{ form.location }}
-                                    {% if form.location.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.location.errors.0 }}</p> {% endif %}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Work Type</label>
-                                    {{ form.work_arrangement }}
-                                    {% if form.work_arrangement.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.work_arrangement.errors.0 }}</p> {% endif %}
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Salary</label>
-                                    {{ form.salary_range }}
-                                    {% if form.salary_range.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.salary_range.errors.0 }}</p> {% endif %}
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Role Type</label>
-                                    {{ form.role_type }}
-                                    {% if form.role_type.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.role_type.errors.0 }}</p> {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Tech Stack</label>
-                            {{ form.new_tools }}
-                            {% if form.new_tools.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.new_tools.errors.0 }}</p> {% endif %}
-                            <p class="text-xs text-slate-400 mt-2 font-mono">e.g. HubSpot, Salesforce, Marketo (Comma separated)</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Description <span class="text-red-500">*</span></label>
-                            {{ form.description }}
-                            {% if form.description.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.description.errors.0 }}</p> {% endif %}
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-slate-900 mb-2 font-serif">Application Link <span class="text-red-500">*</span></label>
-                            {{ form.apply_url }}
-                            {% if form.apply_url.errors %} <p class="text-red-600 text-xs mt-1 font-bold">{{ form.apply_url.errors.0 }}</p> {% endif %}
-                            <p class="text-xs text-slate-500 mt-2">The URL where candidates will apply (e.g. your ATS).</p>
-                        </div>
-
-                        <div class="pt-6 border-t border-slate-100">
-                            <button type="submit" class="w-full bg-[#1f432d] hover:bg-green-900 text-white font-bold text-lg py-4 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-[#1f432d]">
-                                Publish Job Now
-                            </button>
-                            <p class="text-center text-xs text-slate-400 mt-4 font-mono">
-                                By publishing, you agree to our Terms.
-                            </p>
-                        </div>
-                    </form>
-                </div>
+          <div class="pj-row">
+            <div class="form-group">
+              <label class="form-label">Job Title <span class="req">*</span></label>
+              {{ form.title }}
+              {% if form.title.errors %}<p class="form-err">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
-
-            <div class="lg:col-span-5 hidden lg:block">
-                <div class="sticky top-24">
-                    <div class="bg-[#f3f4f6] border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-lg overflow-hidden">
-                        
-                        <div class="bg-white border-b-2 border-black p-4 flex justify-between items-center">
-                            <div class="flex items-center gap-2 text-slate-900 font-bold font-serif">
-                                <svg class="w-5 h-5 text-[#1f432d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                Live Preview
-                            </div>
-                            <span class="text-xs font-mono bg-slate-50 text-slate-500 px-2 py-1 rounded border border-slate-200">Desktop View</span>
-                        </div>
-
-                        <div class="p-6 md:p-8">
-                            
-                            <div class="bg-white border border-black rounded-sm p-4 hover:shadow-md transition-all duration-200 group relative">
-                                
-                                <div class="flex flex-col md:flex-row gap-4 items-start">
-                                    
-                                    <div class="flex-shrink-0">
-                                        <div class="w-14 h-14 border border-slate-100 rounded-md p-1 flex items-center justify-center bg-white" id="preview-logo-box">
-                                            <img id="preview-logo-img" src="" class="hidden w-full h-full object-contain">
-                                            <span id="preview-logo-text" class="text-2xl font-serif font-bold text-slate-300">L</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex-grow">
-                                        <h3 class="text-xl font-serif font-bold text-slate-900 leading-tight mb-1 flex items-center gap-2" id="preview-title">
-                                            Job Title
-                                        </h3>
-                                        <p class="text-sm text-slate-500 font-medium mb-2" id="preview-company">Company Name</p>
-                                        
-                                        <div class="flex flex-wrap gap-2">
-                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                <span id="preview-location">Remote</span>
-                                            </span>
-                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                                <span id="preview-salary">$0k - $0k</span>
-                                            </span>
-                                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-gray-300 text-[10px] font-mono text-slate-800 uppercase tracking-wide">
-                                                <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                <span id="preview-type">Full-time</span>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-col justify-between items-end gap-3 min-w-[140px] self-stretch py-1">
-                                        <div class="flex gap-1.5" id="preview-tags">
-                                            <span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500 shadow-sm">Tech Stack</span>
-                                        </div>
-
-                                        <div class="w-full border-t border-gray-200 my-1"></div>
-
-                                        <button class="bg-[#1f432d] text-white font-bold py-2 px-5 rounded shadow-sm text-xs opacity-90 cursor-not-allowed whitespace-nowrap">
-                                            Apply Now
-                                        </button>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div class="mb-6 px-1 mt-8">
-                                <h4 class="font-serif font-bold text-lg text-slate-900 mb-3 border-b border-slate-200 pb-2">About the Role</h4>
-                                <div id="preview-description" class="text-sm text-slate-600 leading-relaxed font-sans whitespace-pre-wrap">
-                                    <div class="space-y-2 opacity-30">
-                                        <div class="h-2 bg-slate-300 rounded w-full"></div>
-                                        <div class="h-2 bg-slate-300 rounded w-5/6"></div>
-                                        <div class="h-2 bg-slate-300 rounded w-4/6"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
+            <div class="form-group">
+              <label class="form-label">Company Name <span class="req">*</span></label>
+              {{ form.company }}
+              {% if form.company.errors %}<p class="form-err">{{ form.company.errors.0 }}</p>{% endif %}
             </div>
+          </div>
 
+          <div class="form-group">
+            <label class="form-label">Logo URL</label>
+            {{ form.company_logo }}
+            {% if form.company_logo.errors %}<p class="form-err">{{ form.company_logo.errors.0 }}</p>{% endif %}
+            <p class="form-hint">Direct link to a square logo image (PNG/JPG recommended)</p>
+          </div>
+
+          <div class="pj-row">
+            <div class="form-group">
+              <label class="form-label">Location <span class="req">*</span></label>
+              {{ form.location }}
+              {% if form.location.errors %}<p class="form-err">{{ form.location.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Work Type</label>
+              {{ form.work_arrangement }}
+              {% if form.work_arrangement.errors %}<p class="form-err">{{ form.work_arrangement.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="pj-row">
+            <div class="form-group">
+              <label class="form-label">Salary Range</label>
+              {{ form.salary_range }}
+              {% if form.salary_range.errors %}<p class="form-err">{{ form.salary_range.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role Type</label>
+              {{ form.role_type }}
+              {% if form.role_type.errors %}<p class="form-err">{{ form.role_type.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tech Stack</label>
+            {{ form.new_tools }}
+            {% if form.new_tools.errors %}<p class="form-err">{{ form.new_tools.errors.0 }}</p>{% endif %}
+            <p class="form-hint">e.g. HubSpot, Salesforce, Marketo — comma separated</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Job Description <span class="req">*</span></label>
+            {{ form.description }}
+            {% if form.description.errors %}<p class="form-err">{{ form.description.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Application Link <span class="req">*</span></label>
+            {{ form.apply_url }}
+            {% if form.apply_url.errors %}<p class="form-err">{{ form.apply_url.errors.0 }}</p>{% endif %}
+            <p class="form-hint">The URL where candidates will apply (your ATS link)</p>
+          </div>
+
+          <div style="padding-top:20px;border-top:1px solid var(--rule);margin-top:8px;">
+            <button type="submit" class="btn btn-amber btn-block btn-lg">Publish Job Now →</button>
+            <p style="text-align:center;font-family:'Courier Prime',monospace;font-size:11px;color:var(--ink3);margin-top:12px;">By publishing, you agree to our Terms of Service. All listings are reviewed before going live.</p>
+          </div>
+        </form>
+      </div>
+
+      <aside class="pj-preview">
+        <div class="pj-preview-sticky">
+          <div class="pj-preview-card">
+            <div class="pj-preview-header">
+              <span class="pj-preview-label">Live Preview</span>
+              <span class="eyebrow muted">Desktop</span>
+            </div>
+            <div class="pj-preview-body">
+              <div class="pj-prev-row">
+                <div class="pj-prev-top">
+                  <div class="pj-prev-logo" id="preview-logo-wrap">
+                    <img id="preview-logo-img" src="" style="display:none;width:100%;height:100%;object-fit:contain;">
+                    <span id="preview-logo-text">L</span>
+                  </div>
+                  <div style="flex:1;">
+                    <div class="pj-prev-title" id="preview-title">Job Title</div>
+                    <div class="pj-prev-co" id="preview-company">Company Name</div>
+                    <div class="pj-prev-pills" id="preview-pills">
+                      <span class="pill pill-loc" id="preview-loc">Remote</span>
+                      <span class="pill pill-type" id="preview-type">Full-time</span>
+                    </div>
+                    <a class="btn btn-amber" style="font-size:11px;padding:6px 14px;">Apply Now →</a>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <div style="font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;border-bottom:1px solid var(--rule);padding-bottom:6px;">About the Role</div>
+                <div id="preview-desc" style="font-size:12px;color:var(--ink2);line-height:1.7;max-height:200px;overflow:hidden;">
+                  <div style="opacity:.3;">
+                    <div style="height:8px;background:var(--rule);border-radius:4px;margin-bottom:6px;"></div>
+                    <div style="height:8px;background:var(--rule);border-radius:4px;margin-bottom:6px;width:85%;"></div>
+                    <div style="height:8px;background:var(--rule);border-radius:4px;width:70%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:20px;margin-top:16px;box-shadow:var(--shadow-sm);">
+            <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:10px;">What's included — Free</div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:var(--ink2);">
+              <div>✓ Live for 30 days</div>
+              <div>✓ Google Jobs rich results</div>
+              <div>✓ Email alerts to matched subscribers</div>
+              <div>✓ SEO-optimized listing page</div>
+            </div>
+          </div>
         </div>
+      </aside>
     </div>
+  </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Style Inputs
-        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="url"], select, textarea');
-        inputs.forEach(input => {
-            const hasError = input.nextElementSibling && input.nextElementSibling.classList.contains('text-red-600');
-            const borderClass = hasError ? 'border-red-500' : 'border-gray-200';
-            const bgClass = hasError ? 'bg-red-50' : 'bg-white';
+document.addEventListener('DOMContentLoaded', function(){
+  const fields = {
+    title: document.getElementById('id_title'),
+    company: document.getElementById('id_company'),
+    logo: document.getElementById('id_company_logo'),
+    location: document.getElementById('id_location'),
+    type: document.getElementById('id_role_type'),
+    tools: document.getElementById('id_new_tools'),
+    description: document.getElementById('id_description')
+  };
+  const pTitle = document.getElementById('preview-title');
+  const pCo = document.getElementById('preview-company');
+  const pLogoImg = document.getElementById('preview-logo-img');
+  const pLogoTxt = document.getElementById('preview-logo-text');
+  const pLoc = document.getElementById('preview-loc');
+  const pType = document.getElementById('preview-type');
+  const pPills = document.getElementById('preview-pills');
+  const pDesc = document.getElementById('preview-desc');
 
-            input.classList.add(
-                'w-full', 'px-4', 'py-3', 'rounded-md', 
-                'border-2', borderClass, bgClass,
-                'text-slate-900', 'text-sm', 
-                'focus:border-black', 'focus:ring-0', 'outline-none',
-                'transition-colors', 'placeholder-slate-400'
-            );
-            if(input.tagName === 'TEXTAREA') input.rows = 5;
-        });
+  function update() {
+    if(fields.title && fields.title.value) pTitle.textContent = fields.title.value;
+    if(fields.company && fields.company.value) {
+      pCo.textContent = fields.company.value;
+      pLogoTxt.textContent = fields.company.value.charAt(0).toUpperCase();
+    }
+    if(fields.logo && fields.logo.value) {
+      pLogoImg.src = fields.logo.value;
+      pLogoImg.style.display = 'block';
+      pLogoTxt.style.display = 'none';
+    } else {
+      pLogoImg.style.display = 'none';
+      pLogoTxt.style.display = 'block';
+    }
+    if(fields.location && fields.location.value) pLoc.textContent = fields.location.value;
+    if(fields.type) {
+      const sel = fields.type.options[fields.type.selectedIndex];
+      if(sel) pType.textContent = sel.text;
+    }
+    if(fields.description && fields.description.value.trim()) {
+      pDesc.textContent = fields.description.value.substring(0, 300) + (fields.description.value.length > 300 ? '…' : '');
+    }
+    if(fields.tools && fields.tools.value) {
+      const tools = fields.tools.value.split(',').map(t => t.trim()).filter(t => t);
+      const fixed = '<span class="pill pill-loc" id="preview-loc">' + (fields.location && fields.location.value ? fields.location.value : 'Remote') + '</span><span class="pill pill-type">' + pType.textContent + '</span>';
+      const toolPills = tools.slice(0,3).map(t => `<span class="pill pill-stack">${t}</span>`).join('');
+      pPills.innerHTML = fixed + toolPills;
+    }
+  }
 
-        // 2. Live Preview Logic
-        const fields = {
-            title: document.getElementById('id_title'),
-            company: document.getElementById('id_company'),
-            logo: document.getElementById('id_company_logo'),
-            location: document.getElementById('id_location'),
-            salary: document.getElementById('id_salary_range'),
-            type: document.getElementById('id_role_type'),
-            tools: document.getElementById('id_new_tools'),
-            description: document.getElementById('id_description') 
-        };
-
-        const preview = {
-            title: document.getElementById('preview-title'),
-            company: document.getElementById('preview-company'),
-            logoBox: document.getElementById('preview-logo-box'),
-            logoImg: document.getElementById('preview-logo-img'),
-            logoText: document.getElementById('preview-logo-text'),
-            location: document.getElementById('preview-location'),
-            salary: document.getElementById('preview-salary'),
-            type: document.getElementById('preview-type'),
-            tags: document.getElementById('preview-tags'),
-            description: document.getElementById('preview-description')
-        };
-
-        function updatePreview() {
-            if(fields.title.value) preview.title.textContent = fields.title.value;
-            if(fields.company.value) preview.company.textContent = fields.company.value;
-            if(fields.location.value) preview.location.textContent = fields.location.value;
-            if(fields.salary.value) preview.salary.textContent = fields.salary.value;
-            
-            // Description Logic
-            if(fields.description.value.trim() !== "") {
-                preview.description.textContent = fields.description.value;
-            } else {
-                preview.description.innerHTML = `
-                    <div class="space-y-2 opacity-30">
-                        <div class="h-2 bg-slate-300 rounded w-full"></div>
-                        <div class="h-2 bg-slate-300 rounded w-5/6"></div>
-                        <div class="h-2 bg-slate-300 rounded w-4/6"></div>
-                    </div>`;
-            }
-
-            // Logo logic
-            if(fields.logo && fields.logo.value) {
-                preview.logoImg.src = fields.logo.value;
-                preview.logoImg.classList.remove('hidden');
-                preview.logoText.classList.add('hidden');
-            } else {
-                preview.logoImg.classList.add('hidden');
-                preview.logoText.classList.remove('hidden');
-                preview.logoText.textContent = fields.company.value ? fields.company.value.charAt(0) : "L";
-            }
-
-            // Role Type
-            if(fields.type) {
-                const typeText = fields.type.options ? fields.type.options[fields.type.selectedIndex].text : fields.type.value;
-                preview.type.textContent = typeText;
-            }
-
-            // Tags Logic
-            if(fields.tools) {
-                const tools = fields.tools.value.split(',').map(t => t.trim()).filter(t => t);
-                if(tools.length > 0) {
-                    preview.tags.innerHTML = tools.map(t => 
-                        `<span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-700 shadow-sm">${t}</span>`
-                    ).join('');
-                } else {
-                    preview.tags.innerHTML = `<span class="text-[10px] font-bold bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500 shadow-sm">Tech Stack</span>`;
-                }
-            }
-        }
-
-        // Attach listeners safely
-        Object.values(fields).forEach(field => {
-            if(field) field.addEventListener('input', updatePreview);
-        });
-    });
+  Object.values(fields).forEach(f => { if(f) f.addEventListener('input', update); });
+});
 </script>
 {% endblock %}

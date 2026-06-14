@@ -2,63 +2,46 @@
 {% load static %}
 
 {% block title %}Page Not Found — MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
 
 {% block content %}
-<div class="relative bg-white border-b border-slate-100 min-h-[80vh] flex flex-col items-center justify-center overflow-hidden">
-    <div class="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+<style>
+  .e404-wrap { min-height: 75vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; text-align: center; }
+  .e404-num { font-family: 'Playfair Display', serif; font-size: clamp(100px,20vw,200px); font-weight: 800; line-height: 1; color: var(--amber-light); letter-spacing: -.04em; user-select: none; position: relative; }
+  .e404-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .e404-icon-inner { width: 80px; height: 80px; background: var(--card); border: 1px solid var(--rule); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); font-size: 36px; }
+  .e404-wrap h2 { font-family: 'Playfair Display', serif; font-size: clamp(24px,4vw,44px); font-weight: 800; color: var(--ink); margin: -8px 0 16px; }
+  .e404-wrap p { font-size: 16px; color: var(--ink2); max-width: 480px; line-height: 1.7; margin-bottom: 36px; }
+  .e404-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+  .e404-popular { border-top: 1px solid var(--rule); padding-top: 32px; width: 100%; max-width: 480px; }
+  .e404-popular-label { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: var(--ink3); margin-bottom: 16px; }
+  .e404-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .e404-link { font-size: 13px; font-weight: 500; color: var(--ink2); padding: 7px 14px; border-radius: 6px; border: 1px solid var(--rule2); background: var(--card); transition: all .14s; text-decoration: none; }
+  .e404-link:hover { border-color: var(--amber); color: var(--amber); }
+</style>
 
-    <section class="w-full max-w-4xl mx-auto px-4 lg:px-8 py-12 flex flex-col items-center text-center relative z-10">
-        
-        <div class="relative mb-6">
-            <h1 class="text-[140px] md:text-[220px] leading-none font-serif font-bold text-[#1f432d]/5 select-none tracking-widest">
-                404
-            </h1>
-            <div class="absolute inset-0 flex items-center justify-center">
-                <div class="bg-white p-4 rounded-full border border-slate-200 shadow-sm">
-                    <span class="material-symbols-outlined text-5xl md:text-6xl text-[#1f432d]">search_off</span>
-                </div>
-            </div>
-        </div>
-
-        <h2 class="text-3xl md:text-5xl font-serif font-bold text-slate-900 mb-6 -mt-8 relative z-10">
-            Page Not Found
-        </h2>
-        <p class="text-lg text-slate-500 font-light max-w-lg mb-10 leading-relaxed">
-            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
-            <a href="/" class="px-8 py-3.5 bg-[#1f432d] text-white font-bold rounded-sm hover:bg-green-900 transition-colors shadow-sm flex items-center justify-center gap-2 group">
-                <span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                Back to Homepage
-            </a>
-            <a href="{% url 'job_list' %}" class="px-8 py-3.5 bg-white text-slate-900 border border-black font-bold rounded-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-lg">work_outline</span>
-                Browse Open Jobs
-            </a>
-        </div>
-
-        <div class="w-full max-w-lg pt-10 border-t border-slate-200">
-            <p class="text-xs font-mono text-slate-400 uppercase tracking-widest mb-6">Popular Destinations</p>
-            <div class="flex flex-wrap justify-center gap-3">
-                <a href="{% url 'job_list' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
-                    Trending Jobs
-                </a>
-                
-                <a href="{% url 'post_job' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
-                    Post a Job
-                </a>
-                
-                <a href="{% url 'for_employers' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
-                    For Employers
-                </a>
-                
-                <a href="{% url 'contact' %}" class="px-4 py-2 bg-slate-50 hover:bg-white border border-slate-200 hover:border-[#1f432d] rounded-sm text-sm font-medium text-slate-600 hover:text-[#1f432d] transition-all shadow-sm">
-                    Contact Support
-                </a>
-            </div>
-        </div>
-
-    </section>
+<div class="e404-wrap">
+  <div class="e404-num">
+    404
+    <div class="e404-icon">
+      <div class="e404-icon-inner">🔍</div>
+    </div>
+  </div>
+  <h2>Page Not Found</h2>
+  <p>The page you're looking for might have been removed, renamed, or is temporarily unavailable.</p>
+  <div class="e404-btns">
+    <a href="/" class="btn btn-amber btn-lg">← Back to Homepage</a>
+    <a href="{% url 'job_list' %}" class="btn btn-ghost btn-lg">Browse Open Jobs</a>
+  </div>
+  <div class="e404-popular">
+    <div class="e404-popular-label">Popular Destinations</div>
+    <div class="e404-links">
+      <a href="{% url 'job_list' %}" class="e404-link">Trending Jobs</a>
+      <a href="{% url 'post_job' %}" class="e404-link">Post a Job</a>
+      <a href="{% url 'for_employers' %}" class="e404-link">For Employers</a>
+      <a href="{% url 'salary_guide' %}" class="e404-link">Salary Guide</a>
+      <a href="{% url 'contact' %}" class="e404-link">Contact Support</a>
+    </div>
+  </div>
 </div>
 {% endblock %}

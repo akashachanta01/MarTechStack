@@ -20,7 +20,14 @@ class MarTechScreener:
     def __init__(self, model: str = "gpt-4o-mini"):
         self.model = model
         api_key = os.environ.get("OPENAI_API_KEY")
-        self.client = OpenAI(api_key=api_key) if api_key else None
+        # Timeout + retries so a hung OpenAI request can't stall the daily run.
+        self.client = OpenAI(api_key=api_key, timeout=30, max_retries=2) if api_key else None
+
+        # Manual blocklist (admin-managed). Loaded once per run.
+        try:
+            self.block_rules = [(r.rule_type, r.value) for r in BlockRule.objects.filter(enabled=True)]
+        except Exception:
+            self.block_rules = []
         
         self.hunt_roles = []
         self.hunt_tools = []
@@ -43,6 +50,45 @@ class MarTechScreener:
             self.hunt_tools = ["Marketo", "Salesforce", "HubSpot", "Adobe", "Tealium", "Braze", "mParticle"]
 
         self.REQUIRED_KEYWORDS = list(set([r.lower() for r in self.hunt_roles + self.hunt_tools]))
+
+        # Robust built-in MarTech title terms so the title gate doesn't depend
+        # solely on hunt_targets.txt coverage (which dropped legit roles like
+        # "Lifecycle Marketing Manager"). Multi-word role phrases + specific tool
+        # names only — deliberately NO bare "marketing"/"manager"/"data".
+        _GATE_ROLE_TERMS = {
+            "marketing operations", "marketing ops", "mops", "marops",
+            "marketing automation", "campaign operations", "campaign manager",
+            "martech", "marketing technology", "marketing technologist",
+            "marketing analytics", "marketing data", "marketing engineer",
+            "customer data platform", "cdp", "solutions architect",
+            "marketing systems", "web analytics", "digital analytics",
+            "web analyst", "tag management", "analytics engineer",
+        }
+        _GATE_TOOL_TERMS = {
+            "salesforce", "hubspot", "marketo", "pardot", "eloqua", "braze",
+            "iterable", "klaviyo", "segment", "tealium", "mparticle", "amplitude",
+            "mixpanel", "adobe experience", "aep", "ga4", "google analytics",
+            "looker", "snowflake", "optimizely", "6sense", "demandbase",
+            "outreach", "salesloft", "customer.io", "activecampaign",
+            "marketing cloud", "sfmc",
+        }
+        self.gate_terms = set(self.REQUIRED_KEYWORDS) | _GATE_ROLE_TERMS | _GATE_TOOL_TERMS
+
+        # Specialist, IN-SCOPE tools whose presence in a job DESCRIPTION is a
+        # strong MarTech signal even when the title is generic ("Marketing
+        # Manager" whose JD is all Marketo/Segment). Deliberately excludes the
+        # ubiquitous tools (bare Salesforce/HubSpot/Google Analytics appear in
+        # nearly every marketing JD) and the out-of-scope lifecycle messaging
+        # tools (Braze/Iterable/Klaviyo) so we don't flood GPT with noise.
+        self.desc_signal_tools = {
+            "marketo", "pardot", "oracle eloqua", "eloqua",
+            "salesforce marketing cloud", "sfmc", "adobe journey optimizer",
+            "adobe campaign", "twilio segment", "segment", "tealium",
+            "mparticle", "rudderstack", "hightouch", "census", "actioniq",
+            "salesforce data cloud", "adobe experience platform",
+            "adobe experience manager", "adobe analytics", "google tag manager",
+            "tag manager", "optimizely", "amplitude", "mixpanel", "heap",
+        }
         # Ensure we have a clean list of just tools for the prompt and check
         self.tool_list_clean = [t.lower() for t in self.hunt_tools if len(t) > 2]
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
@@ -56,9 +102,45 @@ class MarTechScreener:
     def _normalize(self, text: str) -> str:
         return (text or "").strip().lower()
 
+    def _is_blocked(self, title, company, apply_url) -> bool:
+        if not self.block_rules:
+            return False
+        t = (title or "").lower(); c = (company or "").lower(); u = (apply_url or "").lower()
+        for rule_type, value in self.block_rules:
+            v = (value or "").strip()
+            if not v:
+                continue
+            vl = v.lower()
+            if rule_type == "company" and vl in c:
+                return True
+            if rule_type == "domain" and vl in u:
+                return True
+            if rule_type == "keyword" and vl in t:
+                return True
+            if rule_type == "regex":
+                try:
+                    if re.search(v, f"{title} {company}", re.IGNORECASE):
+                        return True
+                except re.error:
+                    pass
+        return False
+
     def _quick_kill(self, title: str, company: str) -> Optional[dict]:
         t_low = title.lower()
         c_low = company.lower()
+
+        # 0. Tool-name-but-wrong-role trap. These are NEVER MarTech ops/eng/
+        # analytics roles, but they often carry a tool name in the title
+        # (e.g. "Salesforce Account Executive", "Adobe Photoshop Designer",
+        # "HubSpot Sales Rep") which sneaks them past the keyword gate.
+        nonmartech_roles = [
+            "account executive", "account manager", "sales representative",
+            "sales rep", "sales development", " sdr", " bdr", "business development",
+            "photoshop", "illustrator", "videographer", "copywriter",
+            "recruiter", "talent acquisition", "customer success",
+        ]
+        if any(r in t_low for r in nonmartech_roles):
+            return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: non-MarTech role (sales/creative/CS).", "details": {}}
 
         # 1. SEO/Event/Social Trap (Still keep this to filter noise)
         bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
@@ -82,16 +164,35 @@ class MarTechScreener:
         return None
 
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
+        if self._is_blocked(title, company, apply_url):
+            return {"status": "rejected", "score": 0.0, "reason": "Blocked by admin BlockRule.", "details": {"stage": "blocklist"}}
         quick_reject = self._quick_kill(title, company)
         if quick_reject:
             return quick_reject
 
-        full_text = self._normalize(f"{title} {description}")
-        
-        has_keyword = any(kw in full_text for kw in self.REQUIRED_KEYWORDS)
+        # Precision gate: require a hunt keyword in the TITLE. Gating on the
+        # description matches almost everything (every marketing JD lists
+        # "Salesforce/HubSpot" somewhere), which is why generic roles slipped in.
+        title_norm = self._normalize(title)
+        has_keyword = any(kw in title_norm for kw in self.gate_terms)
+
+        # Description-signal fallback: a lot of real MarTech roles ship with a
+        # generic title ("Marketing Manager", "Technical Consultant", "Senior
+        # Analyst") but a JD that is unmistakably built around an in-scope
+        # specialist platform. If the title misses but the DESCRIPTION names
+        # >= 2 distinct specialist tools, let GPT make the final call instead of
+        # hard-rejecting. We require two distinct hits (not one) because a single
+        # passing mention ("we use Marketo") is often incidental, whereas two
+        # specialist tools signals the role actually owns the stack.
+        desc_signal = False
         if not has_keyword:
-            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No hunt_targets keyword found.", "details": {"stage": "fast_fail"}}
-        
+            desc_norm = self._normalize(description)
+            hits = {t for t in self.desc_signal_tools if t in desc_norm}
+            desc_signal = len(hits) >= 2
+
+        if not has_keyword and not desc_signal:
+            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No MarTech term in TITLE or specialist tools in JD.", "details": {"stage": "fast_fail"}}
+
         if not self.client:
             return {"status": "pending", "score": 50.0, "reason": "OPENAI_API_KEY missing.", "details": {"stage": "api_missing"}}
 
@@ -103,44 +204,84 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description, location):
         prompt = f"""
-        Act as a "Senior MarTech Recruiter". 
-        
+        You are a STRICT Senior MarTech Recruiter for a high-precision, NARROWLY
+        scoped job board. We accept ONLY three role families:
+          1. MARKETING OPERATIONS — Marketing Ops/MOps, Marketing Automation
+             (Marketo/HubSpot/Braze platform work), and Campaign Operations.
+          2. MARTECH ENGINEERING — hands-on build/integration of the marketing
+             stack (marketing/MarTech engineer, integration developer, CDP engineer).
+          3. MARKETING ANALYTICS / DATA — analytics, measurement, attribution,
+             tagging, BI for marketing.
+
         JOB CONTEXT:
         - Title: {title}
         - Company: {company}
         - Snippet: {description[:3000]}...
 
-        ✅ VALID TOOLS MENU:
-        [{self.tool_menu_str}]
+        VALID TOOLS MENU (for stack detection): [{self.tool_menu_str}]
 
-        ⛔ HARD REJECT KEYWORDS:
-        [
-         "Customer Success", "CSM", "Account Manager", "Sales", "SDR", "BDR",
-         "Event", "Social Media", "Content", "Brand", "Community", "PR", "SEO", "Search Engine",
-         "Copywriter", "Creative", "Audit", "Support", "Field Marketing"
-        ]
+        DECISION RULES (precision over recall — when unsure, prefer REJECT):
 
-        YOUR TASKS:
-        1. **Detect Tech Stack:** Identify tools from the VALID TOOLS MENU above.
+        APPROVE (85-100) ONLY if the role's PRIMARY function is one of the three
+        families above and it's hands-on with marketing tools, data, or operations.
+        Good examples: "Salesforce Administrator", "Marketo Specialist",
+        "Marketing Operations Manager", "Marketing Automation Manager",
+        "Campaign Operations Manager", "MarTech Engineer", "Marketing Analytics Manager".
 
-        2. **Analyze Role (STRICT FILTER):**
-           - **STEP A: GOLDEN RULE:** If ANY tool from the VALID TOOLS MENU appears in the Job Title -> APPROVE (95). 
-             (e.g. "Salesforce Developer", "HubSpot Admin", "Adobe Architect"). This overrides "Engineer" or "Developer" concerns.
-           
-           - **STEP B: The "Marketing" Trap:** If title contains SEO/Social/Brand -> REJECT (0).
-           
-           - **STEP C: The "Good" Signals:**
-             - "Marketing Operations", "MarTech" -> APPROVE (90).
-             - "Solution Architect" (if MarTech related) -> APPROVE (85).
+        REJECT (0) — IMPORTANT, this board explicitly EXCLUDES these even though
+        they are marketing-adjacent:
+        - Revenue Operations / RevOps / Sales Operations
+        - Lifecycle Marketing / Retention / CRM Marketing Manager / Email Marketing Manager
+        - Growth Marketing / Growth Operations
+        - Demand Generation / Demand Gen
+        (If the role's PRIMARY function is one of the above, REJECT it — even if it
+        uses Marketo/HubSpot/Braze. Only approve when the primary function is truly
+        Marketing Operations, Marketing Automation, Campaign Operations, MarTech
+        engineering, or marketing analytics.)
 
-        3. **Scoring:** 0 = Reject, 65 = Pending, 85-100 = Auto-Approve.
+        ALSO REJECT (0):
+        - Creative / content / design / copywriting / video / brand / PR / social /
+          community / events / SEO / SEM / paid-media-buying
+        - Sales / account management / customer success / SDR / BDR / recruiting
+        - Generic software engineering, data science, or product roles not specific
+          to the marketing stack (even at a MarTech vendor)
+        - Tool name in title but wrong role (e.g. "Adobe Photoshop Designer",
+          "Salesforce Account Executive", "HubSpot Sales Rep").
+
+        PENDING (50-70) only if genuinely ambiguous.
+
+        IMPORTANT: A tool name in the title is a POSITIVE signal ONLY when paired
+        with one of the three accepted families. NEVER auto-approve on a tool alone.
+
+        GENERIC TITLES: Some real MarTech roles ship with a vague title
+        ("Marketing Manager", "Technical Consultant", "Senior Analyst",
+        "Solutions Consultant") but a JD that is clearly built around owning an
+        in-scope platform (Marketo, Eloqua, SFMC, Segment, Tealium, mParticle,
+        Adobe Experience Platform/AEM, GTM, etc.). In that case, judge by the JD,
+        not the title: APPROVE only if the day-to-day responsibilities are
+        genuinely Marketing Operations / Automation / Campaign Ops, MarTech
+        engineering, or marketing analytics. If the JD only mentions the tool in
+        passing, or the primary function is one of the EXCLUDED families above,
+        REJECT.
+
+        ALSO:
+        - Detect stack: tools actually used (from the menu or clearly named).
+        - Classify function into exactly one of:
+          * "engineering": hands-on build/integration — developer, architect,
+            marketing/MarTech engineer, CDP engineer, integration, implementation,
+            AND analytics-engineering / web-analytics implementation / tag
+            management (dbt, GTM, Tealium tagging)
+          * "operations": Marketing Operations, Marketing Automation, Campaign Operations
+          * "data": analysis, reporting, measurement, BI, attribution, insights
+            (a Web Analyst / Marketing Analyst who analyzes, not implements)
+          * "other": doesn't clearly fit
 
         Output JSON:
         {{
             "decision": "APPROVE" | "REJECT" | "PENDING",
             "score": 0-100,
-            "reason": "Clear explanation.",
-            "signals": {{ "stack": [], "role_type": "MOPs" }}
+            "reason": "Clear, specific explanation.",
+            "signals": {{ "stack": [], "function": "operations" }}
         }}
         """
 
@@ -172,7 +313,9 @@ class MarTechScreener:
         found_adobe = False
         for tool in stack:
             t_lower = tool.lower()
-            if "adobe" in t_lower or "marketo" in t_lower or "magento" in t_lower:
+            # Marketo is Adobe Marketo Engage; "adobe" is self-evident. Magento
+            # is e-commerce, NOT MarTech — it must not pull in Adobe Exp Cloud.
+            if "adobe" in t_lower or "marketo" in t_lower:
                 found_adobe = True
                 break
         if found_adobe and "Adobe Experience Cloud" not in stack:

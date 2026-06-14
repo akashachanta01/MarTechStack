@@ -24,8 +24,15 @@ class ToolSitemap(Sitemap):
     
     def items(self):
         from .models import Tool
-        # EXPOSE ALL TOOLS (Even empty ones, to catch leads)
-        return Tool.objects.all().order_by('name')
+        from .tool_catalog import all_canonical_names
+        canonical = {n.lower() for n in all_canonical_names()}
+        # Only CANONICAL tools with at least one live job. Excludes junk tools
+        # (ssf, paid-media-data, crm, …) and empty thin pages.
+        tools = (
+            Tool.objects.filter(jobs__is_active=True, jobs__screening_status='approved')
+            .distinct().order_by('name')
+        )
+        return [t for t in tools if (t.name or '').lower() in canonical]
 
     def location(self, obj):
         return reverse('tool_detail', args=[obj.slug])
@@ -37,25 +44,29 @@ class SEOLandingSitemap(Sitemap):
 
     def items(self):
         from .models import Tool
-        
-        seo_pages = set()
-        
-        # 1. Base Remote Pages for ALL tools
-        seo_pages.add(('remote', '')) 
-        for tool in Tool.objects.all():
-            if tool.slug:
-                seo_pages.add(('remote', tool.slug))
+        from .tool_catalog import all_canonical_names
+        canonical = {n.lower() for n in all_canonical_names()}
+        # Only canonical tools with live jobs go into location combos — no junk.
+        canonical_tools = [
+            t for t in Tool.objects.filter(jobs__is_active=True, jobs__screening_status='approved').distinct()
+            if t.slug and (t.name or '').lower() in canonical
+        ]
 
-        # 2. Hardcode Top Hubs to force indexing of combinations
+        seo_pages = set()
+
+        # 1. Base remote pages for canonical tools
+        seo_pages.add(('remote', ''))
+        for tool in canonical_tools:
+            seo_pages.add(('remote', tool.slug))
+
+        # 2. Curated hubs × canonical tools (no arbitrary cities)
         top_hubs = ["new-york", "san-francisco", "austin", "chicago", "london", "texas", "california"]
-        
+
         for hub in top_hubs:
             seo_pages.add((hub, ''))
-            # Limit to top 20 tools per city to avoid blowing up the sitemap size instantly
-            for tool in Tool.objects.all()[:20]: 
-                if tool.slug:
-                    seo_pages.add((hub, tool.slug))
-        
+            for tool in canonical_tools[:20]:
+                seo_pages.add((hub, tool.slug))
+
         return sorted(list(seo_pages))
 
     def location(self, obj):
@@ -113,15 +124,32 @@ class StaticViewSitemap(Sitemap):
 
     def items(self):
         return [
-            'about', 
-            'for_employers', 
-            'post_job', 
-            'job_list', 
+            'about',
+            'for_employers',
+            'post_job',
+            'job_list',
             'blog_list',
-            'salary_guide',  
-            'directory',     
-            'company_list'   
+            'salary_guide',
+            'directory',
+            'company_list',
+            'all_jobs',
+            'privacy',
+            'terms',
         ]
 
     def location(self, item):
         return reverse(item)
+
+
+class TitleJobsSitemap(Sitemap):
+    """Programmatic job-title pages (/<title>-jobs/)."""
+    priority = 0.8
+    changefreq = 'daily'
+    protocol = 'https'
+
+    def items(self):
+        from jobs.views import TITLE_JOBS
+        return list(TITLE_JOBS.keys())
+
+    def location(self, slug):
+        return f'/{slug}-jobs/'

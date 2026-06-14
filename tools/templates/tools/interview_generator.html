@@ -2,6 +2,7 @@
 
 {% block title %}{{ seo_title }}{% endblock %}
 {% block meta_description %}{{ seo_description }}{% endblock %}
+{% block extra_head %}<script src="https://cdn.tailwindcss.com"></script>{% endblock %}
 
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-12">
@@ -117,6 +118,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script>
     async function generateQuestions() {
         const btn = document.getElementById('genBtn');
@@ -144,12 +146,14 @@
             const data = await response.json();
             
             if(data.html) {
-                output.innerHTML = `
+                // Sanitize the whole block — neutralizes both the LLM HTML and
+                // the user-supplied `stack` value before it touches the DOM.
+                output.innerHTML = DOMPurify.sanitize(`
                     <h3 class="text-2xl font-bold text-slate-900 mb-6">Interview Guide: ${stack}</h3>
                     ${data.html}
-                `;
+                `);
             } else {
-                output.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
+                output.textContent = "Error: " + (data.error || "Unknown error");
             }
 
         } catch(e) {

@@ -2,178 +2,234 @@
 {% load static %}
 
 {% block title %}{{ job.title }} at {{ job.company }} | MarTechJobs{% endblock %}
-
-{% block meta_description %}Hiring now: {{ job.title }} at {{ job.company }}. {{ job.location }}. Apply today.{% endblock %}
-
+{% block meta_description %}{{ job.title }} at {{ job.company }} — {{ job.location }}. {{ job.get_role_type_display }}{% if job.salary_range %}, {{ job.salary_range }}{% endif %}. Apply today on MarTechJobs.{% endblock %}
+{% block meta_keywords %}{{ job.title }}, {{ job.company }} jobs, marketing operations jobs, martech careers{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ job.title }} at {{ job.company }}{% endblock %}
-{% block og_desc %}We are hiring a {{ job.title }} to join our team in {{ job.location }}. Click to apply.{% endblock %}
-{% block og_image %}{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io{% static 'logo.svg' %}{% endif %}{% endblock %}
+{% block og_desc %}Hiring: {{ job.title }} at {{ job.company }} in {{ job.location }}. Apply now on MarTechJobs.{% endblock %}
+{% block og_image %}{% if job.company_logo %}{{ job.company_logo }}{% else %}https://martechjobs.io{% static 'logo-512.png' %}{% endif %}{% endblock %}
 
-{% block content %}
+{% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org/",
   "@type": "JobPosting",
   "title": "{{ job.title|escapejs }}",
-  "description": "{{ job.description|escapejs }}",
-  "identifier": {
-    "@type": "PropertyValue",
-    "name": "{{ job.company|escapejs }}",
-    "value": "{{ job.id }}"
-  },
+  "description": "{{ job.description|striptags|escapejs|truncatechars:5000 }}",
+  "identifier": {"@type":"PropertyValue","name":"{{ job.company|escapejs }}","value":"{{ job.id }}"},
   "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
-  "validThrough": "{{ job.get_schema_valid_through }}", 
+  "validThrough": "{{ job.get_schema_valid_through }}",
   "employmentType": "{% if job.role_type == 'contract' %}CONTRACTOR{% elif job.role_type == 'part_time' %}PART_TIME{% else %}FULL_TIME{% endif %}",
   "hiringOrganization": {
     "@type": "Organization",
     "name": "{{ job.company|escapejs }}",
-    "logo": "{{ job.company_logo|default:'' }}"
+    "sameAs": "https://martechjobs.io"{% if job.company_logo %},"logo": "{{ job.company_logo }}"{% endif %}
   },
-  "jobLocation": {
-    "@type": "Place",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "{{ job.location|escapejs }}",
-      "addressCountry": "US" 
-    }
-  },
-  "baseSalary": {
-    "@type": "MonetaryAmount",
-    "currency": "USD",
-    "value": {
-      "@type": "QuantitativeValue",
-      "unitText": "YEAR",
-      "value": "{{ job.salary_range|default:'Competitive' }}" 
-    }
-  }
+  {% if job.work_arrangement == 'remote' %}"jobLocationType": "TELECOMMUTE",
+  "applicantLocationRequirements": {"@type":"Country","name":"{{ job.get_schema_country }}"},
+  {% endif %}"jobLocation": {"@type":"Place","address":{"@type":"PostalAddress"{% with addr=job.get_address_parts %}{% if addr.locality %},"addressLocality":"{{ addr.locality|escapejs }}"{% endif %}{% if addr.region %},"addressRegion":"{{ addr.region|escapejs }}"{% endif %}{% endwith %},"addressCountry":"{{ job.get_schema_country }}"}}{% with salary=job.get_salary_min_max %}{% if salary.0 %},"baseSalary":{"@type":"MonetaryAmount","currency":"USD","value":{"@type":"QuantitativeValue","unitText":"YEAR","minValue":{{ salary.0 }},"maxValue":{{ salary.1 }}}}{% endif %}{% endwith %}
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
+    {"@type":"ListItem","position":3,"name":"{{ job.title|escapejs }} at {{ job.company|escapejs }}","item":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}"}
+  ]
+}
+</script>
+{% endblock %}
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-    <nav class="flex text-xs font-medium text-slate-400 font-sans">
-        <a href="/" class="hover:text-slate-900 transition">Home</a>
-        <span class="mx-2">/</span>
-        <a href="/" class="hover:text-slate-900 transition">Jobs</a>
-        <span class="mx-2">/</span>
-        <span class="text-slate-900 truncate max-w-[200px]">{{ job.title }}</span>
-    </nav>
+{% block content %}
+<style>
+  .jd-wrap { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+
+  .jd-bc { padding: 18px 0 0; }
+  .jd-bc ol { list-style: none; display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink3); flex-wrap: wrap; }
+  .jd-bc li + li::before { content: '/'; margin-right: 6px; color: var(--rule2); }
+  .jd-bc a:hover { color: var(--amber); text-decoration: underline; }
+
+  .jd-hero { padding: 40px 0 32px; }
+  .jd-header { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
+  .jd-logo-wrap { flex-shrink: 0; width: 72px; height: 72px; border-radius: var(--radius); border: 1px solid var(--rule); background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .jd-logo-wrap img { max-width: 52px; max-height: 52px; object-fit: contain; }
+  .jd-monogram-lg { width: 72px; height: 72px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; }
+  .jd-meta { flex: 1; }
+  .jd-company { font-size: 14px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .jd-company svg { color: var(--green); }
+  .jd-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 4vw, 38px); font-weight: 800; line-height: 1.2; color: var(--ink); margin-bottom: 16px; }
+  .jd-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .jd-apply-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .jd-posted { font-size: 12px; color: var(--ink3); }
+
+  .jd-body { display: grid; grid-template-columns: 1fr 300px; gap: 40px; padding-bottom: 80px; }
+  @media(max-width: 768px){ .jd-body { grid-template-columns: 1fr; } .jd-header { flex-direction: column; } }
+  @media(max-width: 560px){ .jd-wrap { padding: 0 20px; } }
+
+  .jd-content { color: var(--ink2); font-size: 15px; line-height: 1.8; }
+  .jd-content h2, .jd-content h3 { font-family: 'Playfair Display', serif; color: var(--ink); margin: 2rem 0 .75rem; }
+  .jd-content h2 { font-size: 1.4rem; }
+  .jd-content h3 { font-size: 1.15rem; }
+  .jd-content p { margin-bottom: 1.2rem; }
+  .jd-content ul, .jd-content ol { padding-left: 1.5rem; margin-bottom: 1.2rem; }
+  .jd-content li { margin-bottom: .4rem; }
+  .jd-apply-cta { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--rule); }
+  .jd-apply-cta h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: var(--ink); }
+  .jd-apply-cta p { font-size: 14px; color: var(--ink3); margin-bottom: 20px; }
+
+  .jd-sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .jd-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .jd-card h4 { font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 16px; letter-spacing: .02em; }
+  .jd-card-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+  .jd-card-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .jd-card-label { color: var(--ink3); }
+  .jd-card-val { font-weight: 600; color: var(--ink); text-align: right; max-width: 55%; }
+  .jd-stack-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .jd-stack-chips a { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; background: var(--amber-light); color: var(--amber); border: 1px solid #f0c6a8; transition: all .15s; }
+  .jd-stack-chips a:hover { background: var(--amber); color: #fff; }
+
+  .jd-related { padding: 56px 0 72px; border-top: 1px solid var(--rule); background: var(--paper2); }
+  .jd-related h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .jd-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 22px; }
+  .jd-rel-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; display: flex; flex-direction: column; gap: 6px; }
+  .jd-rel-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .jd-rel-co { font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+  .jd-rel-title { font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jd-rel-meta { font-size: 12.5px; color: var(--ink3); }
+  .jd-rel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .jd-rel-chips span { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; background: var(--amber-light); color: var(--amber); }
+</style>
+
+<div class="jd-wrap">
+  <nav class="jd-bc" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Home</a></li>
+      <li><a href="{% url 'all_jobs' %}">Jobs</a></li>
+      <li aria-current="page">{{ job.title }}</li>
+    </ol>
+  </nav>
 </div>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="flex flex-col items-center text-center gap-6">
-        <div class="flex-shrink-0">
-            {% if job.company_logo %}
-                <div class="w-24 h-24 border border-black rounded-sm bg-white p-4 flex items-center justify-center">
-                    <img src="{{ job.company_logo }}" alt="{{ job.company }}" class="max-w-full max-h-full object-contain">
-                </div>
-            {% else %}
-                <div class="w-24 h-24 border border-black rounded-sm bg-slate-50 flex items-center justify-center text-3xl font-serif text-slate-400">
-                    {{ job.company|slice:":1" }}
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="flex-grow">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-3 leading-tight font-serif">{{ job.title }}</h1>
-                <div class="flex justify-center items-center gap-2 text-sm font-medium text-slate-900 mb-6 font-sans">
-                    {{ job.company }}
-                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-3 mb-8 font-sans">
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    {{ job.location|default:"Remote" }}
-                </div>
-                {% if job.salary_range %}
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    {{ job.salary_range }}
-                </div>
-                {% endif %}
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    {{ job.get_role_type_display }}
-                </div>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;">
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-8 rounded shadow-sm text-sm font-sans transition">
-                    Apply for this Position
-                </a>
-                {% if user.is_authenticated %}
-                <button id="save-btn" onclick="toggleSave({{ job.id }})" style="display:inline-flex;align-items:center;gap:6px;padding:13px 20px;border-radius:8px;border:1.5px solid {% if job.id in saved_job_ids %}#bf5420{% else %}#cdc8be{% endif %};background:{% if job.id in saved_job_ids %}#faeee5{% else %}#fff{% endif %};color:{% if job.id in saved_job_ids %}#bf5420{% else %}#666{% endif %};font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;" data-saved="{% if job.id in saved_job_ids %}true{% else %}false{% endif %}">
-                    <svg id="save-icon" width="16" height="16" viewBox="0 0 24 24" fill="{% if job.id in saved_job_ids %}#bf5420{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-                    <span id="save-label">{% if job.id in saved_job_ids %}Saved{% else %}Save Job{% endif %}</span>
-                </button>
-                {% else %}
-                <a href="{% url 'account_login' %}?next={{ request.path }}" style="display:inline-flex;align-items:center;gap:6px;padding:13px 20px;border-radius:8px;border:1.5px solid #cdc8be;color:#666;font-size:13px;font-weight:700;text-decoration:none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-                    Save Job
-                </a>
-                {% endif %}
-            </div>
-        </div>
+<div class="jd-wrap jd-hero">
+  <div class="jd-header">
+    <div>
+      {% if job.company_logo %}
+        <div class="jd-logo-wrap"><img src="{{ job.company_logo }}" alt="{{ job.company }} logo"></div>
+      {% else %}
+        <div class="jd-monogram-lg tint-navy">{{ job.company|slice:":1" }}</div>
+      {% endif %}
     </div>
-</div>
-
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-20">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div class="lg:col-span-2">
-            <div class="prose prose-slate max-w-none text-slate-700 font-sans">
-                {{ job.description|safe }}
-            </div>
-            <div class="mt-16 pt-10 border-t border-slate-200">
-                <h3 class="text-2xl font-serif font-bold text-slate-900 mb-4">Ready to make an impact?</h3>
-                <a href="{{ job.apply_url }}" target="_blank" class="inline-block bg-[#1f432d] hover:bg-green-900 text-white font-bold py-3.5 px-10 rounded shadow-sm text-sm font-sans transition">
-                    Apply Now
-                </a>
-            </div>
-        </div>
-
-        <div class="space-y-8 font-sans">
-            <div class="border border-black rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                <div class="flex items-center gap-4 mb-4">
-                     <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center font-serif font-bold text-slate-400">
-                        {% if job.company_logo %}
-                            <img src="{{ job.company_logo }}" class="w-8 h-8 object-contain">
-                        {% else %}
-                            {{ job.company|slice:":1" }}
-                        {% endif %}
-                     </div>
-                     <div>
-                         <h4 class="font-bold text-slate-900 text-lg">{{ job.company }}</h4>
-                     </div>
-                </div>
-                <p class="text-sm text-slate-500 mb-6 leading-relaxed">
-                    {{ job.company }} is hiring for this role.
-                </p>
-                <div class="space-y-3 pt-4 border-t border-slate-100">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-500">Headquarters</span>
-                        <span class="font-medium text-slate-900">{{ job.location|default:"Remote" }}</span>
-                    </div>
-                </div>
-            </div>
-
-            {% if job.tools.exists %}
-            <div class="border border-black rounded-sm p-6 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-                <h4 class="font-bold text-slate-900 mb-4">Tech Stack</h4>
-                <div class="flex flex-wrap gap-2">
-                    {% for tool in job.tools.all %}
-                    <a href="{% url 'tool_detail' tool.slug %}" class="bg-white border border-slate-200 hover:border-slate-400 text-slate-600 text-xs font-bold px-3 py-1.5 rounded transition">
-                        {{ tool.name }}
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
+    <div class="jd-meta">
+      <div class="jd-company">
+        {{ job.company }}
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+      </div>
+      <h1 class="jd-title">{{ job.title }}</h1>
+      <div class="jd-pills">
+        <span class="pill pill-loc">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          {{ job.location|default:"Not specified" }}
+        </span>
+        {% if job.salary_range %}<span class="pill pill-type">{{ job.salary_range }}</span>{% endif %}
+        <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+        {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote OK</span>{% endif %}
+        {% for tool in job.tools.all|slice:":3" %}<span class="pill pill-stack">{{ tool.name }}</span>{% endfor %}
+      </div>
+      <div class="jd-apply-row">
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg">Apply for this Position →</a>
+        {% if user.is_authenticated %}
+        <button id="save-btn" onclick="toggleSave({{ job.id }})" class="btn btn-ghost btn-lg" data-saved="{% if job.id in saved_job_ids %}true{% else %}false{% endif %}" style="{% if job.id in saved_job_ids %}border-color:var(--amber);background:var(--amber-light);color:var(--amber);{% endif %}">
+          <svg id="save-icon" width="16" height="16" viewBox="0 0 24 24" fill="{% if job.id in saved_job_ids %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span id="save-label">{% if job.id in saved_job_ids %}Saved{% else %}Save Job{% endif %}</span>
+        </button>
+        {% else %}
+        <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-ghost btn-lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          Save Job
+        </a>
+        {% endif %}
+        <span class="jd-posted">Posted {{ job.created_at|timesince }} ago</span>
+      </div>
     </div>
+  </div>
 </div>
+
+<div class="jd-wrap">
+  <div class="jd-body">
+    <div>
+      <div class="jd-content">{% if job.description %}{{ job.description|safe }}{% else %}<p>The full job description is available on the employer's site. Click <strong>Apply Now</strong> below to read the complete role details and requirements.</p>{% endif %}</div>
+      <div class="jd-apply-cta">
+        <h3>Ready to make an impact?</h3>
+        <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg">Apply Now →</a>
+      </div>
+    </div>
+
+    <aside class="jd-sidebar">
+      <div class="jd-card">
+        <h4>Job Details</h4>
+        <div class="jd-card-row"><span class="jd-card-label">Company</span><span class="jd-card-val">{{ job.company }}</span></div>
+        <div class="jd-card-row"><span class="jd-card-label">Location</span><span class="jd-card-val">{{ job.location|default:"Not specified" }}</span></div>
+        <div class="jd-card-row"><span class="jd-card-label">Type</span><span class="jd-card-val">{{ job.get_role_type_display }}</span></div>
+        {% if job.salary_range %}<div class="jd-card-row"><span class="jd-card-label">Salary</span><span class="jd-card-val" style="color:var(--green);font-family:'Playfair Display',serif;font-weight:700;">{{ job.salary_range }}</span></div>{% endif %}
+        {% if job.work_arrangement %}<div class="jd-card-row"><span class="jd-card-label">Work Mode</span><span class="jd-card-val">{{ job.get_work_arrangement_display }}</span></div>{% endif %}
+        <div class="jd-card-row"><span class="jd-card-label">Posted</span><span class="jd-card-val">{{ job.created_at|date:"M j, Y" }}</span></div>
+      </div>
+
+      {% if job.tools.exists %}
+      <div class="jd-card">
+        <h4>Tech Stack Required</h4>
+        <div class="jd-stack-chips">
+          {% for tool in job.tools.all %}
+          <a href="{% url 'tool_detail' tool.slug %}">{{ tool.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="jd-card" style="background:var(--navy);color:#fff;border-color:var(--navy2);">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:8px;color:#fff;">Get job alerts</div>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:16px;line-height:1.6;">Be first to hear about roles like this one — get free MarTech job alerts.</p>
+        <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber btn-block">Get Free Alerts</button>
+      </div>
+
+      <div class="jd-card">
+        <h4>Browse More Roles</h4>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% for t in job.tools.all|slice:":3" %}
+          <a href="{% url 'tool_detail' t.slug %}" style="font-size:13px;color:var(--amber);font-weight:600;">{{ t.name }} Jobs →</a>
+          {% endfor %}
+          {% if job.function and job.function != 'other' %}
+          <a href="{% url 'category_detail' job.function %}" style="font-size:13px;color:var(--amber);font-weight:600;">{{ job.get_function_display }} Jobs →</a>
+          {% endif %}
+          <a href="{% url 'seo_loc_only' 'remote' %}" style="font-size:13px;color:var(--amber);font-weight:600;">Remote MarTech Jobs →</a>
+          <a href="{% url 'all_jobs' %}" style="font-size:13px;color:var(--amber);font-weight:600;">All MarTech Jobs →</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+{% if related_jobs %}
+<section class="jd-related">
+  <div class="jd-wrap">
+    <h2>Similar jobs</h2>
+    <div class="jd-related-grid">
+      {% for rjob in related_jobs %}
+      <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jd-rel-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
+        <span class="jd-rel-co">{{ rjob.company }}</span>
+        <span class="jd-rel-title">{{ rjob.title }}</span>
+        <span class="jd-rel-meta">{{ rjob.location|default:"Not specified" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
+        <span class="jd-rel-chips">{% for t in rjob.tools.all|slice:":2" %}<span>{{ t.name }}</span>{% endfor %}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

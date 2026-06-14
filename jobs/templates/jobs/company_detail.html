@@ -2,31 +2,58 @@
 
 {% block title %}{{ company_name }} Marketing Jobs & Careers | MarTechJobs{% endblock %}
 {% block meta_description %}Browse {{ jobs.count }} open Marketing Operations and Technology roles at {{ company_name }}. See salaries, tech stack requirements, and apply directly.{% endblock %}
+{% block meta_keywords %}{{ company_name }} jobs, {{ company_name }} marketing operations, {{ company_name }} careers{% endblock %}
+{% block og_title %}{{ company_name }} Marketing Jobs & Careers{% endblock %}
+{% block og_desc %}Browse open Marketing Operations and Technology roles at {{ company_name }}. See tech stack requirements and apply directly.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Companies","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":3,"name":"{{ company_name }} Careers","item":"https://martechjobs.io{{ request.path }}"}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="bg-white border-b border-slate-100 py-16">
-    <div class="max-w-5xl mx-auto px-4 text-center">
-        {% if company_logo %}
-        <div class="w-24 h-24 mx-auto bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-center mb-6 shadow-sm">
-            <img src="{{ company_logo }}" alt="{{ company_name }}" class="max-w-full max-h-full object-contain">
-        </div>
-        {% endif %}
-        
-        <h1 class="text-4xl font-serif font-bold text-slate-900 mb-2">
-            {{ company_name }} Careers
-        </h1>
-        <p class="text-slate-500">
-            We found <strong>{{ jobs.count }}</strong> active marketing technology roles.
-        </p>
-    </div>
-</div>
+<style>
+  .co-hero { padding: 56px 0 40px; border-bottom: 1px solid var(--rule); text-align: center; }
+  .co-logo { width: 80px; height: 80px; border-radius: var(--radius); border: 1px solid var(--rule); background: var(--card); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .co-logo img { max-width: 60px; max-height: 60px; object-fit: contain; }
+  .co-logo-mono { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--amber); }
+  .co-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(24px,4vw,40px); font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .co-hero p { font-size: 15px; color: var(--ink3); }
 
-<div class="bg-slate-50 py-12 min-h-screen">
-    <div class="max-w-4xl mx-auto px-4 space-y-4">
-        {% for job in jobs %}
-            {% include "jobs/partials/job_card.html" with job=job %} {% empty %}
-            <p>No active jobs found.</p>
-        {% endfor %}
+  .co-jobs { padding: 40px 0 80px; }
+  .co-jobs-inner { max-width: 780px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; gap: 14px; }
+</style>
+
+<section class="co-hero">
+  <div class="wrap">
+    <div class="co-logo">
+      {% if company_logo %}<img src="{{ company_logo }}" alt="{{ company_name }}">
+      {% else %}<span class="co-logo-mono">{{ company_name|slice:":1" }}</span>{% endif %}
     </div>
+    <h1>{{ company_name }} Careers</h1>
+    <p>{{ jobs.count }} active marketing technology role{{ jobs.count|pluralize }}</p>
+  </div>
+</section>
+
+<div class="co-jobs">
+  <div class="co-jobs-inner">
+    {% for job in jobs %}
+      {% include "jobs/partials/job_card.html" with job=job %}
+    {% empty %}
+      <div style="text-align:center;padding:60px 20px;color:var(--ink3);">
+        <p style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No active roles right now</p>
+        <p style="font-size:14px;">Check back soon or <a href="/" style="color:var(--amber);font-weight:600;">browse all jobs</a>.</p>
+      </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
