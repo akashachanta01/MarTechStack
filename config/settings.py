@@ -71,13 +71,16 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     # ---------------------------------
     'django.contrib.humanize',
+    # 'accounts' MUST come before allauth so our custom templates in
+    # accounts/templates/account/ override allauth's defaults (the app
+    # template loader resolves in INSTALLED_APPS order, first match wins).
+    'accounts',
     # --- ALLAUTH ---
     'allauth',
     'allauth.account',
     # ---------------
     'jobs',
     'tools',
-    'accounts',
 ]
 
 # Required for django.contrib.sites

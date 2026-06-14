@@ -30,14 +30,8 @@ class UserProfile(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    try:
-        instance.userprofile.save()
-    except UserProfile.DoesNotExist:
-        UserProfile.objects.create(user=instance)
+def ensure_user_profile(sender, instance, created, **kwargs):
+    # Guarantee every User has a profile. get_or_create covers both new
+    # signups and any legacy users created before this app existed, without
+    # issuing a redundant UPDATE on every User.save().
+    UserProfile.objects.get_or_create(user=instance)

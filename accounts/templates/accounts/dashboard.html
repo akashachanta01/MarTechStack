@@ -192,9 +192,9 @@
         <div class="progress-bar"><div class="progress-fill" style="width:{{ profile_pct }}%"></div></div>
       </div>
       <div class="dash-stat">
-        <span class="dash-stat-val">{{ top_matches.count }}</span>
+        <span class="dash-stat-val">{{ matches_count }}</span>
         <span class="dash-stat-label">Matches Found</span>
-        <span class="dash-stat-sub">{% if profile.preferred_stack.exists %}Based on your stack{% else %}Add stack to personalise{% endif %}</span>
+        <span class="dash-stat-sub">{% if has_stack %}Based on your stack{% else %}Add stack to personalise{% endif %}</span>
       </div>
     </div>
 
