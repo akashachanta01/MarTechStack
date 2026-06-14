@@ -1,0 +1,15 @@
+{% extends "account/base.html" %}
+{% block title %}Sign-in Error | MarTechJobs{% endblock %}
+{% block auth_content %}
+<div style="width:100%;max-width:420px;text-align:center;">
+  <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#b91c1c;">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  </div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:10px;">Couldn't sign you in</h1>
+  <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:24px;">Something went wrong while signing in with Google. Please try again, or use email instead.</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <a href="{% url 'account_login' %}" class="btn btn-amber">Back to Sign In</a>
+    <a href="{% url 'account_signup' %}" class="btn btn-ghost">Sign up with email</a>
+  </div>
+</div>
+{% endblock %}
