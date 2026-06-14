@@ -71,7 +71,11 @@ class Command(BaseCommand):
         # Anti-flooding: cap how many roles from ONE company go live per run so
         # the board never shows a wall of 15 jobs from a single employer.
         self.company_counts = defaultdict(int)
-        self.MAX_APPROVED_PER_COMPANY = 4
+        # Anti-flooding cap. Tuned for current low total volume: a single
+        # martech-heavy company posting 5-8 relevant roles is signal, not flood,
+        # so we keep them all live. Revisit downward once total live volume grows
+        # large enough that one company could dominate the board.
+        self.MAX_APPROVED_PER_COMPANY = 8
 
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         # Default category for auto-created tools (valid stacks not yet in the DB).
