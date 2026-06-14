@@ -64,9 +64,12 @@ fragility for future real migrations.
 - [ ] **Workday description is title-only** (`fetch_jobs.py:617`): same problem.
 - [ ] **Empty-description fallback**: when an ATS returns no JD, show a clear
   "View full description on employer site" message instead of a blank section.
-- [ ] **Tool auto-creation allows junk** (`fetch_jobs.py:749-757`): GPT stack
-  items not in the catalog become Tool rows ("crm", "data platform"). Restrict
-  to the canonical catalog whitelist.
+- [x] **Tool auto-creation allows junk** — DONE. Root cause was two whitelist
+  bypasses: (1) `post_job` (`views.py`) let user free-text mint arbitrary Tool
+  rows, (2) ingestion `_resolve_tool` fell back to attaching jobs to existing
+  non-canonical tools. Both now route through `resolve_tool_name` and drop
+  anything not in the catalog. Added `prune_noncanonical_tools` command
+  (dry-run default) to delete the historical junk Tool rows/pages.
 - [ ] **Greenhouse multi-region** (`fetch_jobs.py:293`): also handle
   `job-boards.greenhouse.io` subdomain.
 

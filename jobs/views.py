@@ -20,7 +20,7 @@ from django.core.mail import EmailMultiAlternatives
 from .models import Job, Tool, Category, Subscriber, BlogPost, SavedSearch
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
-from .tool_catalog import all_canonical_names
+from .tool_catalog import all_canonical_names, resolve_tool_name
 
 # Canonical tool display names (lowercased) for indexability checks.
 _CANONICAL_TOOL_NAMES = {n.lower() for n in all_canonical_names()}
@@ -855,15 +855,26 @@ def post_job(request):
             
             new_tools_text = form.cleaned_data.get('new_tools')
             if new_tools_text:
-                category, _ = Category.objects.get_or_create(name="User Submitted", defaults={'slug': 'user-submitted'})
+                # WHITELIST: only attach tools that resolve to a canonical MarTech
+                # tool. Free-text that isn't a recognized tool is dropped — never
+                # mint an arbitrary Tool row (that was the source of junk pages).
+                tool_category = None
                 for name in [t.strip() for t in new_tools_text.split(',') if t.strip()]:
-                    target_slug = slugify(name)
-                    tool = Tool.objects.filter(slug=target_slug).first()
-                    if not tool: tool = Tool.objects.filter(name__iexact=name).first()
+                    canon = resolve_tool_name(name)
+                    if not canon:
+                        continue
+                    tool = (Tool.objects.filter(name__iexact=canon).first()
+                            or Tool.objects.filter(slug=slugify(canon)).first())
                     if not tool:
-                        try: tool = Tool.objects.create(name=name, slug=target_slug, category=category)
-                        except: tool = Tool.objects.filter(name__iexact=name).first()
-                    if tool: job.tools.add(tool)
+                        if tool_category is None:
+                            tool_category, _ = Category.objects.get_or_create(
+                                name="MarTech Tools", defaults={'slug': 'martech-tools'})
+                        try:
+                            tool = Tool.objects.create(name=canon, slug=slugify(canon), category=tool_category)
+                        except Exception:
+                            tool = Tool.objects.filter(name__iexact=canon).first()
+                    if tool:
+                        job.tools.add(tool)
 
             cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2')
             if plan == 'featured':
