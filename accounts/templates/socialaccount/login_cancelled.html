@@ -1,0 +1,12 @@
+{% extends "account/base.html" %}
+{% block title %}Sign-in Cancelled | MarTechJobs{% endblock %}
+{% block auth_content %}
+<div style="width:100%;max-width:420px;text-align:center;">
+  <h1 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:10px;">Sign-in cancelled</h1>
+  <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:24px;">No problem — you cancelled signing in with Google. You can try again anytime.</p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <a href="{% url 'account_login' %}" class="btn btn-amber">Back to Sign In</a>
+    <a href="/" class="btn btn-ghost">Go home</a>
+  </div>
+</div>
+{% endblock %}
