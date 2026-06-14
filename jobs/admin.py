@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.contrib import messages
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -44,6 +44,7 @@ class ToolAdmin(admin.ModelAdmin):
     list_display = ("name", "category")
     list_filter = ("category",)
     prepopulated_fields = {"slug": ("name",)}
+    search_fields = ("name", "slug")
 
 # --- 3. BLOG POST ADMIN (NEW) ---
 @admin.register(BlogPost)
@@ -52,6 +53,15 @@ class BlogPostAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     search_fields = ("title", "content")
     list_filter = ("is_published", "category")
+
+
+@admin.register(InterviewGuide)
+class InterviewGuideAdmin(admin.ModelAdmin):
+    list_display = ("tool", "slug", "question_count", "is_published", "updated_at")
+    list_filter = ("is_published",)
+    search_fields = ("tool__name", "slug")
+    readonly_fields = ("created_at", "updated_at")
+    autocomplete_fields = ("tool",)
 
 # --- 4. JOB ADMINS ---
 

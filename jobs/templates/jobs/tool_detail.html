@@ -195,6 +195,12 @@
     <h1 class="td-h1">{{ tool.name }} <span class="em">Jobs</span></h1>
     {% if tool_tagline %}<p class="td-sub">{{ tool_tagline }}</p>{% else %}<p class="td-sub">Hand-curated {{ tool.name }} roles across Marketing Operations, RevOps, and analytics. Refreshed daily, every link verified.</p>{% endif %}
 
+    {% if has_interview_guide %}
+    <a href="{% url 'tool_interview' tool.slug %}" style="display:inline-flex;align-items:center;gap:8px;margin:0 auto 22px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
+      <span aria-hidden="true">🎯</span> Interviewing soon? Read the {{ tool.name }} interview guide →
+    </a>
+    {% endif %}
+
     <form method="get" action="{% url 'tool_detail' tool.slug %}" class="searchcard" role="search" aria-label="Search {{ tool.name }} jobs">
       <div class="search-row1">
         <div class="s-field">

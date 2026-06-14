@@ -91,6 +91,22 @@ class BlogSitemap(Sitemap):
     def location(self, obj):
         return reverse('post_detail', args=[obj.slug])
 
+class InterviewGuideSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        from .models import InterviewGuide
+        return InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return reverse('tool_interview', args=[obj.tool.slug])
+
+
 # --- STATIC TOOLS SITEMAP (UPDATED) ---
 class ToolsStaticSitemap(Sitemap):
     priority = 0.9  # Highest priority assets

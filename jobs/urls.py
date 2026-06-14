@@ -53,6 +53,10 @@ urlpatterns = [
     # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
 
+    # --- PER-TOOL INTERVIEW GUIDES (single-segment; -interview-questions/
+    # suffix disambiguates from the -jobs/ catch-all below) ---
+    path('<slug:tool_slug>-interview-questions/', views.tool_interview, name='tool_interview'),
+
     # --- JOB-TITLE PAGES (single-segment, curated titles only) ---
     # RevOps killed (screener excludes it) — 301 the old indexed URL to the
     # closest relevant page so we don't drop the link equity into a 404.

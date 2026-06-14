@@ -259,6 +259,31 @@ class BlogPost(models.Model):
     def __str__(self): return self.title
     class Meta: ordering = ['-published_at']
 
+
+class InterviewGuide(models.Model):
+    """Per-tool interview guide (e.g. /hubspot-interview-questions/). The
+    curated question bank lives here (admin-editable); the page also renders a
+    live "data spine" (open roles, co-required tools, hiring companies)
+    computed from the job corpus at request time, so it stays fresh."""
+    tool = models.OneToOneField('Tool', on_delete=models.CASCADE, related_name='interview_guide')
+    slug = models.SlugField(max_length=120, unique=True, help_text="Usually the tool slug, e.g. 'hubspot'.")
+    intro = models.TextField(blank=True, help_text="Opening HTML paragraph(s).")
+    prep_tips = models.TextField(blank=True, help_text="Optional 'how to prepare' HTML.")
+    # [{"category": "...", "items": [{"q": "...", "a": "..."}, ...]}, ...]
+    questions = models.JSONField(default=list, blank=True)
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.CharField(max_length=300, blank=True)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.tool.name} interview guide"
+
+    def question_count(self):
+        return sum(len(sec.get('items', [])) for sec in (self.questions or []))
+
+
 class Subscriber(models.Model):
     # A row here = a CONFIRMED newsletter subscriber. New signups land in
     # PendingSubscriber first and are only promoted here after they click the

@@ -817,7 +817,10 @@ def tool_detail(request, slug):
     # Junk/non-canonical tools (ssf, paid-media-data, crm, …) get noindex'd so
     # they stop diluting site quality, even if they carry a few mis-tagged jobs.
     tool_is_canonical = tool.name.lower() in _CANONICAL_TOOL_NAMES
+    from .models import InterviewGuide
+    has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     return render(request, 'jobs/tool_detail.html', {
+        'has_interview_guide': has_interview_guide,
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,
@@ -833,6 +836,48 @@ def tool_detail(request, slug):
         'location_name': 'Global/Remote',
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES,
     })
+
+def tool_interview(request, tool_slug):
+    """Per-tool interview guide, e.g. /hubspot-interview-questions/. Curated
+    question bank + a live data spine (open roles, co-required tools, companies
+    hiring) so the page stays fresh and original."""
+    if tool_slug != tool_slug.lower():
+        return redirect('tool_interview', tool_slug=tool_slug.lower(), permanent=True)
+
+    from .models import InterviewGuide
+    guide = (InterviewGuide.objects.filter(slug=tool_slug, is_published=True)
+             .select_related('tool').first())
+    if not guide:
+        raise Http404("No interview guide for this tool")
+    tool = guide.tool
+
+    live_jobs = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).prefetch_related('tools')
+    live_count = live_jobs.count()
+
+    paired_ids = list(live_jobs.values_list('id', flat=True))
+    often_paired = (
+        Tool.objects.filter(jobs__id__in=paired_ids).exclude(id=tool.id)
+        .annotate(pair_count=Count('jobs', filter=Q(jobs__id__in=paired_ids)))
+        .order_by('-pair_count').distinct()[:8]
+    )
+    hiring_companies = list(
+        live_jobs.exclude(company='').values_list('company', flat=True).distinct()[:8]
+    )
+    recent_jobs = live_jobs.order_by('-is_pinned', '-created_at')[:6]
+
+    return render(request, 'jobs/interview_guide.html', {
+        'guide': guide,
+        'tool': tool,
+        'live_count': live_count,
+        'often_paired': often_paired,
+        'hiring_companies': hiring_companies,
+        'recent_jobs': recent_jobs,
+        # Index only once it has real content; thin guides stay out of the index.
+        'page_noindex': guide.question_count() < 5,
+    })
+
 
 def _related_jobs_for(job, tool_ids, limit=6):
     return (
