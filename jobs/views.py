@@ -592,10 +592,19 @@ def blog_list(request):
     if not search_query and not category_filter and posts.exists():
         featured_post = posts.first()
         remaining_posts = posts[1:]
-    
+
+    # Surface the interview guides as a content-hub section (they live at their
+    # own /<tool>-interview-questions/ URLs but the blog is where people browse).
+    from .models import InterviewGuide
+    interview_guides = (
+        InterviewGuide.objects.filter(is_published=True)
+        .select_related('tool').order_by('-updated_at')
+    )
+
     return render(request, 'jobs/blog_list.html', {
         'featured_post': featured_post,
         'posts': remaining_posts,
+        'interview_guides': interview_guides,
         'search_query': search_query,
         'current_category': category_filter
     })

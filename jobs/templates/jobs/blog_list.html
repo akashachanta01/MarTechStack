@@ -78,6 +78,22 @@
   .blog-filter-label { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 20px; text-align: center; }
   .blog-filter-label span { color: var(--amber); }
   .blog-empty { text-align: center; padding: 80px 20px; color: var(--ink3); grid-column: 1/-1; }
+
+  /* Interview guides hub section */
+  .blog-guides { padding: 52px 0; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper2)); }
+  .blog-guides-head { text-align: center; max-width: 640px; margin: 0 auto 32px; }
+  .blog-guides-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px; }
+  .blog-guides-head p { font-size: 15px; color: var(--ink2); line-height: 1.6; }
+  .blog-guides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .guide-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
+  .guide-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .guide-card-badge { position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; padding: 3px 8px; border-radius: 4px; }
+  .guide-card-tool { width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px; }
+  .guide-card-tool img { width: 30px; height: 30px; object-fit: contain; }
+  .guide-card-tool span { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber); }
+  .guide-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+  .guide-card p { font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1; }
+  .guide-card-link { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px; }
 </style>
 
 <section class="blog-hero">
@@ -132,6 +148,31 @@
 </section>
 {% endif %}
 
+{% if interview_guides and not search_query and not current_category %}
+<section class="blog-guides" id="interview-guides">
+  <div class="wrap">
+    <div class="blog-guides-head">
+      <div class="eyebrow">🎯 Land the role</div>
+      <h2>MarTech Interview Guides</h2>
+      <p>The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
+    </div>
+    <div class="blog-guides-grid">
+      {% for g in interview_guides %}
+      <a href="{% url 'tool_interview' g.tool.slug %}" class="guide-card">
+        <span class="guide-card-badge">Interview Guide</span>
+        <div class="guide-card-tool">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}">{% else %}<span>{{ g.tool.name|slice:":1" }}</span>{% endif %}
+        </div>
+        <h3>{{ g.tool.name }} Interview Questions</h3>
+        <p>{{ g.question_count }} questions with model answers and what employers look for.</p>
+        <span class="guide-card-link">Read the guide →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <div class="blog-filters">
   <div class="wrap">
     <div class="blog-filters-inner">
@@ -139,7 +180,7 @@
         <a href="{% url 'blog_list' %}" class="blog-cat {% if not current_category %}active{% endif %}">All Posts</a>
         <a href="?category=Tech+Stacks" class="blog-cat {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
         <a href="?category=Career+Advice" class="blog-cat {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
-        <a href="?category=Interview+Guides" class="blog-cat {% if current_category == 'Interview Guides' %}active{% endif %}">Interview Guides</a>
+        <a href="{% url 'blog_list' %}#interview-guides" class="blog-cat">Interview Guides</a>
         <a href="?category=Salary+Guides" class="blog-cat {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
         <a href="?category=Industry+News" class="blog-cat {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
       </nav>
