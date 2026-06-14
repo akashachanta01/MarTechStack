@@ -57,14 +57,12 @@ class MarTechScreener:
         # names only — deliberately NO bare "marketing"/"manager"/"data".
         _GATE_ROLE_TERMS = {
             "marketing operations", "marketing ops", "mops", "marops",
-            "revops", "revenue operations", "marketing automation",
-            "lifecycle marketing", "lifecycle", "retention marketing",
-            "crm manager", "crm marketing", "martech", "marketing technology",
-            "marketing technologist", "demand generation", "demand gen",
-            "marketing analytics", "campaign operations", "campaign manager",
-            "email marketing", "growth marketing", "customer data platform",
-            "cdp", "marketing engineer", "marketing data", "solutions architect",
-            "marketing systems", "gtm operations", "go-to-market operations",
+            "marketing automation", "campaign operations", "campaign manager",
+            "martech", "marketing technology", "marketing technologist",
+            "marketing analytics", "marketing data", "marketing engineer",
+            "customer data platform", "cdp", "solutions architect",
+            "marketing systems", "web analytics", "digital analytics",
+            "web analyst", "tag management", "analytics engineer",
         }
         _GATE_TOOL_TERMS = {
             "salesforce", "hubspot", "marketo", "pardot", "eloqua", "braze",
@@ -75,6 +73,22 @@ class MarTechScreener:
             "marketing cloud", "sfmc",
         }
         self.gate_terms = set(self.REQUIRED_KEYWORDS) | _GATE_ROLE_TERMS | _GATE_TOOL_TERMS
+
+        # Specialist, IN-SCOPE tools whose presence in a job DESCRIPTION is a
+        # strong MarTech signal even when the title is generic ("Marketing
+        # Manager" whose JD is all Marketo/Segment). Deliberately excludes the
+        # ubiquitous tools (bare Salesforce/HubSpot/Google Analytics appear in
+        # nearly every marketing JD) and the out-of-scope lifecycle messaging
+        # tools (Braze/Iterable/Klaviyo) so we don't flood GPT with noise.
+        self.desc_signal_tools = {
+            "marketo", "pardot", "oracle eloqua", "eloqua",
+            "salesforce marketing cloud", "sfmc", "adobe journey optimizer",
+            "adobe campaign", "twilio segment", "segment", "tealium",
+            "mparticle", "rudderstack", "hightouch", "census", "actioniq",
+            "salesforce data cloud", "adobe experience platform",
+            "adobe experience manager", "adobe analytics", "google tag manager",
+            "tag manager", "optimizely", "amplitude", "mixpanel", "heap",
+        }
         # Ensure we have a clean list of just tools for the prompt and check
         self.tool_list_clean = [t.lower() for t in self.hunt_tools if len(t) > 2]
         self.tool_menu_str = ", ".join(set(self.hunt_tools))
@@ -161,9 +175,24 @@ class MarTechScreener:
         # "Salesforce/HubSpot" somewhere), which is why generic roles slipped in.
         title_norm = self._normalize(title)
         has_keyword = any(kw in title_norm for kw in self.gate_terms)
+
+        # Description-signal fallback: a lot of real MarTech roles ship with a
+        # generic title ("Marketing Manager", "Technical Consultant", "Senior
+        # Analyst") but a JD that is unmistakably built around an in-scope
+        # specialist platform. If the title misses but the DESCRIPTION names
+        # >= 2 distinct specialist tools, let GPT make the final call instead of
+        # hard-rejecting. We require two distinct hits (not one) because a single
+        # passing mention ("we use Marketo") is often incidental, whereas two
+        # specialist tools signals the role actually owns the stack.
+        desc_signal = False
         if not has_keyword:
-            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No MarTech term in TITLE.", "details": {"stage": "fast_fail"}}
-        
+            desc_norm = self._normalize(description)
+            hits = {t for t in self.desc_signal_tools if t in desc_norm}
+            desc_signal = len(hits) >= 2
+
+        if not has_keyword and not desc_signal:
+            return {"status": "rejected", "score": 0.0, "reason": "Stage 1: No MarTech term in TITLE or specialist tools in JD.", "details": {"stage": "fast_fail"}}
+
         if not self.client:
             return {"status": "pending", "score": 50.0, "reason": "OPENAI_API_KEY missing.", "details": {"stage": "api_missing"}}
 
@@ -175,11 +204,14 @@ class MarTechScreener:
 
     def ask_ai(self, title, company, description, location):
         prompt = f"""
-        You are a STRICT Senior MarTech Recruiter for a high-precision job board.
-        Decide if this is a genuine MARKETING TECHNOLOGY role — i.e. one of:
-        Marketing Operations, Revenue Operations (RevOps), MarTech engineering /
-        integration, lifecycle / CRM, or marketing analytics. These are the people
-        who RUN, BUILD, or MEASURE the marketing technology stack.
+        You are a STRICT Senior MarTech Recruiter for a high-precision, NARROWLY
+        scoped job board. We accept ONLY three role families:
+          1. MARKETING OPERATIONS — Marketing Ops/MOps, Marketing Automation
+             (Marketo/HubSpot/Braze platform work), and Campaign Operations.
+          2. MARTECH ENGINEERING — hands-on build/integration of the marketing
+             stack (marketing/MarTech engineer, integration developer, CDP engineer).
+          3. MARKETING ANALYTICS / DATA — analytics, measurement, attribution,
+             tagging, BI for marketing.
 
         JOB CONTEXT:
         - Title: {title}
@@ -188,37 +220,60 @@ class MarTechScreener:
 
         VALID TOOLS MENU (for stack detection): [{self.tool_menu_str}]
 
-        DECISION RULES (precision over recall — when unsure, prefer PENDING/REJECT):
+        DECISION RULES (precision over recall — when unsure, prefer REJECT):
 
-        APPROVE (85-100) ONLY if the role is clearly Marketing Ops / RevOps /
-        MarTech engineering / lifecycle-CRM / marketing analytics, and is hands-on
-        with marketing tools, data, or operations.
-        Good examples: "Salesforce Administrator", "Marketo Specialist", "HubSpot
-        Developer", "Marketing Operations Manager", "Lifecycle Marketing Manager",
-        "Marketing Analytics Manager", "RevOps Manager".
+        APPROVE (85-100) ONLY if the role's PRIMARY function is one of the three
+        families above and it's hands-on with marketing tools, data, or operations.
+        Good examples: "Salesforce Administrator", "Marketo Specialist",
+        "Marketing Operations Manager", "Marketing Automation Manager",
+        "Campaign Operations Manager", "MarTech Engineer", "Marketing Analytics Manager".
 
-        REJECT (0) if it is ANY of:
+        REJECT (0) — IMPORTANT, this board explicitly EXCLUDES these even though
+        they are marketing-adjacent:
+        - Revenue Operations / RevOps / Sales Operations
+        - Lifecycle Marketing / Retention / CRM Marketing Manager / Email Marketing Manager
+        - Growth Marketing / Growth Operations
+        - Demand Generation / Demand Gen
+        (If the role's PRIMARY function is one of the above, REJECT it — even if it
+        uses Marketo/HubSpot/Braze. Only approve when the primary function is truly
+        Marketing Operations, Marketing Automation, Campaign Operations, MarTech
+        engineering, or marketing analytics.)
+
+        ALSO REJECT (0):
         - Creative / content / design / copywriting / video / brand / PR / social /
           community / events / SEO / SEM / paid-media-buying
         - Sales / account management / customer success / SDR / BDR / recruiting
-        - Generic software engineering, data science, or product roles that are NOT
-          specifically about the marketing stack (even at a MarTech vendor)
-        - A role where a tool NAME appears but the job is not ops/eng/analytics —
-          e.g. "Adobe Photoshop Designer", "Salesforce Account Executive",
-          "Google Ads Buyer", "HubSpot Sales Rep".
+        - Generic software engineering, data science, or product roles not specific
+          to the marketing stack (even at a MarTech vendor)
+        - Tool name in title but wrong role (e.g. "Adobe Photoshop Designer",
+          "Salesforce Account Executive", "HubSpot Sales Rep").
 
-        PENDING (50-70) if genuinely ambiguous.
+        PENDING (50-70) only if genuinely ambiguous.
 
         IMPORTANT: A tool name in the title is a POSITIVE signal ONLY when paired
-        with an operations / engineering / analytics role. NEVER auto-approve on a
-        tool name alone.
+        with one of the three accepted families. NEVER auto-approve on a tool alone.
+
+        GENERIC TITLES: Some real MarTech roles ship with a vague title
+        ("Marketing Manager", "Technical Consultant", "Senior Analyst",
+        "Solutions Consultant") but a JD that is clearly built around owning an
+        in-scope platform (Marketo, Eloqua, SFMC, Segment, Tealium, mParticle,
+        Adobe Experience Platform/AEM, GTM, etc.). In that case, judge by the JD,
+        not the title: APPROVE only if the day-to-day responsibilities are
+        genuinely Marketing Operations / Automation / Campaign Ops, MarTech
+        engineering, or marketing analytics. If the JD only mentions the tool in
+        passing, or the primary function is one of the EXCLUDED families above,
+        REJECT.
 
         ALSO:
         - Detect stack: tools actually used (from the menu or clearly named).
         - Classify function into exactly one of:
-          * "engineering": hands-on build/integration (developer, architect, engineer, implementation)
-          * "operations": platform use, campaign execution, admin, strategy (ops, admin, manager, specialist)
-          * "data": analytics, reporting, measurement, BI, attribution (analyst, insights)
+          * "engineering": hands-on build/integration — developer, architect,
+            marketing/MarTech engineer, CDP engineer, integration, implementation,
+            AND analytics-engineering / web-analytics implementation / tag
+            management (dbt, GTM, Tealium tagging)
+          * "operations": Marketing Operations, Marketing Automation, Campaign Operations
+          * "data": analysis, reporting, measurement, BI, attribution, insights
+            (a Web Analyst / Marketing Analyst who analyzes, not implements)
           * "other": doesn't clearly fit
 
         Output JSON:

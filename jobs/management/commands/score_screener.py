@@ -18,23 +18,30 @@ from jobs.screener import MarTechScreener
 # (title, company, label)  — keep descriptions minimal; the title gate + prompt
 # are what we're testing. Expand this set with real misclassifications over time.
 EVAL_SET = [
-    # --- should KEEP (martech) ---
+    # --- should KEEP (in scope: Marketing Ops + Automation + Campaign Ops, Eng, Data) ---
     ("Marketing Operations Manager", "Acme SaaS", "martech"),
     ("Senior Marketing Ops Specialist", "Acme SaaS", "martech"),
-    ("Revenue Operations Manager", "Acme SaaS", "martech"),
-    ("RevOps Analyst", "Acme SaaS", "martech"),
     ("Salesforce Administrator", "Acme SaaS", "martech"),
     ("Marketo Specialist", "Acme SaaS", "martech"),
     ("HubSpot Developer", "Acme SaaS", "martech"),
     ("Marketing Automation Manager", "Acme SaaS", "martech"),
-    ("Lifecycle Marketing Manager", "Acme SaaS", "martech"),
-    ("CRM Marketing Manager", "Acme SaaS", "martech"),
+    ("Campaign Operations Manager", "Acme SaaS", "martech"),
     ("Marketing Analytics Manager", "Acme SaaS", "martech"),
     ("Marketing Technologist", "Acme SaaS", "martech"),
-    ("Demand Generation Manager", "Acme SaaS", "martech"),
-    ("Email Marketing Manager", "Acme SaaS", "martech"),
+    ("MarTech Engineer", "Acme SaaS", "martech"),
     ("CDP Engineer", "Acme SaaS", "martech"),
     ("Salesforce Marketing Cloud Developer", "Acme SaaS", "martech"),
+    ("Analytics Engineer", "Acme SaaS", "martech"),
+    ("Web Analyst", "Acme SaaS", "martech"),
+    ("Tag Management Specialist", "Acme SaaS", "martech"),
+    # --- should REJECT: explicitly out-of-scope marketing-adjacent roles ---
+    ("Revenue Operations Manager", "Acme SaaS", "reject"),
+    ("RevOps Analyst", "Acme SaaS", "reject"),
+    ("Lifecycle Marketing Manager", "Acme SaaS", "reject"),
+    ("CRM Marketing Manager", "Acme SaaS", "reject"),
+    ("Demand Generation Manager", "Acme SaaS", "reject"),
+    ("Email Marketing Manager", "Acme SaaS", "reject"),
+    ("Growth Marketing Manager", "Acme SaaS", "reject"),
     # --- should REJECT (noise) ---
     ("Senior Software Engineer", "Acme SaaS", "reject"),
     ("Backend Engineer", "Acme SaaS", "reject"),
@@ -54,6 +61,21 @@ EVAL_SET = [
     ("Salesforce Account Executive", "Salesforce", "reject"),
     ("Adobe Photoshop Designer", "Adobe", "reject"),
     ("HubSpot Sales Representative", "HubSpot", "reject"),
+    # --- generic title, in-scope JD (description-signal gate) -------------
+    # 4-tuples carry an explicit description so we exercise the desc_signal
+    # fallback (title alone would fail the gate).
+    ("Technical Consultant", "Acme SaaS",
+     "Own our Marketo instance and Tealium tag management. Build campaign "
+     "automation, lead routing, and analytics dashboards across the marketing stack.",
+     "martech"),
+    ("Senior Analyst", "Acme SaaS",
+     "Implement and maintain Adobe Experience Platform and Google Tag Manager "
+     "data collection for the marketing team; build attribution reporting.",
+     "martech"),
+    # generic title whose JD only name-drops one ubiquitous tool in passing -> reject
+    ("Marketing Manager", "Acme SaaS",
+     "Lead brand campaigns and PR. Manage agencies and events. We use Salesforce.",
+     "reject"),
 ]
 
 
@@ -63,12 +85,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--no-ai", action="store_true", help="Only deterministic stages (no GPT calls)")
 
-    def _deterministic_verdict(self, s, title, company):
+    def _deterministic_verdict(self, s, title, company, description=""):
         if s._is_blocked(title, company, ""):
             return "rejected"
         if s._quick_kill(title, company):
             return "rejected"
-        if not any(kw in s._normalize(title) for kw in s.gate_terms):
+        has_title = any(kw in s._normalize(title) for kw in s.gate_terms)
+        desc_norm = s._normalize(description)
+        desc_signal = len({t for t in s.desc_signal_tools if t in desc_norm}) >= 2
+        if not has_title and not desc_signal:
             return "rejected"
         return "kept"  # would go to GPT — treated as kept in --no-ai mode
 
@@ -80,12 +105,17 @@ class Command(BaseCommand):
         # Confusion counts (positive class = 'martech' = kept)
         tp = fp = tn = fn = 0
         errors = []
-        for title, company, label in EVAL_SET:
+        for row in EVAL_SET:
+            if len(row) == 4:
+                title, company, description, label = row
+            else:
+                title, company, label = row
+                description = f"{title} role at {company}."
             if no_ai:
-                verdict = self._deterministic_verdict(s, title, company)
+                verdict = self._deterministic_verdict(s, title, company, description)
                 kept = verdict != "rejected"
             else:
-                res = s.screen(title, company, "", f"{title} role at {company}.", "")
+                res = s.screen(title, company, "", description, "")
                 kept = res.get("status") != "rejected"
 
             if label == "martech" and kept:
