@@ -43,6 +43,16 @@ class UserProfile(models.Model):
         return int((done / len(fields)) * 100)
 
 
+class ProWaitlistEntry(UserProfile):
+    """Proxy model so the Go Pro waitlist gets its own clear list in the admin
+    (email + join date), separate from the full Users list. No schema change."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Pro waitlist entry"
+        verbose_name_plural = "Pro Waitlist"
+
+
 @receiver(post_save, sender=User)
 def ensure_user_profile(sender, instance, created, **kwargs):
     # Guarantee every User has a profile. get_or_create covers both new
