@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.contrib import messages
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -167,3 +167,11 @@ class SavedSearchAdmin(admin.ModelAdmin):
 
 @admin.register(BlockRule)
 class BlockRuleAdmin(admin.ModelAdmin): list_display = ("rule_type", "value", "enabled")
+
+@admin.register(CompanySource)
+class CompanySourceAdmin(admin.ModelAdmin):
+    list_display = ("name", "ats_type", "token", "enabled", "last_added_count", "last_seen_count", "consecutive_empty", "last_polled_at")
+    list_filter = ("ats_type", "enabled")
+    list_editable = ("enabled",)
+    search_fields = ("name", "token", "board_url")
+    ordering = ("-last_added_count", "name")

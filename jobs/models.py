@@ -113,6 +113,20 @@ class Job(models.Model):
     is_pinned = models.BooleanField(default=False)
     plan_name = models.CharField(max_length=50, blank=True, null=True)
     tags = models.CharField(max_length=200, blank=True, null=True)
+
+    # --- Structured ingestion fields (Sprint 3b) ---
+    # ATS-native identity for reliable dedup: "<source>:<native_id>" so the same
+    # posting re-seen on a later poll is recognized even if the URL drifts.
+    external_id = models.CharField(max_length=255, blank=True, default="", db_index=True)
+    # Structured location captured at ingest (free-text `location` stays the
+    # display value). country is an ISO-2 code; region is a state/province.
+    country = models.CharField(max_length=2, blank=True, default="")
+    region = models.CharField(max_length=100, blank=True, default="")
+    # Remote scope: "" (not remote), "anywhere" (remote, no geo limit), or a
+    # country code the remote role is restricted to (e.g. "US"). Lets us serve
+    # both "remote anywhere" and "remote in <country>" without parsing text.
+    remote_scope = models.CharField(max_length=20, blank=True, default="")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -265,6 +279,47 @@ class SavedSearch(models.Model):
 
     def __str__(self):
         return f"{self.email} · {self.label or 'all MarTech'}"
+
+class CompanySource(models.Model):
+    """A known company ATS board to poll directly (Sprint 3b).
+
+    SERP discovery is expensive and only surfaces the top handful of search
+    results. Every board that discovery successfully fetches is recorded here,
+    so a cheap daily `fetch_jobs --sources-only` run can poll the FULL board
+    directly — no search spend, complete coverage. Dead boards auto-disable
+    after several consecutive empty polls.
+    """
+    ATS_CHOICES = [
+        ("greenhouse", "Greenhouse"), ("lever", "Lever"), ("ashby", "Ashby"),
+        ("workable", "Workable"), ("smartrecruiters", "SmartRecruiters"),
+        ("recruitee", "Recruitee"), ("workday", "Workday"),
+    ]
+    name = models.CharField(max_length=200, help_text="Display company name")
+    ats_type = models.CharField(max_length=20, choices=ATS_CHOICES, db_index=True)
+    # Board identifier for slug-based ATS (greenhouse token, lever handle, etc.).
+    token = models.CharField(max_length=200, blank=True, default="")
+    # Full board URL for ATS that need more than a slug (Workday tenant/host/site).
+    board_url = models.URLField(max_length=500, blank=True, default="")
+
+    enabled = models.BooleanField(default=True, db_index=True)
+    last_polled_at = models.DateTimeField(null=True, blank=True)
+    last_seen_count = models.IntegerField(default=0)    # postings returned last poll
+    last_added_count = models.IntegerField(default=0)   # net-new approved last poll
+    consecutive_empty = models.IntegerField(default=0)  # auto-disable after a streak
+    notes = models.CharField(max_length=300, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Company sources"
+        ordering = ["last_polled_at"]  # poll least-recently-seen first
+        constraints = [
+            models.UniqueConstraint(fields=["ats_type", "token"], name="jobs_cs_ats_token_uniq"),
+        ]
+        indexes = [models.Index(fields=["enabled", "last_polled_at"], name="jobs_cs_enabled_polled_idx")]
+
+    def __str__(self):
+        return f"{self.name} ({self.ats_type}:{self.token or self.board_url})"
+
 
 class BlockRule(models.Model):
     RULE_TYPES = [("domain", "Domain"), ("company", "Company"), ("keyword", "Keyword"), ("regex", "Regex")]
