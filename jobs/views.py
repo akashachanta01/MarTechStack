@@ -19,6 +19,10 @@ from django.core.mail import EmailMultiAlternatives
 from .models import Job, Tool, Category, Subscriber, BlogPost, SavedSearch
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
+from .tool_catalog import all_canonical_names
+
+# Canonical tool display names (lowercased) for indexability checks.
+_CANONICAL_TOOL_NAMES = {n.lower() for n in all_canonical_names()}
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -55,6 +59,40 @@ TOOL_MAPPING = {
 # --- SEO CROSS-LINKING DATA ---
 SEO_CROSS_CITIES = ["New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston", "Los Angeles", "Denver", "Atlanta", "London"]
 SEO_CROSS_STATES = ["California", "Texas", "New York", "Florida", "Illinois", "Pennsylvania", "Washington", "Colorado"]
+
+# --- INDEXABLE LOCATIONS (anti-thin-content) ---
+# The /<location>/jobs/ route is a catch-all, so Google found junk like
+# /beverly-hills/jobs/ and /usa/jobs/. Only a CURATED set of locations gets an
+# indexable page; everything else is served (for UX) but noindex'd.
+_US_STATES = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine",
+    "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+    "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+    "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+    "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+    "Washington", "West Virginia", "Wisconsin", "Wyoming",
+]
+_SEO_COUNTRIES = [
+    "united-states", "united-kingdom", "canada", "germany", "australia",
+    "india", "ireland", "netherlands", "france", "spain", "singapore",
+]
+_SEO_CITIES = [
+    "New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston",
+    "Los Angeles", "Denver", "Atlanta", "Dallas", "Miami", "Toronto", "London",
+]
+INDEXABLE_LOCATION_SLUGS = (
+    {"remote"} | set(_SEO_COUNTRIES)
+    | {slugify(s) for s in _US_STATES} | {slugify(c) for c in _SEO_CITIES}
+)
+# Old/abbreviated slugs -> canonical slug (301 redirected to avoid duplicates).
+LOCATION_ALIASES = {
+    "usa": "united-states", "us": "united-states", "u-s-a": "united-states",
+    "uk": "united-kingdom", "u-k": "united-kingdom", "nyc": "new-york",
+    "sf": "san-francisco", "la": "los-angeles", "dfw": "dallas",
+}
 
 # --- JOB-TITLE PAGES (programmatic SEO for high-intent title queries) ---
 # Curated only: keeps these pages high-quality and prevents arbitrary slugs
@@ -559,17 +597,23 @@ def post_detail(request, slug):
 
 # --- SEO: LANDING PAGE GENERATOR ---
 def seo_landing_page(request, location_slug=None, tool_slug=None):
+    # 301 abbreviated/old location slugs to the canonical one (no duplicates).
+    if location_slug and location_slug.lower() in LOCATION_ALIASES:
+        canonical = LOCATION_ALIASES[location_slug.lower()]
+        if tool_slug:
+            return redirect('seo_tool_loc', location_slug=canonical, tool_slug=tool_slug, permanent=True)
+        return redirect('seo_loc_only', location_slug=canonical, permanent=True)
+
     tool = None
     if tool_slug:
         clean_tool_slug = tool_slug.replace("-jobs", "")
         tool = get_object_or_404(Tool, slug=clean_tool_slug)
 
     SEO_LOCATIONS = {
-        "nyc": "New York", "sf": "San Francisco", "la": "Los Angeles", "dfw": "Dallas",
-        "united-states": "United States"
+        "united-states": "United States",
     }
 
-    location_name = "Remote" 
+    location_name = "Remote"
     if location_slug:
         location_name = SEO_LOCATIONS.get(location_slug.lower(), location_slug.replace("-", " ").title())
 
@@ -596,9 +640,15 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
 
+    # Index only curated, populated pages. Non-curated locations (Beverly Hills,
+    # Noida, …) and non-canonical tools are noindex'd to avoid thin auto-pages.
+    loc_indexable = (not location_slug) or (location_slug.lower() in INDEXABLE_LOCATION_SLUGS)
+    tool_indexable = (tool is None) or (tool.name.lower() in _CANONICAL_TOOL_NAMES)
+    page_noindex = (total_count == 0) or (not loc_indexable) or (not tool_indexable)
+
     return render(request, 'jobs/seo_landing.html', {
         'tool': tool, 'jobs': jobs_page, 'total_count': total_count,
-        'page_noindex': total_count == 0,
+        'page_noindex': page_noindex,
         'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc,
         'is_seo_landing': True, 'location_name': location_name,
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
@@ -689,6 +739,10 @@ TOOL_TAGLINES = {
 }
 
 def tool_detail(request, slug):
+    # 301 mixed-case slugs (e.g. /jobs/Salesforce/) to the canonical lowercase
+    # so we don't split equity across two URLs.
+    if slug != slug.lower():
+        return redirect('tool_detail', slug=slug.lower(), permanent=True)
     tool = get_object_or_404(Tool, slug=slug)
 
     query = request.GET.get("q", "").strip()
@@ -732,11 +786,14 @@ def tool_detail(request, slug):
     params.pop("page", None)
     filter_qs = params.urlencode()
 
+    # Junk/non-canonical tools (ssf, paid-media-data, crm, …) get noindex'd so
+    # they stop diluting site quality, even if they carry a few mis-tagged jobs.
+    tool_is_canonical = tool.name.lower() in _CANONICAL_TOOL_NAMES
     return render(request, 'jobs/tool_detail.html', {
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,
-        'page_noindex': total_count == 0,
+        'page_noindex': (total_count == 0) or (not tool_is_canonical),
         'query': query,
         'location_filter': location_query,
         'current_arrangement': work_arrangement_filter,

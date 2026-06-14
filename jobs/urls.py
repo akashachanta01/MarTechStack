@@ -25,6 +25,8 @@ urlpatterns = [
     path('jobs/', views.all_jobs, name='all_jobs'),
 
     # --- SEO STRATEGY IMPLEMENTATION ---
+    # Old /stack/<slug>/ URLs (indexed by Google) -> canonical /jobs/<slug>/
+    path('stack/<slug:slug>/', RedirectView.as_view(pattern_name='tool_detail', permanent=True)),
     path('jobs/<slug:slug>/', views.tool_detail, name='tool_detail'),
     path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
 
