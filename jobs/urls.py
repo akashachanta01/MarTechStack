@@ -53,9 +53,12 @@ urlpatterns = [
     # --- CATEGORY LANDING PAGES (Engineering / Operations / Data) ---
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
 
-    # --- PER-TOOL INTERVIEW GUIDES (single-segment; -interview-questions/
-    # suffix disambiguates from the -jobs/ catch-all below) ---
+    # --- PER-TOOL INTERVIEW GUIDES (-interview-questions/ suffix disambiguates) ---
     path('<slug:tool_slug>-interview-questions/', views.tool_interview, name='tool_interview'),
+
+    # --- PER-TOOL CERTIFICATION GUIDES (-certification/ suffix disambiguates) ---
+    path('<slug:tool_slug>-certification/', views.tool_certification, name='tool_certification'),
+
 
     # --- PER-ROLE SALARY PAGES (-salary/ suffix disambiguates) ---
     path('<slug:role_slug>-salary/', views.role_salary, name='role_salary'),

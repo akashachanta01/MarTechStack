@@ -182,3 +182,35 @@ class TitleJobsSitemap(Sitemap):
 
     def location(self, slug):
         return f'/{slug}-jobs/'
+
+
+class InterviewGuideSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        from .models import InterviewGuide
+        return InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return reverse('tool_interview', args=[obj.tool.slug])
+
+
+class CertificationGuideSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        from .models import CertificationGuide
+        return CertificationGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return reverse('tool_certification', args=[obj.tool.slug])

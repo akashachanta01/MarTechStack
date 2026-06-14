@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from jobs.sitemaps import (
     JobSitemap, ToolSitemap, SEOLandingSitemap,
     StaticViewSitemap, BlogSitemap, ToolsStaticSitemap, TitleJobsSitemap,
-    InterviewGuideSitemap, RoleSalarySitemap
+    InterviewGuideSitemap, RoleSalarySitemap, CertificationGuideSitemap
 )
 
 # --- 1. DEFINE SITEMAPS ---
@@ -21,6 +21,7 @@ sitemaps = {
     'titles': TitleJobsSitemap,
     'interview_guides': InterviewGuideSitemap,
     'role_salaries': RoleSalarySitemap,
+    'cert_guides': CertificationGuideSitemap,
     'static': StaticViewSitemap,
     'blog': BlogSitemap,
 }

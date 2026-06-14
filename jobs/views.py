@@ -18,7 +18,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
-from .models import Job, Tool, Category, Subscriber, PendingSubscriber, BlogPost, SavedSearch
+from .models import Job, Tool, Category, Subscriber, PendingSubscriber, BlogPost, SavedSearch, InterviewGuide, CertificationGuide
 from .forms import JobPostForm, ContactForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert, send_confirmation_email
 from .tool_catalog import all_canonical_names, resolve_tool_name
@@ -593,11 +593,13 @@ def blog_list(request):
         featured_post = posts.first()
         remaining_posts = posts[1:]
 
-    # Surface the interview guides as a content-hub section (they live at their
-    # own /<tool>-interview-questions/ URLs but the blog is where people browse).
-    from .models import InterviewGuide
+    # Surface interview guides and cert guides as content-hub sections on the blog.
     interview_guides = (
         InterviewGuide.objects.filter(is_published=True)
+        .select_related('tool').order_by('-updated_at')
+    )
+    cert_guides = (
+        CertificationGuide.objects.filter(is_published=True)
         .select_related('tool').order_by('-updated_at')
     )
 
@@ -605,6 +607,7 @@ def blog_list(request):
         'featured_post': featured_post,
         'posts': remaining_posts,
         'interview_guides': interview_guides,
+        'cert_guides': cert_guides,
         'search_query': search_query,
         'current_category': category_filter
     })
@@ -894,10 +897,11 @@ def tool_detail(request, slug):
     # Junk/non-canonical tools (ssf, paid-media-data, crm, …) get noindex'd so
     # they stop diluting site quality, even if they carry a few mis-tagged jobs.
     tool_is_canonical = tool.name.lower() in _CANONICAL_TOOL_NAMES
-    from .models import InterviewGuide
     has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
+    has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     return render(request, 'jobs/tool_detail.html', {
         'has_interview_guide': has_interview_guide,
+        'has_cert_guide': has_cert_guide,
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,
@@ -921,7 +925,6 @@ def tool_interview(request, tool_slug):
     if tool_slug != tool_slug.lower():
         return redirect('tool_interview', tool_slug=tool_slug.lower(), permanent=True)
 
-    from .models import InterviewGuide
     guide = (InterviewGuide.objects.filter(slug=tool_slug, is_published=True)
              .select_related('tool').first())
     if not guide:
@@ -943,6 +946,7 @@ def tool_interview(request, tool_slug):
         live_jobs.exclude(company='').values_list('company', flat=True).distinct()[:8]
     )
     recent_jobs = live_jobs.order_by('-is_pinned', '-created_at')[:6]
+    has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
 
     return render(request, 'jobs/interview_guide.html', {
         'guide': guide,
@@ -951,8 +955,52 @@ def tool_interview(request, tool_slug):
         'often_paired': often_paired,
         'hiring_companies': hiring_companies,
         'recent_jobs': recent_jobs,
+        'has_cert_guide': has_cert_guide,
         # Index only once it has real content; thin guides stay out of the index.
         'page_noindex': guide.question_count() < 5,
+    })
+
+
+def tool_certification(request, tool_slug):
+    """Per-tool certification guide, e.g. /hubspot-certification/. Curated cert
+    content + a live data spine (open roles, companies hiring, paired tools) so
+    the page stays fresh."""
+    if tool_slug != tool_slug.lower():
+        return redirect('tool_certification', tool_slug=tool_slug.lower(), permanent=True)
+
+    guide = (CertificationGuide.objects.filter(slug=tool_slug, is_published=True)
+             .select_related('tool').first())
+    if not guide:
+        raise Http404("No certification guide for this tool")
+    tool = guide.tool
+
+    live_jobs = Job.objects.filter(
+        tools=tool, is_active=True, screening_status='approved'
+    ).prefetch_related('tools')
+    live_count = live_jobs.count()
+
+    paired_ids = list(live_jobs.values_list('id', flat=True))
+    often_paired = (
+        Tool.objects.filter(jobs__id__in=paired_ids).exclude(id=tool.id)
+        .annotate(pair_count=Count('jobs', filter=Q(jobs__id__in=paired_ids)))
+        .order_by('-pair_count').distinct()[:8]
+    )
+    hiring_companies = list(
+        live_jobs.exclude(company='').values_list('company', flat=True).distinct()[:8]
+    )
+    top_jobs = live_jobs.order_by('-is_pinned', '-created_at')[:5]
+    has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
+
+    return render(request, 'jobs/cert_guide.html', {
+        'guide': guide,
+        'tool': tool,
+        'live_count': live_count,
+        'often_paired': often_paired,
+        'hiring_companies': hiring_companies,
+        'top_jobs': top_jobs,
+        'has_interview_guide': has_interview_guide,
+        # noindex if no study path (thin content)
+        'page_noindex': not guide.study_path,
     })
 
 
@@ -1125,6 +1173,7 @@ def confirm_subscription(request, token):
         ip = xff.split(',')[0] if xff else request.META.get('REMOTE_ADDR')
         send_admin_new_subscriber_alert(email, ua, ip)
     return render(request, 'jobs/subscription_confirmed.html', {'email': email})
+
 
 @staff_member_required
 def review_queue(request):
