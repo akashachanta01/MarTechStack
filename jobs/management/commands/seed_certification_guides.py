@@ -288,6 +288,277 @@ GUIDES = {
             "Updated {year}."
         ),
     },
+    "Braze": {
+        "cert_name": "Braze Marketer Certification",
+        "provider": "Braze Learning",
+        "cost": "Free",
+        "exam_format": "~60 questions, multiple choice, 80% pass mark",
+        "validity": "2 years",
+        "difficulty": "Intermediate",
+        "intro": (
+            "<p>The Braze Marketer Certification is the credential that signals you can actually run "
+            "lifecycle and CRM programmes on Braze &mdash; not just navigate the UI. It validates "
+            "that you can segment audiences, orchestrate cross-channel journeys in Canvas, "
+            "personalise with Liquid, and read results well enough to optimise. Those are exactly "
+            "the skills hiring managers screen for in Lifecycle and Retention roles.</p>"
+            "<p>Because Braze Learning makes the preparation courses and the exam free, the "
+            "certification has strong ROI: a low time cost and a verifiable proof point that you "
+            "understand the platform as a system, from data in to messages out.</p>"
+        ),
+        "who_should_get": (
+            "Lifecycle marketers who own engagement programmes on Braze, CRM and retention managers "
+            "responsible for cross-channel messaging, and marketing automation specialists who want "
+            "a verified, employer-recognised proof of Braze competence."
+        ),
+        "study_path": [
+            {
+                "step": 1,
+                "title": "Braze Learning: Platform Fundamentals",
+                "desc": "Complete the foundational Braze Learning courses on the data model (users, attributes, custom events), segmentation, and the messaging channels.",
+                "hours": 3,
+            },
+            {
+                "step": 2,
+                "title": "Building Journeys in Canvas Flow",
+                "desc": "Work through the Canvas Flow courses: entry triggers, steps, delays, action paths, and conversion events. Build a multi-step journey in a workspace.",
+                "hours": 4,
+            },
+            {
+                "step": 3,
+                "title": "Segmentation & Personalisation with Liquid",
+                "desc": "Study segment building and Liquid personalisation, including default/fallback values and Connected Content. Practise rendering personalised content for several profiles.",
+                "hours": 3,
+            },
+            {
+                "step": 4,
+                "title": "Channel Best Practices",
+                "desc": "Review channel-specific best practices across email, push, in-app, and SMS, plus frequency capping, subscription groups, and Intelligent Timing.",
+                "hours": 2,
+            },
+            {
+                "step": 5,
+                "title": "Reporting & Optimisation",
+                "desc": "Learn how to read campaign and Canvas reporting, run A/B tests, and use control/holdout groups to measure incremental impact.",
+                "hours": 2,
+            },
+            {
+                "step": 6,
+                "title": "Practice & Take the Exam",
+                "desc": "Review the Braze Learning study materials, then sit the exam. It's roughly 60 multiple-choice questions with an 80% pass mark.",
+                "hours": 3,
+            },
+        ],
+        "exam_topics": [
+            {"topic": "Segmentation & targeting", "weight": "~22%", "desc": "User attributes vs custom events, building reusable segments, and entry filters."},
+            {"topic": "Canvas & Campaign orchestration", "weight": "~24%", "desc": "Canvas Flow steps, triggers, delays, action paths, and when to use Campaigns vs Canvas."},
+            {"topic": "Personalisation & Liquid", "weight": "~20%", "desc": "Liquid templating, default/fallback values, Connected Content, and catalogs."},
+            {"topic": "Channels & deliverability", "weight": "~18%", "desc": "Email, push, in-app, and SMS best practices, frequency capping, and subscription groups."},
+            {"topic": "Reporting & optimisation", "weight": "~16%", "desc": "A/B testing, conversion events, holdout groups, and reading campaign results."},
+        ],
+        "prep_tips": (
+            "<p><strong>Build in a real workspace.</strong> The exam rewards hands-on understanding. "
+            "Build at least one multi-channel Canvas with branching, a delay, and a conversion event "
+            "before you sit it.</p>"
+            "<p><strong>Know attributes vs events cold.</strong> Modelling questions &mdash; when "
+            "something is a user attribute versus a custom event, and how that drives segments and "
+            "triggers &mdash; come up repeatedly.</p>"
+            "<p><strong>Practise Liquid with fallbacks.</strong> Be comfortable writing personalised "
+            "content with default values so a missing attribute doesn&rsquo;t break the message.</p>"
+            "<p><strong>Understand measurement.</strong> Know the difference between in-message "
+            "engagement and incremental impact measured with a holdout &mdash; it shows up in the "
+            "reporting questions.</p>"
+        ),
+        "meta_title": "Braze Marketer Certification Guide ({year}) | MarTechJobs",
+        "meta_description": (
+            "Complete study guide for the Braze Marketer Certification: exam format, study path, "
+            "topic breakdown, and prep tips. Free cert that signals real lifecycle competence. "
+            "Updated {year}."
+        ),
+    },
+    "Klaviyo": {
+        "cert_name": "Klaviyo Product Certification",
+        "provider": "Klaviyo",
+        "cost": "Free",
+        "exam_format": "~40 questions, 80% pass mark, 1 hour",
+        "validity": "1 year",
+        "difficulty": "Beginner–Intermediate",
+        "intro": (
+            "<p>Klaviyo certifications are among the most relevant credentials for ecommerce email "
+            "and retention roles. The Product Certification validates that you can navigate the "
+            "platform, build flows and campaigns, segment on store data, and read the metrics that "
+            "matter &mdash; exactly what agencies and ecommerce brands expect from an email "
+            "specialist.</p>"
+            "<p>Klaviyo offers a track rather than a single exam: the Product Certification is the "
+            "core credential, alongside more focused certs such as Email Marketing and "
+            "Deliverability. All preparation runs through Klaviyo Academy for free, making this a "
+            "low-cost, high-signal addition to a CV.</p>"
+        ),
+        "who_should_get": (
+            "Email and lifecycle marketers working in ecommerce, agency email specialists who manage "
+            "Klaviyo for multiple clients, and retention marketers who want a verified proof point "
+            "for the platform they use daily."
+        ),
+        "study_path": [
+            {
+                "step": 1,
+                "title": "Klaviyo Academy: Platform Basics",
+                "desc": "Complete the foundational Klaviyo Academy courses on the account structure, profiles, metrics, lists vs segments, and integrations.",
+                "hours": 2,
+            },
+            {
+                "step": 2,
+                "title": "Flows & Automation",
+                "desc": "Study and build the core flows: welcome series, abandoned cart, browse abandonment, post-purchase, and win-back, including triggers and flow filters.",
+                "hours": 3,
+            },
+            {
+                "step": 3,
+                "title": "Segmentation & Data",
+                "desc": "Learn dynamic segments, event-based segmentation, and predictive analytics (CLV, churn risk). Build a few behaviour-driven segments off store data.",
+                "hours": 2,
+            },
+            {
+                "step": 4,
+                "title": "Deliverability",
+                "desc": "Cover engagement-based sending, sunset flows, warming, and managing unengaged subscribers. Understand SMS consent and compliance basics.",
+                "hours": 2,
+            },
+            {
+                "step": 5,
+                "title": "Campaign Strategy & Content",
+                "desc": "Study campaign building, A/B testing subject lines and content, and reading reporting (attributed revenue, revenue per recipient).",
+                "hours": 2,
+            },
+            {
+                "step": 6,
+                "title": "Practice & Take the Exam",
+                "desc": "Review the Klaviyo Academy materials, then sit the certification exam: roughly 40 questions in an hour with an 80% pass mark.",
+                "hours": 2,
+            },
+        ],
+        "exam_topics": [
+            {"topic": "Account & platform fundamentals", "weight": "~20%", "desc": "Profiles, metrics, lists vs segments, and integrations/data sync."},
+            {"topic": "Flows & automation", "weight": "~24%", "desc": "Core ecommerce flows, triggers, flow filters, and conditional splits."},
+            {"topic": "Segmentation & data", "weight": "~20%", "desc": "Dynamic segments, event-based segmentation, and predictive analytics."},
+            {"topic": "Campaigns & content", "weight": "~18%", "desc": "Campaign building, A/B testing, and dynamic/personalised content."},
+            {"topic": "Deliverability & reporting", "weight": "~18%", "desc": "Engagement-based sending, list health, attribution, and revenue per recipient."},
+        ],
+        "prep_tips": (
+            "<p><strong>Klaviyo Academy is free and sufficient.</strong> The official courses cover "
+            "the exam scope well &mdash; complete the relevant tracks fully before reaching for "
+            "third-party material.</p>"
+            "<p><strong>Build a real flow.</strong> Connect a test store and build a welcome series "
+            "and an abandoned-cart flow with a proper flow filter. Hands-on time makes the "
+            "platform questions easy.</p>"
+            "<p><strong>Know the metrics.</strong> Be able to explain attributed revenue, revenue "
+            "per recipient, and how Klaviyo&rsquo;s attribution window works &mdash; these come up "
+            "more than candidates expect.</p>"
+            "<p><strong>Understand list health.</strong> Sunset flows and engagement-based sending "
+            "are tested; know why pruning unengaged subscribers protects deliverability.</p>"
+        ),
+        "meta_title": "Klaviyo Product Certification Guide ({year}) | MarTechJobs",
+        "meta_description": (
+            "Complete study guide for the Klaviyo Product Certification: exam format, study path, "
+            "topic breakdown, and prep tips. Free via Klaviyo Academy. Updated {year}."
+        ),
+    },
+    "Salesforce": {
+        "cert_name": "Salesforce Certified Administrator",
+        "provider": "Salesforce",
+        "cost": "$200 (retake $100)",
+        "exam_format": "60 multiple-choice questions, 105 minutes, 65% pass mark",
+        "validity": "Maintained via release exams (3x/year)",
+        "difficulty": "Intermediate",
+        "intro": (
+            "<p>The Salesforce Certified Administrator is the highest-leverage entry credential in "
+            "the entire Salesforce ecosystem. It proves you can configure and govern an org &mdash; "
+            "the data model, automation with Flow, the security model, data management, and "
+            "reporting &mdash; which is why it appears as a preferred or required qualification "
+            "across MarTech, RevOps, and marketing operations job descriptions where someone owns "
+            "Salesforce configuration.</p>"
+            "<p>For career changers and marketers who already touch Salesforce, the Admin cert is "
+            "the credential that unlocks the rest of the ecosystem. Preparation runs largely through "
+            "free Trailhead content, so the main investment is time and the exam fee &mdash; a "
+            "strong return for how widely the credential is recognised.</p>"
+        ),
+        "who_should_get": (
+            "Aspiring Salesforce administrators, marketing and RevOps professionals who own "
+            "Salesforce configuration, and career changers using the Admin cert as their entry "
+            "point into the Salesforce ecosystem."
+        ),
+        "study_path": [
+            {
+                "step": 1,
+                "title": "Trailhead: Admin Beginner Trail",
+                "desc": "Complete the Admin Beginner trail on Trailhead. Covers the data model, objects and fields, the UI, and core navigation systematically.",
+                "hours": 12,
+            },
+            {
+                "step": 2,
+                "title": "Trailhead: Admin Intermediate Trail",
+                "desc": "Work through the Admin Intermediate trail: more advanced configuration, reporting, and process automation across objects.",
+                "hours": 12,
+            },
+            {
+                "step": 3,
+                "title": "Master Flow",
+                "desc": "Go deep on Flow Builder: record-triggered vs screen flows, before- vs after-save, and the order of execution. Build several flows in a Developer org.",
+                "hours": 6,
+            },
+            {
+                "step": 4,
+                "title": "Security Model & Data Management",
+                "desc": "Study org-wide defaults, role hierarchy, sharing rules, profiles vs permission sets, and field-level security; plus data import/export, duplicate rules, and validation rules.",
+                "hours": 6,
+            },
+            {
+                "step": 5,
+                "title": "Trailhead Superbadges",
+                "desc": "Complete relevant admin Superbadges. They force you to apply configuration end-to-end in a real org, which is the best preparation for scenario questions.",
+                "hours": 8,
+            },
+            {
+                "step": 6,
+                "title": "Official Practice Exam",
+                "desc": "Take the official Salesforce Administrator practice exam, review every wrong answer in depth, and revisit weak topics on Trailhead.",
+                "hours": 4,
+            },
+            {
+                "step": 7,
+                "title": "Schedule via Kryterion/Pearson VUE",
+                "desc": "Book the exam through Kryterion or Pearson VUE (online or test centre). Allow 105 minutes for 60 questions; 65% is required to pass.",
+                "hours": 2,
+            },
+        ],
+        "exam_topics": [
+            {"topic": "Configuration & setup", "weight": "~20%", "desc": "Company settings, user management, UI configuration, and the AppExchange."},
+            {"topic": "Object Manager & Lightning App Builder", "weight": "~20%", "desc": "Standard/custom objects, fields, relationships, record types, page layouts, and Lightning pages."},
+            {"topic": "Sales, marketing, service & support apps", "weight": "~23%", "desc": "Lead conversion, opportunities, the sales/marketing process, and case management basics."},
+            {"topic": "Workflow & process automation", "weight": "~16%", "desc": "Flow Builder, record-triggered vs screen flows, approvals, and the order of execution."},
+            {"topic": "Data & analytics management", "weight": "~14%", "desc": "Data import/export, duplicate and validation rules, report types, and dashboards."},
+            {"topic": "Productivity & collaboration", "weight": "~7%", "desc": "Activities, mobile, and collaboration features that support day-to-day users."},
+        ],
+        "prep_tips": (
+            "<p><strong>Trailhead and Superbadges are the core.</strong> The free Admin trails plus "
+            "Superbadges cover the exam scope and force hands-on application. Complete them fully "
+            "before buying third-party practice material.</p>"
+            "<p><strong>Know the security model cold.</strong> Org-wide defaults, role hierarchy, "
+            "sharing rules, profiles vs permission sets, and field-level security are heavily tested "
+            "and commonly missed. Reason from &lsquo;lock down, then open up&rsquo;.</p>"
+            "<p><strong>Understand Flow.</strong> Record-triggered vs screen flows, before- vs "
+            "after-save, and the basics of the order of execution show up across automation "
+            "questions. Build flows in a Developer org rather than just reading about them.</p>"
+            "<p><strong>Take the official practice exam.</strong> Its question style closely matches "
+            "the real exam. Review every wrong answer and revisit the weak topic on Trailhead before "
+            "you book.</p>"
+        ),
+        "meta_title": "Salesforce Certified Administrator Study Guide ({year}) | MarTechJobs",
+        "meta_description": (
+            "Complete prep guide for the Salesforce Certified Administrator exam: exam format, "
+            "study path, topic breakdown with official weightings, and Trailhead/Flow/security tips. "
+            "Updated {year}."
+        ),
+    },
 }
 
 

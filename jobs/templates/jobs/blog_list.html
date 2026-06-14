@@ -22,93 +22,133 @@
 
 {% block content %}
 <style>
-  .blog-hero { padding: 72px 0 56px; border-bottom: 1px solid var(--rule); background: var(--paper2); text-align: center; }
-  .blog-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 60px); font-weight: 800; color: var(--ink); line-height: 1.15; margin: 16px 0 20px; }
-  .blog-hero h1 em { font-style: italic; color: var(--amber); }
-  .blog-hero p { font-size: 17px; color: var(--ink2); max-width: 580px; margin: 0 auto; line-height: 1.7; }
+  /* ── Masthead ───────────────────────────────────────────── */
+  .ch-masthead { padding: 56px 0 0; background: var(--paper2); border-bottom: 3px double var(--ink); }
+  .ch-masthead-top { display: flex; justify-content: space-between; align-items: center; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule); padding-bottom: 12px; }
+  .ch-masthead-top .ch-amber { color: var(--amber); }
+  .ch-nameplate { text-align: center; padding: 30px 0 24px; }
+  .ch-nameplate h1 { font-family: 'Playfair Display', serif; font-size: clamp(40px, 7vw, 86px); font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -.01em; margin: 0; }
+  .ch-nameplate h1 em { font-style: italic; color: var(--amber); }
+  .ch-tagline { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; font-family: 'Courier Prime', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+  .ch-tagline::before, .ch-tagline::after { content: ""; height: 1px; width: 48px; background: var(--rule2); }
+  .ch-mission { text-align: center; max-width: 560px; margin: 18px auto 0; padding-bottom: 30px; font-size: 16px; color: var(--ink2); line-height: 1.7; font-style: italic; }
 
-  .blog-featured { padding: 56px 0; border-bottom: 1px solid var(--rule); }
-  .blog-featured-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-  @media(max-width:768px){ .blog-featured-grid { grid-template-columns: 1fr; gap: 28px; } }
-  .blog-feat-img { aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--rule); background: var(--paper); position: relative; }
-  .blog-feat-img img { width: 100%; height: 100%; object-fit: cover; }
-  .blog-feat-badge { position: absolute; top: 14px; left: 14px; background: var(--amber); color: #fff; font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; }
-  .blog-feat-cat { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--amber); margin-bottom: 10px; }
-  .blog-feat-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 3vw, 36px); font-weight: 800; color: var(--ink); line-height: 1.25; margin-bottom: 16px; }
-  .blog-feat-title a:hover { color: var(--amber); }
-  .blog-feat-excerpt { font-size: 15px; color: var(--ink2); line-height: 1.7; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .blog-feat-author { display: flex; align-items: center; gap: 12px; }
-  .blog-feat-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--amber-light); border: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .blog-feat-avatar img { width: 100%; height: 100%; object-fit: contain; }
+  /* ── Lead story (featured) ──────────────────────────────── */
+  .ch-lead { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+  .ch-lead-kicker { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); text-align: center; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .ch-lead-kicker::before, .ch-lead-kicker::after { content: ""; height: 1px; flex: 1; max-width: 90px; background: var(--rule2); }
+  .ch-lead-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
+  @media(max-width:768px){ .ch-lead-grid { grid-template-columns: 1fr; gap: 28px; } }
+  .ch-lead-img { aspect-ratio: 16/10; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--rule); background: var(--paper); position: relative; }
+  .ch-lead-img img { width: 100%; height: 100%; object-fit: cover; }
+  .ch-lead-badge { position: absolute; top: 14px; left: 14px; background: var(--amber); color: #fff; font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 5px 11px; border-radius: 4px; }
+  .ch-lead-cat { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--amber); margin-bottom: 12px; }
+  .ch-lead-cat time { color: var(--ink3); }
+  .ch-lead-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 3.6vw, 44px); font-weight: 800; color: var(--ink); line-height: 1.15; margin-bottom: 18px; letter-spacing: -.01em; }
+  .ch-lead-title a:hover { color: var(--amber); }
+  .ch-lead-excerpt { font-size: 16px; color: var(--ink2); line-height: 1.75; margin-bottom: 26px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .ch-lead-byline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ch-lead-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--amber-light); border: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+  .ch-lead-avatar img { width: 100%; height: 100%; object-fit: contain; }
+  .ch-lead-author-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .ch-lead-author-sub { font-size: 11px; color: var(--ink3); font-family: 'Courier Prime', monospace; }
+  .ch-lead-byline .btn { margin-left: auto; }
 
-  .blog-filters { background: var(--paper2); border-bottom: 1px solid var(--rule); position: sticky; top: 64px; z-index: 40; }
-  .blog-filters-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; flex-wrap: wrap; }
-  .blog-cats { display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; -ms-overflow-style: none; scrollbar-width: none; }
-  .blog-cats::-webkit-scrollbar { display: none; }
-  .blog-cat { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid var(--rule2); color: var(--ink2); background: var(--card); transition: all .15s; text-decoration: none; }
-  .blog-cat:hover { border-color: var(--amber); color: var(--amber); }
-  .blog-cat.active { background: var(--amber); color: #fff; border-color: var(--amber); }
-  .blog-search { position: relative; }
-  .blog-search input { padding: 8px 14px 8px 36px; border-radius: 20px; border: 1px solid var(--rule2); font-size: 13px; background: var(--card); color: var(--ink); outline: none; width: 200px; max-width: 100%; }
-  .blog-search input:focus { border-color: var(--amber); }
-  .blog-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); width: 14px; }
+  /* ── Section heading shared ─────────────────────────────── */
+  .ch-sec-head { text-align: center; max-width: 640px; margin: 0 auto 34px; }
+  .ch-sec-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0; letter-spacing: -.01em; }
+  .ch-sec-head p { font-size: 15px; color: var(--ink2); line-height: 1.65; }
 
-  .blog-grid-section { padding: 56px 0; min-height: 50vh; }
-  .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
-  @media(max-width:900px){ .blog-grid { grid-template-columns: repeat(2,1fr); } }
-  @media(max-width:580px){ .blog-grid { grid-template-columns: 1fr; } }
+  /* ── Guide / cert sections ──────────────────────────────── */
+  .ch-guides { padding: 56px 0; border-bottom: 1px solid var(--rule); }
+  .ch-guides.is-interview { background: linear-gradient(180deg, var(--amber-light), var(--paper2)); }
+  .ch-guides.is-cert { background: var(--paper2); }
+  .ch-guides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .ch-guide-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
+  .ch-guide-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--amber); }
+  .ch-guide-card.is-cert:hover { border-color: var(--navy); }
+  .ch-guide-badge { position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+  .ch-guide-badge.is-interview { color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; }
+  .ch-guide-badge.is-cert { color: var(--navy); background: var(--paper2); border: 1px solid var(--rule); }
+  .ch-guide-tool { width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px; }
+  .ch-guide-tool img { width: 30px; height: 30px; object-fit: contain; }
+  .ch-guide-tool span { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber); }
+  .ch-guide-tool span.is-cert { color: var(--navy); }
+  .ch-guide-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+  .ch-guide-card p { font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1; }
+  .ch-guide-link { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px; }
+  .ch-guide-link.is-cert { color: var(--navy); }
 
-  .blog-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; transition: all .2s; display: flex; flex-direction: column; }
-  .blog-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--rule2); }
-  .blog-card-img { aspect-ratio: 16/9; background: var(--paper); border-bottom: 1px solid var(--rule); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .blog-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
-  .blog-card:hover .blog-card-img img { transform: scale(1.04); }
-  .blog-card-cat-badge { position: absolute; top: 10px; right: 10px; background: rgba(252,252,250,.92); border: 1px solid var(--rule); color: var(--ink); font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 4px; }
-  .blog-card-body { padding: 22px 22px 20px; flex: 1; display: flex; flex-direction: column; }
-  .blog-card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink3); margin-bottom: 10px; font-family: 'Courier Prime', monospace; }
-  .blog-card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .blog-card-title a:hover { color: var(--amber); }
-  .blog-card-excerpt { font-size: 13px; color: var(--ink2); line-height: 1.65; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 16px; }
-  .blog-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--rule); margin-top: auto; }
-  .blog-card-author { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink); }
-  .blog-card-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--amber); }
-  .blog-read-link { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-family: 'Courier Prime', monospace; }
-  .blog-read-link:hover { color: var(--amber2); }
+  /* ── Filter bar ─────────────────────────────────────────── */
+  .ch-filters { background: var(--paper2); border-bottom: 1px solid var(--rule); position: sticky; top: 64px; z-index: 40; }
+  .ch-filters-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; flex-wrap: wrap; }
+  .ch-cats { display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; -ms-overflow-style: none; scrollbar-width: none; }
+  .ch-cats::-webkit-scrollbar { display: none; }
+  .ch-cat { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid var(--rule2); color: var(--ink2); background: var(--card); transition: all .15s; text-decoration: none; }
+  .ch-cat:hover { border-color: var(--amber); color: var(--amber); }
+  .ch-cat.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+  .ch-search { position: relative; }
+  .ch-search input { padding: 8px 14px 8px 36px; border-radius: 20px; border: 1px solid var(--rule2); font-size: 13px; background: var(--card); color: var(--ink); outline: none; width: 210px; max-width: 100%; }
+  .ch-search input:focus { border-color: var(--amber); }
+  .ch-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); width: 14px; }
 
-  .blog-filter-label { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 20px; text-align: center; }
-  .blog-filter-label span { color: var(--amber); }
-  .blog-empty { text-align: center; padding: 80px 20px; color: var(--ink3); grid-column: 1/-1; }
+  /* ── Post grid ──────────────────────────────────────────── */
+  .ch-grid-section { padding: 56px 0; min-height: 50vh; }
+  .ch-grid-label { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+  .ch-grid-label::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .ch-grid-label span { color: var(--amber); }
+  .ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  @media(max-width:900px){ .ch-grid { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:580px){ .ch-grid { grid-template-columns: 1fr; } }
 
-  /* Interview guides hub section */
-  .blog-guides { padding: 52px 0; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper2)); }
-  .blog-guides-head { text-align: center; max-width: 640px; margin: 0 auto 32px; }
-  .blog-guides-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px; }
-  .blog-guides-head p { font-size: 15px; color: var(--ink2); line-height: 1.6; }
-  .blog-guides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .guide-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
-  .guide-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--amber); }
-  .guide-card-badge { position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; padding: 3px 8px; border-radius: 4px; }
-  .guide-card-tool { width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px; }
-  .guide-card-tool img { width: 30px; height: 30px; object-fit: contain; }
-  .guide-card-tool span { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber); }
-  .guide-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; }
-  .guide-card p { font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1; }
-  .guide-card-link { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px; }
+  .ch-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; transition: all .2s; display: flex; flex-direction: column; }
+  .ch-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--rule2); }
+  .ch-card-img { aspect-ratio: 16/9; background: var(--paper); border-bottom: 1px solid var(--rule); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .ch-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+  .ch-card:hover .ch-card-img img { transform: scale(1.04); }
+  .ch-card-cat-badge { position: absolute; top: 10px; right: 10px; background: rgba(252,252,250,.92); border: 1px solid var(--rule); color: var(--ink); font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 4px; }
+  .ch-card-body { padding: 22px 22px 20px; flex: 1; display: flex; flex-direction: column; }
+  .ch-card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink3); margin-bottom: 10px; font-family: 'Courier Prime', monospace; }
+  .ch-card-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ch-card-title a:hover { color: var(--amber); }
+  .ch-card-excerpt { font-size: 13px; color: var(--ink2); line-height: 1.65; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 16px; }
+  .ch-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--rule); margin-top: auto; }
+  .ch-card-author { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink); }
+  .ch-card-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--amber); flex-shrink: 0; }
+  .ch-read-link { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-family: 'Courier Prime', monospace; }
+  .ch-read-link:hover { color: var(--amber2); }
+  .ch-empty { text-align: center; padding: 80px 20px; color: var(--ink3); grid-column: 1/-1; }
+
+  @media(max-width:580px){
+    .ch-masthead-top { font-size: 9px; letter-spacing: .08em; }
+    .ch-lead-byline .btn { margin-left: 0; width: 100%; text-align: center; }
+  }
 </style>
 
-<section class="blog-hero">
+<!-- ── MASTHEAD ──────────────────────────────────────────── -->
+<header class="ch-masthead">
   <div class="wrap">
-    <div class="eyebrow">Industry Insights &amp; Career Advice</div>
-    <h1>The MarTech <em>Chronicles</em></h1>
-    <p>Stay ahead of the curve with expert articles on marketing operations, technology stacks, career growth, and the future of digital marketing.</p>
+    <div class="ch-masthead-top">
+      <span>Vol. I · MarTechJobs.io</span>
+      <span class="ch-amber">Marketing Ops &amp; Engineering</span>
+      <span><time datetime="{% now 'Y-m-d' %}">{% now "l, F j, Y" %}</time></span>
+    </div>
+    <div class="ch-nameplate">
+      <div class="eyebrow" style="margin-bottom:14px;">Industry Insights &amp; Career Advice</div>
+      <h1>The MarTech <em>Chronicles</em></h1>
+      <div class="ch-tagline">Written by practitioners · for practitioners</div>
+    </div>
+    <p class="ch-mission">Field notes on marketing operations, technology stacks, career growth, and the future of the MarTech discipline.</p>
   </div>
-</section>
+</header>
 
+<!-- ── LEAD STORY ────────────────────────────────────────── -->
 {% if featured_post %}
-<section class="blog-featured">
+<section class="ch-lead" aria-label="Featured article">
   <div class="wrap">
-    <div class="blog-featured-grid">
-      <div class="blog-feat-img">
+    <div class="ch-lead-kicker">The Lead Story</div>
+    <div class="ch-lead-grid">
+      <div class="ch-lead-img">
         {% if "salary" in featured_post.slug and "2026" in featured_post.slug %}
           <img src="{% static 'images/salary_guide_2026.svg' %}" alt="MarTech Salary Guide 2026">
         {% elif "salary" in featured_post.slug %}
@@ -128,19 +168,19 @@
         {% else %}
           <div style="width:100%;height:100%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:48px;color:var(--amber);opacity:.4;">✦</div>
         {% endif %}
-        <span class="blog-feat-badge">Featured</span>
+        <span class="ch-lead-badge">Featured</span>
       </div>
       <div>
-        <div class="blog-feat-cat">{{ featured_post.category }} <span style="color:var(--ink3);font-weight:400;">·</span> <time datetime="{{ featured_post.published_at|date:'Y-m-d' }}">{{ featured_post.published_at|date:"M d, Y" }}</time></div>
-        <h2 class="blog-feat-title"><a href="{% url 'post_detail' featured_post.slug %}">{{ featured_post.title }}</a></h2>
-        <p class="blog-feat-excerpt">{{ featured_post.excerpt }}</p>
-        <div class="blog-feat-author">
-          <div class="blog-feat-avatar"><img src="{% static 'logo.svg' %}" alt="MarTechJobs"></div>
+        <div class="ch-lead-cat">{{ featured_post.category }} <span style="color:var(--ink3);font-weight:400;">·</span> <time datetime="{{ featured_post.published_at|date:'Y-m-d' }}">{{ featured_post.published_at|date:"M d, Y" }}</time> <span style="color:var(--ink3);font-weight:400;">·</span> {{ featured_post.read_time }}</div>
+        <h2 class="ch-lead-title"><a href="{% url 'post_detail' featured_post.slug %}">{{ featured_post.title }}</a></h2>
+        <p class="ch-lead-excerpt">{{ featured_post.excerpt }}</p>
+        <div class="ch-lead-byline">
+          <div class="ch-lead-avatar"><img src="{% static 'logo.svg' %}" alt="MarTechJobs"></div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--ink);">{{ featured_post.author }}</div>
-            <div style="font-size:11px;color:var(--ink3);font-family:'Courier Prime',monospace;">Editorial Team</div>
+            <div class="ch-lead-author-name">{{ featured_post.author }}</div>
+            <div class="ch-lead-author-sub">Editorial Team</div>
           </div>
-          <a href="{% url 'post_detail' featured_post.slug %}" class="btn btn-amber" style="margin-left:auto;">Read Article →</a>
+          <a href="{% url 'post_detail' featured_post.slug %}" class="btn btn-amber">Read Article →</a>
         </div>
       </div>
     </div>
@@ -148,24 +188,25 @@
 </section>
 {% endif %}
 
+<!-- ── INTERVIEW GUIDES ──────────────────────────────────── -->
 {% if interview_guides and not search_query and not current_category %}
-<section style="padding: 52px 0; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper2));" id="interview-guides">
+<section class="ch-guides is-interview" id="interview-guides" aria-label="Interview guides">
   <div class="wrap">
-    <div style="text-align: center; max-width: 640px; margin: 0 auto 32px;">
+    <div class="ch-sec-head">
       <div class="eyebrow">🎯 Land the role</div>
-      <h2 style="font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px;">MarTech Interview Guides</h2>
-      <p style="font-size: 15px; color: var(--ink2); line-height: 1.6;">The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
+      <h2>MarTech Interview Guides</h2>
+      <p>The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;">
+    <div class="ch-guides-grid">
       {% for g in interview_guides %}
-      <a href="{% url 'tool_interview' g.tool.slug %}" style="background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm);">
-        <span style="position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; padding: 3px 8px; border-radius: 4px;">Interview Guide</span>
-        <div style="width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px;">
-          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}" style="width: 30px; height: 30px; object-fit: contain;">{% else %}<span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber);">{{ g.tool.name|slice:":1" }}</span>{% endif %}
+      <a href="{% url 'tool_interview' g.tool.slug %}" class="ch-guide-card">
+        <span class="ch-guide-badge is-interview">Interview Guide</span>
+        <div class="ch-guide-tool">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }} logo">{% else %}<span>{{ g.tool.name|slice:":1" }}</span>{% endif %}
         </div>
-        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25;">{{ g.tool.name }} Interview Questions</h3>
-        <p style="font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1;">{{ g.question_count }} questions with model answers and what employers look for.</p>
-        <span style="font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px;">Read the guide →</span>
+        <h3>{{ g.tool.name }} Interview Questions</h3>
+        <p>{{ g.question_count }} questions with model answers and what employers look for.</p>
+        <span class="ch-guide-link">Read the guide →</span>
       </a>
       {% endfor %}
     </div>
@@ -173,24 +214,25 @@
 </section>
 {% endif %}
 
+<!-- ── CERTIFICATION GUIDES ──────────────────────────────── -->
 {% if cert_guides and not search_query and not current_category %}
-<section style="padding: 52px 0; border-bottom: 1px solid var(--rule); background: var(--paper2);" id="cert-guides">
+<section class="ch-guides is-cert" id="cert-guides" aria-label="Certification guides">
   <div class="wrap">
-    <div style="text-align: center; max-width: 640px; margin: 0 auto 32px;">
+    <div class="ch-sec-head">
       <div class="eyebrow">🎓 Get certified</div>
-      <h2 style="font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px;">MarTech Certifications</h2>
-      <p style="font-size: 15px; color: var(--ink2); line-height: 1.6;">Study paths, exam formats, and tips for the certifications that actually move the needle in MarTech hiring.</p>
+      <h2>MarTech Certifications</h2>
+      <p>Study paths, exam formats, and tips for the certifications that actually move the needle in MarTech hiring.</p>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;">
+    <div class="ch-guides-grid">
       {% for g in cert_guides %}
-      <a href="{% url 'tool_certification' g.tool.slug %}" style="background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm);">
-        <span style="position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--navy); background: var(--paper2); border: 1px solid var(--rule); padding: 3px 8px; border-radius: 4px;">Cert Guide</span>
-        <div style="width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px;">
-          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}" style="width: 30px; height: 30px; object-fit: contain;">{% else %}<span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--navy);">{{ g.tool.name|slice:":1" }}</span>{% endif %}
+      <a href="{% url 'tool_certification' g.tool.slug %}" class="ch-guide-card is-cert">
+        <span class="ch-guide-badge is-cert">Cert Guide</span>
+        <div class="ch-guide-tool">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }} logo">{% else %}<span class="is-cert">{{ g.tool.name|slice:":1" }}</span>{% endif %}
         </div>
-        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25;">{{ g.cert_name }}</h3>
-        <p style="font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1;">{% if g.provider %}By {{ g.provider }}. {% endif %}{% if g.cost %}{{ g.cost }}. {% endif %}{% if g.difficulty %}{{ g.difficulty }} level.{% endif %}</p>
-        <span style="font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--navy); margin-top: 4px;">View study guide →</span>
+        <h3>{{ g.cert_name }}</h3>
+        <p>{% if g.provider %}By {{ g.provider }}. {% endif %}{% if g.cost %}{{ g.cost }}. {% endif %}{% if g.difficulty %}{{ g.difficulty }} level.{% endif %}</p>
+        <span class="ch-guide-link is-cert">View study guide →</span>
       </a>
       {% endfor %}
     </div>
@@ -198,38 +240,42 @@
 </section>
 {% endif %}
 
-<div class="blog-filters">
+<!-- ── FILTER BAR ────────────────────────────────────────── -->
+<div class="ch-filters">
   <div class="wrap">
-    <div class="blog-filters-inner">
-      <nav class="blog-cats" aria-label="Blog categories">
-        <a href="{% url 'blog_list' %}" class="blog-cat {% if not current_category %}active{% endif %}">All Posts</a>
-        <a href="?category=Tech+Stacks" class="blog-cat {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
-        <a href="?category=Career+Advice" class="blog-cat {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
-        <a href="{% url 'blog_list' %}#interview-guides" class="blog-cat">Interview Guides</a>
-        <a href="?category=Salary+Guides" class="blog-cat {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
-        <a href="?category=Industry+News" class="blog-cat {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
+    <div class="ch-filters-inner">
+      <nav class="ch-cats" aria-label="Blog categories">
+        <a href="{% url 'blog_list' %}" class="ch-cat {% if not current_category %}active{% endif %}">All Posts</a>
+        <a href="?category=Tech+Stacks" class="ch-cat {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
+        <a href="?category=Career+Advice" class="ch-cat {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
+        <a href="{% url 'blog_list' %}#interview-guides" class="ch-cat">Interview Guides</a>
+        <a href="?category=Salary+Guides" class="ch-cat {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
+        <a href="?category=Industry+News" class="ch-cat {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
       </nav>
-      <form method="get" action="{% url 'blog_list' %}" class="blog-search">
-        <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <form method="get" action="{% url 'blog_list' %}" class="ch-search" role="search">
+        <svg class="ch-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" name="q" value="{{ search_query }}" placeholder="Search articles…" aria-label="Search articles">
       </form>
     </div>
   </div>
 </div>
 
-<section class="blog-grid-section">
+<!-- ── POST GRID ─────────────────────────────────────────── -->
+<section class="ch-grid-section" aria-label="Articles">
   <div class="wrap">
     {% if search_query or current_category %}
-    <div class="blog-filter-label">
+    <div class="ch-grid-label">
       Results for <span>{% if search_query %}"{{ search_query }}"{% endif %}{% if current_category %} [{{ current_category }}]{% endif %}</span>
       — <a href="{% url 'blog_list' %}" style="color:var(--ink3);text-decoration:underline;">Clear</a>
     </div>
+    {% else %}
+    <div class="ch-grid-label">Latest <span>dispatches</span></div>
     {% endif %}
 
     {% if current_category == 'Salary Guides' %}
     <a href="{% url 'salary_guide' %}" style="display:flex;align-items:center;gap:18px;background:var(--navy3);color:#fff;border-radius:14px;padding:24px 28px;margin-bottom:28px;text-decoration:none;flex-wrap:wrap;">
       <div style="width:48px;height:48px;border-radius:12px;background:rgba(240,160,106,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--amber-accent);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       </div>
       <div style="flex:1;min-width:200px;">
         <div style="font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber-accent);margin-bottom:4px;">Live Tool · Updated Daily</div>
@@ -240,10 +286,10 @@
     </a>
     {% endif %}
 
-    <div class="blog-grid">
+    <div class="ch-grid">
       {% for post in posts %}
-      <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
-        <div class="blog-card-img">
+      <article class="ch-card" itemscope itemtype="https://schema.org/BlogPosting">
+        <div class="ch-card-img">
           {% if "salary" in post.slug and "2026" in post.slug %}
             <img src="{% static 'images/salary_guide_2026.svg' %}" alt="MarTech Salary Guide 2026" itemprop="image">
           {% elif "salary" in post.slug %}
@@ -263,27 +309,27 @@
           {% else %}
             <div style="width:100%;height:100%;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:40px;color:var(--rule2);">✦</div>
           {% endif %}
-          <span class="blog-card-cat-badge">{{ post.category }}</span>
+          <span class="ch-card-cat-badge">{{ post.category }}</span>
         </div>
-        <div class="blog-card-body">
-          <div class="blog-card-meta">
+        <div class="ch-card-body">
+          <div class="ch-card-meta">
             <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:"M d, Y" }}</time>
             <span>·</span>
             <span itemprop="timeRequired">{{ post.read_time }}</span>
           </div>
-          <h3 class="blog-card-title"><a href="{% url 'post_detail' post.slug %}" itemprop="headline">{{ post.title }}</a></h3>
-          <p class="blog-card-excerpt" itemprop="description">{{ post.excerpt }}</p>
-          <div class="blog-card-footer">
-            <div class="blog-card-author">
-              <div class="blog-card-avatar">{{ post.author|slice:":1" }}</div>
+          <h3 class="ch-card-title"><a href="{% url 'post_detail' post.slug %}" itemprop="headline">{{ post.title }}</a></h3>
+          <p class="ch-card-excerpt" itemprop="description">{{ post.excerpt }}</p>
+          <div class="ch-card-footer">
+            <div class="ch-card-author">
+              <div class="ch-card-avatar">{{ post.author|slice:":1" }}</div>
               <span itemprop="author">{{ post.author }}</span>
             </div>
-            <a class="blog-read-link" href="{% url 'post_detail' post.slug %}">Read →</a>
+            <a class="ch-read-link" href="{% url 'post_detail' post.slug %}">Read →</a>
           </div>
         </div>
       </article>
       {% empty %}
-      <div class="blog-empty">
+      <div class="ch-empty">
         {% if search_query or current_category %}
           <p style="font-size:16px;margin-bottom:12px;">No articles found matching your search.</p>
           <a href="{% url 'blog_list' %}" class="btn btn-ghost">Clear Filters</a>

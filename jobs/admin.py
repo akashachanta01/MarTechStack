@@ -189,17 +189,6 @@ class CompanySourceAdmin(admin.ModelAdmin):
     ordering = ("-last_added_count", "name")
 
 
-@admin.register(InterviewGuide)
-class InterviewGuideAdmin(admin.ModelAdmin):
-    list_display = ("tool", "slug", "question_count", "is_published", "updated_at")
-    list_filter = ("is_published",)
-    search_fields = ("tool__name", "slug")
-
-    def question_count(self, obj):
-        return obj.question_count()
-    question_count.short_description = "Questions"
-
-
 @admin.register(CertificationGuide)
 class CertificationGuideAdmin(admin.ModelAdmin):
     list_display = ("tool", "cert_name", "cost", "is_published")

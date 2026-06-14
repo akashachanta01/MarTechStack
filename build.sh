@@ -23,11 +23,15 @@ python manage.py fix_seo_domain
 python manage.py seed_canonical_tools
 
 # 6. SEED INTERVIEW GUIDES
-# Creates/keeps the flagship per-tool interview guides (HubSpot, SFMC, …).
+# Creates/keeps the flagship per-tool interview guides (HubSpot, SFMC, Braze, …).
 # Idempotent; only fills blanks unless --overwrite is passed.
 python manage.py seed_interview_guides
 
 # 7. SEED CERTIFICATION GUIDES
-# Creates/keeps the flagship per-tool certification guides (HubSpot, Marketo, SFMC).
+# Creates/keeps the flagship per-tool certification guides (HubSpot, Marketo, SFMC, …).
 # Idempotent; only fills blanks unless --overwrite is passed.
 python manage.py seed_certification_guides
+
+# 8. SEED BLOG POSTS
+# Hand-authored evergreen MarTech blog content. Idempotent; --overwrite to refresh.
+python manage.py seed_blog_posts
