@@ -1,0 +1,204 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}{% if guide.meta_title %}{{ guide.meta_title }}{% else %}{{ tool.name }} Interview Questions ({% now "Y" %}) — Real Guide for MarTech Roles | MarTechJobs{% endif %}{% endblock %}
+{% block meta_description %}{% if guide.meta_description %}{{ guide.meta_description }}{% else %}The most complete {{ tool.name }} interview questions guide — {{ guide.question_count }} questions with what hiring managers look for, drawn from {{ live_count }} live {{ tool.name }} roles. Updated {% now "Y" %}.{% endif %}{% endblock %}
+{% block meta_keywords %}{{ tool.name }} interview questions, {{ tool.name }} interview, {{ tool.name }} jobs, marketing operations interview{% endblock %}
+{% block og_title %}{{ tool.name }} Interview Questions & Guide ({% now "Y" %}){% endblock %}
+{% block og_desc %}{{ guide.question_count }} real {{ tool.name }} interview questions with what employers actually look for — informed by {{ live_count }} live roles.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+  {% for section in guide.questions %}{% for item in section.items %}{
+    "@type": "Question",
+    "name": "{{ item.q|escapejs }}",
+    "acceptedAnswer": {"@type": "Answer", "text": "{{ item.a|striptags|escapejs }}"}
+  }{% if not forloop.last %},{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"{{ tool.name }} Jobs","item":"https://martechjobs.io{% url 'tool_detail' tool.slug %}"},
+    {"@type":"ListItem","position":3,"name":"{{ tool.name }} Interview Questions","item":"https://martechjobs.io{% url 'tool_interview' tool.slug %}"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .ig-wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  @media(max-width:560px){ .ig-wrap { padding: 0 20px; } }
+
+  .ig-hero { padding: 44px 0 8px; }
+  .ig-bc { font-size: 12.5px; color: var(--ink3); margin-bottom: 18px; }
+  .ig-bc a:hover { color: var(--amber); text-decoration: underline; }
+  .ig-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(30px,5vw,46px); font-weight:800; line-height:1.1; color:var(--ink); margin-bottom:14px; }
+  .ig-hero h1 em { font-style:italic; color:var(--amber); }
+  .ig-lede { font-size:17px; line-height:1.7; color:var(--ink2); max-width:760px; }
+
+  /* live data spine */
+  .ig-stats { display:flex; flex-wrap:wrap; gap:14px; margin:28px 0 8px; }
+  .ig-stat { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:16px 20px; min-width:150px; }
+  .ig-stat-v { font-family:'Playfair Display',serif; font-size:26px; font-weight:800; color:var(--navy); line-height:1; }
+  .ig-stat-v .amber { color:var(--amber); }
+  .ig-stat-l { font-size:12px; color:var(--ink3); margin-top:6px; }
+
+  .ig-body { display:grid; grid-template-columns: 240px 1fr; gap:48px; padding:40px 0 72px; align-items:start; }
+  @media(max-width:880px){ .ig-body { grid-template-columns:1fr; gap:24px; } .ig-toc { display:none; } }
+
+  /* TOC */
+  .ig-toc { position:sticky; top:84px; }
+  .ig-toc-h { font-family:'Courier Prime',monospace; font-size:10px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--ink3); margin-bottom:12px; }
+  .ig-toc a { display:block; font-size:13.5px; font-weight:600; color:var(--ink3); padding:6px 0; border-left:2px solid var(--rule); padding-left:12px; transition:all .15s; }
+  .ig-toc a:hover { color:var(--amber); border-left-color:var(--amber); }
+  .ig-toc .ig-toc-cta { margin-top:18px; }
+
+  .ig-content { min-width:0; }
+  .ig-content :is(h2) { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:800; color:var(--ink); margin:8px 0 6px; scroll-margin-top:84px; }
+  .ig-sec-sub { font-size:14px; color:var(--ink3); margin-bottom:20px; }
+  .ig-intro { font-size:16px; line-height:1.8; color:var(--ink2); margin-bottom:36px; }
+  .ig-intro p { margin-bottom:1.1rem; }
+
+  /* Skills / what employers want */
+  .ig-skills { background:var(--paper2); border:1px solid var(--rule); border-radius:14px; padding:24px 26px; margin:0 0 40px; }
+  .ig-skills h3 { font-family:'Playfair Display',serif; font-size:18px; font-weight:800; color:var(--ink); margin-bottom:6px; }
+  .ig-skills p { font-size:13.5px; color:var(--ink3); margin-bottom:14px; }
+  .ig-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .ig-chips a { font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:7px; background:var(--amber-light); color:var(--amber); border:1px solid #f0c6a8; transition:all .15s; }
+  .ig-chips a:hover { background:var(--amber); color:#fff; }
+
+  /* Q&A */
+  .ig-qsec { margin-bottom:40px; }
+  .ig-q { border:1px solid var(--rule); border-radius:12px; margin-bottom:12px; overflow:hidden; background:var(--card); transition:box-shadow .15s; }
+  .ig-q:hover { box-shadow:var(--shadow-sm); }
+  .ig-q summary { list-style:none; cursor:pointer; display:flex; align-items:flex-start; gap:12px; padding:16px 20px; font-size:15.5px; font-weight:700; color:var(--ink); }
+  .ig-q summary::-webkit-details-marker { display:none; }
+  .ig-q-num { font-family:'Courier Prime',monospace; font-size:12px; font-weight:700; color:var(--amber); flex-shrink:0; margin-top:2px; }
+  .ig-q summary .chev { margin-left:auto; flex-shrink:0; width:18px; height:18px; stroke:var(--ink3); fill:none; stroke-width:2.5; transition:transform .2s; margin-top:2px; }
+  .ig-q[open] summary .chev { transform:rotate(180deg); }
+  .ig-a { padding:0 20px 18px 50px; font-size:15px; line-height:1.75; color:var(--ink2); }
+  .ig-a p { margin-bottom:.8rem; }
+
+  .ig-cta { background:var(--navy); border-radius:16px; padding:40px; text-align:center; color:#fff; margin:8px 0 48px; }
+  .ig-cta h2 { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:800; color:#fff; margin-bottom:10px; }
+  .ig-cta p { font-size:15px; color:rgba(255,255,255,.72); max-width:520px; margin:0 auto 22px; line-height:1.6; }
+
+  .ig-recent { margin-bottom:8px; }
+  .ig-recent h2 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:800; color:var(--ink); margin-bottom:18px; }
+  .ig-recent-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .ig-rc { background:#fff; border:1px solid var(--rule); border-radius:12px; padding:16px 18px; text-decoration:none; color:inherit; transition:transform .15s,box-shadow .15s,border-color .15s; }
+  .ig-rc:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--amber); }
+  .ig-rc-co { font-size:12.5px; font-weight:700; color:var(--ink2); }
+  .ig-rc-t { font-size:14.5px; font-weight:700; color:var(--ink); line-height:1.3; margin-top:3px; }
+  .ig-rc-m { font-size:12px; color:var(--ink3); margin-top:5px; }
+</style>
+
+<div class="ig-wrap ig-hero">
+  <nav class="ig-bc" aria-label="Breadcrumb">
+    <a href="/">Home</a> &nbsp;/&nbsp; <a href="{% url 'tool_detail' tool.slug %}">{{ tool.name }} Jobs</a> &nbsp;/&nbsp; <span>Interview Questions</span>
+  </nav>
+  <h1>{{ tool.name }} <em>Interview Questions</em> &amp; Guide</h1>
+  <p class="ig-lede">{% if guide.intro %}{{ guide.intro|striptags|truncatewords:45 }}{% else %}The questions hiring managers really ask for {{ tool.name }} roles — with what a strong answer looks like — informed by live job descriptions on MarTechJobs.{% endif %}</p>
+
+  <div class="ig-stats">
+    <div class="ig-stat"><div class="ig-stat-v"><span class="amber">{{ guide.question_count }}</span></div><div class="ig-stat-l">Questions covered</div></div>
+    {% if live_count %}<div class="ig-stat"><div class="ig-stat-v">{{ live_count }}</div><div class="ig-stat-l">Live {{ tool.name }} roles now</div></div>{% endif %}
+    {% if hiring_companies %}<div class="ig-stat"><div class="ig-stat-v">{{ hiring_companies|length }}{% if hiring_companies|length >= 8 %}+{% endif %}</div><div class="ig-stat-l">Companies hiring</div></div>{% endif %}
+    <div class="ig-stat"><div class="ig-stat-v">{% now "Y" %}</div><div class="ig-stat-l">Updated</div></div>
+  </div>
+</div>
+
+<div class="ig-wrap">
+  <div class="ig-body">
+    <!-- TOC -->
+    <aside class="ig-toc">
+      <div class="ig-toc-h">On this page</div>
+      <nav>
+        <a href="#what-employers-want">What employers want</a>
+        {% for section in guide.questions %}
+        <a href="#sec-{{ forloop.counter }}">{{ section.category }}</a>
+        {% endfor %}
+        {% if guide.prep_tips %}<a href="#prep">How to prepare</a>{% endif %}
+        <div class="ig-toc-cta">
+          <a href="{% url 'tool_detail' tool.slug %}" class="btn btn-amber btn-block">View {{ tool.name }} jobs →</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="ig-content">
+      {% if guide.intro %}<div class="ig-intro">{{ guide.intro|safe }}</div>{% endif %}
+
+      <!-- Data spine: what employers actually want -->
+      <div class="ig-skills" id="what-employers-want">
+        <h3>What {{ tool.name }} employers actually want</h3>
+        {% if often_paired %}
+        <p>Across {{ live_count }} live {{ tool.name }} role{{ live_count|pluralize }} on MarTechJobs, these tools and skills show up alongside {{ tool.name }} most often — expect questions that connect them:</p>
+        <div class="ig-chips">
+          {% for t in often_paired %}<a href="{% url 'tool_detail' t.slug %}">{{ t.name }}</a>{% endfor %}
+        </div>
+        {% else %}
+        <p>{{ tool.name }} roles reward hands-on builders who can connect the platform to data, campaigns, and reporting. The questions below reflect what hiring teams probe for.</p>
+        {% endif %}
+      </div>
+
+      <!-- Question sections -->
+      {% for section in guide.questions %}
+      <section class="ig-qsec" id="sec-{{ forloop.counter }}">
+        <h2>{{ section.category }}</h2>
+        {% if section.note %}<p class="ig-sec-sub">{{ section.note }}</p>{% endif %}
+        {% for item in section.items %}
+        <details class="ig-q">
+          <summary>
+            <span class="ig-q-num">Q{{ forloop.parentloop.counter }}.{{ forloop.counter }}</span>
+            <span>{{ item.q }}</span>
+            <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="ig-a">{{ item.a|safe }}</div>
+        </details>
+        {% endfor %}
+      </section>
+      {% endfor %}
+
+      {% if guide.prep_tips %}
+      <section class="ig-qsec" id="prep">
+        <h2>How to prepare</h2>
+        <div class="ig-intro">{{ guide.prep_tips|safe }}</div>
+      </section>
+      {% endif %}
+
+      <!-- CTA -->
+      <div class="ig-cta">
+        <h2>Ready to put it to work?</h2>
+        <p>{% if live_count %}{{ live_count }} {{ tool.name }} role{{ live_count|pluralize }} are hiring right now on MarTechJobs.{% else %}New {{ tool.name }} roles land on MarTechJobs regularly.{% endif %} Skip the recruiter noise — apply directly.</p>
+        <a href="{% url 'tool_detail' tool.slug %}" class="btn btn-amber btn-lg">Browse {{ tool.name }} Jobs →</a>
+      </div>
+
+      {% if recent_jobs %}
+      <section class="ig-recent">
+        <h2>{{ tool.name }} roles hiring now</h2>
+        <div class="ig-recent-grid">
+          {% for job in recent_jobs %}
+          <a href="{% url 'job_detail' job.id job.slug %}" class="ig-rc">
+            <div class="ig-rc-co">{{ job.company }}</div>
+            <div class="ig-rc-t">{{ job.title }}</div>
+            <div class="ig-rc-m">{{ job.location|default:"Not specified" }}{% if job.salary_range %} · {{ job.salary_range }}{% endif %}</div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

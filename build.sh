@@ -21,3 +21,8 @@ python manage.py fix_seo_domain
 # so /jobs/<slug>/ resolves instead of 404'ing before any job is tagged with it.
 # Idempotent; empty tool pages are noindex'd by the view.
 python manage.py seed_canonical_tools
+
+# 6. SEED INTERVIEW GUIDES
+# Creates/keeps the flagship per-tool interview guides (HubSpot, SFMC, …).
+# Idempotent; only fills blanks unless --overwrite is passed.
+python manage.py seed_interview_guides

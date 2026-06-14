@@ -8,7 +8,8 @@ from django.http import HttpResponse
 # Import your Sitemap logic
 from jobs.sitemaps import (
     JobSitemap, ToolSitemap, SEOLandingSitemap,
-    StaticViewSitemap, BlogSitemap, ToolsStaticSitemap, TitleJobsSitemap
+    StaticViewSitemap, BlogSitemap, ToolsStaticSitemap, TitleJobsSitemap,
+    InterviewGuideSitemap
 )
 
 # --- 1. DEFINE SITEMAPS ---
@@ -18,6 +19,7 @@ sitemaps = {
     'tools_static': ToolsStaticSitemap,
     'seo_landing': SEOLandingSitemap,
     'titles': TitleJobsSitemap,
+    'interview_guides': InterviewGuideSitemap,
     'static': StaticViewSitemap,
     'blog': BlogSitemap,
 }
