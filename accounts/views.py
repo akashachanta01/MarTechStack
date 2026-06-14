@@ -1,5 +1,6 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
@@ -83,43 +84,52 @@ def saved_jobs(request):
     return render(request, 'accounts/saved_jobs.html', {'saved_jobs': jobs})
 
 
+def _clean_url(raw):
+    """Normalise a user-entered URL to https and reject non-http(s) schemes
+    (javascript:, ftp:, etc). Returns '' for blank/invalid. URLField validators
+    don't run on .save(), so we validate here."""
+    raw = (raw or '').strip()
+    if not raw:
+        return ''
+    if raw.startswith('http://'):
+        raw = 'https://' + raw[len('http://'):]
+    elif not raw.startswith('https://'):
+        raw = 'https://' + raw
+    try:
+        URLValidator(schemes=['https'])(raw)
+    except ValidationError:
+        return ''
+    return raw[:200]
+
+
 @login_required
 def profile_edit(request):
     profile = request.user.userprofile
     all_tools = Tool.objects.order_by('name')
 
     if request.method == 'POST':
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        bio = request.POST.get('bio', '').strip()
-        preferred_location = request.POST.get('preferred_location', '').strip()
-        linkedin_url = request.POST.get('linkedin_url', '').strip()
-        tool_ids = request.POST.getlist('preferred_stack')
-
-        request.user.first_name = first_name
-        request.user.last_name = last_name
+        request.user.first_name = request.POST.get('first_name', '').strip()[:30]
+        request.user.last_name = request.POST.get('last_name', '').strip()[:150]
         request.user.save()
 
-        profile.bio = bio[:500]
-        profile.preferred_location = preferred_location[:100]
-        # Normalise and validate the LinkedIn URL: force https, reject any
-        # non-http(s) scheme (e.g. javascript:, ftp:) and anything that isn't
-        # a real URL. URLField validators don't run on .save(), so do it here.
-        if linkedin_url:
-            if linkedin_url.startswith('http://'):
-                linkedin_url = 'https://' + linkedin_url[len('http://'):]
-            elif not linkedin_url.startswith('https://'):
-                linkedin_url = 'https://' + linkedin_url
-            try:
-                URLValidator(schemes=['https'])(linkedin_url)
-            except ValidationError:
-                linkedin_url = ''
-        profile.linkedin_url = linkedin_url
-        profile.preferred_stack.set(Tool.objects.filter(id__in=tool_ids))
+        profile.bio = request.POST.get('bio', '').strip()[:1000]
+        profile.preferred_location = request.POST.get('preferred_location', '').strip()[:100]
+        # Social links
+        profile.linkedin_url = _clean_url(request.POST.get('linkedin_url'))
+        profile.github_url = _clean_url(request.POST.get('github_url'))
+        profile.twitter_url = _clean_url(request.POST.get('twitter_url'))
+        profile.website_url = _clean_url(request.POST.get('website_url'))
+        # Preferences
+        profile.open_to_remote = request.POST.get('open_to_remote') == 'on'
+        role = request.POST.get('desired_role_type', '').strip()
+        profile.desired_role_type = role if role in {'full_time', 'contract', 'part_time'} else ''
+        profile.desired_salary = request.POST.get('desired_salary', '').strip()[:60]
+        profile.preferred_stack.set(Tool.objects.filter(id__in=request.POST.getlist('preferred_stack')))
         profile.save()
 
         messages.success(request, 'Profile updated.')
-        return redirect('accounts_profile')
+        active = request.POST.get('active_tab', 'basic')
+        return redirect(reverse('accounts_profile') + '#' + active)
 
     ctx = {
         'profile': profile,
@@ -127,6 +137,43 @@ def profile_edit(request):
         'selected_tool_ids': set(profile.preferred_stack.values_list('id', flat=True)),
     }
     return render(request, 'accounts/profile.html', ctx)
+
+
+@login_required
+def settings_view(request):
+    profile = request.user.userprofile
+    has_google = request.user.socialaccount_set.filter(provider='google').exists()
+    return render(request, 'accounts/settings.html', {
+        'profile': profile,
+        'has_google': has_google,
+    })
+
+
+@require_POST
+@login_required
+def update_notifications(request):
+    """AJAX endpoint for the Settings notification toggles + quick actions."""
+    profile = request.user.userprofile
+    action = request.POST.get('action', '')
+    if action == 'pause_all':
+        profile.email_newsletter = False
+        profile.email_announcements = False
+    elif action == 'enable_all':
+        profile.email_newsletter = True
+        profile.email_announcements = True
+    else:
+        field = request.POST.get('field')
+        value = request.POST.get('value') == 'true'
+        if field == 'newsletter':
+            profile.email_newsletter = value
+        elif field == 'announcements':
+            profile.email_announcements = value
+    profile.save(update_fields=['email_newsletter', 'email_announcements', 'updated_at'])
+    return JsonResponse({
+        'ok': True,
+        'newsletter': profile.email_newsletter,
+        'announcements': profile.email_announcements,
+    })
 
 
 @require_POST

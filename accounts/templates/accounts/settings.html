@@ -1,0 +1,136 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}Settings | MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<style>
+  .st-wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  .st-back { font-size:13px; color:var(--ink3); font-weight:600; display:inline-flex; gap:5px; margin-bottom:16px; }
+  .st-head h1 { font-family:'Playfair Display',serif; font-size:clamp(26px,3vw,34px); font-weight:800; color:var(--navy); }
+  .st-head p { font-size:14px; color:var(--ink3); margin-top:4px; }
+
+  .st-card { background:#fff; border:1px solid var(--rule); border-radius:14px; padding:28px 30px; box-shadow:var(--shadow-sm); margin-top:24px; }
+  .st-card-h { display:flex; align-items:center; gap:9px; font-family:'Playfair Display',serif; font-size:18px; font-weight:800; color:var(--ink); }
+  .st-card-h svg { width:19px; height:19px; fill:none; stroke:var(--amber); stroke-width:2; }
+  .st-card-sub { font-size:13.5px; color:var(--ink3); margin:4px 0 18px 0; }
+
+  .st-row { display:flex; align-items:center; gap:14px; padding:16px 0; border-top:1px solid var(--rule); }
+  .st-row:first-of-type { border-top:none; }
+  .st-row-ico { width:40px; height:40px; border-radius:10px; background:var(--paper2); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--ink3); }
+  .st-row-ico svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; }
+  .st-row-info { flex:1; }
+  .st-row-t { font-size:14.5px; font-weight:700; color:var(--ink); }
+  .st-row-m { font-size:12.5px; color:var(--ink3); margin-top:2px; }
+
+  .st-switch { position:relative; width:48px; height:27px; flex-shrink:0; }
+  .st-switch input { display:none; }
+  .st-switch span { position:absolute; inset:0; border-radius:999px; background:var(--rule2); transition:.2s; cursor:pointer; }
+  .st-switch span::before { content:''; position:absolute; width:21px; height:21px; border-radius:50%; background:#fff; top:3px; left:3px; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .st-switch input:checked + span { background:var(--amber); }
+  .st-switch input:checked + span::before { transform:translateX(21px); }
+
+  .st-action { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-top:1px solid var(--rule); }
+  .st-action:first-of-type { border-top:none; }
+  .st-account-row { display:flex; flex-direction:column; gap:4px; padding:12px 0; }
+  .st-account-row .l { font-size:12px; color:var(--ink3); }
+  .st-account-row .v { font-size:15px; font-weight:600; color:var(--ink); }
+  .st-google { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink2); margin-top:10px; }
+  .st-google svg { width:16px; height:16px; }
+  .st-links { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+</style>
+
+<div class="st-wrap">
+  <a href="{% url 'accounts_dashboard' %}" class="st-back">← Dashboard</a>
+  <div class="st-head">
+    <h1>Settings</h1>
+    <p>Manage your notification preferences.</p>
+  </div>
+
+  <!-- Email notifications -->
+  <div class="st-card">
+    <div class="st-card-h"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Email Notifications</div>
+    <div class="st-card-sub">Choose what emails you'd like to receive.</div>
+
+    <div class="st-row">
+      <div class="st-row-ico"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+      <div class="st-row-info">
+        <div class="st-row-t">Newsletter</div>
+        <div class="st-row-m">Weekly curated jobs, featured companies, and industry insights.</div>
+      </div>
+      <label class="st-switch"><input type="checkbox" id="tg-newsletter" {% if profile.email_newsletter %}checked{% endif %} onchange="setNotif('newsletter', this.checked)"><span></span></label>
+    </div>
+
+    <div class="st-row">
+      <div class="st-row-ico"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+      <div class="st-row-info">
+        <div class="st-row-t">Announcements</div>
+        <div class="st-row-m">Product updates and new features.</div>
+      </div>
+      <label class="st-switch"><input type="checkbox" id="tg-announcements" {% if profile.email_announcements %}checked{% endif %} onchange="setNotif('announcements', this.checked)"><span></span></label>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="st-card">
+    <div class="st-card-h"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Quick Actions</div>
+    <div class="st-action">
+      <div class="st-row-info">
+        <div class="st-row-t">Pause all notifications</div>
+        <div class="st-row-m">Temporarily stop receiving all email notifications.</div>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="quickAction('pause_all')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Pause All
+      </button>
+    </div>
+    <div class="st-action">
+      <div class="st-row-info">
+        <div class="st-row-t">Enable all notifications</div>
+        <div class="st-row-m">Turn on all email notifications.</div>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="quickAction('enable_all')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Enable All
+      </button>
+    </div>
+  </div>
+
+  <!-- Account -->
+  <div class="st-card">
+    <div class="st-card-h"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Account</div>
+    <div class="st-account-row">
+      <span class="l">Email</span>
+      <span class="v">{{ request.user.email }}</span>
+    </div>
+    {% if has_google %}
+    <div class="st-google">
+      <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      Connected with Google
+    </div>
+    {% endif %}
+    <div class="st-links">
+      <a href="{% url 'account_change_password' %}" class="btn btn-ghost">Change password</a>
+      <a href="{% url 'socialaccount_connections' %}" class="btn btn-ghost">Manage connections</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function postNotif(data) {
+  data['csrfmiddlewaretoken'] = '{{ csrf_token }}';
+  return fetch('{% url "update_notifications" %}', {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':'{{ csrf_token }}'},
+    body: new URLSearchParams(data).toString(),
+  }).then(function(r){ return r.json(); });
+}
+function setNotif(field, value) {
+  postNotif({field: field, value: value ? 'true':'false'}).catch(function(){});
+}
+function quickAction(action) {
+  postNotif({action: action}).then(function(d){
+    document.getElementById('tg-newsletter').checked = d.newsletter;
+    document.getElementById('tg-announcements').checked = d.announcements;
+  }).catch(function(){});
+}
+</script>
+{% endblock %}
