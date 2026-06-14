@@ -411,7 +411,6 @@ def category_detail(request, slug):
         cat_q |= Q(title__icontains=kw)
     cat_q |= Q(tools__slug__in=config["tool_slugs"])
     unclassified = unclassified.filter(cat_q)
-    from django.db.models import QuerySet
     jobs = (classified | unclassified)
 
     # Optional user refinements within the category.
