@@ -238,6 +238,10 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 # Google has already verified the email, so don't re-verify.
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_EMAIL_REQUIRED = True
+# Auto-link a Google login to an existing local account with the same email
+# (handled in accounts/adapter.py:SocialAccountAdapter.pre_social_login) so
+# email-first users can sign in with Google without hitting a signup screen.
+SOCIALACCOUNT_ADAPTER = 'accounts.adapter.SocialAccountAdapter'
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],

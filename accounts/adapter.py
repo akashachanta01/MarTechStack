@@ -1,6 +1,7 @@
 import logging
 
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
 logger = logging.getLogger('jobs')
 
@@ -24,3 +25,27 @@ class AccountAdapter(DefaultAccountAdapter):
             super().send_mail(template_prefix, email, context)
         except Exception as e:
             logger.warning("allauth email send failed (%s): %s", template_prefix, e)
+
+
+class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    """Auto-link Google logins to a pre-existing local account with the same
+    email, so a user who first signed up with email/password can later click
+    "Sign in with Google" and land straight in their account — instead of
+    being bounced to a signup screen. Safe because Google supplies a verified
+    email (proof of ownership)."""
+
+    def pre_social_login(self, request, sociallogin):
+        # Already linked (returning Google user) → let allauth proceed.
+        if sociallogin.is_existing:
+            return
+
+        email = (sociallogin.user.email or '').strip().lower()
+        if not email:
+            return
+
+        from django.contrib.auth.models import User
+        existing = User.objects.filter(email__iexact=email).first()
+        if existing:
+            # Connect this Google identity to the existing account and log in.
+            sociallogin.connect(request, existing)
+
