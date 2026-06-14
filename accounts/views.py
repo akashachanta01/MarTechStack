@@ -8,9 +8,11 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from jobs.models import Job, Tool
 from .models import UserProfile
+from .emails import send_pro_waitlist_alert
 
 
 @login_required
@@ -57,8 +59,21 @@ def dashboard(request):
         'checklist': checklist,
         'saved_count': saved_count,
         'profile_pct': profile.profile_complete_pct(),
+        'pro_waitlist': profile.pro_waitlist,
     }
     return render(request, 'accounts/dashboard.html', ctx)
+
+
+@require_POST
+@login_required
+def join_pro_waitlist(request):
+    profile = request.user.userprofile
+    if not profile.pro_waitlist:
+        profile.pro_waitlist = True
+        profile.pro_waitlist_at = timezone.now()
+        profile.save(update_fields=['pro_waitlist', 'pro_waitlist_at', 'updated_at'])
+        send_pro_waitlist_alert(request.user)  # internally non-fatal
+    return JsonResponse({'ok': True})
 
 
 @login_required
