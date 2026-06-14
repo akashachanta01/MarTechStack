@@ -489,10 +489,20 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             Feedback
           </a>
+          {% if user.is_authenticated %}
+          <a href="{% url 'accounts_dashboard' %}" class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:7px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">{{ user.first_name|slice:":1"|upper|default:user.email|slice:":1"|upper }}</span>
+            Dashboard
+          </a>
+          <a href="{% url 'account_logout' %}" class="btn btn-ghost">Sign Out</a>
+          {% else %}
           <button onclick="toggleModal('subscribe-modal')" class="btn btn-ghost" aria-label="Get job alerts">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             Get Alerts
           </button>
+          <a href="{% url 'account_login' %}" class="btn btn-ghost">Sign In</a>
+          <a href="{% url 'account_signup' %}" class="btn btn-amber">Sign Up</a>
+          {% endif %}
           <a href="{% url 'post_job' %}" class="btn btn-amber">Post a Job</a>
           <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="nav-toggle-btn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -511,6 +521,13 @@
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'for_employers' %}">For Employers</a></li>
           <li><a href="#" onclick="toggleModal('subscribe-modal'); toggleMobileMenu(); return false;">🔔 Get Job Alerts</a></li>
+          {% if user.is_authenticated %}
+          <li><a href="{% url 'accounts_dashboard' %}" class="tools-link">📊 Dashboard</a></li>
+          <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
+          {% else %}
+          <li><a href="{% url 'account_login' %}">Sign In</a></li>
+          <li><a href="{% url 'account_signup' %}" class="tools-link">Sign Up Free</a></li>
+          {% endif %}
         </ul>
       </div>
     </nav>

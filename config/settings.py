@@ -67,12 +67,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # --- REQUIRED FOR SEO SITEMAPS ---
-    'django.contrib.sites', 
+    'django.contrib.sites',
     'django.contrib.sitemaps',
     # ---------------------------------
     'django.contrib.humanize',
+    # --- ALLAUTH ---
+    'allauth',
+    'allauth.account',
+    # ---------------
     'jobs',
-    'tools',  # <--- ADD THIS
+    'tools',
+    'accounts',
 ]
 
 # Required for django.contrib.sites
@@ -89,6 +94,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -106,6 +112,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'jobs.context_processors.global_seo_data',
                 'jobs.context_processors.seo_indexing',
+                'accounts.context_processors.saved_job_ids',
             ],
         },
     },
@@ -185,6 +192,28 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
 
 # Strip trailing slashes to prevent url errors
 DOMAIN_URL = os.environ.get("DOMAIN_URL", "https://martechjobs.io").strip().rstrip('/')
+
+# ==============================================
+# AUTHENTICATION BACKENDS
+# ==============================================
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# ==============================================
+# DJANGO-ALLAUTH
+# ==============================================
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+LOGIN_REDIRECT_URL = '/accounts/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_ON_GET = False
+ACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'
 
 # ==============================================
 # CACHE

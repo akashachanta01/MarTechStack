@@ -1,0 +1,10 @@
+Hi {% if user.first_name %}{{ user.first_name }}{% else %}there{% endif %},
+
+Welcome to MarTechJobs! Please confirm your email address by clicking the link below:
+
+{{ activate_url }}
+
+If you didn't create an account, you can safely ignore this email.
+
+— The MarTechJobs Team
+martechjobs.io
