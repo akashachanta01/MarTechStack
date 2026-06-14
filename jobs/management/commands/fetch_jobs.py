@@ -20,17 +20,42 @@ from django.utils.text import slugify
 from django.conf import settings
 from django.db.models import Q
 
-from jobs.models import Job, Tool, Category
+from jobs.models import Job, Tool, Category, CompanySource
 from jobs.screener import MarTechScreener
 from jobs.tool_catalog import resolve_tool_name
 
 logger = logging.getLogger("jobs.fetch")
 
+# Free-text country name -> ISO-2 code, for structured location capture.
+_COUNTRY_CODES = {
+    "united states": "US", "usa": "US", "u.s.": "US", "u.s.a.": "US",
+    "united kingdom": "GB", "uk": "GB", "u.k.": "GB", "england": "GB",
+    "canada": "CA", "australia": "AU", "germany": "DE", "france": "FR",
+    "netherlands": "NL", "ireland": "IE", "spain": "ES", "singapore": "SG",
+    "mexico": "MX", "brazil": "BR", "india": "IN", "poland": "PL",
+    "portugal": "PT", "italy": "IT", "sweden": "SE",
+}
+
 class Command(BaseCommand):
     help = 'The "Direct-Apply" Hunter: Smart Deduplication + Geocoding + Clean URLs + Auto-Cleanup.'
 
+    # Auto-disable a CompanySource after this many consecutive empty direct polls.
+    EMPTY_POLLS_BEFORE_DISABLE = 5
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--sources-only", action="store_true",
+            help="Skip SERP discovery; poll only the saved CompanySource registry (cheap daily run).",
+        )
+        parser.add_argument(
+            "--no-discovery", action="store_true",
+            help="Alias for --sources-only.",
+        )
+
     def handle(self, *args, **options):
-        self.stdout.write("🚀 Starting Job Hunt (Optimized Batch Mode)...")
+        self.sources_only = options.get("sources_only") or options.get("no_discovery")
+        mode = "DIRECT POLL (registry only)" if self.sources_only else "SERP discovery + registry"
+        self.stdout.write(f"🚀 Starting Job Hunt — mode: {mode}...")
 
         # --- 0. INIT GEOCODER ---
         self.geolocator = Nominatim(user_agent="martechstack_jobs_bot_v2")
@@ -55,12 +80,15 @@ class Command(BaseCommand):
         if self.search_provider not in ('serper', 'serpapi'):
             self.search_provider = 'serper' if self.serper_key else 'serpapi'
 
-        if self.search_provider == 'serper' and not self.serper_key:
-            self.stdout.write(self.style.ERROR("❌ Error: SEARCH_PROVIDER=serper but SERPER_API_KEY is missing."))
-            return
-        if self.search_provider == 'serpapi' and not self.serpapi_key:
-            self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY."))
-            return
+        # Search keys are only required for SERP discovery. A --sources-only run
+        # polls the saved registry directly and needs no search provider.
+        if not self.sources_only:
+            if self.search_provider == 'serper' and not self.serper_key:
+                self.stdout.write(self.style.ERROR("❌ Error: SEARCH_PROVIDER=serper but SERPER_API_KEY is missing."))
+                return
+            if self.search_provider == 'serpapi' and not self.serpapi_key:
+                self.stdout.write(self.style.ERROR("❌ Error: Missing SERPAPI_KEY."))
+                return
 
         self.stdout.write(f"🔌 Search provider: {self.search_provider}")
 
@@ -71,7 +99,11 @@ class Command(BaseCommand):
         # Anti-flooding: cap how many roles from ONE company go live per run so
         # the board never shows a wall of 15 jobs from a single employer.
         self.company_counts = defaultdict(int)
-        self.MAX_APPROVED_PER_COMPANY = 4
+        # Anti-flooding cap. Tuned for current low total volume: a single
+        # martech-heavy company posting 5-8 relevant roles is signal, not flood,
+        # so we keep them all live. Revisit downward once total live volume grows
+        # large enough that one company could dominate the board.
+        self.MAX_APPROVED_PER_COMPANY = 8
 
         self.tool_cache = {self.screener._normalize(t.name): t for t in Tool.objects.all()}
         # Default category for auto-created tools (valid stacks not yet in the DB).
@@ -116,38 +148,47 @@ class Command(BaseCommand):
         if not target_lines:
             target_lines = ['MarTech']
 
-        # --- MAIN LOOP ---
-        for group_query in ats_groups:
-            for line in target_lines:
-                # 1. Parse the OR line
-                parts = [p.strip() for p in line.split(' OR ')]
-                
-                intitle_parts = []
-                exclude_str = ""
-                
-                for p in parts:
-                    clean_p = p.replace('"', '') 
-                    intitle_parts.append(f'intitle:"{clean_p}"')
-                    
-                    if clean_p in vendor_domains:
-                        exclude_str += f" -site:{vendor_domains[clean_p]}"
-                
-                joined_intitle = " OR ".join(intitle_parts)
-                final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
+        # --- PHASE 1: DIRECT POLL of the learned CompanySource registry ---
+        # Cheap, complete coverage of boards we already know employ MarTech roles.
+        # Runs in every mode (it costs no search spend), and is the ONLY phase in
+        # --sources-only mode.
+        self.poll_company_sources()
 
-                self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
-                time.sleep(1.0) # Respect rate limits
-                
-                links = self.search_google(final_query, num=100, tbs="qdr:d14")
-                self.stdout.write(f"   Found {len(links)} links. Processing...")
+        # --- PHASE 2: SERP DISCOVERY (skipped in --sources-only mode) ---
+        # Finds NEW boards we don't know about yet; each success is recorded into
+        # the registry so future direct polls pick it up.
+        if not self.sources_only:
+            for group_query in ats_groups:
+                for line in target_lines:
+                    # 1. Parse the OR line
+                    parts = [p.strip() for p in line.split(' OR ')]
 
-                for link in links:
-                    try:
-                        self.analyze_and_fetch(link)
-                        time.sleep(0.5)
-                    except Exception as e:
-                        self.stats["link:error"] += 1
-                        logger.warning("Link processing failed for %s: %s", link, e)
+                    intitle_parts = []
+                    exclude_str = ""
+
+                    for p in parts:
+                        clean_p = p.replace('"', '')
+                        intitle_parts.append(f'intitle:"{clean_p}"')
+
+                        if clean_p in vendor_domains:
+                            exclude_str += f" -site:{vendor_domains[clean_p]}"
+
+                    joined_intitle = " OR ".join(intitle_parts)
+                    final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
+
+                    self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
+                    time.sleep(1.0) # Respect rate limits
+
+                    links = self.search_google(final_query, num=100, tbs="qdr:d14")
+                    self.stdout.write(f"   Found {len(links)} links. Processing...")
+
+                    for link in links:
+                        try:
+                            self.analyze_and_fetch(link)
+                            time.sleep(0.5)
+                        except Exception as e:
+                            self.stats["link:error"] += 1
+                            logger.warning("Link processing failed for %s: %s", link, e)
 
         # --- PER-SOURCE RUN SUMMARY (observability) ---
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
@@ -228,7 +269,11 @@ class Command(BaseCommand):
         parsed = urlparse(url)
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
-    def _is_duplicate(self, title, company, clean_url):
+    def _is_duplicate(self, title, company, clean_url, external_id=""):
+        # ATS-native id is the most reliable signal — same posting, even if its
+        # URL drifts between polls.
+        if external_id and Job.objects.filter(external_id=external_id).exists():
+            return True
         if Job.objects.filter(apply_url=clean_url).exists():
             return True
         # Check against last 30 days to prevent duplicates with slight URL variations
@@ -255,15 +300,108 @@ class Command(BaseCommand):
         elif "smartrecruiters.com" in clean_url:
             match = re.search(r'jobs\.smartrecruiters\.com/([^/]+)', clean_url) or re.search(r'([^.]+)\.smartrecruiters\.com', clean_url)
             if match: self.fetch_smartrecruiters_api(match.group(1)); return
+        elif "recruitee.com" in clean_url:
+            match = re.search(r'([^.]+)\.recruitee\.com', clean_url)
+            if match: self.fetch_recruitee_api(match.group(1)); return
+        elif "myworkdayjobs.com" in clean_url:
+            # Real Workday CXS API fetcher (replaces the old AI-scraper fallback).
+            self.fetch_workday_api(clean_url); return
 
-        # Fallback AI Scraper for generic ATS (Workday, Taleo, etc.)
-        if any(x in clean_url for x in ['myworkdayjobs.com', 'taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
+        # Fallback AI Scraper for other generic ATS (Taleo, iCIMS, etc.)
+        if any(x in clean_url for x in ['taleo.net', 'icims.com', 'jobvite.com', 'bamboohr.com']):
             # Ensure we are not scraping a search result page
             if any(k in clean_url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(clean_url)
                  
     def get_headers(self):
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+
+    # --- Sprint 3b: structured location + source registry ---------------------
+    def _geo_fields(self, clean_loc, arrangement):
+        """Derive (country ISO-2, region, remote_scope) from a cleaned location.
+
+        remote_scope: "" if not remote, a country code if the remote role is
+        geo-restricted, else "anywhere".
+        """
+        low = (clean_loc or "").lower()
+        country = ""
+        for name, code in _COUNTRY_CODES.items():
+            if name in low:
+                country = code
+                break
+        # ", CA" style US state suffix implies the US even without "United States".
+        if not country and re.search(r',\s*[a-z]{2}$', low):
+            country = "US"
+        parts = [p.strip() for p in (clean_loc or "").split(",") if p.strip()]
+        region = parts[1] if len(parts) >= 2 and parts[1].lower() not in _COUNTRY_CODES else ""
+        remote_scope = ""
+        if arrangement == "remote":
+            remote_scope = country or "anywhere"
+        return country, region, remote_scope
+
+    def record_source(self, ats_type, token, name="", board_url=""):
+        """Auto-learn: remember a board that fetched successfully so future
+        `--sources-only` runs can poll it directly (no search spend)."""
+        if not token and not board_url:
+            return
+        try:
+            obj, created = CompanySource.objects.get_or_create(
+                ats_type=ats_type, token=token or board_url[:200],
+                defaults={"name": name or (token or "").capitalize(), "board_url": board_url},
+            )
+            if created:
+                self.stats["source:learned"] += 1
+            elif board_url and obj.board_url != board_url:
+                obj.board_url = board_url
+                obj.save(update_fields=["board_url"])
+        except Exception as e:
+            logger.warning("record_source failed (%s:%s): %s", ats_type, token, e)
+
+    def poll_company_sources(self):
+        """Phase 1: poll every enabled board in the registry directly."""
+        from django.db.models import F
+        # Never-polled boards (last_polled_at IS NULL) go first, then oldest poll.
+        sources = list(
+            CompanySource.objects.filter(enabled=True).order_by(F("last_polled_at").asc(nulls_first=True))
+        )
+        if not sources:
+            self.stdout.write("📇 Registry empty — nothing to direct-poll yet (SERP discovery will seed it).")
+            return
+        self.stdout.write(f"📇 Direct-polling {len(sources)} saved company sources...")
+        dispatch = {
+            "greenhouse": lambda s: self.fetch_greenhouse_api(s.token),
+            "lever": lambda s: self.fetch_lever_api(s.token),
+            "ashby": lambda s: self.fetch_ashby_api(s.token),
+            "workable": lambda s: self.fetch_workable_api(s.token),
+            "smartrecruiters": lambda s: self.fetch_smartrecruiters_api(s.token),
+            "recruitee": lambda s: self.fetch_recruitee_api(s.token),
+            "workday": lambda s: self.fetch_workday_api(s.board_url or s.token),
+        }
+        self._polling_registry = True
+        for s in sources:
+            fn = dispatch.get(s.ats_type)
+            if not fn:
+                continue
+            self._poll_seen = 0
+            before = self.total_added
+            try:
+                fn(s)
+            except Exception as e:
+                logger.warning("Direct poll failed for %s: %s", s, e)
+            added = self.total_added - before
+            s.last_polled_at = timezone.now()
+            s.last_seen_count = self._poll_seen
+            s.last_added_count = added
+            if self._poll_seen == 0:
+                s.consecutive_empty += 1
+                if s.consecutive_empty >= self.EMPTY_POLLS_BEFORE_DISABLE:
+                    s.enabled = False
+                    self.stats["source:auto_disabled"] += 1
+            else:
+                s.consecutive_empty = 0
+            s.save(update_fields=["last_polled_at", "last_seen_count", "last_added_count", "consecutive_empty", "enabled"])
+            time.sleep(0.3)
+        self._polling_registry = False
 
     # ... (API Fetchers for Greenhouse, Lever, etc. remain the same) ...
     def fetch_greenhouse_api(self, token):
@@ -272,14 +410,16 @@ class Command(BaseCommand):
         try:
             resp = requests.get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
+                self.record_source("greenhouse", token, token.capitalize())
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('updated_at')):
                         raw_loc = item.get('location', {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         self.screen_and_upsert({
-                            "title": item.get('title'), "company": token.capitalize(), "location": clean_loc, 
-                            "description": item.get('content'), "apply_url": item.get('absolute_url'), 
-                            "work_arrangement": arr, "source": "Greenhouse"
+                            "title": item.get('title'), "company": token.capitalize(), "location": clean_loc,
+                            "description": item.get('content'), "apply_url": item.get('absolute_url'),
+                            "work_arrangement": arr, "source": "Greenhouse",
+                            "external_id": f"greenhouse:{item.get('id')}",
                         })
         except Exception as e:
             self.stats["Greenhouse:error"] += 1
@@ -291,6 +431,7 @@ class Command(BaseCommand):
         try:
             resp = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
+                self.record_source("lever", token, token.capitalize())
                 for item in resp.json():
                     if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
@@ -301,7 +442,8 @@ class Command(BaseCommand):
                         self.screen_and_upsert({
                             "title": item.get('text'), "company": token.capitalize(), "location": clean_loc,
                             "description": item.get('description'), "apply_url": item.get('hostedUrl'),
-                            "work_arrangement": arr, "source": "Lever", "salary": salary
+                            "work_arrangement": arr, "source": "Lever", "salary": salary,
+                            "external_id": f"lever:{item.get('id')}",
                         })
         except Exception as e:
             self.stats["Lever:error"] += 1
@@ -313,6 +455,7 @@ class Command(BaseCommand):
         try:
             resp = requests.post("https://api.ashbyhq.com/posting-api/job-board/" + company, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
+                self.record_source("ashby", company, company.capitalize())
                 for item in resp.json().get('jobs', []):
                     loc_obj = item.get('location') or {}
                     if isinstance(loc_obj, str): raw_loc = loc_obj
@@ -321,7 +464,8 @@ class Command(BaseCommand):
                     self.screen_and_upsert({
                         "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
                         "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'),
-                        "work_arrangement": arr, "source": "Ashby", "salary": item.get('compensationTierSummary')
+                        "work_arrangement": arr, "source": "Ashby", "salary": item.get('compensationTierSummary'),
+                        "external_id": f"ashby:{item.get('id')}",
                     })
         except Exception as e:
             self.stats["Ashby:error"] += 1
@@ -333,15 +477,17 @@ class Command(BaseCommand):
         try:
             resp = requests.get(f"https://apply.workable.com/api/v1/widget/accounts/{sub}", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
+                self.record_source("workable", sub, sub.capitalize())
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('published_on')):
                         parts = [item.get('city'), item.get('state'), item.get('country')]
                         raw_loc = ", ".join([p for p in parts if p])
                         clean_loc, arr = self._clean_location(raw_loc, item.get('telecommuting', False))
                         self.screen_and_upsert({
-                            "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc, 
-                            "description": item.get('description'), "apply_url": item.get('url'), 
-                            "work_arrangement": arr, "source": "Workable"
+                            "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc,
+                            "description": item.get('description'), "apply_url": item.get('url'),
+                            "work_arrangement": arr, "source": "Workable",
+                            "external_id": f"workable:{item.get('id') or item.get('shortcode')}",
                         })
         except Exception as e:
             self.stats["Workable:error"] += 1
@@ -353,6 +499,7 @@ class Command(BaseCommand):
         try:
             resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
+                self.record_source("smartrecruiters", company, company.capitalize())
                 for item in resp.json().get('content', []):
                     if self.is_fresh(item.get('releasedDate')):
                         try:
@@ -365,12 +512,73 @@ class Command(BaseCommand):
                         clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
                         self.screen_and_upsert({
                             "title": item.get('name'), "company": company.capitalize(), "location": clean_loc,
-                            "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}", 
-                            "work_arrangement": arr, "source": "SmartRecruiters"
+                            "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
+                            "work_arrangement": arr, "source": "SmartRecruiters",
+                            "external_id": f"smartrecruiters:{item.get('id')}",
                         })
         except Exception as e:
             self.stats["SmartRecruiters:error"] += 1
             logger.warning("SmartRecruiters board '%s' failed: %s", company, e)
+
+    def fetch_recruitee_api(self, company):
+        if company in self.processed_tokens: return
+        self.processed_tokens.add(company)
+        try:
+            resp = requests.get(f"https://{company}.recruitee.com/api/offers/", headers=self.get_headers(), timeout=5)
+            if resp.status_code == 200:
+                self.record_source("recruitee", company, company.capitalize())
+                for item in resp.json().get('offers', []):
+                    if self.is_fresh(item.get('published_at') or item.get('created_at')):
+                        parts = [item.get('city'), item.get('state_name') or item.get('state_code'), item.get('country')]
+                        raw_loc = ", ".join([p for p in parts if p]) or item.get('location')
+                        is_remote = bool(item.get('remote')) or "remote" in (raw_loc or "").lower()
+                        clean_loc, arr = self._clean_location(raw_loc, is_remote)
+                        self.screen_and_upsert({
+                            "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
+                            "description": item.get('description'), "apply_url": item.get('careers_url') or item.get('url'),
+                            "work_arrangement": arr, "source": "Recruitee",
+                            "external_id": f"recruitee:{item.get('id')}",
+                        })
+        except Exception as e:
+            self.stats["Recruitee:error"] += 1
+            logger.warning("Recruitee board '%s' failed: %s", company, e)
+
+    def fetch_workday_api(self, board_url):
+        """Workday CXS API. board_url is a full careers URL like
+        https://<tenant>.<host>.myworkdayjobs.com/<lang?>/<site> — we derive the
+        tenant/host/site and POST to the public /wday/cxs jobs endpoint."""
+        if board_url in self.processed_tokens: return
+        self.processed_tokens.add(board_url)
+        m = re.match(r'https?://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:([a-z]{2}-[A-Z]{2})/)?([^/?#]+)', board_url)
+        if not m:
+            self.stats["Workday:skip_badurl"] += 1
+            return
+        tenant, host, _lang, site = m.group(1), m.group(2), m.group(3), m.group(4)
+        api = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
+        try:
+            resp = requests.post(api, json={"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""},
+                                 headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
+            if resp.status_code != 200:
+                self.stats["Workday:error"] += 1
+                return
+            self.record_source("workday", f"{tenant}/{site}", tenant.capitalize(), board_url=board_url)
+            base = f"https://{tenant}.{host}.myworkdayjobs.com/{('%s/' % _lang) if _lang else ''}{site}"
+            for item in resp.json().get('jobPostings', []):
+                # postedOn is relative text ("Posted 3 Days Ago"); trust the
+                # search recency window instead of trying to parse it.
+                ext_path = item.get('externalPath') or ""
+                raw_loc = item.get('locationsText') or item.get('bulletFields', [None])[0] or ""
+                is_remote = "remote" in raw_loc.lower()
+                clean_loc, arr = self._clean_location(raw_loc, is_remote)
+                self.screen_and_upsert({
+                    "title": item.get('title'), "company": tenant.capitalize(), "location": clean_loc,
+                    "description": item.get('title'), "apply_url": f"{base}{ext_path}",
+                    "work_arrangement": arr, "source": "Workday",
+                    "external_id": f"workday:{ext_path}",
+                })
+        except Exception as e:
+            self.stats["Workday:error"] += 1
+            logger.warning("Workday board '%s' failed: %s", board_url, e)
 
     def fetch_generic_ai(self, url):
         if self._is_duplicate("", "", url): return 
@@ -413,8 +621,13 @@ class Command(BaseCommand):
     def screen_and_upsert(self, job_data):
         source = job_data.get("source", "?")
         self.stats[f"{source}:seen"] += 1
+        # Track postings seen during a direct registry poll so we can auto-disable
+        # boards that return nothing (vs. boards that just yield no NEW jobs).
+        if getattr(self, "_polling_registry", False):
+            self._poll_seen += 1
         clean_url = self._clean_url(job_data.get("apply_url"))
-        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url):
+        external_id = (job_data.get("external_id") or "").strip()
+        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url, external_id):
             self.stats[f"{source}:dupe"] += 1
             return
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), clean_url)
@@ -447,6 +660,8 @@ class Command(BaseCommand):
         role_type = raw_role if raw_role in valid_role_types else "full_time"
         # Real salary from the ATS payload when available (never fabricated).
         salary = (job_data.get("salary") or "").strip() or None
+        # Structured location captured at ingest (Sprint 3b).
+        country, region, remote_scope = self._geo_fields(job_data.get("location"), job_data.get("work_arrangement"))
         job = Job.objects.create(
             title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
             location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
@@ -456,6 +671,8 @@ class Command(BaseCommand):
             is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
             function=fn,
             screening_details=analysis.get("details", {}),
+            external_id=external_id,
+            country=country, region=region, remote_scope=remote_scope,
         )
         for raw in signals.get("stack", []):
             tool = self._resolve_tool(raw)
