@@ -35,6 +35,8 @@ stripe
 geopy
 google-auth
 django-allauth==65.3.1
-PyJWT==2.13.0
-cryptography==49.0.0
+# allauth's Google provider verifies the id_token (JWT) — the [crypto] extra
+# pulls a wheel-available cryptography automatically. Left unpinned so Render's
+# pip resolves a prebuilt wheel for its Python (no Rust/source build).
+PyJWT[crypto]>=2.0
 redis==5.0.8
