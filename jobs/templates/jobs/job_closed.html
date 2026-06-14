@@ -45,7 +45,7 @@
     <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jc-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
       <span class="co">{{ rjob.company }}</span>
       <span class="ti">{{ rjob.title }}</span>
-      <span class="me">{{ rjob.location|default:"Remote" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
+      <span class="me">{{ rjob.location|default:"Not specified" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
     </a>
     {% endfor %}
   </div>

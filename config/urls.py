@@ -29,6 +29,12 @@ Disallow: /admin/
 Disallow: /staff/
 Disallow: /webhook/
 Disallow: /post-job/success/
+Disallow: /*?q=
+Disallow: /*?l=
+Disallow: /*&q=
+Disallow: /*&l=
+Disallow: /*?sort=
+Disallow: /*&sort=
 
 Sitemap: https://martechjobs.io/sitemap.xml
 """

@@ -80,6 +80,23 @@ _SEO_COUNTRIES = [
     "united-states", "united-kingdom", "canada", "germany", "australia",
     "india", "ireland", "netherlands", "france", "spain", "singapore",
 ]
+# Full state name -> USPS code, so a state page (e.g. /california/jobs/) rolls
+# up city jobs stored with the abbreviation ("San Francisco, CA, United States").
+US_STATE_ABBR = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR",
+    "california": "CA", "colorado": "CO", "connecticut": "CT", "delaware": "DE",
+    "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID",
+    "illinois": "IL", "indiana": "IN", "iowa": "IA", "kansas": "KS",
+    "kentucky": "KY", "louisiana": "LA", "maine": "ME", "maryland": "MD",
+    "massachusetts": "MA", "michigan": "MI", "minnesota": "MN", "mississippi": "MS",
+    "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV",
+    "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+    "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK",
+    "oregon": "OR", "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC",
+    "south dakota": "SD", "tennessee": "TN", "texas": "TX", "utah": "UT",
+    "vermont": "VT", "virginia": "VA", "washington": "WA", "west virginia": "WV",
+    "wisconsin": "WI", "wyoming": "WY",
+}
 _SEO_CITIES = [
     "New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston",
     "Los Angeles", "Denver", "Atlanta", "Dallas", "Miami", "Toronto", "London",
@@ -619,8 +636,20 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     if tool: jobs = jobs.filter(tools=tool)
-    if location_name == "Remote": jobs = jobs.filter(work_arrangement="remote")
-    elif location_name != "United States": jobs = jobs.filter(location__icontains=location_name)
+    if location_name == "Remote":
+        jobs = jobs.filter(work_arrangement="remote")
+    elif location_name != "United States":
+        state_abbr = US_STATE_ABBR.get(location_name.lower())
+        if state_abbr:
+            # State page: match the full name OR the USPS code as it appears in
+            # stored locations ("San Francisco, CA, United States").
+            jobs = jobs.filter(
+                Q(location__icontains=location_name)
+                | Q(location__icontains=f", {state_abbr},")
+                | Q(location__iendswith=f", {state_abbr}")
+            )
+        else:
+            jobs = jobs.filter(location__icontains=location_name)
 
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"

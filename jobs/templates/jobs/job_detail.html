@@ -131,7 +131,7 @@
       <div class="jd-pills">
         <span class="pill pill-loc">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          {{ job.location|default:"Remote" }}
+          {{ job.location|default:"Not specified" }}
         </span>
         {% if job.salary_range %}<span class="pill pill-type">{{ job.salary_range }}</span>{% endif %}
         <span class="pill pill-type">{{ job.get_role_type_display }}</span>
@@ -149,7 +149,7 @@
 <div class="jd-wrap">
   <div class="jd-body">
     <div>
-      <div class="jd-content">{{ job.description|safe }}</div>
+      <div class="jd-content">{% if job.description %}{{ job.description|safe }}{% else %}<p>The full job description is available on the employer's site. Click <strong>Apply Now</strong> below to read the complete role details and requirements.</p>{% endif %}</div>
       <div class="jd-apply-cta">
         <h3>Ready to make an impact?</h3>
         <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>
@@ -161,7 +161,7 @@
       <div class="jd-card">
         <h4>Job Details</h4>
         <div class="jd-card-row"><span class="jd-card-label">Company</span><span class="jd-card-val">{{ job.company }}</span></div>
-        <div class="jd-card-row"><span class="jd-card-label">Location</span><span class="jd-card-val">{{ job.location|default:"Remote" }}</span></div>
+        <div class="jd-card-row"><span class="jd-card-label">Location</span><span class="jd-card-val">{{ job.location|default:"Not specified" }}</span></div>
         <div class="jd-card-row"><span class="jd-card-label">Type</span><span class="jd-card-val">{{ job.get_role_type_display }}</span></div>
         {% if job.salary_range %}<div class="jd-card-row"><span class="jd-card-label">Salary</span><span class="jd-card-val" style="color:var(--green);font-family:'Playfair Display',serif;font-weight:700;">{{ job.salary_range }}</span></div>{% endif %}
         {% if job.work_arrangement %}<div class="jd-card-row"><span class="jd-card-label">Work Mode</span><span class="jd-card-val">{{ job.get_work_arrangement_display }}</span></div>{% endif %}
@@ -211,7 +211,7 @@
       <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jd-rel-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
         <span class="jd-rel-co">{{ rjob.company }}</span>
         <span class="jd-rel-title">{{ rjob.title }}</span>
-        <span class="jd-rel-meta">{{ rjob.location|default:"Remote" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
+        <span class="jd-rel-meta">{{ rjob.location|default:"Not specified" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
         <span class="jd-rel-chips">{% for t in rjob.tools.all|slice:":2" %}<span>{{ t.name }}</span>{% endfor %}</span>
       </a>
       {% endfor %}

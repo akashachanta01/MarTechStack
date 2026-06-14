@@ -4,6 +4,8 @@
 {% block title %}Browse All MarTech Jobs | MarTechJobs{% endblock %}
 {% block meta_description %}Browse every open marketing-technology role — Marketing Ops, RevOps, Lifecycle, CDP, and analytics. Curated, vendor-neutral, and verified daily on MarTechJobs.{% endblock %}
 {% block meta_keywords %}martech jobs, marketing technology jobs, marketing operations jobs, revops jobs, browse martech roles{% endblock %}
+{% block og_title %}Browse All MarTech Jobs{% endblock %}
+{% block og_desc %}Browse every open marketing-technology role — Marketing Ops, RevOps, Lifecycle, CDP, and analytics. Curated, vendor-neutral, and verified daily on MarTechJobs.{% endblock %}
 
 {% block rel_prev_next %}
   {% if jobs.has_previous %}<link rel="prev" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.previous_page_number }}" />{% endif %}
@@ -289,7 +291,7 @@
             </span>
             <span>·</span>
             <svg style="width:11px;height:11px;color:var(--ink3);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span>{{ job.location|default:"Remote" }}</span>
+            <span>{{ job.location|default:"Not specified" }}</span>
             <span>·</span>
             <span>{{ job.created_at|timesince }} ago</span>
           </div>
