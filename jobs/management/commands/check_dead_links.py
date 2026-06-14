@@ -60,11 +60,12 @@ class Command(BaseCommand):
                             break
 
             except requests.exceptions.Timeout:
-                # Be lenient on timeouts (might be temporary)
-                pass
+                pass  # temporary; don't penalise
+            except requests.exceptions.ConnectionError:
+                # DNS failure / refused connection — board is gone
+                reason = "Connection failed (board may be removed)"
             except Exception as e:
-                # Other errors (DNS, etc) might be permanent
-                pass
+                self.stdout.write(self.style.WARNING(f"\n   ⚠ Check error for {job.apply_url}: {e}"))
 
             # 2. ACTION: REJECT IF DEAD
             if reason:
