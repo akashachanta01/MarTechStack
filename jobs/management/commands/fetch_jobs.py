@@ -736,12 +736,12 @@ class Command(BaseCommand):
 
     def _resolve_tool(self, raw):
         """Normalize a raw stack name to a canonical Tool, auto-creating valid
-        but missing ones. Unrecognized names are dropped (prevents junk tools)."""
+        but missing ones. Unrecognized names are dropped entirely — we never
+        attach a job to a non-canonical tool, so junk tool pages can't be kept
+        alive (or re-created) through ingestion."""
         canon = resolve_tool_name(raw)
         if not canon:
-            # Fall back to an exact existing-tool match before giving up.
-            existing = self.tool_cache.get(self.screener._normalize(raw))
-            return existing
+            return None
         key = canon.lower()
         tool = self.tool_cache.get(key)
         if tool:
