@@ -1,6 +1,7 @@
 import stripe
 import json
 import os
+import secrets
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
@@ -17,9 +18,9 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
-from .models import Job, Tool, Category, Subscriber, BlogPost, SavedSearch
+from .models import Job, Tool, Category, Subscriber, PendingSubscriber, BlogPost, SavedSearch
 from .forms import JobPostForm, ContactForm
-from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert
+from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert, send_confirmation_email
 from .tool_catalog import all_canonical_names, resolve_tool_name
 
 # Canonical tool display names (lowercased) for indexability checks.
@@ -128,12 +129,10 @@ TITLE_JOBS = {
         "intro": "Marketing Operations Specialists run day-to-day campaign execution, list management, automation builds, and QA inside the marketing automation platform.",
         "skills": "HubSpot, Marketo, email QA, segmentation, workflows",
     },
-    "revenue-operations-manager": {
-        "name": "Revenue Operations Manager",
-        "kw": ["revenue operations manager", "revops manager", "revenue operations", "manager, revenue operations"],
-        "intro": "Revenue Operations (RevOps) Managers align marketing, sales, and customer success operations — owning the funnel, the CRM, forecasting, and the go-to-market tech stack.",
-        "skills": "Salesforce, CRM, forecasting, lead-to-revenue, GTM stack",
-    },
+    # RevOps intentionally removed: the screener EXCLUDES Revenue Operations
+    # roles, so this programmatic page was always empty and contradicted our
+    # positioning. The old /revenue-operations-manager-jobs/ URL 301-redirects
+    # to marketing-operations-manager (see jobs/urls.py).
     "marketing-automation-specialist": {
         "name": "Marketing Automation Specialist",
         "kw": ["marketing automation specialist", "marketing automation manager", "automation specialist"],
@@ -961,7 +960,6 @@ def subscribe(request):
             sarr = request.POST.get("arrangement", "").strip().lower()[:20]
             has_filters = any([sq, stool, sloc, sfunc, sarr])
 
-            newly = False
             if has_filters:
                 parts = []
                 if sfunc: parts.append(sfunc.title())
@@ -974,17 +972,37 @@ def subscribe(request):
                     email=email, query=sq, tool=stool, location=sloc,
                     function=sfunc, arrangement=sarr, defaults={'label': label},
                 )
-            else:
-                _, newly = Subscriber.objects.get_or_create(email=email)
+                if newly:
+                    send_welcome_email(email)
+                return JsonResponse({"success": True})
 
-            if newly:
-                send_welcome_email(email)
-                user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown')
-                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
-                send_admin_new_subscriber_alert(email, user_agent, ip)
-            return JsonResponse({"success": True})
+            # General newsletter signup -> double opt-in. Hold the email in
+            # PendingSubscriber until they click the confirmation link; only
+            # then do they become a real (sending-list) Subscriber.
+            if Subscriber.objects.filter(email=email).exists():
+                return JsonResponse({"success": True, "message": "You're already subscribed!"})
+            pending, _ = PendingSubscriber.objects.update_or_create(
+                email=email, defaults={'token': secrets.token_urlsafe(32)})
+            send_confirmation_email(email, pending.token)
+            return JsonResponse({"success": True, "message": "Almost there — check your inbox to confirm."})
     return JsonResponse({"success": False}, status=400)
+
+
+def confirm_subscription(request, token):
+    """Double opt-in confirmation: promote a PendingSubscriber to Subscriber."""
+    pending = PendingSubscriber.objects.filter(token=token).first() if token else None
+    if not pending:
+        return render(request, 'jobs/subscription_confirmed.html', {'invalid': True})
+    email = pending.email
+    _, created = Subscriber.objects.get_or_create(email=email)
+    pending.delete()
+    if created:
+        send_welcome_email(email)
+        ua = request.META.get('HTTP_USER_AGENT', 'Unknown')
+        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        ip = xff.split(',')[0] if xff else request.META.get('REMOTE_ADDR')
+        send_admin_new_subscriber_alert(email, ua, ip)
+    return render(request, 'jobs/subscription_confirmed.html', {'email': email})
 
 @staff_member_required
 def review_queue(request):

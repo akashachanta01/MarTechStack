@@ -139,10 +139,31 @@ def profile_edit(request):
     return render(request, 'accounts/profile.html', ctx)
 
 
+def _sync_newsletter_subscription(user, subscribed):
+    """Wire the Settings newsletter toggle to the real Subscriber list. The user
+    owns this verified account, so no double opt-in is needed — subscribing here
+    creates a confirmed Subscriber; unsubscribing removes them from the list."""
+    from jobs.models import Subscriber
+    email = (user.email or '').strip().lower()
+    if not email:
+        return
+    if subscribed:
+        Subscriber.objects.get_or_create(email=email)
+    else:
+        Subscriber.objects.filter(email=email).delete()
+
+
 @login_required
 def settings_view(request):
     profile = request.user.userprofile
     has_google = request.user.socialaccount_set.filter(provider='google').exists()
+    # Reconcile the toggle with the real list (source of truth).
+    from jobs.models import Subscriber
+    on_list = Subscriber.objects.filter(
+        email=(request.user.email or '').lower()).exists()
+    if profile.email_newsletter != on_list:
+        profile.email_newsletter = on_list
+        profile.save(update_fields=['email_newsletter', 'updated_at'])
     return render(request, 'accounts/settings.html', {
         'profile': profile,
         'has_google': has_google,
@@ -158,14 +179,17 @@ def update_notifications(request):
     if action == 'pause_all':
         profile.email_newsletter = False
         profile.email_announcements = False
+        _sync_newsletter_subscription(request.user, False)
     elif action == 'enable_all':
         profile.email_newsletter = True
         profile.email_announcements = True
+        _sync_newsletter_subscription(request.user, True)
     else:
         field = request.POST.get('field')
         value = request.POST.get('value') == 'true'
         if field == 'newsletter':
             profile.email_newsletter = value
+            _sync_newsletter_subscription(request.user, value)
         elif field == 'announcements':
             profile.email_announcements = value
     profile.save(update_fields=['email_newsletter', 'email_announcements', 'updated_at'])

@@ -1,0 +1,26 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{% if invalid %}Invalid link{% else %}Subscription confirmed{% endif %} | MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<div style="min-height:62vh; display:flex; align-items:center; justify-content:center; padding:40px 20px;">
+  <div style="max-width:460px; text-align:center;">
+    {% if invalid %}
+      <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#b91c1c;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:10px;">Link expired or invalid</h1>
+      <p style="font-size:15px;color:var(--ink3);line-height:1.6;margin-bottom:24px;">This confirmation link is no longer valid — it may have already been used. Try subscribing again.</p>
+      <a href="/" class="btn btn-amber">Back to MarTechJobs</a>
+    {% else %}
+      <div style="width:64px;height:64px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--green);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-bottom:10px;">You're confirmed! 🎉</h1>
+      <p style="font-size:15px;color:var(--ink3);line-height:1.6;margin-bottom:24px;"><strong>{{ email }}</strong> is now subscribed. Fresh MarTech roles are on the way — check your inbox for a welcome email.</p>
+      <a href="{% url 'all_jobs' %}" class="btn btn-amber">Browse MarTech Jobs →</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -78,9 +78,25 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
         logger.exception("Email send failed ('%s'): %s", subject, e)
         return False
 
+def send_confirmation_email(to_email, token):
+    """Double opt-in: ask the new subscriber to confirm before we add them to
+    the sending list. No welcome until they click."""
+    confirm_url = f"{DOMAIN}/newsletter/confirm/{token}/"
+    success = send_html_email(
+        subject="Confirm your MarTechJobs subscription",
+        template_name="emails/confirm_subscription.html",
+        context={"confirm_url": confirm_url},
+        to_email=[to_email],
+        unsubscribe_email=to_email,
+    )
+    if success:
+        logger.info("Confirmation email sent to %s", to_email)
+    return success
+
+
 def send_welcome_email(to_email):
     """
-    Removed threading. Send synchronously to guarantee Render 
+    Removed threading. Send synchronously to guarantee Render
     doesn't kill the process before the SMTP handshake finishes.
     """
     success = send_html_email(

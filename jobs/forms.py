@@ -59,10 +59,20 @@ class JobPostForm(HoneypotMixin, forms.ModelForm):
         initial='onsite',
     )
 
+    # Job function so user-posted roles land on the right category page
+    # (Engineering / Operations / Data) instead of defaulting to 'other' and
+    # never appearing in category listings.
+    function = forms.ChoiceField(
+        choices=[('engineering', 'Engineering'), ('operations', 'Operations'), ('data', 'Data & Analytics')],
+        widget=forms.Select(attrs={'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500 bg-white'}),
+        label="Job Function",
+        help_text="Which category does this role belong to?",
+    )
+
     class Meta:
         model = Job
         fields = [
-            'title', 'company', 'company_logo', 'location', 'work_arrangement', 
+            'title', 'company', 'company_logo', 'location', 'work_arrangement', 'function',
             'role_type', 'salary_range', 'apply_url', 'description', 'tools'
         ]
         widgets = {
