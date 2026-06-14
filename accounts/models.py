@@ -11,6 +11,18 @@ class UserProfile(models.Model):
     preferred_location = models.CharField(max_length=100, blank=True)
     bio = models.TextField(max_length=500, blank=True)
     linkedin_url = models.URLField(blank=True)
+    # Social links
+    github_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    website_url = models.URLField(blank=True)
+    # Job preferences
+    open_to_remote = models.BooleanField(default=False)
+    desired_role_type = models.CharField(max_length=20, blank=True)  # full_time / contract / part_time / ''
+    desired_salary = models.CharField(max_length=60, blank=True)
+    # Notification preferences (Settings page)
+    email_newsletter = models.BooleanField(default=True)
+    email_announcements = models.BooleanField(default=True)
+    # Go Pro waitlist
     pro_waitlist = models.BooleanField(default=False)
     pro_waitlist_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
