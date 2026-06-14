@@ -1,0 +1,15 @@
+{% extends "account/base.html" %}
+{% block title %}Confirm Email | MarTechJobs{% endblock %}
+{% block auth_content %}
+<div style="width:100%;max-width:420px;text-align:center;">
+  <h1 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:800;color:var(--navy);margin-bottom:10px;">Confirm your email</h1>
+  {% if confirmation %}
+  <p style="font-size:14px;color:var(--ink3);margin-bottom:24px;">Click below to confirm <strong>{{ confirmation.email_address.email }}</strong> and activate your account.</p>
+  <form method="post">{% csrf_token %}
+    <button type="submit" class="btn btn-amber btn-lg">Confirm Email Address</button>
+  </form>
+  {% else %}
+  <p style="font-size:14px;color:var(--ink3);margin-bottom:24px;">This confirmation link is invalid or has expired. <a href="{% url 'account_email' %}" style="color:var(--amber);">Request a new one →</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}Saved Jobs | MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<style>
+  .saved-hero { padding:40px 0 24px; border-bottom:1px solid var(--rule); }
+  .saved-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(24px,4vw,36px); font-weight:800; color:var(--navy); margin-bottom:6px; }
+  .saved-hero p { font-size:14px; color:var(--ink3); }
+  .saved-content { padding:32px 0 80px; }
+  .saved-inner { max-width:720px; margin:0 auto; padding:0 32px; display:flex; flex-direction:column; gap:12px; }
+  .saved-row { background:var(--card); border:1px solid var(--rule); border-radius:var(--radius); padding:18px 20px; display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit; transition:box-shadow .15s,transform .15s; }
+  .saved-row:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+  .saved-logo { width:44px; height:44px; border-radius:9px; border:1px solid var(--rule); background:var(--paper); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+  .saved-logo img { width:28px; height:28px; object-fit:contain; }
+  .saved-logo-mono { font-family:'Playfair Display',serif; font-size:18px; font-weight:800; color:var(--amber); }
+  .saved-info { flex:1; min-width:0; }
+  .saved-title { font-size:15px; font-weight:700; color:var(--ink); }
+  .saved-co { font-size:13px; color:var(--ink3); margin-top:2px; }
+  .saved-loc { font-size:12px; color:var(--ink3); white-space:nowrap; }
+</style>
+
+<section class="saved-hero">
+  <div class="wrap">
+    <a href="{% url 'accounts_dashboard' %}" style="font-size:13px;color:var(--ink3);font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;">
+      ← Dashboard
+    </a>
+    <h1>Saved Jobs</h1>
+    <p>{{ saved_jobs|length }} saved role{{ saved_jobs|length|pluralize }}</p>
+  </div>
+</section>
+
+<div class="saved-content">
+  <div class="saved-inner">
+    {% for job in saved_jobs %}
+    <a href="{% url 'job_detail' job.id job.slug %}" class="saved-row">
+      <div class="saved-logo">
+        {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }}">
+        {% else %}<span class="saved-logo-mono">{{ job.company|slice:":1" }}</span>{% endif %}
+      </div>
+      <div class="saved-info">
+        <div class="saved-title">{{ job.title }}</div>
+        <div class="saved-co">{{ job.company }}</div>
+      </div>
+      <div class="saved-loc">{{ job.location|default:"Remote" }}</div>
+    </a>
+    {% empty %}
+    <div style="text-align:center;padding:60px 20px;color:var(--ink3);">
+      <p style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No saved jobs yet</p>
+      <p style="font-size:14px;margin-bottom:20px;">Hit the bookmark on any job listing to save it here.</p>
+      <a href="{% url 'all_jobs' %}" class="btn btn-amber">Browse Jobs →</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

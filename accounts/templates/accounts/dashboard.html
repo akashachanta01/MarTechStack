@@ -1,0 +1,279 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard | MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<style>
+  .dash-wrap { display:flex; min-height:calc(100vh - 64px); }
+
+  /* Sidebar */
+  .dash-sidebar {
+    width:240px; flex-shrink:0;
+    background:var(--navy3); color:#fff;
+    display:flex; flex-direction:column;
+    padding:24px 0; position:sticky; top:64px;
+    height:calc(100vh - 64px); overflow-y:auto;
+  }
+  .dash-user { padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:12px; }
+  .dash-avatar {
+    width:40px; height:40px; border-radius:50%;
+    background:var(--amber); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Playfair Display',serif; font-size:17px; font-weight:800;
+    margin-bottom:10px;
+  }
+  .dash-user-name { font-size:14px; font-weight:700; color:#fff; line-height:1.2; }
+  .dash-user-email { font-size:12px; color:rgba(255,255,255,.5); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px; }
+
+  .dash-nav-section { font-family:'Courier Prime',monospace; font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.3); padding:12px 20px 6px; margin-top:4px; }
+  .dash-nav a {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 20px; font-size:13.5px; font-weight:600; color:rgba(255,255,255,.7);
+    text-decoration:none; transition:all .15s; border-left:3px solid transparent;
+  }
+  .dash-nav a:hover { color:#fff; background:rgba(255,255,255,.06); }
+  .dash-nav a.active { color:#fff; background:rgba(255,255,255,.09); border-left-color:var(--amber); }
+  .dash-nav svg { width:16px; height:16px; flex-shrink:0; opacity:.7; }
+  .dash-nav a.active svg, .dash-nav a:hover svg { opacity:1; }
+
+  .dash-sidebar-foot { margin-top:auto; padding:16px 20px; border-top:1px solid rgba(255,255,255,.08); }
+  .dash-gopro { background:var(--amber); color:#fff; border-radius:8px; padding:12px 14px; text-align:center; }
+  .dash-gopro .label { font-family:'Courier Prime',monospace; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; opacity:.85; display:block; margin-bottom:3px; }
+  .dash-gopro .title { font-family:'Playfair Display',serif; font-size:14px; font-weight:800; display:block; margin-bottom:6px; }
+  .dash-gopro .sub { font-size:11px; opacity:.8; display:block; margin-bottom:10px; line-height:1.4; }
+  .dash-gopro a { display:block; background:rgba(255,255,255,.2); color:#fff; font-size:11px; font-weight:700; padding:7px; border-radius:5px; text-align:center; text-decoration:none; transition:background .15s; }
+  .dash-gopro a:hover { background:rgba(255,255,255,.3); }
+  .dash-signout { margin-top:10px; }
+  .dash-signout a { font-size:12px; color:rgba(255,255,255,.4); text-decoration:none; transition:color .15s; display:flex; align-items:center; gap:6px; }
+  .dash-signout a:hover { color:rgba(255,255,255,.7); }
+
+  /* Main */
+  .dash-main { flex:1; overflow:auto; padding:40px 48px 80px; background:var(--paper); }
+  .dash-greeting { margin-bottom:36px; }
+  .dash-greeting h1 { font-family:'Playfair Display',serif; font-size:clamp(22px,3vw,32px); font-weight:800; color:var(--navy); margin-bottom:4px; }
+  .dash-greeting p { font-size:14px; color:var(--ink3); }
+
+  /* Stat cards */
+  .dash-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; margin-bottom:36px; }
+  .dash-stat { background:var(--card); border:1px solid var(--rule); border-radius:var(--radius); padding:20px; }
+  .dash-stat-val { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:var(--navy); display:block; line-height:1; }
+  .dash-stat-label { font-size:12px; color:var(--ink3); margin-top:6px; display:block; }
+  .dash-stat-sub { font-size:11px; color:var(--amber); font-weight:700; margin-top:4px; font-family:'Courier Prime',monospace; }
+
+  /* Section */
+  .dash-section { margin-bottom:40px; }
+  .dash-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .dash-section-head h2 { font-family:'Playfair Display',serif; font-size:20px; font-weight:800; color:var(--ink); }
+  .dash-section-head a { font-size:12px; font-weight:700; color:var(--amber); font-family:'Courier Prime',monospace; letter-spacing:.08em; text-transform:uppercase; }
+
+  /* Match cards */
+  .dash-matches { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+  .dash-match {
+    background:var(--card); border:1px solid var(--rule); border-radius:var(--radius);
+    padding:18px; display:flex; flex-direction:column; gap:8px;
+    transition:box-shadow .2s, transform .2s; text-decoration:none; color:inherit;
+  }
+  .dash-match:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+  .dash-match-top { display:flex; align-items:center; gap:10px; }
+  .dash-match-logo { width:36px; height:36px; border-radius:8px; border:1px solid var(--rule); background:var(--paper); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+  .dash-match-logo img { width:24px; height:24px; object-fit:contain; }
+  .dash-match-logo-mono { font-family:'Playfair Display',serif; font-size:14px; font-weight:800; color:var(--amber); }
+  .dash-match-company { font-size:12px; color:var(--ink3); }
+  .dash-match-title { font-size:14px; font-weight:700; color:var(--ink); line-height:1.3; }
+  .dash-match-meta { font-size:11px; color:var(--ink3); }
+
+  /* Saved job rows */
+  .dash-saved-list { display:flex; flex-direction:column; gap:10px; }
+  .dash-saved-row {
+    background:var(--card); border:1px solid var(--rule); border-radius:var(--radius);
+    padding:14px 18px; display:flex; align-items:center; gap:14px;
+    text-decoration:none; color:inherit; transition:box-shadow .15s;
+  }
+  .dash-saved-row:hover { box-shadow:var(--shadow-sm); }
+  .dash-saved-row-info { flex:1; min-width:0; }
+  .dash-saved-row-title { font-size:14px; font-weight:700; color:var(--ink); }
+  .dash-saved-row-co { font-size:12px; color:var(--ink3); margin-top:2px; }
+  .dash-saved-row-loc { font-size:11px; color:var(--ink3); }
+
+  /* Checklist */
+  .dash-checklist { display:flex; flex-direction:column; gap:10px; }
+  .dash-check-item { display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--rule); border-radius:var(--radius); padding:12px 16px; }
+  .dash-check-ico { width:22px; height:22px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .dash-check-ico.done { background:var(--green-light); color:var(--green); }
+  .dash-check-ico.todo { background:var(--paper); border:1.5px solid var(--rule2); }
+  .dash-check-label { font-size:14px; font-weight:600; color:var(--ink2); flex:1; }
+  .dash-check-label.done { color:var(--ink3); text-decoration:line-through; }
+  .dash-check-link { font-size:12px; font-weight:700; color:var(--amber); font-family:'Courier Prime',monospace; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap; }
+
+  /* Empty state */
+  .dash-empty { text-align:center; padding:40px 20px; color:var(--ink3); font-size:14px; }
+  .dash-empty strong { display:block; font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:var(--ink2); margin-bottom:6px; }
+
+  /* Progress bar */
+  .progress-bar { background:var(--rule); border-radius:999px; height:6px; margin-top:8px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:999px; background:var(--amber); transition:width .5s; }
+
+  @media(max-width:860px){
+    .dash-sidebar { display:none; }
+    .dash-main { padding:24px 20px 60px; }
+  }
+</style>
+
+<div class="dash-wrap">
+
+  <!-- Sidebar -->
+  <aside class="dash-sidebar">
+    <div class="dash-user">
+      <div class="dash-avatar">{{ request.user.first_name|slice:":1"|upper|default:request.user.email|slice:":1"|upper }}</div>
+      <div class="dash-user-name">{% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}My Account{% endif %}</div>
+      <div class="dash-user-email">{{ request.user.email }}</div>
+    </div>
+
+    <div class="dash-nav">
+      <div class="dash-nav-section">Menu</div>
+      <a href="{% url 'accounts_dashboard' %}" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </a>
+      <a href="{% url 'accounts_saved_jobs' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        Saved Jobs <span style="margin-left:auto;background:rgba(255,255,255,.15);padding:1px 7px;border-radius:20px;font-size:11px;">{{ saved_count }}</span>
+      </a>
+      <a href="{% url 'all_jobs' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Browse Jobs
+      </a>
+      <div class="dash-nav-section">Account</div>
+      <a href="{% url 'accounts_profile' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </a>
+      <a href="{% url 'account_change_password' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Change Password
+      </a>
+    </div>
+
+    <div class="dash-sidebar-foot">
+      <div class="dash-gopro">
+        <span class="label">Coming Soon</span>
+        <span class="title">Go Pro</span>
+        <span class="sub">Priority alerts, salary insights, and profile boost.</span>
+        <a href="#">Join the waitlist</a>
+      </div>
+      <div class="dash-signout">
+        <a href="{% url 'account_logout' %}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign out
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="dash-main">
+
+    <div class="dash-greeting">
+      <h1>{% if request.user.first_name %}Good morning, {{ request.user.first_name }}.{% else %}Welcome back.{% endif %}</h1>
+      <p>Here's your job search at a glance.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <span class="dash-stat-val">{{ saved_count }}</span>
+        <span class="dash-stat-label">Saved Jobs</span>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-val">{{ profile_pct }}%</span>
+        <span class="dash-stat-label">Profile Complete</span>
+        <div class="progress-bar"><div class="progress-fill" style="width:{{ profile_pct }}%"></div></div>
+      </div>
+      <div class="dash-stat">
+        <span class="dash-stat-val">{{ top_matches.count }}</span>
+        <span class="dash-stat-label">Matches Found</span>
+        <span class="dash-stat-sub">{% if profile.preferred_stack.exists %}Based on your stack{% else %}Add stack to personalise{% endif %}</span>
+      </div>
+    </div>
+
+    <!-- Top Matches -->
+    <div class="dash-section">
+      <div class="dash-section-head">
+        <h2>Top Matches</h2>
+        <a href="{% url 'all_jobs' %}">Browse all →</a>
+      </div>
+      {% if top_matches %}
+      <div class="dash-matches">
+        {% for job in top_matches %}
+        <a href="{% url 'job_detail' job.id job.slug %}" class="dash-match">
+          <div class="dash-match-top">
+            <div class="dash-match-logo">
+              {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }}">
+              {% else %}<span class="dash-match-logo-mono">{{ job.company|slice:":1" }}</span>{% endif %}
+            </div>
+            <span class="dash-match-company">{{ job.company }}</span>
+          </div>
+          <div class="dash-match-title">{{ job.title }}</div>
+          <div class="dash-match-meta">{{ job.location|default:"Not specified" }} · {{ job.created_at|timesince }} ago</div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dash-empty"><strong>No matches yet</strong>Add tools to your profile to get personalised recommendations.</div>
+      {% endif %}
+    </div>
+
+    <!-- Saved Jobs -->
+    <div class="dash-section">
+      <div class="dash-section-head">
+        <h2>Saved Jobs</h2>
+        <a href="{% url 'accounts_saved_jobs' %}">View all →</a>
+      </div>
+      {% if saved_jobs %}
+      <div class="dash-saved-list">
+        {% for job in saved_jobs %}
+        <a href="{% url 'job_detail' job.id job.slug %}" class="dash-saved-row">
+          <div class="dash-match-logo">
+            {% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }}">
+            {% else %}<span class="dash-match-logo-mono">{{ job.company|slice:":1" }}</span>{% endif %}
+          </div>
+          <div class="dash-saved-row-info">
+            <div class="dash-saved-row-title">{{ job.title }}</div>
+            <div class="dash-saved-row-co">{{ job.company }}</div>
+          </div>
+          <div class="dash-saved-row-loc">{{ job.location|default:"Remote" }}</div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="dash-empty">
+        <strong>No saved jobs yet</strong>
+        Hit the bookmark on any job to save it here.
+        <br><br><a href="{% url 'all_jobs' %}" class="btn btn-amber">Browse Jobs →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Getting Started checklist -->
+    <div class="dash-section">
+      <div class="dash-section-head"><h2>Getting Started</h2></div>
+      <div class="dash-checklist">
+        {% for item in checklist %}
+        <div class="dash-check-item">
+          <div class="dash-check-ico {% if item.done %}done{% else %}todo{% endif %}">
+            {% if item.done %}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% endif %}
+          </div>
+          <span class="dash-check-label {% if item.done %}done{% endif %}">{{ item.label }}</span>
+          {% if not item.done %}<a href="{{ item.url }}" class="dash-check-link">Do it →</a>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

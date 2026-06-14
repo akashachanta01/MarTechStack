@@ -36,7 +36,8 @@ Sitemap: https://martechjobs.io/sitemap.xml
 urlpatterns = [
     # Admin & Apps
     path('admin/', admin.site.urls),
-    path('tools/', include('tools.urls')), 
+    path('tools/', include('tools.urls')),
+    path('accounts/', include('accounts.urls')),
     path('', include('jobs.urls')),
 
     # SEO Paths
