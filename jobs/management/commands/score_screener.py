@@ -31,6 +31,9 @@ EVAL_SET = [
     ("MarTech Engineer", "Acme SaaS", "martech"),
     ("CDP Engineer", "Acme SaaS", "martech"),
     ("Salesforce Marketing Cloud Developer", "Acme SaaS", "martech"),
+    ("Analytics Engineer", "Acme SaaS", "martech"),
+    ("Web Analyst", "Acme SaaS", "martech"),
+    ("Tag Management Specialist", "Acme SaaS", "martech"),
     # --- should REJECT: explicitly out-of-scope marketing-adjacent roles ---
     ("Revenue Operations Manager", "Acme SaaS", "reject"),
     ("RevOps Analyst", "Acme SaaS", "reject"),

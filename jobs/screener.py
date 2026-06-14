@@ -61,7 +61,8 @@ class MarTechScreener:
             "martech", "marketing technology", "marketing technologist",
             "marketing analytics", "marketing data", "marketing engineer",
             "customer data platform", "cdp", "solutions architect",
-            "marketing systems",
+            "marketing systems", "web analytics", "digital analytics",
+            "web analyst", "tag management", "analytics engineer",
         }
         _GATE_TOOL_TERMS = {
             "salesforce", "hubspot", "marketo", "pardot", "eloqua", "braze",
@@ -224,9 +225,13 @@ class MarTechScreener:
         ALSO:
         - Detect stack: tools actually used (from the menu or clearly named).
         - Classify function into exactly one of:
-          * "engineering": hands-on build/integration (developer, architect, engineer, implementation)
+          * "engineering": hands-on build/integration — developer, architect,
+            marketing/MarTech engineer, CDP engineer, integration, implementation,
+            AND analytics-engineering / web-analytics implementation / tag
+            management (dbt, GTM, Tealium tagging)
           * "operations": Marketing Operations, Marketing Automation, Campaign Operations
-          * "data": analytics, reporting, measurement, BI, attribution, tagging
+          * "data": analysis, reporting, measurement, BI, attribution, insights
+            (a Web Analyst / Marketing Analyst who analyzes, not implements)
           * "other": doesn't clearly fit
 
         Output JSON:

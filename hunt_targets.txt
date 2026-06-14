@@ -1,16 +1,25 @@
-# --- ROLES (Grouped by Intent) ---
-"MarTech" OR "Marketing Technology" OR "Marketing Technologist" OR "Marketing Operations" OR "MOPs" OR "Marketing Ops" OR "Marketing automation specialist"
-"CDP" OR "CDP Engineer" OR "Customer Data Platform"
+# Search-discovery targets. Each non-comment line is split on " OR " and each
+# term becomes an intitle: Google search on ATS job pages. Scope: Marketing
+# Operations (+ Marketing Automation + Campaign Operations), MarTech Engineering,
+# and Marketing Analytics/Data.
+# Deliberately EXCLUDED: RevOps, Lifecycle/CRM/Email marketing, Growth, Demand Gen.
+# Note: ATS titles are role-based (the tool is usually only in the JD), so the
+# ROLE lines do most of the discovery; tool lines are supplementary.
 
-# --- MARKETING AUTOMATION (Grouped by Competitor) ---
-"Adobe Journey Optimizer" OR "AJO" OR "Adobe" OR "Marketo" OR "Adobe Marketo Engage"
-"HubSpot Marketing Hub" OR "HubSpot Operations" OR "Braze" OR "Iterable" OR "Customer.io" OR "Klaviyo" OR "Eloqua" OR "Oracle Eloqua" OR "Knack" OR "Movable Ink"
+# --- ROLES: OPERATIONS (Marketing Operations only) ---
+"Marketing Operations" OR "Marketing Ops" OR "MOPs" OR "Marketing Technologist" OR "MarTech"
+"Marketing Automation Specialist" OR "Marketing Automation Manager" OR "Marketing Automation Developer" OR "Campaign Operations"
 
-# --- DATA & CDPs ---
-"Twilio Segment" OR "ActionIQ" OR "Tealium" OR "Tealium AudienceStream" OR "Tealium iQ"
-"Adobe Experience Platform" OR "AEP" OR "Real-Time CDP" OR "AEM" OR "Adobe Experience Manager"
-"Salesforce CDP" OR "Salesforce Data Cloud" OR "Salesforce Marketing Cloud" OR "SFMC" OR "Marketing Cloud" OR "Salesforce Admin" OR "Salesforce" OR "Salesforce developer"
+# --- ROLES: MARTECH ENGINEERING ---
+"Marketing Engineer" OR "MarTech Engineer" OR "CDP Engineer" OR "Customer Data Platform" OR "Marketing Solutions Architect" OR "Analytics Engineer"
+"Tag Management" OR "Tagging Specialist" OR "Web Analytics Implementation" OR "Marketing Integration Engineer"
 
-# --- ANALYTICS & TESTING ---
-"Google Analytics 4" OR "GA4" OR "Google Tag Manager" OR "Adobe Analytics" OR "Customer Journey Analytics" OR "Adobe Launch" OR "Tagging Specialist" OR "Web Analyst" OR "Web Analytics" OR "Digital Analytics"
-"Mixpanel" OR "Amplitude" OR "Heap" OR "Server-side tracking" OR "Adobe Target" OR "Optimizely"
+# --- ROLES: MARKETING ANALYTICS / DATA ---
+"Marketing Analytics" OR "Marketing Data Analyst" OR "Web Analyst" OR "Digital Analytics" OR "Customer Journey Analytics"
+
+# --- PLATFORMS (in-scope MarTech automation / CDP / analytics tools) ---
+"Marketo" OR "Adobe Marketo Engage" OR "Pardot" OR "Oracle Eloqua" OR "Eloqua" OR "HubSpot" OR "Salesforce Administrator"
+"Salesforce Marketing Cloud" OR "SFMC" OR "Adobe Journey Optimizer" OR "AJO" OR "Adobe Campaign"
+"Twilio Segment" OR "Tealium" OR "mParticle" OR "ActionIQ" OR "RudderStack" OR "Hightouch" OR "Census" OR "Salesforce Data Cloud"
+"Adobe Experience Platform" OR "AEP" OR "Adobe Experience Manager" OR "AEM" OR "Adobe Analytics"
+"Google Analytics 4" OR "GA4" OR "Google Tag Manager" OR "Adobe Target" OR "Optimizely" OR "Amplitude" OR "Mixpanel" OR "Heap"
