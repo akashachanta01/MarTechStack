@@ -104,3 +104,10 @@ fragility for future real migrations.
   `update_logos.py` with specific exception types + logging.
 - [ ] Alert the founder (email) when a CompanySource auto-disables after 5
   empty polls, so silent source loss is visible.
+- [ ] **Per-source progress logging in `poll_company_sources`**
+  (`fetch_jobs.py:385-407`): the loop runs silently between the
+  "Direct-polling N sources..." header and the final summary — a full
+  `--sources-only` run can take 10-30 min (paid GPT screen + rate-limited
+  Nominatim geocode per new job) with zero output, looking hung. Print a
+  per-source line, e.g. `[12/89] greenhouse:acme → +3`, so the run is
+  visibly alive in the Render shell. Small change, high operator value.
