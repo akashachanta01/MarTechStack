@@ -6,6 +6,8 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from jobs.models import Job, Tool
 from .models import UserProfile
@@ -14,32 +16,46 @@ from .models import UserProfile
 @login_required
 def dashboard(request):
     profile = request.user.userprofile
-    saved = profile.saved_jobs.filter(is_active=True).order_by('-created_at')[:5]
-    stack_tools = profile.preferred_stack.all()
 
-    # Top matches: active jobs using the user's preferred tools
-    if stack_tools.exists():
-        top_matches = (
+    # Evaluate the saved-jobs relation once; derive both the count and the
+    # preview slice from the same result instead of re-querying.
+    saved_active = list(
+        profile.saved_jobs.filter(is_active=True).order_by('-created_at')
+    )
+    saved_count = len(saved_active)
+    saved_preview = saved_active[:5]
+
+    # Evaluate the preferred stack once too.
+    stack_tools = list(profile.preferred_stack.all())
+    has_stack = bool(stack_tools)
+
+    # Top matches: active jobs using the user's preferred tools.
+    if has_stack:
+        top_matches = list(
             Job.objects.filter(is_active=True, tools__in=stack_tools)
             .distinct()
             .order_by('-created_at')[:6]
         )
     else:
-        top_matches = Job.objects.filter(is_active=True).order_by('-created_at')[:6]
+        top_matches = list(
+            Job.objects.filter(is_active=True).order_by('-created_at')[:6]
+        )
 
     checklist = [
         {'label': 'Add your first name', 'done': bool(request.user.first_name), 'url': '/accounts/profile/'},
-        {'label': 'Pick your tech stack', 'done': stack_tools.exists(), 'url': '/accounts/profile/'},
+        {'label': 'Pick your tech stack', 'done': has_stack, 'url': '/accounts/profile/'},
         {'label': 'Set preferred location', 'done': bool(profile.preferred_location), 'url': '/accounts/profile/'},
-        {'label': 'Save your first job', 'done': profile.saved_jobs.exists(), 'url': '/jobs/'},
+        {'label': 'Save your first job', 'done': saved_count > 0, 'url': '/jobs/'},
     ]
 
     ctx = {
         'profile': profile,
-        'saved_jobs': saved,
+        'saved_jobs': saved_preview,
         'top_matches': top_matches,
+        'matches_count': len(top_matches),
+        'has_stack': has_stack,
         'checklist': checklist,
-        'saved_count': profile.saved_jobs.filter(is_active=True).count(),
+        'saved_count': saved_count,
         'profile_pct': profile.profile_complete_pct(),
     }
     return render(request, 'accounts/dashboard.html', ctx)
@@ -70,9 +86,19 @@ def profile_edit(request):
         request.user.save()
 
         profile.bio = bio[:500]
-        profile.preferred_location = preferred_location
-        if linkedin_url and not linkedin_url.startswith(('http://', 'https://')):
-            linkedin_url = 'https://' + linkedin_url
+        profile.preferred_location = preferred_location[:100]
+        # Normalise and validate the LinkedIn URL: force https, reject any
+        # non-http(s) scheme (e.g. javascript:, ftp:) and anything that isn't
+        # a real URL. URLField validators don't run on .save(), so do it here.
+        if linkedin_url:
+            if linkedin_url.startswith('http://'):
+                linkedin_url = 'https://' + linkedin_url[len('http://'):]
+            elif not linkedin_url.startswith('https://'):
+                linkedin_url = 'https://' + linkedin_url
+            try:
+                URLValidator(schemes=['https'])(linkedin_url)
+            except ValidationError:
+                linkedin_url = ''
         profile.linkedin_url = linkedin_url
         profile.preferred_stack.set(Tool.objects.filter(id__in=tool_ids))
         profile.save()
