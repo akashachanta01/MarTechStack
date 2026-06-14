@@ -4,18 +4,25 @@
 {% block title %}Dashboard | MarTechJobs{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 
+{# Dashboard is an immersive app view — hide the marketing nav + footer.
+   Its own sidebar (with "Browse Jobs") is the way back to the public site. #}
+{% block navbar %}{% endblock %}
+{% block site_footer %}{% endblock %}
+
 {% block content %}
 <style>
-  .dash-wrap { display:flex; min-height:calc(100vh - 64px); }
+  .dash-wrap { display:flex; min-height:100vh; }
 
   /* Sidebar */
   .dash-sidebar {
     width:240px; flex-shrink:0;
     background:var(--navy3); color:#fff;
     display:flex; flex-direction:column;
-    padding:24px 0; position:sticky; top:64px;
-    height:calc(100vh - 64px); overflow-y:auto;
+    padding:24px 0; position:sticky; top:0;
+    height:100vh; overflow-y:auto;
   }
+  .dash-logo { display:block; padding:0 20px 18px; margin-bottom:6px; line-height:0; opacity:.95; transition:opacity .15s; }
+  .dash-logo:hover { opacity:1; }
   .dash-user { padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:12px; }
   .dash-avatar {
     width:40px; height:40px; border-radius:50%;
@@ -115,8 +122,22 @@
   .progress-bar { background:var(--rule); border-radius:999px; height:6px; margin-top:8px; overflow:hidden; }
   .progress-fill { height:100%; border-radius:999px; background:var(--amber); transition:width .5s; }
 
+  /* On mobile the sidebar becomes a sticky horizontal nav bar so the
+     dashboard stays self-navigable (the marketing nav is hidden here). */
   @media(max-width:860px){
-    .dash-sidebar { display:none; }
+    .dash-wrap { flex-direction:column; }
+    .dash-sidebar {
+      width:100%; height:auto; position:sticky; top:0; z-index:50;
+      flex-direction:row; align-items:center; gap:4px;
+      padding:10px 12px; overflow-x:auto;
+    }
+    .dash-logo, .dash-user, .dash-nav-section { display:none; }
+    .dash-nav { display:flex; flex-direction:row; gap:4px; flex:1; }
+    .dash-nav a { white-space:nowrap; border-left:none; border-radius:7px; padding:8px 12px; }
+    .dash-nav a span { display:none; }
+    .dash-sidebar-foot { margin:0 0 0 auto; padding:0; border:none; flex-shrink:0; }
+    .dash-gopro { display:none; }
+    .dash-signout { margin:0; }
     .dash-main { padding:24px 20px 60px; }
   }
 </style>
@@ -125,6 +146,17 @@
 
   <!-- Sidebar -->
   <aside class="dash-sidebar">
+    <a href="{% url 'job_list' %}" class="dash-logo" aria-label="MarTechJobs home">
+      <svg width="150" height="28" viewBox="0 0 250 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MarTechJobs">
+        <rect x="0" y="6" width="36" height="36" rx="10" fill="#bf5420"/>
+        <rect x="9" y="15" width="18" height="4.6" rx="2.3" fill="#fff"/>
+        <rect x="9" y="21.7" width="12" height="4.6" rx="2.3" fill="#fff" opacity=".82"/>
+        <rect x="9" y="28.4" width="15" height="4.6" rx="2.3" fill="#fff" opacity=".55"/>
+        <text x="48" y="25" font-family="'Playfair Display',Georgia,serif" font-weight="800" font-size="22" letter-spacing="-.4">
+          <tspan fill="#fff">MarTech</tspan><tspan fill="#f0a06a">Jobs</tspan>
+        </text>
+      </svg>
+    </a>
     <div class="dash-user">
       <div class="dash-avatar">{{ request.user.first_name|slice:":1"|upper|default:request.user.email|slice:":1"|upper }}</div>
       <div class="dash-user-name">{% if request.user.first_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}My Account{% endif %}</div>
