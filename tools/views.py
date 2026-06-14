@@ -4,36 +4,67 @@ import time
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.core.cache import cache
 from django.db.models import Q
 from openai import OpenAI
 from .models import ToolPage
-from jobs.models import Job 
+from jobs.models import Job
 
 # --- SECURITY: API RATE LIMITER (Protects your OpenAI Wallet) ---
+# Defence in depth: a per-session cooldown (UX), a per-IP daily quota, and a
+# GLOBAL daily ceiling. The session-only limit was bypassable by simply dropping
+# the cookie, so the IP + global caps (backed by the shared cache) are what
+# actually cap spend.
+IP_DAILY_LIMIT = 40       # generations per IP per day
+GLOBAL_DAILY_LIMIT = 750  # hard ceiling across ALL users per day (wallet guard)
+
+
+def _tools_client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')
+
+
+def _bump_daily(key, limit, window=86400):
+    """Increment a daily counter in the shared cache; return True if over limit."""
+    current = cache.get(key)
+    if current is None:
+        cache.set(key, 1, timeout=window)
+        return False
+    if current >= limit:
+        return True
+    try:
+        cache.incr(key)
+    except ValueError:
+        cache.set(key, 1, timeout=window)
+    return False
+
+
 def check_rate_limit(request):
     current_time = time.time()
-    
-    # Check frequency (Cooldown: 5 seconds between clicks)
+
+    # 1. Session cooldown (5s between clicks) — UX nicety, not a real guard.
     last_call = request.session.get('last_ai_call', 0)
     if current_time - last_call < 5:
         return False, "Please wait a few seconds before generating again."
-        
-    # Check daily quota (Max 15 free generations per user per day)
-    usage_count = request.session.get('ai_usage_count', 0)
-    last_reset = request.session.get('ai_usage_reset', current_time)
-    
-    # Reset quota every 24 hours
-    if current_time - last_reset > 86400:
-        usage_count = 0
-        request.session['ai_usage_reset'] = current_time
-        
-    if usage_count >= 15:
+
+    # 2. Global daily ceiling — the real wallet protection. Checked first so a
+    #    flood from many IPs still can't blow the budget.
+    today = time.strftime('%Y%m%d')
+    if _bump_daily(f"ai_tools:global:{today}", GLOBAL_DAILY_LIMIT):
+        return False, "Our free AI tools are at capacity for today — please try again tomorrow."
+
+    # 3. Per-IP daily quota — independent of the (droppable) session cookie.
+    ip = _tools_client_ip(request)
+    if _bump_daily(f"ai_tools:ip:{ip}:{today}", IP_DAILY_LIMIT):
         return False, "You've hit your free daily limit for AI tools! Please come back tomorrow."
-        
-    # Update session
+
+    # 4. Session counter retained for friendly messaging.
     request.session['last_ai_call'] = current_time
-    request.session['ai_usage_count'] = usage_count + 1
+    request.session['ai_usage_count'] = request.session.get('ai_usage_count', 0) + 1
     return True, ""
+
 
 
 # --- 1. JOB DESCRIPTION GENERATOR ---

@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Case, When, Value, IntegerField, Count, Max
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.cache import cache
 from django.utils.text import slugify
 from django.http import HttpResponse, JsonResponse, Http404
@@ -966,7 +967,12 @@ def review_action(request, job_id, action):
             cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
-    return redirect(request.META.get("HTTP_REFERER", "review_queue"))
+    # Return to the review queue the staffer came from, but only if the Referer
+    # is one of our own pages — never follow an attacker-supplied redirect.
+    referer = request.META.get("HTTP_REFERER")
+    if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return redirect(referer)
+    return redirect("review_queue")
 
 def about(request): return render(request, 'jobs/about.html')
 def for_employers(request):
