@@ -18,6 +18,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
 from django.conf import settings
+from django.db import IntegrityError
 from django.db.models import Q
 
 from jobs.models import Job, Tool, Category, CompanySource
@@ -259,11 +260,11 @@ class Command(BaseCommand):
         # 1. Remove hash fragments
         url = url.split('#')[0]
         
-        # 2. Aggressively strip trailing /apply, /login, /autofill, /useMyLastApplication
-        # Regex explanation:
-        # /(apply|login|autofill|useMyLastApplication) -> look for these keywords starting with /
-        # .*$ -> match EVERYTHING after them until the end of the string
-        url = re.sub(r'/(apply|login|autofill|useMyLastApplication).*$', '', url, flags=re.IGNORECASE)
+        # 2. Strip trailing /apply, /login, /autofill, /useMyLastApplication —
+        # but only as WHOLE path segments. The keyword must be followed by a "/"
+        # or the end of the string, so a real job slug like
+        # ".../senior-marketing-applylytics-engineer" is NOT truncated.
+        url = re.sub(r'/(apply|login|autofill|useMyLastApplication)(?=/|$).*$', '', url, flags=re.IGNORECASE)
         
         # 3. Standard Parse rebuild to ensure valid structure
         parsed = urlparse(url)
@@ -543,10 +544,28 @@ class Command(BaseCommand):
             self.stats["Recruitee:error"] += 1
             logger.warning("Recruitee board '%s' failed: %s", company, e)
 
+    def _workday_fresh(self, posted_on):
+        """Workday `postedOn` is relative text ("Posted 5 Days Ago", "Posted
+        30+ Days Ago", "Posted Today"). Return True if within the 14-day window.
+        Unknown/missing format -> keep (fail-open) so a wording change can't
+        silently drop a whole board."""
+        if not posted_on:
+            return True
+        t = posted_on.lower()
+        if "today" in t or "yesterday" in t or "hour" in t or "minute" in t:
+            return True
+        if "month" in t or "year" in t:
+            return False
+        m = re.search(r'(\d+)\+?\s*day', t)
+        if m:
+            return int(m.group(1)) <= 14
+        return True
+
     def fetch_workday_api(self, board_url):
         """Workday CXS API. board_url is a full careers URL like
         https://<tenant>.<host>.myworkdayjobs.com/<lang?>/<site> — we derive the
-        tenant/host/site and POST to the public /wday/cxs jobs endpoint."""
+        tenant/host/site and POST to the public /wday/cxs jobs endpoint.
+        Paginates (Workday returns 20/page) and gates on postedOn freshness."""
         if board_url in self.processed_tokens: return
         self.processed_tokens.add(board_url)
         m = re.match(r'https?://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:([a-z]{2}-[A-Z]{2})/)?([^/?#]+)', board_url)
@@ -555,27 +574,43 @@ class Command(BaseCommand):
             return
         tenant, host, _lang, site = m.group(1), m.group(2), m.group(3), m.group(4)
         api = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
+        base = f"https://{tenant}.{host}.myworkdayjobs.com/{('%s/' % _lang) if _lang else ''}{site}"
+        PAGE = 20
+        MAX_PAGES = 10  # cap coverage at 200 postings/board to bound cost
         try:
-            resp = requests.post(api, json={"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""},
-                                 headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
-            if resp.status_code != 200:
-                self.stats["Workday:error"] += 1
-                return
-            self.record_source("workday", f"{tenant}/{site}", tenant.capitalize(), board_url=board_url)
-            base = f"https://{tenant}.{host}.myworkdayjobs.com/{('%s/' % _lang) if _lang else ''}{site}"
-            for item in resp.json().get('jobPostings', []):
-                # postedOn is relative text ("Posted 3 Days Ago"); trust the
-                # search recency window instead of trying to parse it.
-                ext_path = item.get('externalPath') or ""
-                raw_loc = item.get('locationsText') or item.get('bulletFields', [None])[0] or ""
-                is_remote = "remote" in raw_loc.lower()
-                clean_loc, arr = self._clean_location(raw_loc, is_remote)
-                self.screen_and_upsert({
-                    "title": item.get('title'), "company": tenant.capitalize(), "location": clean_loc,
-                    "description": item.get('title'), "apply_url": f"{base}{ext_path}",
-                    "work_arrangement": arr, "source": "Workday",
-                    "external_id": f"workday:{ext_path}",
-                })
+            recorded = False
+            for page in range(MAX_PAGES):
+                offset = page * PAGE
+                resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": ""},
+                                     headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
+                if resp.status_code != 200:
+                    self.stats["Workday:error"] += 1
+                    return
+                payload = resp.json()
+                postings = payload.get('jobPostings', [])
+                if not postings:
+                    break
+                if not recorded:
+                    self.record_source("workday", f"{tenant}/{site}", tenant.capitalize(), board_url=board_url)
+                    recorded = True
+                for item in postings:
+                    if not self._workday_fresh(item.get('postedOn')):
+                        self.stats["Workday:stale"] += 1
+                        continue
+                    ext_path = item.get('externalPath') or ""
+                    raw_loc = item.get('locationsText') or (item.get('bulletFields') or [None])[0] or ""
+                    is_remote = "remote" in raw_loc.lower()
+                    clean_loc, arr = self._clean_location(raw_loc, is_remote)
+                    self.screen_and_upsert({
+                        "title": item.get('title'), "company": tenant.capitalize(), "location": clean_loc,
+                        "description": item.get('title'), "apply_url": f"{base}{ext_path}",
+                        "work_arrangement": arr, "source": "Workday",
+                        "external_id": f"workday:{ext_path}",
+                    })
+                # Stop once we've walked the whole board.
+                if offset + PAGE >= payload.get('total', 0):
+                    break
+                time.sleep(0.3)
         except Exception as e:
             self.stats["Workday:error"] += 1
             logger.warning("Workday board '%s' failed: %s", board_url, e)
@@ -662,18 +697,24 @@ class Command(BaseCommand):
         salary = (job_data.get("salary") or "").strip() or None
         # Structured location captured at ingest (Sprint 3b).
         country, region, remote_scope = self._geo_fields(job_data.get("location"), job_data.get("work_arrangement"))
-        job = Job.objects.create(
-            title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
-            location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
-            description=job_data.get("description"), apply_url=clean_url,
-            role_type=role_type, screening_status=status, salary_range=salary,
-            screening_score=score, screening_reason=analysis.get("reason", ""),
-            is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
-            function=fn,
-            screening_details=analysis.get("details", {}),
-            external_id=external_id,
-            country=country, region=region, remote_scope=remote_scope,
-        )
+        try:
+            job = Job.objects.create(
+                title=job_data.get("title"), company=job_data.get("company"), company_logo=self.resolve_logo(job_data.get("company")),
+                location=job_data.get("location"), work_arrangement=job_data.get("work_arrangement"),
+                description=job_data.get("description"), apply_url=clean_url,
+                role_type=role_type, screening_status=status, salary_range=salary,
+                screening_score=score, screening_reason=analysis.get("reason", ""),
+                is_active=(status == "approved"), screened_at=timezone.now(), tags=f"{job_data.get('source')}",
+                function=fn,
+                screening_details=analysis.get("details", {}),
+                external_id=external_id,
+                country=country, region=region, remote_scope=remote_scope,
+            )
+        except IntegrityError:
+            # A concurrent run won the race on the same external_id — that's the
+            # unique constraint doing its job. Treat as a duplicate, not a crash.
+            self.stats[f"{source}:dupe"] += 1
+            return
         for raw in signals.get("stack", []):
             tool = self._resolve_tool(raw)
             if tool:
