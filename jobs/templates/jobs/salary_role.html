@@ -1,0 +1,176 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ role_name }} Salary ({% now "Y" %}) — Real Pay Data | MarTechJobs{% endblock %}
+{% block meta_description %}{% if stats %}{{ role_name }} salaries range ${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }} (median ${{ stats.median|intcomma }}), based on {{ stats.count }} disclosed MarTech postings. Updated {% now "Y" %}.{% else %}{{ role_name }} salary data, pay ranges and live openings on MarTechJobs. Updated {% now "Y" %}.{% endif %}{% endblock %}
+{% block meta_keywords %}{{ role_name }} salary, {{ role_name }} pay, {{ role_name }} compensation, marketing operations salary{% endblock %}
+{% block og_title %}{{ role_name }} Salary ({% now "Y" %}){% endblock %}
+{% block og_desc %}{% if stats %}Median ${{ stats.median|intcomma }} · range ${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }}, from {{ stats.count }} real postings.{% else %}Real {{ role_name }} pay data from live MarTech job postings.{% endif %}{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Salary Guide","item":"https://martechjobs.io/salary-guide/"},
+    {"@type":"ListItem","position":3,"name":"{{ role_name }} Salary","item":"https://martechjobs.io{% url 'role_salary' role_slug %}"}
+  ]
+}
+</script>
+{% if stats %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How much does a {{ role_name|escapejs }} make?","acceptedAnswer":{"@type":"Answer","text":"Based on {{ stats.count }} disclosed {{ role_name|escapejs }} postings on MarTechJobs, pay typically ranges from ${{ stats.avg_low|intcomma }} to ${{ stats.avg_high|intcomma }}, with a median around ${{ stats.median|intcomma }} per year."}},
+    {"@type":"Question","name":"What is the salary range for a {{ role_name|escapejs }}?","acceptedAnswer":{"@type":"Answer","text":"Reported {{ role_name|escapejs }} salaries span roughly ${{ stats.low|intcomma }} on the low end to ${{ stats.high|intcomma }} on the high end, with the middle 50% between ${{ stats.p25|intcomma }} and ${{ stats.p75|intcomma }}."}}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+  .sr-wrap { max-width: 920px; margin: 0 auto; padding: 0 32px; }
+  @media(max-width:560px){ .sr-wrap { padding: 0 20px; } }
+  .sr-hero { padding: 48px 0 8px; }
+  .sr-bc { font-size:12.5px; color:var(--ink3); margin-bottom:16px; }
+  .sr-bc a:hover { color:var(--amber); text-decoration:underline; }
+  .sr-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(30px,5vw,46px); font-weight:800; line-height:1.1; color:var(--ink); margin-bottom:12px; }
+  .sr-hero h1 em { font-style:italic; color:var(--amber); }
+  .sr-headline { font-size:18px; color:var(--ink2); line-height:1.6; max-width:720px; }
+  .sr-headline b { color:var(--green); font-family:'Playfair Display',serif; }
+
+  .sr-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin:30px 0 8px; }
+  .sr-card { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:20px; }
+  .sr-card-l { font-family:'Courier Prime',monospace; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); margin-bottom:8px; }
+  .sr-card-v { font-family:'Playfair Display',serif; font-size:24px; font-weight:800; color:var(--navy); line-height:1; }
+  .sr-card-v.green { color:var(--green); }
+
+  .sr-section { padding:36px 0 8px; }
+  .sr-section h2 { font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:800; color:var(--ink); margin-bottom:16px; }
+  .sr-intro { font-size:16px; line-height:1.75; color:var(--ink2); margin:8px 0 4px; }
+
+  .sr-split { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:560px){ .sr-split { grid-template-columns:1fr; } }
+  .sr-split-card { background:var(--paper2); border:1px solid var(--rule); border-radius:12px; padding:20px 22px; }
+  .sr-split-card .t { font-size:13px; font-weight:700; color:var(--ink2); margin-bottom:6px; display:flex; align-items:center; gap:7px; }
+  .sr-split-card .r { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:var(--green); }
+  .sr-split-card .n { font-size:12px; color:var(--ink3); margin-top:4px; }
+
+  .sr-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .sr-chips a { font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:7px; background:var(--amber-light); color:var(--amber); border:1px solid #f0c6a8; }
+  .sr-chips a:hover { background:var(--amber); color:#fff; }
+
+  .sr-jobs { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+  .sr-job { display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:14px 18px; text-decoration:none; color:inherit; transition:box-shadow .15s; }
+  .sr-job:hover { box-shadow:var(--shadow-sm); }
+  .sr-job-info { flex:1; min-width:0; }
+  .sr-job-t { font-size:14.5px; font-weight:700; color:var(--ink); }
+  .sr-job-c { font-size:12.5px; color:var(--ink3); margin-top:2px; }
+  .sr-job-pay { font-family:'Playfair Display',serif; font-weight:700; color:var(--green); white-space:nowrap; font-size:15px; }
+
+  .sr-note { font-size:12.5px; color:var(--ink3); font-style:italic; margin-top:20px; line-height:1.6; }
+  .sr-cta { background:var(--navy); border-radius:16px; padding:36px; text-align:center; color:#fff; margin:36px 0 56px; }
+  .sr-cta h2 { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:10px; }
+  .sr-cta p { font-size:15px; color:rgba(255,255,255,.72); max-width:520px; margin:0 auto 20px; line-height:1.6; }
+  .sr-empty { background:var(--paper2); border:1px solid var(--rule); border-radius:14px; padding:28px; text-align:center; margin:24px 0; }
+</style>
+
+<div class="sr-wrap sr-hero">
+  <nav class="sr-bc" aria-label="Breadcrumb">
+    <a href="/">Home</a> &nbsp;/&nbsp; <a href="{% url 'salary_guide' %}">Salary Guide</a> &nbsp;/&nbsp; <span>{{ role_name }}</span>
+  </nav>
+  <h1>{{ role_name }} <em>Salary</em></h1>
+  {% if stats %}
+  <p class="sr-headline">A {{ role_name }} typically earns <b>${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }}</b>, with a median around <b>${{ stats.median|intcomma }}</b> — based on {{ stats.count }} disclosed {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs.</p>
+  {% else %}
+  <p class="sr-headline">We're still gathering disclosed-pay data for {{ role_name }} roles. In the meantime, here are the live openings and the stack these roles use.</p>
+  {% endif %}
+</div>
+
+<div class="sr-wrap">
+  {% if stats %}
+  <div class="sr-cards">
+    <div class="sr-card"><div class="sr-card-l">Median</div><div class="sr-card-v green">${{ stats.median|intcomma }}</div></div>
+    <div class="sr-card"><div class="sr-card-l">Typical range</div><div class="sr-card-v">${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }}</div></div>
+    <div class="sr-card"><div class="sr-card-l">Middle 50%</div><div class="sr-card-v">${{ stats.p25|intcomma }}–${{ stats.p75|intcomma }}</div></div>
+    <div class="sr-card"><div class="sr-card-l">Data points</div><div class="sr-card-v">{{ stats.count }}</div></div>
+  </div>
+  {% endif %}
+
+  {% if role_intro %}
+  <div class="sr-section">
+    <p class="sr-intro">{{ role_intro }}</p>
+  </div>
+  {% endif %}
+
+  {% if remote_stats or onsite_stats %}
+  <div class="sr-section">
+    <h2>Remote vs on-site</h2>
+    <div class="sr-split">
+      {% if remote_stats %}
+      <div class="sr-split-card">
+        <div class="t">✈ Remote</div>
+        <div class="r">${{ remote_stats.avg_low|intcomma }}–${{ remote_stats.avg_high|intcomma }}</div>
+        <div class="n">median ${{ remote_stats.median|intcomma }} · {{ remote_stats.count }} posting{{ remote_stats.count|pluralize }}</div>
+      </div>
+      {% endif %}
+      {% if onsite_stats %}
+      <div class="sr-split-card">
+        <div class="t">🏢 On-site / hybrid</div>
+        <div class="r">${{ onsite_stats.avg_low|intcomma }}–${{ onsite_stats.avg_high|intcomma }}</div>
+        <div class="n">median ${{ onsite_stats.median|intcomma }} · {{ onsite_stats.count }} posting{{ onsite_stats.count|pluralize }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if top_tools %}
+  <div class="sr-section">
+    <h2>Skills that move {{ role_name }} pay</h2>
+    <p class="sr-intro" style="font-size:14px;margin-bottom:14px;">The tools most often required across live {{ role_name }} roles — depth here typically lifts compensation:</p>
+    <div class="sr-chips">
+      {% for t in top_tools %}<a href="{% url 'tool_detail' t.slug %}">{{ t.name }}</a>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if examples %}
+  <div class="sr-section">
+    <h2>{{ role_name }} roles with disclosed pay</h2>
+    <div class="sr-jobs">
+      {% for job in examples %}
+      <a href="{% url 'job_detail' job.id job.slug %}" class="sr-job">
+        <div class="sr-job-info">
+          <div class="sr-job-t">{{ job.title }}</div>
+          <div class="sr-job-c">{{ job.company }} · {{ job.location|default:"Not specified" }}</div>
+        </div>
+        <div class="sr-job-pay">{{ job.salary_range }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="sr-empty">
+    <p style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px;">No disclosed-pay {{ role_name }} roles right now</p>
+    <p style="font-size:14px;color:var(--ink3);">Pay data appears here as postings that disclose salary come in.</p>
+  </div>
+  {% endif %}
+
+  {% if stats %}
+  <p class="sr-note">Methodology: figures are computed from {{ stats.count }} {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs that disclosed pay, annualised where needed. This is real, observed data — not a model estimate — so it shifts as new roles are posted.</p>
+  {% endif %}
+
+  <div class="sr-cta">
+    <h2>See live {{ role_name }} jobs</h2>
+    <p>{% if total_open %}{{ total_open }} {{ role_name }} role{{ total_open|pluralize }} are open on MarTechJobs right now.{% else %}New {{ role_name }} roles are added regularly.{% endif %} Apply directly — no recruiter noise.</p>
+    <a href="{% url 'title_jobs' role_slug %}" class="btn btn-amber btn-lg">Browse {{ role_name }} Jobs →</a>
+  </div>
+</div>
+{% endblock %}

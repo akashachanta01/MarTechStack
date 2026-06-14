@@ -101,6 +101,9 @@
     <h1 class="tj-h1">{{ title_name }} <span class="em">Jobs</span></h1>
     <p class="tj-intro">{{ intro }}</p>
     {% if skills %}<p class="tj-skills"><b>Common skills:</b> {{ skills }}</p>{% endif %}
+    <a href="{% url 'role_salary' title_slug %}" style="display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
+      💰 What does a {{ title_name }} earn? See the salary data →
+    </a>
   </div>
 </section>
 

@@ -734,6 +734,74 @@ def salary_guide(request):
         'overall_max_k': overall_max_k,
     })
 
+def _salary_stats(jobs):
+    """Aggregate real, disclosed salary ranges into honest stats. Returns None
+    when no job in the set disclosed pay (we never fabricate a number)."""
+    lows, highs, mids = [], [], []
+    for j in jobs:
+        lo, hi = j.get_salary_min_max()
+        if lo and hi:
+            lows.append(lo); highs.append(hi); mids.append((lo + hi) // 2)
+    n = len(mids)
+    if n == 0:
+        return None
+    mids.sort()
+
+    def pct(p):
+        k = max(0, min(n - 1, int(round((p / 100.0) * (n - 1)))))
+        return mids[k]
+
+    return {
+        'count': n,
+        'avg_low': int(sum(lows) / n),
+        'avg_high': int(sum(highs) / n),
+        'p25': pct(25), 'median': pct(50), 'p75': pct(75),
+        'low': min(lows), 'high': max(highs),
+    }
+
+
+def role_salary(request, role_slug):
+    """Per-role salary page, e.g. /marketing-operations-manager-salary/.
+    Computed entirely from disclosed pay in the live/recent job corpus."""
+    cfg = TITLE_JOBS.get(role_slug)
+    if not cfg:
+        raise Http404("Unknown role")
+
+    q = Q()
+    for kw in cfg["kw"]:
+        q |= Q(title__icontains=kw)
+    jobs = (Job.objects.filter(is_active=True, screening_status="approved")
+            .filter(q).prefetch_related("tools").distinct())
+
+    stats = _salary_stats(jobs)
+    remote_stats = _salary_stats(jobs.filter(work_arrangement='remote'))
+    onsite_stats = _salary_stats(jobs.exclude(work_arrangement='remote'))
+
+    # Top tools among these roles (skills chips) and example roles with pay.
+    paired_ids = list(jobs.values_list('id', flat=True))
+    top_tools = (
+        Tool.objects.filter(jobs__id__in=paired_ids)
+        .annotate(c=Count('jobs', filter=Q(jobs__id__in=paired_ids)))
+        .order_by('-c').distinct()[:8]
+    )
+    examples = [j for j in jobs.order_by('-is_pinned', '-created_at')
+                if j.get_salary_min_max()[0]][:6]
+
+    return render(request, 'jobs/salary_role.html', {
+        'role_slug': role_slug,
+        'role_name': cfg["name"],
+        'role_intro': cfg.get("intro", ""),
+        'stats': stats,
+        'remote_stats': remote_stats,
+        'onsite_stats': onsite_stats,
+        'top_tools': top_tools,
+        'examples': examples,
+        'total_open': jobs.count(),
+        # Thin data => keep it out of the index until it's substantive.
+        'page_noindex': (not stats) or stats['count'] < 3,
+    })
+
+
 def unsubscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
