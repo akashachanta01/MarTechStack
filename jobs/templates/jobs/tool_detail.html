@@ -2,6 +2,8 @@
 
 {% block title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs {% now "Y" %} | MarTechJobs{% endif %}{% endblock %}
 {% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
+{% block og_title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs{% endif %}{% endblock %}
+{% block og_desc %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
 {% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing jobs, {{ tool.name }} careers, {{ tool.name }} marketing operations{% endblock %}
 
 {% block rel_prev_next %}
@@ -326,7 +328,7 @@
             </span>
             <span>·</span>
             <svg style="width:11px;height:11px;color:var(--ink3);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <span>{{ job.location|default:"Remote" }}</span>
+            <span>{{ job.location|default:"Not specified" }}</span>
             <span>·</span>
             <span>{{ job.created_at|timesince }} ago</span>
           </div>

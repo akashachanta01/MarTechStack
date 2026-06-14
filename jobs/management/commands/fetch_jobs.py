@@ -21,7 +21,7 @@ from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Q
 
-from jobs.models import Job, Tool, Category, CompanySource
+from jobs.models import Job, Tool, Category, CompanySource, clean_html_description
 from jobs.screener import MarTechScreener
 from jobs.tool_catalog import resolve_tool_name
 
@@ -224,7 +224,8 @@ class Command(BaseCommand):
             resp = requests.get("https://serpapi.com/search", params=params, timeout=15)
             if resp.status_code == 200:
                 return [r.get("link") for r in resp.json().get("organic_results", [])]
-        except: pass
+        except requests.RequestException as e:
+            logger.warning("SerpAPI request failed: %s", e)
         return []
 
     def _search_serper(self, query, num=100, tbs="qdr:d14"):
@@ -382,7 +383,8 @@ class Command(BaseCommand):
             "workday": lambda s: self.fetch_workday_api(s.board_url or s.token),
         }
         self._polling_registry = True
-        for s in sources:
+        total = len(sources)
+        for idx, s in enumerate(sources, 1):
             fn = dispatch.get(s.ats_type)
             if not fn:
                 continue
@@ -393,6 +395,8 @@ class Command(BaseCommand):
             except Exception as e:
                 logger.warning("Direct poll failed for %s: %s", s, e)
             added = self.total_added - before
+            # Progress line so a long --sources-only run is visibly alive.
+            self.stdout.write(f"   [{idx}/{total}] {s.ats_type}:{s.token or s.name} → +{added}")
             s.last_polled_at = timezone.now()
             s.last_seen_count = self._poll_seen
             s.last_added_count = added
@@ -401,6 +405,9 @@ class Command(BaseCommand):
                 if s.consecutive_empty >= self.EMPTY_POLLS_BEFORE_DISABLE:
                     s.enabled = False
                     self.stats["source:auto_disabled"] += 1
+                    self.stdout.write(self.style.WARNING(
+                        f"   ⚠ Auto-disabled '{s.name}' ({s.ats_type}) after "
+                        f"{s.consecutive_empty} empty polls."))
             else:
                 s.consecutive_empty = 0
             s.save(update_fields=["last_polled_at", "last_seen_count", "last_added_count", "consecutive_empty", "enabled"])
@@ -473,9 +480,14 @@ class Command(BaseCommand):
                     if isinstance(loc_obj, str): raw_loc = loc_obj
                     else: raw_loc = item.get('locationName') or "Remote"
                     clean_loc, arr = self._clean_location(raw_loc, item.get('isRemote', False))
+                    # Ashby's job-board API returns the real JD; use it instead of
+                    # a placeholder so detail pages and Google for Jobs schema have
+                    # genuine content.
+                    raw_desc = item.get('descriptionHtml') or item.get('descriptionPlain') or ''
+                    description = clean_html_description(raw_desc) if raw_desc else f"Full details at {item.get('jobUrl')}"
                     self.screen_and_upsert({
                         "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
-                        "description": f"Full details at {item.get('jobUrl')}", "apply_url": item.get('jobUrl'),
+                        "description": description, "apply_url": item.get('jobUrl'),
                         "work_arrangement": arr, "source": "Ashby", "salary": item.get('compensationTierSummary'),
                         "external_id": f"ashby:{item.get('id')}",
                     })

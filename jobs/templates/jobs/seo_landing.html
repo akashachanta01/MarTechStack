@@ -2,6 +2,8 @@
 
 {% block title %}{{ custom_title }} | MarTechJobs{% endblock %}
 {% block meta_description %}{{ custom_desc }}{% endblock %}
+{% block og_title %}{{ custom_title }}{% endblock %}
+{% block og_desc %}{{ custom_desc }}{% endblock %}
 {% block meta_keywords %}{{ custom_title }}, marketing operations jobs, martech jobs, {{ location_name }} marketing jobs{% endblock %}
 
 {% block rel_prev_next %}
@@ -125,7 +127,7 @@
           <div class="jrow-title">{{ job.title }}</div>
           <div class="jrow-meta">
             <span class="co">{{ job.company }}</span><span>·</span>
-            <span>{{ job.location|default:"Remote" }}</span><span>·</span>
+            <span>{{ job.location|default:"Not specified" }}</span><span>·</span>
             <span>{{ job.created_at|timesince }} ago</span>
           </div>
           <div class="jrow-badges">

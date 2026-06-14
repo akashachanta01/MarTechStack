@@ -313,7 +313,9 @@ class MarTechScreener:
         found_adobe = False
         for tool in stack:
             t_lower = tool.lower()
-            if "adobe" in t_lower or "marketo" in t_lower or "magento" in t_lower:
+            # Marketo is Adobe Marketo Engage; "adobe" is self-evident. Magento
+            # is e-commerce, NOT MarTech — it must not pull in Adobe Exp Cloud.
+            if "adobe" in t_lower or "marketo" in t_lower:
                 found_adobe = True
                 break
         if found_adobe and "Adobe Experience Cloud" not in stack:
