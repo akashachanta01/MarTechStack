@@ -27,8 +27,8 @@ ENGINEERING_TOOL_SLUGS = [
 OPERATIONS_KEYWORDS = [
     "operations", "ops", "admin", "administrator", "coordinator",
     "specialist", "manager", "analyst", "strategist", "consultant",
-    "campaign", "crm", "email", "automation", "revenue operations",
-    "revops", "marketing ops", "martech", "demand generation",
+    "campaign", "crm", "email", "automation",
+    "marketing ops", "martech", "demand generation",
     "demand gen", "lifecycle", "retention", "growth",
 ]
 OPERATIONS_TOOL_SLUGS = [

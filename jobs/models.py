@@ -260,9 +260,21 @@ class BlogPost(models.Model):
     class Meta: ordering = ['-published_at']
 
 class Subscriber(models.Model):
+    # A row here = a CONFIRMED newsletter subscriber. New signups land in
+    # PendingSubscriber first and are only promoted here after they click the
+    # confirmation link (double opt-in), so this table needs no 'confirmed' flag.
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.email
+
+
+class PendingSubscriber(models.Model):
+    """Unconfirmed newsletter signup awaiting double opt-in. Promoted to a real
+    Subscriber once the emailed confirmation link is clicked."""
+    email = models.EmailField(unique=True)
+    token = models.CharField(max_length=64, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self): return f"pending: {self.email}"
 
 class SavedSearch(models.Model):
     """A targeted job alert: an email + the filters it should match on.

@@ -133,6 +133,13 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label">Job Function</label>
+            {{ form.function }}
+            {% if form.function.errors %}<p class="form-err">{{ form.function.errors.0 }}</p>{% endif %}
+            <p class="form-hint">Which category does this role belong to? (Engineering, Operations, or Data &amp; Analytics)</p>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">Tech Stack</label>
             {{ form.new_tools }}
             {% if form.new_tools.errors %}<p class="form-err">{{ form.new_tools.errors.0 }}</p>{% endif %}

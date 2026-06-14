@@ -35,6 +35,7 @@ urlpatterns = [
     
     path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
     path('subscribe/', views.subscribe, name='subscribe'),
+    path('newsletter/confirm/<str:token>/', views.confirm_subscription, name='confirm_subscription'),
     path('unsubscribe/', views.unsubscribe, name='unsubscribe'),
     path('u/<str:token>/', views.unsubscribe_oneclick, name='unsubscribe_oneclick'),
 
@@ -53,6 +54,10 @@ urlpatterns = [
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
 
     # --- JOB-TITLE PAGES (single-segment, curated titles only) ---
+    # RevOps killed (screener excludes it) — 301 the old indexed URL to the
+    # closest relevant page so we don't drop the link equity into a 404.
+    path('revenue-operations-manager-jobs/',
+         RedirectView.as_view(url='/marketing-operations-manager-jobs/', permanent=True)),
     path('<slug:title_slug>-jobs/', views.title_jobs, name='title_jobs'),
 
     # --- PROGRAMMATIC SEO (Must be last) ---
