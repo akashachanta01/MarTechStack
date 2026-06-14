@@ -1,9 +1,14 @@
 {% extends "jobs/base.html" %}
 {% load static %}
 
-{% block title %}Browse All MarTech Jobs — {{ total_count }} Open Roles | MarTechJobs{% endblock %}
+{% block title %}Browse All MarTech Jobs | MarTechJobs{% endblock %}
 {% block meta_description %}Browse every open marketing-technology role — Marketing Ops, RevOps, Lifecycle, CDP, and analytics. Curated, vendor-neutral, and verified daily on MarTechJobs.{% endblock %}
 {% block meta_keywords %}martech jobs, marketing technology jobs, marketing operations jobs, revops jobs, browse martech roles{% endblock %}
+
+{% block rel_prev_next %}
+  {% if jobs.has_previous %}<link rel="prev" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.previous_page_number }}" />{% endif %}
+  {% if jobs.has_next %}<link rel="next" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.next_page_number }}" />{% endif %}
+{% endblock %}
 
 {% block extra_schema %}
 <script type="application/ld+json">

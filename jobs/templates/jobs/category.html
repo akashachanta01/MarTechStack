@@ -5,6 +5,11 @@
 {% block meta_description %}{{ category.description }} Browse {{ category.name|lower }} MarTech roles, refreshed daily.{% endblock %}
 {% block meta_keywords %}{{ category.name|lower }} martech jobs, marketing {{ category.name|lower }} jobs, {{ category.name|lower }} marketing operations careers{% endblock %}
 
+{% block rel_prev_next %}
+  {% if jobs.has_previous %}<link rel="prev" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.previous_page_number }}" />{% endif %}
+  {% if jobs.has_next %}<link rel="next" href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ jobs.next_page_number }}" />{% endif %}
+{% endblock %}
+
 {% block extra_schema %}
 <script type="application/ld+json">
 {

@@ -25,10 +25,12 @@ def auto_tag_tools(modeladmin, request, queryset):
         if added_count > 0: affected_jobs += 1
     modeladmin.message_user(request, f"✅ Scanned {queryset.count()} jobs. Updated Tech Stack for {affected_jobs} jobs.", messages.SUCCESS)
 
-@admin.action(description="🗑️ DELETE ALL 'Rejected' Jobs")
+@admin.action(description="🗑️ Delete selected rejected jobs")
 def delete_all_rejected(modeladmin, request, queryset):
-    count, _ = Job.objects.filter(screening_status='rejected').delete()
-    modeladmin.message_user(request, f"🧹 Wiped {count} rejected jobs.", messages.WARNING)
+    to_delete = queryset.filter(screening_status='rejected')
+    count = to_delete.count()
+    to_delete.delete()
+    modeladmin.message_user(request, f"🧹 Deleted {count} rejected jobs.", messages.WARNING)
 
 # --- 2. HELPERS ---
 
