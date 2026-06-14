@@ -232,6 +232,15 @@ class Job(models.Model):
     class Meta:
         ordering = ['-is_pinned', '-created_at']
         indexes = [models.Index(fields=['is_active', 'screening_status']), models.Index(fields=['created_at'])]
+        constraints = [
+            # ATS-native id is globally unique per posting; the partial condition
+            # exempts legacy/AI-scraped rows that have no external_id.
+            models.UniqueConstraint(
+                fields=['external_id'],
+                condition=models.Q(external_id__gt=''),
+                name='jobs_job_external_id_uniq',
+            ),
+        ]
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=255)
