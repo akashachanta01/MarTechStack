@@ -149,23 +149,48 @@
 {% endif %}
 
 {% if interview_guides and not search_query and not current_category %}
-<section class="blog-guides" id="interview-guides">
+<section style="padding: 52px 0; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper2));" id="interview-guides">
   <div class="wrap">
-    <div class="blog-guides-head">
+    <div style="text-align: center; max-width: 640px; margin: 0 auto 32px;">
       <div class="eyebrow">🎯 Land the role</div>
-      <h2>MarTech Interview Guides</h2>
-      <p>The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
+      <h2 style="font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px;">MarTech Interview Guides</h2>
+      <p style="font-size: 15px; color: var(--ink2); line-height: 1.6;">The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
     </div>
-    <div class="blog-guides-grid">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;">
       {% for g in interview_guides %}
-      <a href="{% url 'tool_interview' g.tool.slug %}" class="guide-card">
-        <span class="guide-card-badge">Interview Guide</span>
-        <div class="guide-card-tool">
-          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}">{% else %}<span>{{ g.tool.name|slice:":1" }}</span>{% endif %}
+      <a href="{% url 'tool_interview' g.tool.slug %}" style="background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm);">
+        <span style="position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; padding: 3px 8px; border-radius: 4px;">Interview Guide</span>
+        <div style="width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px;">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}" style="width: 30px; height: 30px; object-fit: contain;">{% else %}<span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber);">{{ g.tool.name|slice:":1" }}</span>{% endif %}
         </div>
-        <h3>{{ g.tool.name }} Interview Questions</h3>
-        <p>{{ g.question_count }} questions with model answers and what employers look for.</p>
-        <span class="guide-card-link">Read the guide →</span>
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25;">{{ g.tool.name }} Interview Questions</h3>
+        <p style="font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1;">{{ g.question_count }} questions with model answers and what employers look for.</p>
+        <span style="font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px;">Read the guide →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if cert_guides and not search_query and not current_category %}
+<section style="padding: 52px 0; border-bottom: 1px solid var(--rule); background: var(--paper2);" id="cert-guides">
+  <div class="wrap">
+    <div style="text-align: center; max-width: 640px; margin: 0 auto 32px;">
+      <div class="eyebrow">🎓 Get certified</div>
+      <h2 style="font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0 8px;">MarTech Certifications</h2>
+      <p style="font-size: 15px; color: var(--ink2); line-height: 1.6;">Study paths, exam formats, and tips for the certifications that actually move the needle in MarTech hiring.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px;">
+      {% for g in cert_guides %}
+      <a href="{% url 'tool_certification' g.tool.slug %}" style="background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm);">
+        <span style="position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--navy); background: var(--paper2); border: 1px solid var(--rule); padding: 3px 8px; border-radius: 4px;">Cert Guide</span>
+        <div style="width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px;">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}" style="width: 30px; height: 30px; object-fit: contain;">{% else %}<span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--navy);">{{ g.tool.name|slice:":1" }}</span>{% endif %}
+        </div>
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25;">{{ g.cert_name }}</h3>
+        <p style="font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1;">{% if g.provider %}By {{ g.provider }}. {% endif %}{% if g.cost %}{{ g.cost }}. {% endif %}{% if g.difficulty %}{{ g.difficulty }} level.{% endif %}</p>
+        <span style="font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--navy); margin-top: 4px;">View study guide →</span>
       </a>
       {% endfor %}
     </div>

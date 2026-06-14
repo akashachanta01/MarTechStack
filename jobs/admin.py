@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.contrib import messages
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide, CertificationGuide
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -187,3 +187,21 @@ class CompanySourceAdmin(admin.ModelAdmin):
     list_editable = ("enabled",)
     search_fields = ("name", "token", "board_url")
     ordering = ("-last_added_count", "name")
+
+
+@admin.register(InterviewGuide)
+class InterviewGuideAdmin(admin.ModelAdmin):
+    list_display = ("tool", "slug", "question_count", "is_published", "updated_at")
+    list_filter = ("is_published",)
+    search_fields = ("tool__name", "slug")
+
+    def question_count(self, obj):
+        return obj.question_count()
+    question_count.short_description = "Questions"
+
+
+@admin.register(CertificationGuide)
+class CertificationGuideAdmin(admin.ModelAdmin):
+    list_display = ("tool", "cert_name", "cost", "is_published")
+    list_filter = ("is_published",)
+    search_fields = ("tool__name", "cert_name", "provider")

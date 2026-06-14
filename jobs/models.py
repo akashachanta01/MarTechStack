@@ -259,7 +259,6 @@ class BlogPost(models.Model):
     def __str__(self): return self.title
     class Meta: ordering = ['-published_at']
 
-
 class InterviewGuide(models.Model):
     """Per-tool interview guide (e.g. /hubspot-interview-questions/). The
     curated question bank lives here (admin-editable); the page also renders a
@@ -282,6 +281,30 @@ class InterviewGuide(models.Model):
 
     def question_count(self):
         return sum(len(sec.get('items', [])) for sec in (self.questions or []))
+
+
+class CertificationGuide(models.Model):
+    tool = models.OneToOneField('Tool', on_delete=models.CASCADE, related_name='cert_guide')
+    slug = models.SlugField(max_length=120, unique=True)
+    cert_name = models.CharField(max_length=200)  # e.g. "HubSpot Marketing Hub Certification"
+    provider = models.CharField(max_length=100, blank=True)  # e.g. "HubSpot Academy"
+    cost = models.CharField(max_length=100, blank=True)  # e.g. "Free"
+    exam_format = models.CharField(max_length=200, blank=True)  # e.g. "60 questions, 3 hours, 75% pass mark"
+    validity = models.CharField(max_length=100, blank=True)  # e.g. "2 years"
+    difficulty = models.CharField(max_length=50, blank=True)  # e.g. "Intermediate"
+    intro = models.TextField(blank=True)
+    who_should_get = models.TextField(blank=True)
+    study_path = models.JSONField(default=list, blank=True)  # [{step, title, desc, hours?}]
+    exam_topics = models.JSONField(default=list, blank=True)  # [{topic, weight?, desc?}]
+    prep_tips = models.TextField(blank=True)
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.CharField(max_length=300, blank=True)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.cert_name
 
 
 class Subscriber(models.Model):

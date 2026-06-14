@@ -1,0 +1,329 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}{% if guide.meta_title %}{{ guide.meta_title }}{% else %}{{ guide.cert_name }} — Complete Study Guide ({% now "Y" %}) | MarTechJobs{% endif %}{% endblock %}
+{% block meta_description %}{% if guide.meta_description %}{{ guide.meta_description }}{% else %}Complete study guide for the {{ guide.cert_name }} — exam format, study path, topics, tips, and {{ live_count }} live roles requiring it. Updated {% now "Y" %}.{% endif %}{% endblock %}
+{% block meta_keywords %}{{ guide.cert_name }}, {{ tool.name }} certification, {{ tool.name }} cert, MarTech certification{% endblock %}
+{% block og_title %}{{ guide.cert_name }} — Study Guide ({% now "Y" %}){% endblock %}
+{% block og_desc %}Complete prep guide for {{ guide.cert_name }}: exam format, study path, topics, and live hiring data.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"{{ tool.name }} Jobs","item":"https://martechjobs.io{% url 'tool_detail' tool.slug %}"},
+    {"@type":"ListItem","position":3,"name":"{{ guide.cert_name }}","item":"https://martechjobs.io{% url 'tool_certification' tool.slug %}"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How long does it take to get the {{ guide.cert_name|escapejs }}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{% if guide.study_path %}The study path covers {{ guide.study_path|length }} steps. Most candidates complete preparation in 2–6 weeks depending on prior experience.{% else %}Preparation time varies by experience level. Review the official {{ guide.provider|escapejs }} materials for guidance.{% endif %}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does the {{ guide.cert_name|escapejs }} cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{% if guide.cost %}The {{ guide.cert_name|escapejs }} costs {{ guide.cost|escapejs }}.{% else %}Check the official {{ guide.provider|escapejs }} website for current pricing.{% endif %}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the {{ guide.cert_name|escapejs }} worth it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{% if live_count %}Yes — there are currently {{ live_count }} live roles on MarTechJobs requiring {{ tool.name }} skills. The {{ guide.cert_name|escapejs }} is a recognised credential that signals hands-on platform competency to hiring managers.{% else %}The {{ guide.cert_name|escapejs }} is a recognised credential that signals hands-on {{ tool.name }} competency to hiring managers.{% endif %}"
+      }
+    }
+  ]
+}
+</script>
+{% if page_noindex %}<meta name="robots" content="noindex,follow">{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+  .cg-wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  @media(max-width:560px){ .cg-wrap { padding: 0 20px; } }
+
+  .cg-hero { padding: 44px 0 8px; }
+  .cg-bc { font-size: 12.5px; color: var(--ink3); margin-bottom: 18px; }
+  .cg-bc a:hover { color: var(--amber); text-decoration: underline; }
+  .cg-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(28px,5vw,44px); font-weight:800; line-height:1.1; color:var(--ink); margin-bottom:14px; }
+  .cg-hero h1 em { font-style:italic; color:var(--amber); }
+  .cg-lede { font-size:17px; line-height:1.7; color:var(--ink2); max-width:760px; margin-bottom:20px; }
+
+  /* chips: cost / format / validity / difficulty */
+  .cg-chips { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 28px; }
+  .cg-chip { display:inline-flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--rule); border-radius:999px; padding:7px 14px; font-size:13px; font-weight:600; color:var(--ink2); }
+  .cg-chip .cg-chip-label { font-family:'Courier Prime',monospace; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); margin-right:2px; }
+  .cg-chip.provider { background:var(--amber-light); border-color:#f0c6a8; color:var(--amber); }
+
+  /* live data spine */
+  .cg-stats { display:flex; flex-wrap:wrap; gap:14px; margin:0 0 8px; }
+  .cg-stat { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:16px 20px; min-width:150px; }
+  .cg-stat-v { font-family:'Playfair Display',serif; font-size:26px; font-weight:800; color:var(--navy); line-height:1; }
+  .cg-stat-v .amber { color:var(--amber); }
+  .cg-stat-l { font-size:12px; color:var(--ink3); margin-top:6px; }
+
+  .cg-body { display:grid; grid-template-columns: 240px 1fr; gap:48px; padding:40px 0 72px; align-items:start; }
+  @media(max-width:880px){ .cg-body { grid-template-columns:1fr; gap:24px; } .cg-toc { display:none; } }
+
+  /* TOC */
+  .cg-toc { position:sticky; top:84px; }
+  .cg-toc-h { font-family:'Courier Prime',monospace; font-size:10px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--ink3); margin-bottom:12px; }
+  .cg-toc a { display:block; font-size:13.5px; font-weight:600; color:var(--ink3); padding:6px 0; border-left:2px solid var(--rule); padding-left:12px; transition:all .15s; }
+  .cg-toc a:hover { color:var(--amber); border-left-color:var(--amber); }
+  .cg-toc .cg-toc-cta { margin-top:18px; }
+
+  .cg-content { min-width:0; }
+  .cg-content h2 { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:800; color:var(--ink); margin:8px 0 6px; scroll-margin-top:84px; }
+  .cg-intro { font-size:16px; line-height:1.8; color:var(--ink2); margin-bottom:32px; }
+  .cg-intro p { margin-bottom:1rem; }
+
+  /* Who should get section */
+  .cg-who { background:var(--paper2); border:1px solid var(--rule); border-radius:14px; padding:24px 26px; margin-bottom:36px; }
+  .cg-who h3 { font-family:'Playfair Display',serif; font-size:18px; font-weight:800; color:var(--ink); margin-bottom:10px; }
+  .cg-who p { font-size:14px; color:var(--ink2); line-height:1.7; }
+
+  /* Study path */
+  .cg-steps { list-style:none; padding:0; margin:0 0 36px; }
+  .cg-step { display:flex; gap:16px; margin-bottom:16px; }
+  .cg-step-num { width:32px; height:32px; border-radius:50%; background:var(--amber); color:#fff; font-family:'Playfair Display',serif; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:3px; }
+  .cg-step-body { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:16px 20px; flex:1; transition:box-shadow .15s; }
+  .cg-step-body:hover { box-shadow:var(--shadow-sm); }
+  .cg-step-title { font-size:15px; font-weight:700; color:var(--ink); line-height:1.3; }
+  .cg-step-desc { font-size:13.5px; color:var(--ink2); margin-top:5px; line-height:1.6; }
+  .cg-step-hours { font-family:'Courier Prime',monospace; font-size:11px; font-weight:700; color:var(--amber); margin-top:6px; text-transform:uppercase; letter-spacing:.05em; }
+
+  /* Exam topics */
+  .cg-topics { margin-bottom:36px; }
+  .cg-topic { background:var(--card); border:1px solid var(--rule); border-radius:12px; padding:16px 20px; margin-bottom:10px; }
+  .cg-topic-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .cg-topic-name { font-size:15px; font-weight:700; color:var(--ink); }
+  .cg-topic-weight { font-family:'Courier Prime',monospace; font-size:12px; font-weight:700; color:var(--amber); }
+  .cg-topic-bar { height:6px; background:var(--rule); border-radius:3px; overflow:hidden; }
+  .cg-topic-fill { height:100%; background:linear-gradient(90deg,var(--amber),var(--amber2)); border-radius:3px; }
+  .cg-topic-desc { font-size:13px; color:var(--ink3); margin-top:8px; line-height:1.55; }
+
+  /* Companies / paired tools */
+  .cg-spine-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px; }
+  .cg-co-chip { font-size:13px; font-weight:600; padding:6px 12px; border-radius:999px; background:var(--paper2); border:1px solid var(--rule); color:var(--ink2); }
+  .cg-tool-chip { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:700; padding:6px 14px 6px 8px; border-radius:999px; background:#fff; border:1px solid var(--rule); color:var(--ink); text-decoration:none; transition:all .15s; }
+  .cg-tool-chip:hover { border-color:var(--amber); transform:translateY(-1px); }
+  .cg-tool-ico { width:24px; height:24px; border-radius:6px; background:var(--violet-light); color:var(--violet); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-weight:800; font-size:11px; overflow:hidden; flex-shrink:0; }
+  .cg-tool-ico img { width:16px; height:16px; object-fit:contain; }
+
+  /* Prep tips */
+  .cg-tips { font-size:15.5px; line-height:1.8; color:var(--ink2); margin-bottom:36px; }
+  .cg-tips p { margin-bottom:1rem; }
+
+  /* Cross-link block */
+  .cg-crosslink { display:flex; align-items:center; gap:14px; background:var(--paper2); border:1px solid var(--rule); border-radius:14px; padding:18px 22px; margin-bottom:28px; text-decoration:none; color:inherit; transition:border-color .15s,box-shadow .15s; }
+  .cg-crosslink:hover { border-color:var(--amber); box-shadow:var(--shadow-sm); }
+  .cg-crosslink-ico { width:40px; height:40px; border-radius:10px; background:var(--amber-light); color:var(--amber); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .cg-crosslink-body { flex:1; min-width:0; }
+  .cg-crosslink-label { font-family:'Courier Prime',monospace; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); }
+  .cg-crosslink-title { font-size:15px; font-weight:700; color:var(--ink); margin-top:2px; }
+  .cg-crosslink-arr { color:var(--amber); font-weight:700; flex-shrink:0; }
+
+  /* CTA */
+  .cg-cta { background:var(--navy); border-radius:16px; padding:40px; text-align:center; color:#fff; margin:8px 0 48px; }
+  .cg-cta h2 { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:800; color:#fff; margin-bottom:10px; }
+  .cg-cta p { font-size:15px; color:rgba(255,255,255,.72); max-width:520px; margin:0 auto 22px; line-height:1.6; }
+
+  /* Top jobs */
+  .cg-jobs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-bottom:8px; }
+  .cg-jc { background:#fff; border:1px solid var(--rule); border-radius:12px; padding:16px 18px; text-decoration:none; color:inherit; transition:transform .15s,box-shadow .15s,border-color .15s; }
+  .cg-jc:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--amber); }
+  .cg-jc-co { font-size:12.5px; font-weight:700; color:var(--ink2); }
+  .cg-jc-t { font-size:14.5px; font-weight:700; color:var(--ink); line-height:1.3; margin-top:3px; }
+  .cg-jc-m { font-size:12px; color:var(--ink3); margin-top:5px; }
+</style>
+
+<div class="cg-wrap cg-hero">
+  <nav class="cg-bc" aria-label="Breadcrumb">
+    <a href="/">Home</a> &nbsp;/&nbsp; <a href="{% url 'tool_detail' tool.slug %}">{{ tool.name }} Jobs</a> &nbsp;/&nbsp; <span>{{ guide.cert_name }}</span>
+  </nav>
+  <h1>{{ guide.cert_name }} <em>Study Guide</em></h1>
+  <p class="cg-lede">{% if guide.intro %}{{ guide.intro|striptags|truncatewords:50 }}{% else %}The complete guide to earning the {{ guide.cert_name }} — exam format, study path, topics, and what it means for your MarTech career.{% endif %}</p>
+
+  <div class="cg-chips">
+    {% if guide.provider %}<span class="cg-chip provider"><span class="cg-chip-label">Provider</span> {{ guide.provider }}</span>{% endif %}
+    {% if guide.cost %}<span class="cg-chip"><span class="cg-chip-label">Cost</span> {{ guide.cost }}</span>{% endif %}
+    {% if guide.exam_format %}<span class="cg-chip"><span class="cg-chip-label">Format</span> {{ guide.exam_format }}</span>{% endif %}
+    {% if guide.validity %}<span class="cg-chip"><span class="cg-chip-label">Valid</span> {{ guide.validity }}</span>{% endif %}
+    {% if guide.difficulty %}<span class="cg-chip"><span class="cg-chip-label">Level</span> {{ guide.difficulty }}</span>{% endif %}
+  </div>
+
+  <div class="cg-stats">
+    {% if live_count %}<div class="cg-stat"><div class="cg-stat-v">{{ live_count }}</div><div class="cg-stat-l">Live {{ tool.name }} roles now</div></div>{% endif %}
+    {% if hiring_companies %}<div class="cg-stat"><div class="cg-stat-v">{{ hiring_companies|length }}{% if hiring_companies|length >= 8 %}+{% endif %}</div><div class="cg-stat-l">Companies hiring</div></div>{% endif %}
+    {% if guide.study_path %}<div class="cg-stat"><div class="cg-stat-v"><span class="amber">{{ guide.study_path|length }}</span></div><div class="cg-stat-l">Study steps</div></div>{% endif %}
+    <div class="cg-stat"><div class="cg-stat-v">{% now "Y" %}</div><div class="cg-stat-l">Updated</div></div>
+  </div>
+</div>
+
+<div class="cg-wrap">
+  <div class="cg-body">
+    <!-- TOC -->
+    <aside class="cg-toc">
+      <div class="cg-toc-h">On this page</div>
+      <nav>
+        {% if guide.intro %}<a href="#intro">About this cert</a>{% endif %}
+        {% if guide.who_should_get %}<a href="#who">Who should get it</a>{% endif %}
+        {% if guide.study_path %}<a href="#study-path">Study path</a>{% endif %}
+        {% if guide.exam_topics %}<a href="#topics">Exam topics</a>{% endif %}
+        {% if hiring_companies %}<a href="#companies">Companies hiring</a>{% endif %}
+        {% if often_paired %}<a href="#paired">Paired tools</a>{% endif %}
+        {% if guide.prep_tips %}<a href="#tips">Prep tips</a>{% endif %}
+        {% if top_jobs %}<a href="#jobs">Roles hiring now</a>{% endif %}
+        <div class="cg-toc-cta">
+          <a href="{% url 'tool_detail' tool.slug %}" class="btn btn-amber btn-block">View {{ tool.name }} jobs →</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="cg-content">
+      {% if guide.intro %}
+      <section id="intro">
+        <div class="cg-intro">{{ guide.intro|safe }}</div>
+      </section>
+      {% endif %}
+
+      {% if guide.who_should_get %}
+      <section id="who">
+        <h2>Who should get this certification</h2>
+        <div class="cg-who">
+          <h3>Is it right for you?</h3>
+          <p>{{ guide.who_should_get }}</p>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if guide.study_path %}
+      <section id="study-path">
+        <h2>Study path</h2>
+        <p style="font-size:14px;color:var(--ink3);margin-bottom:20px;">Follow these steps in order for the most efficient route to passing.</p>
+        <ol class="cg-steps">
+          {% for step in guide.study_path %}
+          <li class="cg-step">
+            <div class="cg-step-num">{{ forloop.counter }}</div>
+            <div class="cg-step-body">
+              <div class="cg-step-title">{{ step.title }}</div>
+              {% if step.desc %}<div class="cg-step-desc">{{ step.desc }}</div>{% endif %}
+              {% if step.hours %}<div class="cg-step-hours">~{{ step.hours }}h</div>{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+      {% if guide.exam_topics %}
+      <section id="topics">
+        <h2>Exam topics</h2>
+        <p style="font-size:14px;color:var(--ink3);margin-bottom:20px;">Coverage breakdown from the official exam guide — focus your prep proportionally.</p>
+        <div class="cg-topics">
+          {% for t in guide.exam_topics %}
+          <div class="cg-topic">
+            <div class="cg-topic-head">
+              <span class="cg-topic-name">{{ t.topic }}</span>
+              {% if t.weight %}<span class="cg-topic-weight">{{ t.weight }}</span>{% endif %}
+            </div>
+            {% if t.weight %}
+            <div class="cg-topic-bar">
+              <div class="cg-topic-fill" style="width:{{ t.weight|cut:'~'|cut:'%'|default:'20' }}%"></div>
+            </div>
+            {% endif %}
+            {% if t.desc %}<div class="cg-topic-desc">{{ t.desc }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if hiring_companies %}
+      <section id="companies">
+        <h2>Companies hiring {{ tool.name }} professionals</h2>
+        <p style="font-size:14px;color:var(--ink3);margin-bottom:16px;">These companies are actively hiring {{ tool.name }} roles on MarTechJobs right now.</p>
+        <div class="cg-spine-row">
+          {% for co in hiring_companies %}<span class="cg-co-chip">{{ co }}</span>{% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if often_paired %}
+      <section id="paired">
+        <h2>Tools often paired with {{ tool.name }}</h2>
+        <p style="font-size:14px;color:var(--ink3);margin-bottom:16px;">Hiring managers expect these tools alongside {{ tool.name }} — worth knowing them.</p>
+        <div class="cg-spine-row">
+          {% for t in often_paired %}
+          <a href="{% url 'tool_detail' t.slug %}" class="cg-tool-chip">
+            <span class="cg-tool-ico">{% if t.logo_url %}<img src="{{ t.logo_url }}" alt="{{ t.name }}">{% else %}{{ t.name|slice:":2" }}{% endif %}</span>
+            {{ t.name }}
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if guide.prep_tips %}
+      <section id="tips">
+        <h2>Exam prep tips</h2>
+        <div class="cg-tips">{{ guide.prep_tips|safe }}</div>
+      </section>
+      {% endif %}
+
+      {% if has_interview_guide %}
+      <a href="{% url 'tool_interview' tool.slug %}" class="cg-crosslink">
+        <div class="cg-crosslink-ico">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="cg-crosslink-body">
+          <div class="cg-crosslink-label">Also useful</div>
+          <div class="cg-crosslink-title">{{ tool.name }} Interview Questions Guide</div>
+        </div>
+        <span class="cg-crosslink-arr">→</span>
+      </a>
+      {% endif %}
+
+      <!-- CTA -->
+      <div class="cg-cta">
+        <h2>Ready to use it on the job?</h2>
+        <p>{% if live_count %}{{ live_count }} {{ tool.name }} role{{ live_count|pluralize }} are hiring right now on MarTechJobs.{% else %}New {{ tool.name }} roles land on MarTechJobs regularly.{% endif %} Skip the recruiter noise — apply directly.</p>
+        <a href="{% url 'tool_detail' tool.slug %}" class="btn btn-amber btn-lg">Browse {{ tool.name }} Jobs →</a>
+      </div>
+
+      {% if top_jobs %}
+      <section id="jobs">
+        <h2>{{ tool.name }} roles hiring now</h2>
+        <div class="cg-jobs-grid">
+          {% for job in top_jobs %}
+          <a href="{% url 'job_detail' job.id job.slug %}" class="cg-jc">
+            <div class="cg-jc-co">{{ job.company }}</div>
+            <div class="cg-jc-t">{{ job.title }}</div>
+            <div class="cg-jc-m">{{ job.location|default:"Not specified" }}{% if job.salary_range %} · {{ job.salary_range }}{% endif %}</div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

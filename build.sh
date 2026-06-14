@@ -26,3 +26,8 @@ python manage.py seed_canonical_tools
 # Creates/keeps the flagship per-tool interview guides (HubSpot, SFMC, …).
 # Idempotent; only fills blanks unless --overwrite is passed.
 python manage.py seed_interview_guides
+
+# 7. SEED CERTIFICATION GUIDES
+# Creates/keeps the flagship per-tool certification guides (HubSpot, Marketo, SFMC).
+# Idempotent; only fills blanks unless --overwrite is passed.
+python manage.py seed_certification_guides
