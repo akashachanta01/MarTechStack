@@ -123,6 +123,34 @@
     .ch-masthead-top { font-size: 9px; letter-spacing: .08em; }
     .ch-lead-byline .btn { margin-left: 0; width: 100%; text-align: center; }
   }
+
+  /* ── Category cover (deterministic, no image files) ─────── */
+  .bcover { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--paper2), var(--card)); }
+  .bcover__mono { font-family: 'Playfair Display', serif; font-weight: 800; line-height: 1;
+    font-size: clamp(120px, 38%, 220px); opacity: .18; user-select: none;
+    position: absolute; right: -.06em; bottom: -.28em; }
+  .bcover__eyebrow { position: absolute; top: 14px; left: 16px; z-index: 1;
+    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; }
+  .bcover__rule { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 2px; opacity: .55; }
+  /* Themes */
+  .bcover--tech    { background: linear-gradient(135deg, #e9eef6, var(--card)); }
+  .bcover--tech .bcover__mono, .bcover--tech .bcover__eyebrow { color: var(--navy3); }
+  .bcover--tech .bcover__rule { background: var(--navy); }
+  .bcover--career  { background: linear-gradient(135deg, var(--amber-light), var(--card)); }
+  .bcover--career .bcover__mono, .bcover--career .bcover__eyebrow { color: var(--amber); }
+  .bcover--career .bcover__rule { background: var(--amber); }
+  .bcover--salary  { background: linear-gradient(135deg, var(--green-light), var(--card)); }
+  .bcover--salary .bcover__mono, .bcover--salary .bcover__eyebrow { color: var(--green); }
+  .bcover--salary .bcover__rule { background: var(--green); }
+  .bcover--news    { background: linear-gradient(135deg, var(--paper2), var(--paper)); }
+  .bcover--news .bcover__mono, .bcover--news .bcover__eyebrow { color: var(--ink3); }
+  .bcover--news .bcover__rule { background: var(--ink3); }
+  .bcover--default { background: linear-gradient(135deg, var(--paper2), var(--card)); }
+  .bcover--default .bcover__mono, .bcover--default .bcover__eyebrow { color: var(--amber); }
+  .bcover--default .bcover__rule { background: var(--amber); }
 </style>
 
 <!-- ── MASTHEAD ──────────────────────────────────────────── -->
@@ -149,25 +177,11 @@
     <div class="ch-lead-kicker">The Lead Story</div>
     <div class="ch-lead-grid">
       <div class="ch-lead-img">
-        {% if "salary" in featured_post.slug and "2026" in featured_post.slug %}
-          <img src="{% static 'images/salary_guide_2026.svg' %}" alt="MarTech Salary Guide 2026">
-        {% elif "salary" in featured_post.slug %}
-          <img src="{% static 'images/salary_chart_2025.svg' %}" alt="Marketing Salary Trends">
-        {% elif "salesforce" in featured_post.slug or "agentforce" in featured_post.slug %}
-          <img src="{% static 'images/salesforce_agentforce.svg' %}" alt="Salesforce Agentforce">
-        {% elif "break-into" in featured_post.slug or "roadmap" in featured_post.slug %}
-          <img src="{% static 'images/break_into_martech.svg' %}" alt="MarTech Career Roadmap">
-        {% elif "career-paths" in featured_post.slug or "job-titles" in featured_post.slug %}
-          <img src="{% static 'images/martech_career_paths_2026.svg' %}" alt="Career Paths 2026">
-        {% elif "resume" in featured_post.slug or "portfolio" in featured_post.slug %}
-          <img src="{% static 'images/portfolio_graphic.svg' %}" alt="Marketing Portfolio">
-        {% elif "interview" in featured_post.slug %}
-          <img src="{% static 'images/interview_strategy.svg' %}" alt="Interview Strategy">
-        {% elif "sql" in featured_post.slug or "technical" in featured_post.slug %}
-          <img src="{% static 'images/tech_skills_matrix.svg' %}" alt="Tech Skills">
-        {% else %}
-          <div style="width:100%;height:100%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:48px;color:var(--amber);opacity:.4;">✦</div>
-        {% endif %}
+        <div class="bcover {% if featured_post.category == 'Tech Stacks' %}bcover--tech{% elif featured_post.category == 'Career Advice' %}bcover--career{% elif featured_post.category == 'Salary Guides' %}bcover--salary{% elif featured_post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
+          <span class="bcover__eyebrow">{{ featured_post.category|default:"MarTech" }}</span>
+          <span class="bcover__rule"></span>
+          <span class="bcover__mono">{{ featured_post.title|slice:":1" }}</span>
+        </div>
         <span class="ch-lead-badge">Featured</span>
       </div>
       <div>
@@ -290,25 +304,10 @@
       {% for post in posts %}
       <article class="ch-card" itemscope itemtype="https://schema.org/BlogPosting">
         <div class="ch-card-img">
-          {% if "salary" in post.slug and "2026" in post.slug %}
-            <img src="{% static 'images/salary_guide_2026.svg' %}" alt="MarTech Salary Guide 2026" itemprop="image">
-          {% elif "salary" in post.slug %}
-            <img src="{% static 'images/salary_chart_2025.svg' %}" alt="Salary Chart" itemprop="image">
-          {% elif "salesforce" in post.slug or "agentforce" in post.slug %}
-            <img src="{% static 'images/salesforce_agentforce.svg' %}" alt="Salesforce" itemprop="image">
-          {% elif "break-into" in post.slug or "roadmap" in post.slug %}
-            <img src="{% static 'images/break_into_martech.svg' %}" alt="MarTech Career Guide" itemprop="image">
-          {% elif "career-paths" in post.slug or "job-titles" in post.slug %}
-            <img src="{% static 'images/martech_career_paths_2026.svg' %}" alt="Career Paths" itemprop="image">
-          {% elif "resume" in post.slug or "portfolio" in post.slug %}
-            <img src="{% static 'images/portfolio_graphic.svg' %}" alt="Marketing Portfolio" itemprop="image">
-          {% elif "interview" in post.slug %}
-            <img src="{% static 'images/interview_strategy.svg' %}" alt="Interview Strategy" itemprop="image">
-          {% elif "sql" in post.slug or "technical" in post.slug %}
-            <img src="{% static 'images/tech_skills_matrix.svg' %}" alt="Tech Skills" itemprop="image">
-          {% else %}
-            <div style="width:100%;height:100%;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:40px;color:var(--rule2);">✦</div>
-          {% endif %}
+          <div class="bcover {% if post.category == 'Tech Stacks' %}bcover--tech{% elif post.category == 'Career Advice' %}bcover--career{% elif post.category == 'Salary Guides' %}bcover--salary{% elif post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" itemprop="image" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
           <span class="ch-card-cat-badge">{{ post.category }}</span>
         </div>
         <div class="ch-card-body">

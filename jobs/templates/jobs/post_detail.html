@@ -118,6 +118,33 @@
   .post-related-img { height: 160px; background: var(--paper); border-bottom: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; position: relative; }
   .post-related-body { padding: 18px; }
   .post-related-badge { position: absolute; top: 10px; right: 10px; background: rgba(252,252,250,.92); border: 1px solid var(--rule); font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; color: var(--ink); }
+
+  /* ── Category cover (deterministic, no image files) ─────── */
+  .bcover { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--paper2), var(--card)); }
+  .bcover__mono { font-family: 'Playfair Display', serif; font-weight: 800; line-height: 1;
+    font-size: clamp(90px, 60%, 130px); opacity: .18; user-select: none;
+    position: absolute; right: -.06em; bottom: -.28em; }
+  .bcover__eyebrow { position: absolute; top: 14px; left: 16px; z-index: 1;
+    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase; }
+  .bcover__rule { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 2px; opacity: .55; }
+  .bcover--tech    { background: linear-gradient(135deg, #e9eef6, var(--card)); }
+  .bcover--tech .bcover__mono, .bcover--tech .bcover__eyebrow { color: var(--navy3); }
+  .bcover--tech .bcover__rule { background: var(--navy); }
+  .bcover--career  { background: linear-gradient(135deg, var(--amber-light), var(--card)); }
+  .bcover--career .bcover__mono, .bcover--career .bcover__eyebrow { color: var(--amber); }
+  .bcover--career .bcover__rule { background: var(--amber); }
+  .bcover--salary  { background: linear-gradient(135deg, var(--green-light), var(--card)); }
+  .bcover--salary .bcover__mono, .bcover--salary .bcover__eyebrow { color: var(--green); }
+  .bcover--salary .bcover__rule { background: var(--green); }
+  .bcover--news    { background: linear-gradient(135deg, var(--paper2), var(--paper)); }
+  .bcover--news .bcover__mono, .bcover--news .bcover__eyebrow { color: var(--ink3); }
+  .bcover--news .bcover__rule { background: var(--ink3); }
+  .bcover--default { background: linear-gradient(135deg, var(--paper2), var(--card)); }
+  .bcover--default .bcover__mono, .bcover--default .bcover__eyebrow { color: var(--amber); }
+  .bcover--default .bcover__rule { background: var(--amber); }
 </style>
 
 <div class="reading-bar"></div>
@@ -221,7 +248,11 @@
       {% for related in related_posts %}
       <article class="post-related-card">
         <div class="post-related-img">
-          <div style="font-family:'Playfair Display',serif;font-size:40px;color:var(--rule2);">✦</div>
+          <div class="bcover {% if related.category == 'Tech Stacks' %}bcover--tech{% elif related.category == 'Career Advice' %}bcover--career{% elif related.category == 'Salary Guides' %}bcover--salary{% elif related.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
+            <span class="bcover__eyebrow">{{ related.category|default:"MarTech" }}</span>
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ related.title|slice:":1" }}</span>
+          </div>
           <span class="post-related-badge">{{ related.category }}</span>
         </div>
         <div class="post-related-body">

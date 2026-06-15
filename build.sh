@@ -35,3 +35,9 @@ python manage.py seed_certification_guides
 # 8. SEED BLOG POSTS
 # Hand-authored evergreen MarTech blog content. Idempotent; --overwrite to refresh.
 python manage.py seed_blog_posts
+python manage.py seed_blog_posts_2
+
+# 9. NORMALIZE BLOG POSTS
+# Unifies legacy AI posts with new posts (author, category, read_time, excerpt/meta).
+# Idempotent; reports 0 changed once everything is consistent.
+python manage.py normalize_blog_posts
