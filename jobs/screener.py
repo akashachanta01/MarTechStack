@@ -176,14 +176,17 @@ class MarTechScreener:
         if quick_reject:
             return quick_reject
 
-        # Fast-approve: titles with these terms are unambiguously MarTech.
+        # Fast-approve: UNAMBIGUOUS MarTech title terms only — these bypass the AI
+        # and auto-approve, so generic/ambiguous tools (Tableau, Looker, dbt,
+        # Magento, Outreach, etc.) are deliberately EXCLUDED. Those still pass the
+        # keyword gate below and get AI-screened against the full JD.
         _FAST_APPROVE_TERMS = {
             "martech", "marketing technology",
             "marketing operations", "marketing ops", "mops",
             "marketing automation", "campaign operations",
-            "marketing analytics", "digital analytics", "web analytics",
-            "marketing data", "marketing engineer",
-            # Salesforce ecosystem
+            "marketing analytics", "marketing data", "marketing engineer",
+            "digital analytics", "web analytics", "google tag manager",
+            # Salesforce ecosystem (role must be a technical/ops role — gated below)
             "salesforce administrator", "salesforce admin",
             "salesforce developer", "salesforce architect",
             "salesforce consultant", "salesforce analyst",
@@ -191,36 +194,22 @@ class MarTechScreener:
             "salesforce implementer", "salesforce business analyst",
             "sfmc", "salesforce marketing cloud", "marketing cloud",
             "pardot", "account engagement",
-            "salesforce data cloud", "salesforce cdp",
-            # Adobe Experience Cloud — full suite
+            "salesforce data cloud",
+            # Adobe Experience Cloud — full suite (all unambiguously MarTech)
             "adobe experience manager", "aem ", "aem-", "(aem)", " aem",
             "adobe experience platform", " aep", "aep ",
-            "adobe analytics",
-            "adobe target",
-            "adobe campaign",
-            "adobe journey optimizer", "ajo ",
-            "adobe audience manager", " aam",
-            "adobe real-time cdp", "adobe rtcdp",
-            "adobe workfront",
-            "adobe commerce", "magento",
-            "adobe marketo", "marketo engage",
-            "adobe genstudio",
-            "adobe launch", "adobe dtm",
-            # Other MAP / automation platforms
-            "marketo", "eloqua", "pardot", "hubspot",
-            "braze", "klaviyo", "iterable", "customer.io",
-            "activecampaign", "drip ", "sendgrid",
-            # CDP / data platforms
-            "segment ", "tealium", "mparticle", "rudderstack",
-            "hightouch", "census ", "actioniq",
-            "salesforce data cloud", "adobe real-time cdp",
-            # Tag / analytics
-            "google tag manager", "gtm ", " gtm",
-            "amplitude", "mixpanel", "heap ", "fullstory",
-            "looker", "tableau", "dbt ",
-            # Other MarTech
-            "optimizely", "6sense", "demandbase",
-            "outreach", "salesloft", "gong ",
+            "adobe analytics", "adobe target", "adobe campaign",
+            "adobe journey optimizer", "adobe audience manager",
+            "adobe real-time cdp", "adobe rtcdp", "adobe workfront",
+            "adobe marketo", "marketo engage", "adobe genstudio",
+            "adobe launch",
+            # Marketing automation platforms (names that aren't common words)
+            "marketo", "eloqua", "hubspot",
+            "braze", "klaviyo", "iterable", "customer.io", "activecampaign",
+            # CDP / data activation platforms (MarTech-specific names)
+            "tealium", "mparticle", "rudderstack", "hightouch", "actioniq",
+            # ABM / sales-marketing platforms
+            "6sense", "demandbase", "salesloft",
         }
         title_norm = self._normalize(title)
         for term in _FAST_APPROVE_TERMS:
