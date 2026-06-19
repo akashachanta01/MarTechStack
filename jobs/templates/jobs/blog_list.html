@@ -5,7 +5,7 @@
 {% block meta_description %}Expert articles on marketing operations, technology stacks, career growth, salary guides and the future of MarTech. Written for practitioners, by practitioners.{% endblock %}
 {% block meta_keywords %}martech blog, marketing operations articles, martech careers, HubSpot tips, Salesforce guides, marketing salary guide{% endblock %}
 {% block og_title %}Blog — MarTech Insights, Career Advice & Salary Guides{% endblock %}
-{% block og_desc %}Expert articles on marketing operations, technology stacks, career growth, salary guides and the future of MarTech. Written for practitioners, by practitioners.{% endblock %}
+{% block og_desc %}Expert articles on marketing operations, tech stacks, career growth, salary guides and the future of MarTech.{% endblock %}
 
 {% block extra_schema %}
 <script type="application/ld+json">
@@ -22,322 +22,521 @@
 
 {% block content %}
 <style>
-  /* ── Masthead ───────────────────────────────────────────── */
-  .ch-masthead { padding: 56px 0 0; background: var(--paper2); border-bottom: 3px double var(--ink); }
-  .ch-masthead-top { display: flex; justify-content: space-between; align-items: center; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule); padding-bottom: 12px; }
-  .ch-masthead-top .ch-amber { color: var(--amber); }
-  .ch-nameplate { text-align: center; padding: 30px 0 24px; }
-  .ch-nameplate h1 { font-family: 'Playfair Display', serif; font-size: clamp(40px, 7vw, 86px); font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -.01em; margin: 0; }
-  .ch-nameplate h1 em { font-style: italic; color: var(--amber); }
-  .ch-tagline { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 18px; font-family: 'Courier Prime', monospace; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
-  .ch-tagline::before, .ch-tagline::after { content: ""; height: 1px; width: 48px; background: var(--rule2); }
-  .ch-mission { text-align: center; max-width: 560px; margin: 18px auto 0; padding-bottom: 30px; font-size: 16px; color: var(--ink2); line-height: 1.7; font-style: italic; }
+/* ── Variables / base ───────────────────────────── */
+:root {
+  --navy3: #1e2a3a;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --amber2: #c05621;
+}
 
-  /* ── Lead story (featured) ──────────────────────────────── */
-  .ch-lead { padding: 56px 0; border-bottom: 1px solid var(--rule); }
-  .ch-lead-kicker { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); text-align: center; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .ch-lead-kicker::before, .ch-lead-kicker::after { content: ""; height: 1px; flex: 1; max-width: 90px; background: var(--rule2); }
-  .ch-lead-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
-  @media(max-width:768px){ .ch-lead-grid { grid-template-columns: 1fr; gap: 28px; } }
-  .ch-lead-img { aspect-ratio: 16/10; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--rule); background: var(--paper); position: relative; }
-  .ch-lead-img img { width: 100%; height: 100%; object-fit: cover; }
-  .ch-lead-badge { position: absolute; top: 14px; left: 14px; background: var(--amber); color: #fff; font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 5px 11px; border-radius: 4px; }
-  .ch-lead-cat { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--amber); margin-bottom: 12px; }
-  .ch-lead-cat time { color: var(--ink3); }
-  .ch-lead-title { font-family: 'Playfair Display', serif; font-size: clamp(28px, 3.6vw, 44px); font-weight: 800; color: var(--ink); line-height: 1.15; margin-bottom: 18px; letter-spacing: -.01em; }
-  .ch-lead-title a:hover { color: var(--amber); }
-  .ch-lead-excerpt { font-size: 16px; color: var(--ink2); line-height: 1.75; margin-bottom: 26px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .ch-lead-byline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .ch-lead-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--amber-light); border: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-  .ch-lead-avatar img { width: 100%; height: 100%; object-fit: contain; }
-  .ch-lead-author-name { font-size: 13px; font-weight: 700; color: var(--ink); }
-  .ch-lead-author-sub { font-size: 11px; color: var(--ink3); font-family: 'Courier Prime', monospace; }
-  .ch-lead-byline .btn { margin-left: auto; }
+/* ── Masthead ────────────────────────────────────── */
+.bl-mast { padding: 48px 0 0; background: var(--paper2); border-bottom: 3px double var(--ink); }
+.bl-mast-meta { display: flex; justify-content: space-between; align-items: center; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+.bl-mast-meta .hl { color: var(--amber); }
+.bl-nameplate { text-align: center; padding: 28px 0 20px; }
+.bl-nameplate h1 { font-family: 'Playfair Display', serif; font-size: clamp(38px, 6vw, 80px); font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -.01em; margin: 0; }
+.bl-nameplate h1 em { font-style: italic; color: var(--amber); }
+.bl-tagline { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+.bl-tagline::before, .bl-tagline::after { content: ""; height: 1px; width: 44px; background: var(--rule2); }
 
-  /* ── Section heading shared ─────────────────────────────── */
-  .ch-sec-head { text-align: center; max-width: 640px; margin: 0 auto 34px; }
-  .ch-sec-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: var(--ink); margin: 8px 0; letter-spacing: -.01em; }
-  .ch-sec-head p { font-size: 15px; color: var(--ink2); line-height: 1.65; }
+/* ── Sticky nav ──────────────────────────────────── */
+.bl-nav { background: var(--paper2); border-bottom: 1px solid var(--rule); position: sticky; top: 64px; z-index: 40; }
+.bl-nav-inner { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; flex-wrap: wrap; }
+.bl-tabs { display: flex; gap: 4px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -ms-overflow-style: none; }
+.bl-tabs::-webkit-scrollbar { display: none; }
+.bl-tab { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid var(--rule2); color: var(--ink2); background: var(--card); transition: all .15s; text-decoration: none; }
+.bl-tab:hover { border-color: var(--amber); color: var(--amber); }
+.bl-tab.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+.bl-search { position: relative; }
+.bl-search input { padding: 7px 14px 7px 34px; border-radius: 20px; border: 1px solid var(--rule2); font-size: 13px; background: var(--card); color: var(--ink); outline: none; width: 200px; max-width: 100%; }
+.bl-search input:focus { border-color: var(--amber); }
+.bl-search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink3); width: 14px; }
 
-  /* ── Guide / cert sections ──────────────────────────────── */
-  .ch-guides { padding: 56px 0; border-bottom: 1px solid var(--rule); }
-  .ch-guides.is-interview { background: linear-gradient(180deg, var(--amber-light), var(--paper2)); }
-  .ch-guides.is-cert { background: var(--paper2); }
-  .ch-guides-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .ch-guide-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 24px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .2s, box-shadow .2s, border-color .2s; box-shadow: var(--shadow-sm); }
-  .ch-guide-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--amber); }
-  .ch-guide-card.is-cert:hover { border-color: var(--navy); }
-  .ch-guide-badge { position: absolute; top: 16px; right: 16px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
-  .ch-guide-badge.is-interview { color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; }
-  .ch-guide-badge.is-cert { color: var(--navy); background: var(--paper2); border: 1px solid var(--rule); }
-  .ch-guide-tool { width: 46px; height: 46px; border-radius: 11px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px; }
-  .ch-guide-tool img { width: 30px; height: 30px; object-fit: contain; }
-  .ch-guide-tool span { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--amber); }
-  .ch-guide-tool span.is-cert { color: var(--navy); }
-  .ch-guide-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.25; }
-  .ch-guide-card p { font-size: 13px; color: var(--ink3); line-height: 1.55; flex: 1; }
-  .ch-guide-link { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 4px; }
-  .ch-guide-link.is-cert { color: var(--navy); }
+/* ── Section wrapper shared ──────────────────────── */
+.bl-section { padding: 52px 0; border-bottom: 1px solid var(--rule); }
+.bl-section:last-child { border-bottom: none; }
+.bl-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+.bl-section-left {}
+.bl-section-kicker { font-family: 'Courier Prime', monospace; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+.bl-section-kicker.kicker-blue { color: var(--navy3); }
+.bl-section-kicker.kicker-green { color: var(--green); }
+.bl-section-h { font-family: 'Playfair Display', serif; font-size: clamp(22px, 3vw, 30px); font-weight: 800; color: var(--ink); line-height: 1.15; margin: 0; }
+.bl-see-all { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--amber); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+.bl-see-all:hover { color: var(--amber2); }
 
-  /* ── Filter bar ─────────────────────────────────────────── */
-  .ch-filters { background: var(--paper2); border-bottom: 1px solid var(--rule); position: sticky; top: 64px; z-index: 40; }
-  .ch-filters-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; flex-wrap: wrap; }
-  .ch-cats { display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; -ms-overflow-style: none; scrollbar-width: none; }
-  .ch-cats::-webkit-scrollbar { display: none; }
-  .ch-cat { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; border: 1px solid var(--rule2); color: var(--ink2); background: var(--card); transition: all .15s; text-decoration: none; }
-  .ch-cat:hover { border-color: var(--amber); color: var(--amber); }
-  .ch-cat.active { background: var(--amber); color: #fff; border-color: var(--amber); }
-  .ch-search { position: relative; }
-  .ch-search input { padding: 8px 14px 8px 36px; border-radius: 20px; border: 1px solid var(--rule2); font-size: 13px; background: var(--card); color: var(--ink); outline: none; width: 210px; max-width: 100%; }
-  .ch-search input:focus { border-color: var(--amber); }
-  .ch-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); width: 14px; }
+/* ── Hero lead (featured) ────────────────────────── */
+.bl-hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 44px; align-items: center; }
+@media(max-width: 768px){ .bl-hero { grid-template-columns: 1fr; gap: 24px; } }
+.bl-hero-img { aspect-ratio: 16/10; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--rule); position: relative; }
+.bl-hero-cat { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--amber); margin-bottom: 10px; }
+.bl-hero-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.4vw, 42px); font-weight: 800; color: var(--ink); line-height: 1.15; margin-bottom: 16px; }
+.bl-hero-title a:hover { color: var(--amber); }
+.bl-hero-excerpt { font-size: 15.5px; color: var(--ink2); line-height: 1.75; margin-bottom: 22px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.bl-hero-byline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bl-hero-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--amber-light); border: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.bl-hero-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.bl-hero-meta { font-size: 12px; color: var(--ink2); }
+.bl-hero-meta strong { color: var(--ink); }
+.bl-hero-byline .btn { margin-left: auto; }
+@media(max-width:580px){ .bl-hero-byline .btn { margin-left: 0; width: 100%; text-align: center; } }
 
-  /* ── Post grid ──────────────────────────────────────────── */
-  .ch-grid-section { padding: 56px 0; min-height: 50vh; }
-  .ch-grid-label { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
-  .ch-grid-label::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
-  .ch-grid-label span { color: var(--amber); }
-  .ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
-  @media(max-width:900px){ .ch-grid { grid-template-columns: repeat(2,1fr); } }
-  @media(max-width:580px){ .ch-grid { grid-template-columns: 1fr; } }
+/* ── 3-up card grid ──────────────────────────────── */
+.bl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media(max-width:900px){ .bl-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:560px){ .bl-grid { grid-template-columns: 1fr; } }
+.bl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media(max-width:1050px){ .bl-grid-4 { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:560px){ .bl-grid-4 { grid-template-columns: 1fr; } }
 
-  .ch-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; transition: all .2s; display: flex; flex-direction: column; }
-  .ch-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--rule2); }
-  .ch-card-img { aspect-ratio: 16/9; background: var(--paper); border-bottom: 1px solid var(--rule); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .ch-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
-  .ch-card:hover .ch-card-img img { transform: scale(1.04); }
-  .ch-card-cat-badge { position: absolute; top: 10px; right: 10px; background: rgba(252,252,250,.92); border: 1px solid var(--rule); color: var(--ink); font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 4px; }
-  .ch-card-body { padding: 22px 22px 20px; flex: 1; display: flex; flex-direction: column; }
-  .ch-card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink3); margin-bottom: 10px; font-family: 'Courier Prime', monospace; }
-  .ch-card-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .ch-card-title a:hover { color: var(--amber); }
-  .ch-card-excerpt { font-size: 13px; color: var(--ink2); line-height: 1.65; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 16px; }
-  .ch-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid var(--rule); margin-top: auto; }
-  .ch-card-author { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--ink); }
-  .ch-card-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--amber); flex-shrink: 0; }
-  .ch-read-link { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-family: 'Courier Prime', monospace; }
-  .ch-read-link:hover { color: var(--amber2); }
-  .ch-empty { text-align: center; padding: 80px 20px; color: var(--ink3); grid-column: 1/-1; }
+/* ── Post card ───────────────────────────────────── */
+.bl-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; transition: all .18s; display: flex; flex-direction: column; text-decoration: none; color: inherit; }
+.bl-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--rule2); }
+.bl-card-img { aspect-ratio: 16/9; background: var(--paper); border-bottom: 1px solid var(--rule); position: relative; overflow: hidden; }
+.bl-card-cat { position: absolute; top: 10px; right: 10px; background: rgba(252,252,250,.92); border: 1px solid var(--rule); color: var(--ink); font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 4px; z-index: 1; }
+.bl-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+.bl-card-meta { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink3); margin-bottom: 8px; }
+.bl-card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.3; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bl-card:hover .bl-card-title { color: var(--amber); }
+.bl-card-excerpt { font-size: 13px; color: var(--ink2); line-height: 1.65; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 14px; }
+.bl-card-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--rule); margin-top: auto; }
+.bl-card-author { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink); }
+.bl-card-av { width: 20px; height: 20px; border-radius: 50%; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--amber); flex-shrink: 0; }
+.bl-read { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .06em; font-family: 'Courier Prime', monospace; }
 
-  @media(max-width:580px){
-    .ch-masthead-top { font-size: 9px; letter-spacing: .08em; }
-    .ch-lead-byline .btn { margin-left: 0; width: 100%; text-align: center; }
-  }
+/* ── Guide cards (interview + cert) ─────────────── */
+.bl-guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.bl-guide-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .18s, box-shadow .18s, border-color .18s; }
+.bl-guide-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--amber); }
+.bl-guide-card.is-cert:hover { border-color: var(--navy3); }
+.bl-guide-badge { position: absolute; top: 14px; right: 14px; font-family: 'Courier Prime', monospace; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; }
+.bl-guide-badge.iv { color: var(--amber); background: var(--amber-light); border: 1px solid #f0c6a8; }
+.bl-guide-badge.ct { color: var(--navy3); background: var(--paper2); border: 1px solid var(--rule); }
+.bl-guide-icon { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--rule); background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 4px; }
+.bl-guide-icon img { width: 28px; height: 28px; object-fit: contain; }
+.bl-guide-icon span { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; color: var(--amber); }
+.bl-guide-icon span.ct { color: var(--navy3); }
+.bl-guide-card h3 { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.bl-guide-card p { font-size: 13px; color: var(--ink3); line-height: 1.5; flex: 1; }
+.bl-guide-link { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--amber); margin-top: 2px; }
+.bl-guide-link.ct { color: var(--navy3); }
 
-  /* ── Category cover (deterministic, no image files) ─────── */
-  .bcover { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, var(--paper2), var(--card)); }
-  .bcover__mono { font-family: 'Playfair Display', serif; font-weight: 800; line-height: 1;
-    font-size: clamp(120px, 38%, 220px); opacity: .18; user-select: none;
-    position: absolute; right: -.06em; bottom: -.28em; }
-  .bcover__eyebrow { position: absolute; top: 14px; left: 16px; z-index: 1;
-    font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
-    letter-spacing: .14em; text-transform: uppercase; }
-  .bcover__rule { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 2px; opacity: .55; }
-  /* Themes */
-  .bcover--tech    { background: linear-gradient(135deg, #e9eef6, var(--card)); }
-  .bcover--tech .bcover__mono, .bcover--tech .bcover__eyebrow { color: var(--navy3); }
-  .bcover--tech .bcover__rule { background: var(--navy); }
-  .bcover--career  { background: linear-gradient(135deg, var(--amber-light), var(--card)); }
-  .bcover--career .bcover__mono, .bcover--career .bcover__eyebrow { color: var(--amber); }
-  .bcover--career .bcover__rule { background: var(--amber); }
-  .bcover--salary  { background: linear-gradient(135deg, var(--green-light), var(--card)); }
-  .bcover--salary .bcover__mono, .bcover--salary .bcover__eyebrow { color: var(--green); }
-  .bcover--salary .bcover__rule { background: var(--green); }
-  .bcover--news    { background: linear-gradient(135deg, var(--paper2), var(--paper)); }
-  .bcover--news .bcover__mono, .bcover--news .bcover__eyebrow { color: var(--ink3); }
-  .bcover--news .bcover__rule { background: var(--ink3); }
-  .bcover--default { background: linear-gradient(135deg, var(--paper2), var(--card)); }
-  .bcover--default .bcover__mono, .bcover--default .bcover__eyebrow { color: var(--amber); }
-  .bcover--default .bcover__rule { background: var(--amber); }
+/* ── Salary callout strip ────────────────────────── */
+.bl-salary-strip { display: flex; align-items: center; gap: 18px; background: var(--navy3); color: #fff; border-radius: 14px; padding: 22px 26px; text-decoration: none; flex-wrap: wrap; margin-bottom: 24px; }
+.bl-salary-strip-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(240,160,106,.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--amber); }
+.bl-salary-strip-text { flex: 1; min-width: 180px; }
+.bl-salary-strip-eye { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); margin-bottom: 3px; }
+.bl-salary-strip-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; line-height: 1.2; }
+.bl-salary-strip-sub { font-size: 13px; color: rgba(255,255,255,.65); margin-top: 3px; }
+.bl-salary-strip-cta { font-weight: 700; font-size: 13px; color: var(--amber); white-space: nowrap; font-family: 'Courier Prime', monospace; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ── Section tinted backgrounds ─────────────────── */
+.bl-section.is-tech   { background: linear-gradient(180deg, #eef1f7 0%, var(--paper2) 100%); }
+.bl-section.is-career { background: linear-gradient(180deg, var(--amber-light) 0%, var(--paper2) 100%); }
+.bl-section.is-iv     { background: linear-gradient(180deg, var(--amber-light) 0%, var(--paper2) 100%); }
+.bl-section.is-cert   { background: var(--paper2); }
+.bl-section.is-salary { background: linear-gradient(180deg, var(--green-light) 0%, var(--paper2) 100%); }
+.bl-section.is-news   { background: var(--paper2); }
+
+/* ── Filter mode grid (search/category active) ── */
+.bl-filter-grid { padding: 48px 0; }
+.bl-filter-label { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin-bottom: 26px; display: flex; align-items: center; gap: 12px; }
+.bl-filter-label::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.bl-filter-label span { color: var(--amber); }
+.bl-empty { text-align: center; padding: 80px 20px; color: var(--ink3); grid-column: 1/-1; }
+
+/* ── Category cover (deterministic) ─────────────── */
+.bcover { position: absolute; inset: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--paper2), var(--card)); }
+.bcover__mono { font-family: 'Playfair Display', serif; font-weight: 800; line-height: 1; font-size: clamp(120px, 38%, 220px); opacity: .18; user-select: none; position: absolute; right: -.06em; bottom: -.28em; }
+.bcover__rule { position: absolute; left: 16px; bottom: 16px; width: 38px; height: 2px; opacity: .55; }
+.bcover--tech    { background: linear-gradient(135deg, #e9eef6, var(--card)); }
+.bcover--tech .bcover__mono { color: var(--navy3); }
+.bcover--tech .bcover__rule { background: var(--navy3); }
+.bcover--career  { background: linear-gradient(135deg, var(--amber-light), var(--card)); }
+.bcover--career .bcover__mono { color: var(--amber); }
+.bcover--career .bcover__rule { background: var(--amber); }
+.bcover--salary  { background: linear-gradient(135deg, var(--green-light), var(--card)); }
+.bcover--salary .bcover__mono { color: var(--green); }
+.bcover--salary .bcover__rule { background: var(--green); }
+.bcover--news    { background: linear-gradient(135deg, var(--paper2), var(--paper)); }
+.bcover--news .bcover__mono { color: var(--ink3); }
+.bcover--news .bcover__rule { background: var(--ink3); }
+.bcover--default { background: linear-gradient(135deg, var(--paper2), var(--card)); }
+.bcover--default .bcover__mono { color: var(--amber); }
+.bcover--default .bcover__rule { background: var(--amber); }
 </style>
 
-<!-- ── MASTHEAD ──────────────────────────────────────────── -->
-<header class="ch-masthead">
+<!-- ── MASTHEAD ──────────────────────────────────── -->
+<header class="bl-mast">
   <div class="wrap">
-    <div class="ch-masthead-top">
+    <div class="bl-mast-meta">
       <span>Vol. I · MarTechJobs.io</span>
-      <span class="ch-amber">Marketing Ops &amp; Engineering</span>
+      <span class="hl">Marketing Ops &amp; Engineering</span>
       <span><time datetime="{% now 'Y-m-d' %}">{% now "l, F j, Y" %}</time></span>
     </div>
-    <div class="ch-nameplate">
-      <div class="eyebrow" style="margin-bottom:14px;">Industry Insights &amp; Career Advice</div>
+    <div class="bl-nameplate">
+      <div class="eyebrow" style="margin-bottom:12px;">Industry Insights &amp; Career Advice</div>
       <h1>The MarTech <em>Chronicles</em></h1>
-      <div class="ch-tagline">Written by practitioners · for practitioners</div>
+      <div class="bl-tagline">Written by practitioners · for practitioners</div>
     </div>
-    <p class="ch-mission">Field notes on marketing operations, technology stacks, career growth, and the future of the MarTech discipline.</p>
+    <p style="text-align:center;max-width:520px;margin:14px auto 0;padding-bottom:28px;font-size:15.5px;color:var(--ink2);line-height:1.7;font-style:italic;">Field notes on marketing operations, technology stacks, career growth, and the future of MarTech.</p>
   </div>
 </header>
 
-<!-- ── LEAD STORY ────────────────────────────────────────── -->
-{% if featured_post %}
-<section class="ch-lead" aria-label="Featured article">
+<!-- ── STICKY NAV ────────────────────────────────── -->
+<div class="bl-nav">
   <div class="wrap">
-    <div class="ch-lead-kicker">The Lead Story</div>
-    <div class="ch-lead-grid">
-      <div class="ch-lead-img">
-        <div class="bcover {% if featured_post.category == 'Tech Stacks' %}bcover--tech{% elif featured_post.category == 'Career Advice' %}bcover--career{% elif featured_post.category == 'Salary Guides' %}bcover--salary{% elif featured_post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
-          <span class="bcover__eyebrow">{{ featured_post.category|default:"MarTech" }}</span>
-          <span class="bcover__rule"></span>
-          <span class="bcover__mono">{{ featured_post.title|slice:":1" }}</span>
-        </div>
-        <span class="ch-lead-badge">Featured</span>
-      </div>
-      <div>
-        <div class="ch-lead-cat">{{ featured_post.category }} <span style="color:var(--ink3);font-weight:400;">·</span> <time datetime="{{ featured_post.published_at|date:'Y-m-d' }}">{{ featured_post.published_at|date:"M d, Y" }}</time> <span style="color:var(--ink3);font-weight:400;">·</span> {{ featured_post.read_time }}</div>
-        <h2 class="ch-lead-title"><a href="{% url 'post_detail' featured_post.slug %}">{{ featured_post.title }}</a></h2>
-        <p class="ch-lead-excerpt">{{ featured_post.excerpt }}</p>
-        <div class="ch-lead-byline">
-          <div class="ch-lead-avatar"><img src="{% static 'logo.svg' %}" alt="MarTechJobs"></div>
-          <div>
-            <div class="ch-lead-author-name">{{ featured_post.author }}</div>
-            <div class="ch-lead-author-sub">Editorial Team</div>
-          </div>
-          <a href="{% url 'post_detail' featured_post.slug %}" class="btn btn-amber">Read Article →</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- ── INTERVIEW GUIDES ──────────────────────────────────── -->
-{% if interview_guides and not search_query and not current_category %}
-<section class="ch-guides is-interview" id="interview-guides" aria-label="Interview guides">
-  <div class="wrap">
-    <div class="ch-sec-head">
-      <div class="eyebrow">🎯 Land the role</div>
-      <h2>MarTech Interview Guides</h2>
-      <p>The questions hiring managers actually ask — with what a strong answer shows, informed by live job data. Free, and updated as roles change.</p>
-    </div>
-    <div class="ch-guides-grid">
-      {% for g in interview_guides %}
-      <a href="{% url 'tool_interview' g.tool.slug %}" class="ch-guide-card">
-        <span class="ch-guide-badge is-interview">Interview Guide</span>
-        <div class="ch-guide-tool">
-          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }} logo">{% else %}<span>{{ g.tool.name|slice:":1" }}</span>{% endif %}
-        </div>
-        <h3>{{ g.tool.name }} Interview Questions</h3>
-        <p>{{ g.question_count }} questions with model answers and what employers look for.</p>
-        <span class="ch-guide-link">Read the guide →</span>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- ── CERTIFICATION GUIDES ──────────────────────────────── -->
-{% if cert_guides and not search_query and not current_category %}
-<section class="ch-guides is-cert" id="cert-guides" aria-label="Certification guides">
-  <div class="wrap">
-    <div class="ch-sec-head">
-      <div class="eyebrow">🎓 Get certified</div>
-      <h2>MarTech Certifications</h2>
-      <p>Study paths, exam formats, and tips for the certifications that actually move the needle in MarTech hiring.</p>
-    </div>
-    <div class="ch-guides-grid">
-      {% for g in cert_guides %}
-      <a href="{% url 'tool_certification' g.tool.slug %}" class="ch-guide-card is-cert">
-        <span class="ch-guide-badge is-cert">Cert Guide</span>
-        <div class="ch-guide-tool">
-          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }} logo">{% else %}<span class="is-cert">{{ g.tool.name|slice:":1" }}</span>{% endif %}
-        </div>
-        <h3>{{ g.cert_name }}</h3>
-        <p>{% if g.provider %}By {{ g.provider }}. {% endif %}{% if g.cost %}{{ g.cost }}. {% endif %}{% if g.difficulty %}{{ g.difficulty }} level.{% endif %}</p>
-        <span class="ch-guide-link is-cert">View study guide →</span>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- ── FILTER BAR ────────────────────────────────────────── -->
-<div class="ch-filters">
-  <div class="wrap">
-    <div class="ch-filters-inner">
-      <nav class="ch-cats" aria-label="Blog categories">
-        <a href="{% url 'blog_list' %}" class="ch-cat {% if not current_category %}active{% endif %}">All Posts</a>
-        <a href="?category=Tech+Stacks" class="ch-cat {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
-        <a href="?category=Career+Advice" class="ch-cat {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
-        <a href="{% url 'blog_list' %}#interview-guides" class="ch-cat">Interview Guides</a>
-        <a href="?category=Salary+Guides" class="ch-cat {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
-        <a href="?category=Industry+News" class="ch-cat {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
+    <div class="bl-nav-inner">
+      <nav class="bl-tabs" aria-label="Blog sections">
+        <a href="{% url 'blog_list' %}" class="bl-tab {% if not current_category and not search_query %}active{% endif %}">All Posts</a>
+        <a href="?category=Tech+Stacks" class="bl-tab {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
+        <a href="?category=Career+Advice" class="bl-tab {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
+        <a href="{% url 'blog_list' %}#interview-guides" class="bl-tab {% if current_category == 'Interview Guides' %}active{% endif %}">Interview Guides</a>
+        <a href="{% url 'blog_list' %}#cert-guides" class="bl-tab {% if current_category == 'Certification Guides' %}active{% endif %}">Cert Guides</a>
+        <a href="?category=Salary+Guides" class="bl-tab {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
+        <a href="?category=Industry+News" class="bl-tab {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
       </nav>
-      <form method="get" action="{% url 'blog_list' %}" class="ch-search" role="search">
-        <svg class="ch-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <form method="get" action="{% url 'blog_list' %}" class="bl-search" role="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" name="q" value="{{ search_query }}" placeholder="Search articles…" aria-label="Search articles">
       </form>
     </div>
   </div>
 </div>
 
-<!-- ── POST GRID ─────────────────────────────────────────── -->
-<section class="ch-grid-section" aria-label="Articles">
+{% if is_hub %}
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- HUB MODE: organized sections                   -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<!-- ── FEATURED STORY ───────────────────────────── -->
+{% if featured_post %}
+<section class="bl-section" aria-label="Featured article" style="background:var(--paper2);">
   <div class="wrap">
-    {% if search_query or current_category %}
-    <div class="ch-grid-label">
-      Results for <span>{% if search_query %}"{{ search_query }}"{% endif %}{% if current_category %} [{{ current_category }}]{% endif %}</span>
-      — <a href="{% url 'blog_list' %}" style="color:var(--ink3);text-decoration:underline;">Clear</a>
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker">✦ Lead Story</div>
+        <h2 class="bl-section-h">Latest from the Chronicles</h2>
+      </div>
     </div>
-    {% else %}
-    <div class="ch-grid-label">Latest <span>dispatches</span></div>
-    {% endif %}
-
-    {% if current_category == 'Salary Guides' %}
-    <a href="{% url 'salary_guide' %}" style="display:flex;align-items:center;gap:18px;background:var(--navy3);color:#fff;border-radius:14px;padding:24px 28px;margin-bottom:28px;text-decoration:none;flex-wrap:wrap;">
-      <div style="width:48px;height:48px;border-radius:12px;background:rgba(240,160,106,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--amber-accent);">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    <div class="bl-hero">
+      <div class="bl-hero-img">
+        <div class="bcover {% if featured_post.category == 'Tech Stacks' %}bcover--tech{% elif featured_post.category == 'Career Advice' %}bcover--career{% elif featured_post.category == 'Salary Guides' %}bcover--salary{% elif featured_post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
+          <span class="bcover__rule"></span>
+          <span class="bcover__mono">{{ featured_post.title|slice:":1" }}</span>
+        </div>
+        <span style="position:absolute;top:14px;left:14px;background:var(--amber);color:#fff;font-family:'Courier Prime',monospace;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:4px;z-index:1;">Featured</span>
       </div>
-      <div style="flex:1;min-width:200px;">
-        <div style="font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber-accent);margin-bottom:4px;">Live Tool · Updated Daily</div>
-        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;">MarTech Salary Guide {% now "Y" %}</div>
-        <div style="font-size:13.5px;color:rgba(255,255,255,.7);margin-top:3px;">Real-time pay ranges by tech stack, calculated from live job postings.</div>
+      <div>
+        <div class="bl-hero-cat">{{ featured_post.category }} <span style="color:var(--ink3);font-weight:400;">·</span> <time datetime="{{ featured_post.published_at|date:'Y-m-d' }}">{{ featured_post.published_at|date:"M d, Y" }}</time> <span style="color:var(--ink3);font-weight:400;">·</span> {{ featured_post.read_time }}</div>
+        <h2 class="bl-hero-title"><a href="{% url 'post_detail' featured_post.slug %}">{{ featured_post.title }}</a></h2>
+        <p class="bl-hero-excerpt">{{ featured_post.excerpt }}</p>
+        <div class="bl-hero-byline">
+          <div class="bl-hero-avatar"><img src="{% static 'logo.svg' %}" alt="MarTechJobs"></div>
+          <div class="bl-hero-meta"><strong>{{ featured_post.author }}</strong><br>Editorial Team</div>
+          <a href="{% url 'post_detail' featured_post.slug %}" class="btn btn-amber">Read Article →</a>
+        </div>
       </div>
-      <span style="font-weight:700;font-size:14px;color:var(--amber-accent);white-space:nowrap;">View the data →</span>
-    </a>
-    {% endif %}
+    </div>
 
-    <div class="ch-grid">
-      {% for post in posts %}
-      <article class="ch-card" itemscope itemtype="https://schema.org/BlogPosting">
-        <div class="ch-card-img">
-          <div class="bcover {% if post.category == 'Tech Stacks' %}bcover--tech{% elif post.category == 'Career Advice' %}bcover--career{% elif post.category == 'Salary Guides' %}bcover--salary{% elif post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" itemprop="image" aria-hidden="true">
+    {% if latest_posts %}
+    <div class="bl-grid" style="margin-top:32px;">
+      {% for post in latest_posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover {% if post.category == 'Tech Stacks' %}bcover--tech{% elif post.category == 'Career Advice' %}bcover--career{% elif post.category == 'Salary Guides' %}bcover--salary{% elif post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
             <span class="bcover__rule"></span>
             <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
           </div>
-          <span class="ch-card-cat-badge">{{ post.category }}</span>
+          <span class="bl-card-cat">{{ post.category }}</span>
         </div>
-        <div class="ch-card-body">
-          <div class="ch-card-meta">
-            <time datetime="{{ post.published_at|date:'Y-m-d' }}" itemprop="datePublished">{{ post.published_at|date:"M d, Y" }}</time>
-            <span>·</span>
-            <span itemprop="timeRequired">{{ post.read_time }}</span>
-          </div>
-          <h3 class="ch-card-title"><a href="{% url 'post_detail' post.slug %}" itemprop="headline">{{ post.title }}</a></h3>
-          <p class="ch-card-excerpt" itemprop="description">{{ post.excerpt }}</p>
-          <div class="ch-card-footer">
-            <div class="ch-card-author">
-              <div class="ch-card-avatar">{{ post.author|slice:":1" }}</div>
-              <span itemprop="author">{{ post.author }}</span>
-            </div>
-            <a class="ch-read-link" href="{% url 'post_detail' post.slug %}">Read →</a>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
           </div>
         </div>
-      </article>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- ── TECH STACKS ───────────────────────────────── -->
+{% if tech_posts %}
+<section class="bl-section is-tech" id="tech-stacks" aria-label="Tech Stacks articles">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker">🛠 Tech Stacks</div>
+        <h2 class="bl-section-h">Platform Deep-Dives &amp; Stack Comparisons</h2>
+      </div>
+      <a href="?category=Tech+Stacks" class="bl-see-all">See all →</a>
+    </div>
+    <div class="bl-grid-4">
+      {% for post in tech_posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover bcover--tech" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
+          <span class="bl-card-cat">Tech Stacks</span>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── CAREER ADVICE ─────────────────────────────── -->
+{% if career_posts %}
+<section class="bl-section is-career" id="career-advice" aria-label="Career Advice articles">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker">🚀 Career Advice</div>
+        <h2 class="bl-section-h">Land the Role. Grow the Career.</h2>
+      </div>
+      <a href="?category=Career+Advice" class="bl-see-all">See all →</a>
+    </div>
+    <div class="bl-grid-4">
+      {% for post in career_posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover bcover--career" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
+          <span class="bl-card-cat">Career Advice</span>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── INTERVIEW GUIDES ──────────────────────────── -->
+{% if interview_guides %}
+<section class="bl-section is-iv" id="interview-guides" aria-label="Interview Guides">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker">🎯 Interview Guides</div>
+        <h2 class="bl-section-h">Questions Hiring Managers Actually Ask</h2>
+      </div>
+    </div>
+    <div class="bl-guide-grid">
+      {% for g in interview_guides %}
+      <a href="{% url 'tool_interview' g.tool.slug %}" class="bl-guide-card">
+        <span class="bl-guide-badge iv">Interview Guide</span>
+        <div class="bl-guide-icon">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}">{% else %}<span>{{ g.tool.name|slice:":1" }}</span>{% endif %}
+        </div>
+        <h3>{{ g.tool.name }} Interview Questions</h3>
+        <p>{{ g.question_count }} questions with model answers and what employers look for.</p>
+        <span class="bl-guide-link">Read the guide →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── CERTIFICATION GUIDES ──────────────────────── -->
+{% if cert_guides %}
+<section class="bl-section is-cert" id="cert-guides" aria-label="Certification Guides">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker kicker-blue">🎓 Certification Guides</div>
+        <h2 class="bl-section-h">Certifications That Move the Needle</h2>
+      </div>
+    </div>
+    <div class="bl-guide-grid">
+      {% for g in cert_guides %}
+      <a href="{% url 'tool_certification' g.tool.slug %}" class="bl-guide-card is-cert">
+        <span class="bl-guide-badge ct">Cert Guide</span>
+        <div class="bl-guide-icon">
+          {% if g.tool.logo_url %}<img src="{{ g.tool.logo_url }}" alt="{{ g.tool.name }}">{% else %}<span class="ct">{{ g.tool.name|slice:":1" }}</span>{% endif %}
+        </div>
+        <h3>{{ g.cert_name }}</h3>
+        <p>{% if g.provider %}By {{ g.provider }}. {% endif %}{% if g.cost %}{{ g.cost }}. {% endif %}{% if g.difficulty %}{{ g.difficulty }} level.{% endif %}</p>
+        <span class="bl-guide-link ct">View study guide →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── SALARY GUIDES ─────────────────────────────── -->
+<section class="bl-section is-salary" id="salary-guides" aria-label="Salary Guides">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker kicker-green">💰 Salary Guides</div>
+        <h2 class="bl-section-h">Know Your Worth in MarTech</h2>
+      </div>
+      {% if salary_posts %}<a href="?category=Salary+Guides" class="bl-see-all">See all →</a>{% endif %}
+    </div>
+    <a href="{% url 'salary_guide' %}" class="bl-salary-strip">
+      <div class="bl-salary-strip-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div class="bl-salary-strip-text">
+        <div class="bl-salary-strip-eye">Live Tool · Updated Daily</div>
+        <div class="bl-salary-strip-title">MarTech Salary Guide {% now "Y" %}</div>
+        <div class="bl-salary-strip-sub">Real-time pay ranges by tech stack, calculated from live job postings.</div>
+      </div>
+      <span class="bl-salary-strip-cta">View the data →</span>
+    </a>
+    {% if salary_posts %}
+    <div class="bl-grid">
+      {% for post in salary_posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover bcover--salary" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
+          <span class="bl-card-cat">Salary Guides</span>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ── INDUSTRY NEWS ─────────────────────────────── -->
+{% if news_posts %}
+<section class="bl-section is-news" id="industry-news" aria-label="Industry News">
+  <div class="wrap">
+    <div class="bl-section-head">
+      <div class="bl-section-left">
+        <div class="bl-section-kicker">📡 Industry News</div>
+        <h2 class="bl-section-h">What's Happening in MarTech</h2>
+      </div>
+      <a href="?category=Industry+News" class="bl-see-all">See all →</a>
+    </div>
+    <div class="bl-grid">
+      {% for post in news_posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover bcover--news" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
+          <span class="bl-card-cat">Industry News</span>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% else %}
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- FILTER MODE: search or category active         -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="bl-filter-grid">
+  <div class="wrap">
+    {% if current_category == 'Salary Guides' %}
+    <a href="{% url 'salary_guide' %}" class="bl-salary-strip" style="margin-bottom:28px;display:flex;">
+      <div class="bl-salary-strip-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div class="bl-salary-strip-text">
+        <div class="bl-salary-strip-eye">Live Tool · Updated Daily</div>
+        <div class="bl-salary-strip-title">MarTech Salary Guide {% now "Y" %}</div>
+        <div class="bl-salary-strip-sub">Real-time pay ranges by tech stack, from live job postings.</div>
+      </div>
+      <span class="bl-salary-strip-cta">View the data →</span>
+    </a>
+    {% endif %}
+
+    <div class="bl-filter-label">
+      {% if search_query %}Results for <span>"{{ search_query }}"</span>{% endif %}
+      {% if current_category %}<span>{{ current_category }}</span>{% endif %}
+      — <a href="{% url 'blog_list' %}" style="color:var(--ink3);text-decoration:underline;">Clear</a>
+    </div>
+
+    <div class="bl-grid">
+      {% for post in posts %}
+      <a href="{% url 'post_detail' post.slug %}" class="bl-card">
+        <div class="bl-card-img">
+          <div class="bcover {% if post.category == 'Tech Stacks' %}bcover--tech{% elif post.category == 'Career Advice' %}bcover--career{% elif post.category == 'Salary Guides' %}bcover--salary{% elif post.category == 'Industry News' %}bcover--news{% else %}bcover--default{% endif %}" aria-hidden="true">
+            <span class="bcover__rule"></span>
+            <span class="bcover__mono">{{ post.title|slice:":1" }}</span>
+          </div>
+          <span class="bl-card-cat">{{ post.category }}</span>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-card-meta"><time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"M d, Y" }}</time> · {{ post.read_time }}</div>
+          <div class="bl-card-title">{{ post.title }}</div>
+          <p class="bl-card-excerpt">{{ post.excerpt }}</p>
+          <div class="bl-card-foot">
+            <div class="bl-card-author"><div class="bl-card-av">{{ post.author|slice:":1" }}</div>{{ post.author }}</div>
+            <span class="bl-read">Read →</span>
+          </div>
+        </div>
+      </a>
       {% empty %}
-      <div class="ch-empty">
-        {% if search_query or current_category %}
-          <p style="font-size:16px;margin-bottom:12px;">No articles found matching your search.</p>
-          <a href="{% url 'blog_list' %}" class="btn btn-ghost">Clear Filters</a>
-        {% else %}
-          <p>More articles coming soon. Check back soon for new insights.</p>
-        {% endif %}
+      <div class="bl-empty">
+        <p style="font-size:16px;margin-bottom:12px;">No articles found.</p>
+        <a href="{% url 'blog_list' %}" class="btn btn-ghost">Clear Filters</a>
       </div>
       {% endfor %}
     </div>
   </div>
 </section>
+
+{% endif %}
 {% endblock %}

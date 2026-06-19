@@ -574,26 +574,18 @@ def blog_list(request):
     search_query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
 
-    posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')
+    all_posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')
 
     if search_query:
-        posts = posts.filter(
-            Q(title__icontains=search_query) | 
+        all_posts = all_posts.filter(
+            Q(title__icontains=search_query) |
             Q(content__icontains=search_query) |
             Q(excerpt__icontains=search_query)
         )
-    
+
     if category_filter:
-        posts = posts.filter(category__iexact=category_filter)
+        all_posts = all_posts.filter(category__iexact=category_filter)
 
-    featured_post = None
-    remaining_posts = posts
-
-    if not search_query and not category_filter and posts.exists():
-        featured_post = posts.first()
-        remaining_posts = posts[1:]
-
-    # Surface interview guides and cert guides as content-hub sections on the blog.
     interview_guides = (
         InterviewGuide.objects.filter(is_published=True)
         .select_related('tool').order_by('-updated_at')
@@ -603,14 +595,27 @@ def blog_list(request):
         .select_related('tool').order_by('-updated_at')
     )
 
-    return render(request, 'jobs/blog_list.html', {
-        'featured_post': featured_post,
-        'posts': remaining_posts,
+    # Hub mode: organize posts into sections when no filter is active.
+    is_hub = not search_query and not category_filter
+    ctx = {
+        'posts': all_posts,
         'interview_guides': interview_guides,
         'cert_guides': cert_guides,
         'search_query': search_query,
-        'current_category': category_filter
-    })
+        'current_category': category_filter,
+        'is_hub': is_hub,
+    }
+
+    if is_hub:
+        base = BlogPost.objects.filter(is_published=True).order_by('-published_at')
+        ctx['featured_post'] = base.first()
+        ctx['latest_posts'] = list(base[1:4])
+        ctx['tech_posts'] = list(base.filter(category='Tech Stacks')[:4])
+        ctx['career_posts'] = list(base.filter(category='Career Advice')[:4])
+        ctx['salary_posts'] = list(base.filter(category='Salary Guides')[:3])
+        ctx['news_posts'] = list(base.filter(category='Industry News')[:3])
+
+    return render(request, 'jobs/blog_list.html', ctx)
 
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
