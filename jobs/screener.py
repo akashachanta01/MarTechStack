@@ -176,14 +176,34 @@ class MarTechScreener:
         if quick_reject:
             return quick_reject
 
-        # Fast-approve: "martech" in the title is an unambiguous signal.
-        if "martech" in self._normalize(title):
-            return {"status": "approved", "score": 92.0, "reason": "Fast-approve: MarTech in title.", "details": {"stage": "fast_approve", "signals": {"function": "operations", "stack": []}}}
-
-        # Precision gate: require a hunt keyword in the TITLE. Gating on the
-        # description matches almost everything (every marketing JD lists
-        # "Salesforce/HubSpot" somewhere), which is why generic roles slipped in.
+        # Fast-approve: titles with these terms are unambiguously MarTech.
+        _FAST_APPROVE_TERMS = {
+            "martech", "marketing technology",
+            "marketing operations", "marketing ops", "mops",
+            "marketing automation", "campaign operations",
+            "marketing analytics", "digital analytics", "web analytics",
+            "marketing data", "marketing engineer",
+            # Platform-specific roles that are always relevant
+            "salesforce administrator", "salesforce admin",
+            "salesforce developer", "salesforce architect",
+            "salesforce consultant", "salesforce analyst",
+            "salesforce solution architect", "salesforce technical architect",
+            "salesforce implementer", "salesforce business analyst",
+            "sfmc", "marketing cloud",
+            "marketo", "pardot", "eloqua", "hubspot",
+            "aem ", "aem-", "(aem)", "adobe experience manager",
+            "adobe experience platform", " aep",
+            "braze", "klaviyo", "iterable",
+            "segment ", "tealium", "mparticle",
+            "google tag manager", "gtm ",
+        }
         title_norm = self._normalize(title)
+        for term in _FAST_APPROVE_TERMS:
+            if term in title_norm:
+                fn = "engineering" if any(w in title_norm for w in ("developer", "engineer", "architect", "technical", "backend", "frontend", "full stack", "author")) else "operations"
+                return {"status": "approved", "score": 92.0, "reason": f"Fast-approve: '{term.strip()}' in title.", "details": {"stage": "fast_approve", "signals": {"function": fn, "stack": []}}}
+
+        # Precision gate: require a hunt keyword in the TITLE.
         has_keyword = any(kw in title_norm for kw in self.gate_terms)
 
         # Description-signal fallback: a lot of real MarTech roles ship with a
