@@ -111,6 +111,10 @@ class Command(BaseCommand):
         self.cutoff_date = timezone.now() - timedelta(days=14)
         self.processed_tokens = set()
 
+        # In-memory dedup caches — avoids 3 DB queries per candidate job.
+        self._known_ids = set(Job.objects.values_list("external_id", flat=True).exclude(external_id=""))
+        self._known_urls = set(Job.objects.values_list("apply_url", flat=True).exclude(apply_url=""))
+
         # ATS Groups (Domains to search)
         ats_groups = [
             "site:greenhouse.io OR site:lever.co OR site:ashbyhq.com OR site:jobs.smartrecruiters.com",
@@ -272,14 +276,16 @@ class Command(BaseCommand):
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
     def _is_duplicate(self, title, company, clean_url, external_id=""):
-        # ATS-native id is the most reliable signal — same posting, even if its
-        # URL drifts between polls.
-        if external_id and Job.objects.filter(external_id=external_id).exists():
+        # Check in-memory caches first (no DB queries for the common case).
+        if external_id and external_id in self._known_ids:
             return True
-        if Job.objects.filter(apply_url=clean_url).exists():
+        if clean_url and clean_url in self._known_urls:
             return True
-        # Check against last 30 days to prevent duplicates with slight URL variations
-        if Job.objects.filter(title__iexact=title, company__iexact=company, created_at__gte=timezone.now() - timedelta(days=30)).exists():
+        # Fall back to DB only for title/company fuzzy match (can't cache this).
+        if title and company and Job.objects.filter(
+            title__iexact=title, company__iexact=company,
+            created_at__gte=timezone.now() - timedelta(days=30)
+        ).exists():
             return True
         return False
 
@@ -524,9 +530,10 @@ class Command(BaseCommand):
                 for item in resp.json().get('content', []):
                     if self.is_fresh(item.get('releasedDate')):
                         try:
-                            d = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=3).json()
-                            desc = d.get('jobAd',{}).get('sections',{}).get('jobDescription',{}).get('text','')
-                        except: desc = "See Job Post"
+                            d = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=5).json()
+                            desc = (d.get('jobAd') or {}).get('sections', {}).get('jobDescription', {}).get('text', '')
+                        except Exception:
+                            desc = "See Job Post"
                         loc = item.get('location', {})
                         parts = [loc.get('city'), loc.get('region'), loc.get('country')]
                         raw_loc = ", ".join([p for p in parts if p])
@@ -732,10 +739,13 @@ class Command(BaseCommand):
                 country=country, region=region, remote_scope=remote_scope,
             )
         except IntegrityError:
-            # A concurrent run won the race on the same external_id — that's the
-            # unique constraint doing its job. Treat as a duplicate, not a crash.
             self.stats[f"{source}:dupe"] += 1
             return
+        # Keep in-memory caches current so later candidates in this run see it.
+        if external_id:
+            self._known_ids.add(external_id)
+        if clean_url:
+            self._known_urls.add(clean_url)
         for raw in signals.get("stack", []):
             tool = self._resolve_tool(raw)
             if tool:

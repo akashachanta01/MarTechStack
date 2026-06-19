@@ -1,5 +1,6 @@
 import requests
 import re
+from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from jobs.models import Job
@@ -9,10 +10,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("🧹 Starting Dead Link Cleanup...")
-        
-        # Only check active jobs (Live on site)
-        active_jobs = Job.objects.filter(is_active=True)
-        total = active_jobs.count()
+
+        # Only scan jobs older than 14 days (fresh jobs are almost never dead)
+        # and cap at 100 per run — at 10s timeout each that's still ~17 minutes max.
+        cutoff = timezone.now() - timedelta(days=14)
+        active_jobs = Job.objects.filter(is_active=True, created_at__lte=cutoff).order_by('created_at')[:100]
+        total = len(list(active_jobs))
         dead_count = 0
         
         self.stdout.write(f"   Scanning {total} active jobs...")

@@ -11,11 +11,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.serpapi_key = os.environ.get('SERPAPI_KEY')
         
-        # 1. Find jobs with missing logos
-        jobs = Job.objects.filter(company_logo__isnull=True) | Job.objects.filter(company_logo__exact='')
-        total = jobs.count()
-        
-        self.stdout.write(f"🔍 Found {total} jobs missing logos. Starting update...")
+        # 1. Find jobs with missing logos — cap at 50 per run to avoid hour-long delays
+        jobs = (Job.objects.filter(company_logo__isnull=True) | Job.objects.filter(company_logo__exact=''))[:50]
+        total = len(list(jobs))
+
+        self.stdout.write(f"🔍 Found {total} jobs missing logos (processing up to 50 per run).")
         
         # Headers to prevent 403 blocks
         headers = {

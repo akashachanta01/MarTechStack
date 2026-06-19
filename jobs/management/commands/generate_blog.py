@@ -26,7 +26,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("   ❌ Missing OPENAI_API_KEY in environment variables."))
             return
 
-        client = OpenAI(api_key=api_key)
+        client = OpenAI(api_key=api_key, timeout=60, max_retries=2)
 
         # 2. Strategic SEO Topic Matrix
         topics = [
