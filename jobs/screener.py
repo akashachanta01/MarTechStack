@@ -170,6 +170,16 @@ class MarTechScreener:
         return None
 
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
+        # Coerce EVERY input to a string at the entry point. Some ATS APIs
+        # (Workday especially) return null for description/location, and any
+        # downstream .lower()/[:] slice on None crashes the whole screener.
+        # Normalizing here once means nothing below can ever hit a NoneType.
+        title = str(title or "")
+        company = str(company or "")
+        location = str(location or "")
+        description = str(description or "")
+        apply_url = str(apply_url or "")
+
         if self._is_blocked(title, company, apply_url):
             return {"status": "rejected", "score": 0.0, "reason": "Blocked by admin BlockRule.", "details": {"stage": "blocklist"}}
         quick_reject = self._quick_kill(title, company)
