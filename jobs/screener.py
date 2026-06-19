@@ -130,37 +130,42 @@ class MarTechScreener:
         t_low = title.lower()
         c_low = company.lower()
 
-        # 0. Tool-name-but-wrong-role trap. These are NEVER MarTech ops/eng/
-        # analytics roles, but they often carry a tool name in the title
-        # (e.g. "Salesforce Account Executive", "Adobe Photoshop Designer",
-        # "HubSpot Sales Rep") which sneaks them past the keyword gate.
+        # 0. Clearly non-MarTech roles even when a tool name appears in the title.
         nonmartech_roles = [
-            "account executive", "account manager", "sales representative",
-            "sales rep", "sales development", " sdr", " bdr", "business development",
+            "account executive", "sales representative", "sales rep",
+            "sales development", " sdr", " bdr", "business development",
             "photoshop", "illustrator", "videographer", "copywriter",
             "recruiter", "talent acquisition", "customer success",
         ]
         if any(r in t_low for r in nonmartech_roles):
             return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: non-MarTech role (sales/creative/CS).", "details": {}}
 
-        # 1. SEO/Event/Social Trap (Still keep this to filter noise)
+        # 1. SEO/Event/Social trap
         bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
         if any(bad in t_low for bad in bad_keywords):
             if "operations" not in t_low and "technology" not in t_low:
                 return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: Non-Technical Role (SEO/Event/Social)", "details": {}}
 
-        # 2. Vendor Trap (Working AT Salesforce/Adobe)
+        # 2. Vendor trap — only applies to truly generic product/sales roles at
+        # tool vendors. Salesforce/HubSpot Admins, Developers, Architects, and
+        # Consultants are valid even when the company IS the vendor, because
+        # practitioners still need to see those postings.
+        sfdc_tech_roles = {
+            "administrator", "admin", "developer", "architect", "consultant",
+            "analyst", "engineer", "implementer", "specialist", "manager",
+        }
+        is_sfdc_tech = any(r in t_low for r in sfdc_tech_roles)
+
         is_vendor = any(v.lower() in c_low for v in self.VENDOR_COMPANIES)
-        if is_vendor:
-            # SAFETY BYPASS: If the title explicitly names a tool (e.g. "Salesforce Developer"), ALLOW IT.
-            has_tool_in_title = any(tool in t_low for tool in self.tool_list_clean)
-            
-            if not has_tool_in_title:
-                # Only reject if it's a generic product role AND doesn't mention a tool
-                vendor_bad_titles = ["software engineer", "product manager", "data scientist", "machine learning", "ai scientist", "account executive", "csm", "customer success"]
-                if any(bt in t_low for bt in vendor_bad_titles):
-                    if "marketing" not in t_low and "martech" not in t_low:
-                        return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: {title} at {company} is a product role (no tool mentioned).", "details": {}}
+        if is_vendor and not is_sfdc_tech:
+            vendor_bad_titles = [
+                "software engineer", "product manager", "data scientist",
+                "machine learning", "ai scientist", "account executive",
+                "csm", "customer success",
+            ]
+            if any(bt in t_low for bt in vendor_bad_titles):
+                if "marketing" not in t_low and "martech" not in t_low:
+                    return {"status": "rejected", "score": 0.0, "reason": f"Vendor Trap: generic product role at {company}.", "details": {}}
 
         return None
 
@@ -170,6 +175,10 @@ class MarTechScreener:
         quick_reject = self._quick_kill(title, company)
         if quick_reject:
             return quick_reject
+
+        # Fast-approve: "martech" in the title is an unambiguous signal.
+        if "martech" in self._normalize(title):
+            return {"status": "approved", "score": 92.0, "reason": "Fast-approve: MarTech in title.", "details": {"stage": "fast_approve", "signals": {"function": "operations", "stack": []}}}
 
         # Precision gate: require a hunt keyword in the TITLE. Gating on the
         # description matches almost everything (every marketing JD lists
@@ -221,49 +230,43 @@ class MarTechScreener:
 
         VALID TOOLS MENU (for stack detection): [{self.tool_menu_str}]
 
-        DECISION RULES (precision over recall — when unsure, prefer REJECT):
+        DECISION RULES:
 
-        APPROVE (85-100) ONLY if the role's PRIMARY function is one of the three
-        families above and it's hands-on with marketing tools, data, or operations.
-        Good examples: "Salesforce Administrator", "Marketo Specialist",
-        "Marketing Operations Manager", "Marketing Automation Manager",
-        "Campaign Operations Manager", "MarTech Engineer", "Marketing Analytics Manager".
+        APPROVE (85-100) for any of these:
+          1. MARKETING OPERATIONS roles — Marketing Ops, Marketing Automation,
+             Campaign Operations, Marketing Systems, CRM/MAP administration.
+          2. MARTECH ENGINEERING roles — MarTech Engineer, Marketing Engineer,
+             CDP/integration developer, tag management, marketing data engineer.
+          3. MARKETING ANALYTICS roles — Marketing Analyst, Marketing Data Analyst,
+             attribution, web analytics, campaign analytics, BI for marketing.
+          4. SALESFORCE TECHNICAL roles — Salesforce Administrator, Salesforce
+             Developer, Salesforce Architect, Salesforce Consultant, Salesforce
+             Implementer, Salesforce Business Analyst, SFMC/Marketing Cloud roles.
+             These are core MarTech skills regardless of what company posts them.
+          5. ANY role with "MarTech" in the title — always approve.
+          6. SFMC / Marketing Cloud Analyst or Specialist — always approve.
+          7. HubSpot Administrator, Marketo Specialist, Eloqua Consultant,
+             Pardot Administrator, Braze Engineer — always approve.
 
-        REJECT (0) — IMPORTANT, this board explicitly EXCLUDES these even though
-        they are marketing-adjacent:
-        - Revenue Operations / RevOps / Sales Operations
-        - Lifecycle Marketing / Retention / CRM Marketing Manager / Email Marketing Manager
-        - Growth Marketing / Growth Operations
-        - Demand Generation / Demand Gen
-        (If the role's PRIMARY function is one of the above, REJECT it — even if it
-        uses Marketo/HubSpot/Braze. Only approve when the primary function is truly
-        Marketing Operations, Marketing Automation, Campaign Operations, MarTech
-        engineering, or marketing analytics.)
+        REJECT (0) — hard exclusions:
+        - Pure sales roles: Account Executive, Sales Rep, SDR, BDR, Sales Manager
+        - Creative / content / copywriting / video / brand / PR / social media /
+          community manager / events / SEO / SEM / paid media buying
+        - Customer Success / Support / Recruiting / HR
+        - Generic software engineering or data science with NO marketing stack
+          component (e.g. backend engineer, ML engineer, data scientist building
+          internal tools unrelated to marketing)
+        - Finance, legal, operations roles unrelated to marketing technology
 
-        ALSO REJECT (0):
-        - Creative / content / design / copywriting / video / brand / PR / social /
-          community / events / SEO / SEM / paid-media-buying
-        - Sales / account management / customer success / SDR / BDR / recruiting
-        - Generic software engineering, data science, or product roles not specific
-          to the marketing stack (even at a MarTech vendor)
-        - Tool name in title but wrong role (e.g. "Adobe Photoshop Designer",
-          "Salesforce Account Executive", "HubSpot Sales Rep").
+        PENDING (50-70) only if genuinely ambiguous after reading the JD.
 
-        PENDING (50-70) only if genuinely ambiguous.
+        WHEN IN DOUBT, APPROVE — this board prefers relevant roles over missing them.
+        A Salesforce Admin at any company is relevant to MarTech practitioners.
+        A Marketing Operations role at a vendor company is still relevant.
 
-        IMPORTANT: A tool name in the title is a POSITIVE signal ONLY when paired
-        with one of the three accepted families. NEVER auto-approve on a tool alone.
-
-        GENERIC TITLES: Some real MarTech roles ship with a vague title
-        ("Marketing Manager", "Technical Consultant", "Senior Analyst",
-        "Solutions Consultant") but a JD that is clearly built around owning an
-        in-scope platform (Marketo, Eloqua, SFMC, Segment, Tealium, mParticle,
-        Adobe Experience Platform/AEM, GTM, etc.). In that case, judge by the JD,
-        not the title: APPROVE only if the day-to-day responsibilities are
-        genuinely Marketing Operations / Automation / Campaign Ops, MarTech
-        engineering, or marketing analytics. If the JD only mentions the tool in
-        passing, or the primary function is one of the EXCLUDED families above,
-        REJECT.
+        GENERIC TITLES: Judge by the JD. If a "Solutions Consultant" or "Technical
+        Consultant" role is clearly built around Salesforce, HubSpot, Marketo,
+        SFMC, Segment, Tealium, or another MarTech platform — APPROVE it.
 
         ALSO:
         - Detect stack: tools actually used (from the menu or clearly named).
