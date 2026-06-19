@@ -621,7 +621,8 @@ class Command(BaseCommand):
                         self.stats["Workday:stale"] += 1
                         continue
                     ext_path = item.get('externalPath') or ""
-                    raw_loc = item.get('locationsText') or (item.get('bulletFields') or [None])[0] or ""
+                    _bullet0 = ((item.get('bulletFields') or []) + [None])[0]
+                    raw_loc = str(item.get('locationsText') or _bullet0 or "")
                     is_remote = "remote" in raw_loc.lower()
                     clean_loc, arr = self._clean_location(raw_loc, is_remote)
                     self.screen_and_upsert({

@@ -2,11 +2,12 @@ import os
 import re
 import json
 import logging
-from typing import Optional, Dict, List, Any 
+import traceback
+from typing import Optional, Dict, List, Any
 from openai import OpenAI
 from urllib.parse import urlparse
 from django.conf import settings
-from jobs.models import BlockRule, Tool 
+from jobs.models import BlockRule, Tool
 
 logger = logging.getLogger("screener")
 
@@ -199,7 +200,7 @@ class MarTechScreener:
         try:
             return self.ask_ai(title, company, description, location)
         except Exception as e:
-            logger.error(f"AI Crash: {e}")
+            logger.error("AI Crash: %s\n%s", e, traceback.format_exc())
             return {"status": "pending", "score": 25.0, "reason": f"AI Crash: {e}", "details": {"stage": "api_error"}}
 
     def ask_ai(self, title, company, description, location):
