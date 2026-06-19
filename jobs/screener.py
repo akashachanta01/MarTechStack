@@ -183,19 +183,44 @@ class MarTechScreener:
             "marketing automation", "campaign operations",
             "marketing analytics", "digital analytics", "web analytics",
             "marketing data", "marketing engineer",
-            # Platform-specific roles that are always relevant
+            # Salesforce ecosystem
             "salesforce administrator", "salesforce admin",
             "salesforce developer", "salesforce architect",
             "salesforce consultant", "salesforce analyst",
             "salesforce solution architect", "salesforce technical architect",
             "salesforce implementer", "salesforce business analyst",
-            "sfmc", "marketing cloud",
-            "marketo", "pardot", "eloqua", "hubspot",
-            "aem ", "aem-", "(aem)", "adobe experience manager",
-            "adobe experience platform", " aep",
-            "braze", "klaviyo", "iterable",
-            "segment ", "tealium", "mparticle",
-            "google tag manager", "gtm ",
+            "sfmc", "salesforce marketing cloud", "marketing cloud",
+            "pardot", "account engagement",
+            "salesforce data cloud", "salesforce cdp",
+            # Adobe Experience Cloud — full suite
+            "adobe experience manager", "aem ", "aem-", "(aem)", " aem",
+            "adobe experience platform", " aep", "aep ",
+            "adobe analytics",
+            "adobe target",
+            "adobe campaign",
+            "adobe journey optimizer", "ajo ",
+            "adobe audience manager", " aam",
+            "adobe real-time cdp", "adobe rtcdp",
+            "adobe workfront",
+            "adobe commerce", "magento",
+            "adobe marketo", "marketo engage",
+            "adobe genstudio",
+            "adobe launch", "adobe dtm",
+            # Other MAP / automation platforms
+            "marketo", "eloqua", "pardot", "hubspot",
+            "braze", "klaviyo", "iterable", "customer.io",
+            "activecampaign", "drip ", "sendgrid",
+            # CDP / data platforms
+            "segment ", "tealium", "mparticle", "rudderstack",
+            "hightouch", "census ", "actioniq",
+            "salesforce data cloud", "adobe real-time cdp",
+            # Tag / analytics
+            "google tag manager", "gtm ", " gtm",
+            "amplitude", "mixpanel", "heap ", "fullstory",
+            "looker", "tableau", "dbt ",
+            # Other MarTech
+            "optimizely", "6sense", "demandbase",
+            "outreach", "salesloft", "gong ",
         }
         title_norm = self._normalize(title)
         for term in _FAST_APPROVE_TERMS:
