@@ -19,34 +19,54 @@ class Command(BaseCommand):
             name="MarTech", defaults={"slug": "martech"}
         )
 
-        existing_names = {t.name.lower() for t in Tool.objects.all()}
+        # Build name→tool map for all existing tools.
+        all_tools = {t.name.lower(): t for t in Tool.objects.all()}
         existing_slugs = set(Tool.objects.values_list("slug", flat=True))
 
         created = 0
+        slug_fixed = 0
         skipped_existing = 0
         slug_conflicts = []
 
         for name in sorted(all_canonical_names()):
-            if name.lower() in existing_names:
-                skipped_existing += 1
+            canonical_slug = slugify(name)
+            existing = all_tools.get(name.lower())
+
+            if existing:
+                # Tool row exists — fix slug if it drifted from the canonical form.
+                if existing.slug != canonical_slug:
+                    if canonical_slug not in existing_slugs:
+                        old_slug = existing.slug
+                        existing.slug = canonical_slug
+                        existing.save(update_fields=["slug"])
+                        existing_slugs.discard(old_slug)
+                        existing_slugs.add(canonical_slug)
+                        slug_fixed += 1
+                        self.stdout.write(self.style.WARNING(
+                            f"  ~ {name}  slug: {old_slug} → {canonical_slug}"
+                        ))
+                    # else: canonical slug already taken by another row — leave it
+                else:
+                    skipped_existing += 1
                 continue
-            slug = slugify(name)
-            if slug in existing_slugs:
+
+            if canonical_slug in existing_slugs:
                 # A different tool already owns this slug — don't clobber it.
-                slug_conflicts.append((name, slug))
+                slug_conflicts.append((name, canonical_slug))
                 continue
-            Tool.objects.create(name=name, slug=slug, category=category)
-            existing_slugs.add(slug)
+            t = Tool.objects.create(name=name, slug=canonical_slug, category=category)
+            all_tools[name.lower()] = t
+            existing_slugs.add(canonical_slug)
             created += 1
-            self.stdout.write(self.style.SUCCESS(f"  + {name}  (/jobs/{slug}/)"))
+            self.stdout.write(self.style.SUCCESS(f"  + {name}  (/jobs/{canonical_slug}/)"))
 
         # Bust the popular-stacks cache so new tools can surface in nav/listings.
         django_cache.delete("popular_tech_stacks_v4")
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(
-            f"Done. Created {created}, already existed {skipped_existing}, "
-            f"slug conflicts {len(slug_conflicts)}."
+            f"Done. Created {created}, slug fixed {slug_fixed}, "
+            f"already correct {skipped_existing}, slug conflicts {len(slug_conflicts)}."
         ))
         if slug_conflicts:
             self.stdout.write(self.style.WARNING(
