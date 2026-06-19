@@ -68,7 +68,7 @@ class MarTechScreener:
         _GATE_TOOL_TERMS = {
             "salesforce", "hubspot", "marketo", "pardot", "eloqua", "braze",
             "iterable", "klaviyo", "segment", "tealium", "mparticle", "amplitude",
-            "mixpanel", "adobe experience", "aep", "ga4", "google analytics",
+            "mixpanel", "adobe experience", "adobe experience platform", "ga4", "google analytics",
             "looker", "snowflake", "optimizely", "6sense", "demandbase",
             "outreach", "salesloft", "customer.io", "activecampaign",
             "marketing cloud", "sfmc",
@@ -197,7 +197,7 @@ class MarTechScreener:
             "salesforce data cloud",
             # Adobe Experience Cloud — full suite (all unambiguously MarTech)
             "adobe experience manager", "aem ", "aem-", "(aem)", " aem",
-            "adobe experience platform", " aep", "aep ",
+            "adobe experience platform",
             "adobe analytics", "adobe target", "adobe campaign",
             "adobe journey optimizer", "adobe audience manager",
             "adobe real-time cdp", "adobe rtcdp", "adobe workfront",
