@@ -258,9 +258,9 @@ class MarTechScreener:
              tagging, BI for marketing.
 
         JOB CONTEXT:
-        - Title: {title}
-        - Company: {company}
-        - Snippet: {description[:3000]}...
+        - Title: {title or ""}
+        - Company: {company or ""}
+        - Snippet: {(description or "")[:3000]}...
 
         VALID TOOLS MENU (for stack detection): [{self.tool_menu_str}]
 
