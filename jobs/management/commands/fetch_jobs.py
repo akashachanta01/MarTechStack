@@ -11,8 +11,6 @@ from urllib.parse import urlparse, urlunparse
 from typing import Any, Dict
 from bs4 import BeautifulSoup
 from openai import OpenAI
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -58,8 +56,7 @@ class Command(BaseCommand):
         mode = "DIRECT POLL (registry only)" if self.sources_only else "SERP discovery + registry"
         self.stdout.write(f"🚀 Starting Job Hunt — mode: {mode}...")
 
-        # --- 0. INIT GEOCODER ---
-        self.geolocator = Nominatim(user_agent="martechstack_jobs_bot_v2")
+        # --- 0. INIT ---
         self.location_cache = {}
 
         # --- 1. AUTO-CLEANUP ---
@@ -770,20 +767,8 @@ class Command(BaseCommand):
         return tool
 
     def resolve_location_automatically(self, raw_loc):
-        if not raw_loc or len(raw_loc) < 3: return raw_loc
-        if raw_loc in self.location_cache: return self.location_cache[raw_loc]
-        try:
-            location = self.geolocator.geocode(raw_loc, language="en", addressdetails=True, timeout=10)
-            if location:
-                addr = location.raw.get('address', {})
-                city = addr.get('city') or addr.get('town') or addr.get('village') or addr.get('county')
-                state = addr.get('state') or addr.get('region')
-                country = addr.get('country')
-                parts = [p for p in [city, state, country] if p]
-                formatted_loc = ", ".join(parts)
-                self.location_cache[raw_loc] = formatted_loc
-                return formatted_loc
-        except: pass
+        # Nominatim removed — ATS APIs already provide clean location strings
+        # and live geocoding calls block the entire cron run for 30+ minutes.
         return raw_loc
 
     def _clean_location(self, location_str, is_remote_flag):
