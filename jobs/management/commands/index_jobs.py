@@ -3,8 +3,6 @@ import json
 import requests
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from google.oauth2 import service_account
-from google.auth.transport.requests import Request
 from jobs.models import Job
 
 class Command(BaseCommand):
@@ -13,18 +11,25 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("🚀 Starting Google Indexing Ping...")
 
+        # Lazy-import google-auth so a missing package never crashes the daily run.
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request
+        except ImportError:
+            self.stdout.write(self.style.WARNING("⚠️ google-auth not installed — skipping indexing step."))
+            return
+
         SCOPES = ["https://www.googleapis.com/auth/indexing"]
         creds = None
 
         # 1. Try Loading from Render Environment Variable
         json_key_string = os.environ.get('GOOGLE_JSON_KEY')
-        
+
         if json_key_string:
             try:
                 json_key_string = json_key_string.strip()
                 info = json.loads(json_key_string)
                 creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
-                # Extract client_email to show user helpful errors
                 self.service_email = info.get('client_email', 'unknown')
                 self.stdout.write("   🔑 Found GOOGLE_JSON_KEY in Environment!")
             except json.JSONDecodeError as e:
@@ -35,9 +40,9 @@ class Command(BaseCommand):
             if os.path.exists(key_file):
                 creds = service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
                 self.service_email = creds.service_account_email
-                self.stdout.write("   xB4 Found service_account.json file.")
+                self.stdout.write("   📄 Found service_account.json file.")
             else:
-                self.stdout.write(self.style.ERROR("❌ Error: Could not find GOOGLE_JSON_KEY in settings."))
+                self.stdout.write(self.style.WARNING("⚠️ No GOOGLE_JSON_KEY env var or service_account.json — skipping indexing step."))
                 return
 
         # Authenticate
