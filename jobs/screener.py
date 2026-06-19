@@ -295,8 +295,14 @@ class MarTechScreener:
             temperature=0
         )
 
-        content = completion.choices[0].message.content.strip()
-        
+        choices = completion.choices if completion and completion.choices else []
+        if not choices:
+            return {"status": "pending", "score": 50.0, "reason": "AI returned no choices.", "details": {}}
+        raw_content = choices[0].message.content
+        if not raw_content:
+            return {"status": "pending", "score": 50.0, "reason": "AI returned empty content.", "details": {}}
+        content = raw_content.strip()
+
         if content.startswith("```json"):
             content = content[7:]
         if content.endswith("```"):
@@ -306,9 +312,12 @@ class MarTechScreener:
             result = json.loads(content.strip())
         except json.JSONDecodeError:
             return {"status": "pending", "score": 50.0, "reason": "AI JSON Error", "details": {"raw": content}}
-        
-        signals = result.get("signals", {})
-        stack = signals.get("stack", [])
+
+        if not isinstance(result, dict):
+            return {"status": "pending", "score": 50.0, "reason": "AI returned non-dict JSON.", "details": {"raw": content}}
+
+        signals = result.get("signals") or {}
+        stack = signals.get("stack") or []
         
         found_adobe = False
         for tool in stack:
