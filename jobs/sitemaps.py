@@ -111,7 +111,10 @@ class InterviewGuideSitemap(Sitemap):
 
     def items(self):
         from .models import InterviewGuide
-        return InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        # Only emit guides that are actually indexable (>= 5 questions), matching
+        # the noindex gate in tool_interview — no point sitemapping noindex pages.
+        guides = InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        return [g for g in guides if g.question_count() >= 5]
 
     def lastmod(self, obj):
         return obj.updated_at
@@ -191,7 +194,10 @@ class InterviewGuideSitemap(Sitemap):
 
     def items(self):
         from .models import InterviewGuide
-        return InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        # Only emit guides that are actually indexable (>= 5 questions), matching
+        # the noindex gate in tool_interview — no point sitemapping noindex pages.
+        guides = InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        return [g for g in guides if g.question_count() >= 5]
 
     def lastmod(self, obj):
         return obj.updated_at
@@ -207,7 +213,10 @@ class CertificationGuideSitemap(Sitemap):
 
     def items(self):
         from .models import CertificationGuide
-        return CertificationGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        # Only emit guides with a study path (indexable), matching the noindex
+        # gate in tool_certification — don't sitemap pages we noindex.
+        guides = CertificationGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
+        return [g for g in guides if g.study_path]
 
     def lastmod(self, obj):
         return obj.updated_at
