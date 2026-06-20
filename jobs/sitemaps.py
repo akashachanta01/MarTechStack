@@ -80,6 +80,26 @@ class SEOLandingSitemap(Sitemap):
             if Job.objects.filter(is_active=True, screening_status='approved').filter(country_q).exists():
                 seo_pages.add((slug, ''))
 
+        # 4. International city / region pages — only those with live jobs, so
+        # we never sitemap an empty page. These are linked from country pages;
+        # adding them here lets Google discover them directly. Matched by the
+        # location text (same as the landing view's fallback for non-US locales).
+        from django.utils.text import slugify
+        from .views import COUNTRY_CROSS_CITIES, COUNTRY_CROSS_REGIONS
+        intl_locs = set()
+        for names in COUNTRY_CROSS_CITIES.values():
+            intl_locs.update(names)
+        for names in COUNTRY_CROSS_REGIONS.values():
+            intl_locs.update(names)
+        live = Job.objects.filter(is_active=True, screening_status='approved')
+        for name in intl_locs:
+            page_slug = slugify(name)
+            # Skip slugs already emitted as country/hub pages above.
+            if (page_slug, '') in seo_pages:
+                continue
+            if live.filter(location__icontains=name).exists():
+                seo_pages.add((page_slug, ''))
+
         return sorted(list(seo_pages))
 
     def location(self, obj):
