@@ -67,6 +67,19 @@ class SEOLandingSitemap(Sitemap):
             for tool in canonical_tools[:20]:
                 seo_pages.add((hub, tool.slug))
 
+        # 3. International country hubs — only those with live jobs, so we never
+        # publish a thin/empty country page. Uses the same country-match logic
+        # the landing view applies (structured `country` field OR alias text).
+        from django.db.models import Q
+        from .models import Job
+        from .views import SEO_COUNTRY_MATCH
+        for slug, (iso, aliases) in SEO_COUNTRY_MATCH.items():
+            country_q = Q(country=iso)
+            for alias in aliases:
+                country_q |= Q(location__icontains=alias)
+            if Job.objects.filter(is_active=True, screening_status='approved').filter(country_q).exists():
+                seo_pages.add((slug, ''))
+
         return sorted(list(seo_pages))
 
     def location(self, obj):

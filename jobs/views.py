@@ -80,7 +80,27 @@ _US_STATES = [
 _SEO_COUNTRIES = [
     "united-states", "united-kingdom", "canada", "germany", "australia",
     "india", "ireland", "netherlands", "france", "spain", "singapore",
+    "china", "united-arab-emirates",
 ]
+# Country page slug -> (ISO-2 code, [location substrings]). Country pages match
+# on the structured `country` field captured at ingest (reliable) OR any alias
+# substring in the free-text location, so "/united-kingdom/" rolls up jobs
+# stored as "London, UK", "London, England" or "London, GB" — not just the ones
+# that literally contain "United Kingdom".
+SEO_COUNTRY_MATCH = {
+    "united-kingdom": ("GB", ["United Kingdom", ", UK", "England", "Scotland", "Wales", "London"]),
+    "canada": ("CA", ["Canada"]),
+    "germany": ("DE", ["Germany", "Deutschland", "Berlin", "Munich"]),
+    "australia": ("AU", ["Australia"]),
+    "india": ("IN", ["India", "Bengaluru", "Bangalore", "Mumbai", "Chennai", "Hyderabad", "Pune", "Delhi", "Gurgaon", "Gurugram", "Noida"]),
+    "ireland": ("IE", ["Ireland", "Dublin"]),
+    "netherlands": ("NL", ["Netherlands", "Amsterdam"]),
+    "france": ("FR", ["France", "Paris"]),
+    "spain": ("ES", ["Spain", "Madrid", "Barcelona"]),
+    "singapore": ("SG", ["Singapore"]),
+    "china": ("CN", ["China", "Shanghai", "Beijing", "Shenzhen", "Hong Kong"]),
+    "united-arab-emirates": ("AE", ["United Arab Emirates", "UAE", "Dubai", "Abu Dhabi"]),
+}
 # Full state name -> USPS code, so a state page (e.g. /california/jobs/) rolls
 # up city jobs stored with the abbreviation ("San Francisco, CA, United States").
 US_STATE_ABBR = {
@@ -111,6 +131,8 @@ LOCATION_ALIASES = {
     "usa": "united-states", "us": "united-states", "u-s-a": "united-states",
     "uk": "united-kingdom", "u-k": "united-kingdom", "nyc": "new-york",
     "sf": "san-francisco", "la": "los-angeles", "dfw": "dallas",
+    "uae": "united-arab-emirates", "u-a-e": "united-arab-emirates",
+    "dubai": "united-arab-emirates",
 }
 
 # --- JOB-TITLE PAGES (programmatic SEO for high-intent title queries) ---
@@ -652,8 +674,18 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     if tool: jobs = jobs.filter(tools=tool)
+    _loc_slug = (location_slug or "").lower()
     if location_name == "Remote":
         jobs = jobs.filter(work_arrangement="remote")
+    elif _loc_slug in SEO_COUNTRY_MATCH:
+        # Country page: match the structured `country` ISO field (captured at
+        # ingest) OR any alias substring in the free-text location, so jobs
+        # stored as "London, UK" / "London, England" / "London, GB" all roll up.
+        iso, aliases = SEO_COUNTRY_MATCH[_loc_slug]
+        country_q = Q(country=iso)
+        for alias in aliases:
+            country_q |= Q(location__icontains=alias)
+        jobs = jobs.filter(country_q)
     elif location_name != "United States":
         state_abbr = US_STATE_ABBR.get(location_name.lower())
         if state_abbr:
