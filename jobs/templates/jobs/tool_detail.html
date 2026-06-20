@@ -1,9 +1,9 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs {% now "Y" %} | MarTechJobs{% endif %}{% endblock %}
-{% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
-{% block og_title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ tool.name }} Jobs{% endif %}{% endblock %}
-{% block og_desc %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}Browse hand-curated {{ tool.name }} MarTech roles. Refreshed daily on MarTechJobs.{% endblock %}
+{% block title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ total_count }} {{ tool.name }} Jobs & Careers {% now "Y" %} | MarTechJobs{% endif %}{% endblock %}
+{% block meta_description %}{{ total_count }} open {{ tool.name }} jobs in Marketing Ops & MarTech — {{ tool.name }} admin, developer, architect and consultant roles. Apply directly. Updated daily.{% endblock %}
+{% block og_title %}{% if tool.seo_title %}{{ tool.seo_title }}{% else %}{{ total_count }} {{ tool.name }} Jobs & Careers {% now "Y" %}{% endif %}{% endblock %}
+{% block og_desc %}{{ total_count }} open {{ tool.name }} jobs in Marketing Ops & MarTech — {{ tool.name }} admin, developer, architect and consultant roles. Apply directly. Updated daily.{% endblock %}
 {% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing jobs, {{ tool.name }} careers, {{ tool.name }} marketing operations{% endblock %}
 
 {% block rel_prev_next %}
