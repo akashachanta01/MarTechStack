@@ -49,6 +49,13 @@ TOPIC_QUEUE = [
     {"type": "salary_guide", "topic": "Salesforce Marketing Cloud Salary", "keyword": "salesforce marketing cloud salary", "tool_slug": "salesforce"},
     # klaviyo specialist salary: estimated, hyper-targeted
     {"type": "salary_guide", "topic": "Klaviyo Specialist Salary", "keyword": "klaviyo specialist salary", "tool_slug": "klaviyo"},
+    # Tier 4: GSC 0-click high-impression queries — site ranks but no dedicated page
+    # "marketing technology consultant" 132 impressions, "martech consultant" 123,
+    # "martech developer" 113, "martech solutions" 113 — all 0 clicks
+    {"type": "role_guide", "topic": "MarTech Consultant", "keyword": "martech consultant", "tool_slug": None},
+    {"type": "role_guide", "topic": "MarTech Developer", "keyword": "martech developer", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Technology Consultant", "keyword": "marketing technology consultant", "tool_slug": None},
+    {"type": "role_guide", "topic": "MarTech Solutions Architect", "keyword": "martech solutions", "tool_slug": None},
 ]
 
 CATEGORY_MAP = {
