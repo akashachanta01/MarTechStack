@@ -13,7 +13,7 @@ from jobs.models import BlogPost
 # Tier 2: Role/skill guides
 # Tier 3: Salary guides
 TOPIC_QUEUE = [
-    # Tier 1: Company careers guides — ordered by real KD/volume from Ahrefs
+    # Tier 1: Company careers guides — ordered by Ahrefs vol/KD
     # hubspot careers: 14K vol, KD 4
     {"type": "company_careers", "company": "HubSpot", "tool_slug": "hubspot", "keyword": "hubspot careers", "volume": 14000},
     # klaviyo careers: 2.4K vol, KD 2
@@ -22,21 +22,20 @@ TOPIC_QUEUE = [
     {"type": "company_careers", "company": "Braze", "tool_slug": "braze", "keyword": "braze careers", "volume": 1600},
     # amplitude careers: 1.1K vol, KD 4
     {"type": "company_careers", "company": "Amplitude", "tool_slug": "amplitude", "keyword": "amplitude careers", "volume": 1100},
-    # marketo careers: 40 vol, KD 3 — low vol but hyper-targeted
-    {"type": "company_careers", "company": "Marketo", "tool_slug": "marketo", "keyword": "marketo careers", "volume": 40},
-    # mixpanel careers: estimated, not in export
     {"type": "company_careers", "company": "Mixpanel", "tool_slug": "mixpanel", "keyword": "mixpanel careers", "volume": 300},
-    # iterable careers: estimated
+    # marketo careers: 40 vol, KD 3 — low vol but hyper-targeted audience
+    {"type": "company_careers", "company": "Marketo", "tool_slug": "marketo", "keyword": "marketo careers", "volume": 40},
     {"type": "company_careers", "company": "Iterable", "tool_slug": "iterable", "keyword": "iterable careers", "volume": 200},
-    # tealium careers: estimated
     {"type": "company_careers", "company": "Tealium", "tool_slug": "tealium", "keyword": "tealium careers", "volume": 150},
-    # mparticle careers: estimated
     {"type": "company_careers", "company": "mParticle", "tool_slug": "mparticle", "keyword": "mparticle careers", "volume": 100},
-    # Tier 2: Role/skill guides
-    {"type": "role_guide", "topic": "Marketing Operations Manager", "keyword": "marketing operations manager jobs", "tool_slug": None},
-    {"type": "role_guide", "topic": "Marketing Automation Specialist", "keyword": "marketing automation specialist jobs", "tool_slug": None},
+    # Tier 2: Role/skill guides — Ahrefs data: marketing operations jobs 450 KD0,
+    # marketing automation jobs 200 KD1, martech jobs 200 KD0, cdp jobs 70 KD0
+    {"type": "role_guide", "topic": "Marketing Operations Manager", "keyword": "marketing operations jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Automation Specialist", "keyword": "marketing automation jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "MarTech Specialist", "keyword": "martech jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Technology Manager", "keyword": "marketing technology jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "CDP Specialist", "keyword": "cdp jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Salesforce Administrator", "keyword": "salesforce admin jobs martech", "tool_slug": "salesforce"},
-    {"type": "role_guide", "topic": "CDP Specialist", "keyword": "customer data platform jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Marketing Data Analyst", "keyword": "marketing data analyst jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Email Marketing Manager", "keyword": "email marketing manager jobs martech", "tool_slug": None},
     # Tier 3: Salary guides
