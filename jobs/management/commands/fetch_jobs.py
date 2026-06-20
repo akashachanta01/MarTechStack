@@ -48,9 +48,13 @@ _COUNTRY_CODES = {
 # international market on top, sweeping the whole list over a rolling window.
 # So the daily run is US + 1 country (2 passes); a manual `--countries all`
 # run seeds every market at once.
-_DISCOVERY_GL_PRIMARY = "us"
-_DISCOVERY_GL_ROTATION = ["gb", "in", "sg", "de", "cn", "fr", "ca", "nl", "ae"]
-_DISCOVERY_GL = [_DISCOVERY_GL_PRIMARY] + _DISCOVERY_GL_ROTATION
+# Core markets scanned EVERY day. US is the home market; India has the deepest
+# MarTech supply of the international set (huge Adobe/Salesforce ecosystem +
+# system-integrator hiring on Workday/Taleo/iCIMS), so it earns a daily slot
+# instead of waiting its turn in the rotation.
+_DISCOVERY_GL_PRIMARY = ["us", "in"]
+_DISCOVERY_GL_ROTATION = ["gb", "sg", "de", "cn", "fr", "ca", "nl", "ae"]
+_DISCOVERY_GL = list(_DISCOVERY_GL_PRIMARY) + _DISCOVERY_GL_ROTATION
 
 class Command(BaseCommand):
     help = 'The "Direct-Apply" Hunter: Smart Deduplication + Geocoding + Clean URLs + Auto-Cleanup.'
@@ -250,10 +254,10 @@ class Command(BaseCommand):
             return list(_DISCOVERY_GL)
         if raw:
             picked = [c.strip().lower() for c in raw.split(",") if c.strip()]
-            return picked or [_DISCOVERY_GL_PRIMARY]
-        # Default: US every day + one rotating international market.
+            return picked or list(_DISCOVERY_GL_PRIMARY)
+        # Default: core markets (US + India) every day + one rotating market.
         idx = datetime.utcnow().date().toordinal() % len(_DISCOVERY_GL_ROTATION)
-        return [_DISCOVERY_GL_PRIMARY, _DISCOVERY_GL_ROTATION[idx]]
+        return list(_DISCOVERY_GL_PRIMARY) + [_DISCOVERY_GL_ROTATION[idx]]
 
     def search_google(self, query, num=100, tbs="qdr:d14", gl="us"):
         if self.search_provider == 'serper':
