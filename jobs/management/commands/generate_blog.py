@@ -56,6 +56,11 @@ TOPIC_QUEUE = [
     {"type": "role_guide", "topic": "MarTech Developer", "keyword": "martech developer", "tool_slug": None},
     {"type": "role_guide", "topic": "Marketing Technology Consultant", "keyword": "marketing technology consultant", "tool_slug": None},
     {"type": "role_guide", "topic": "MarTech Solutions Architect", "keyword": "martech solutions", "tool_slug": None},
+    # Tier 5: GSC 0-click queries 100+ impressions (3-month data)
+    {"type": "role_guide", "topic": "MarTech Recruitment Guide", "keyword": "martech recruitment", "tool_slug": None},
+    {"type": "role_guide", "topic": "MarTech Specialist", "keyword": "martech specialist", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Technology Analyst", "keyword": "marketing technology analyst jobs", "tool_slug": None},
+    {"type": "company_careers", "company": "Optimizely", "tool_slug": "optimizely", "keyword": "optimizely careers", "volume": 112},
 ]
 
 CATEGORY_MAP = {

@@ -667,6 +667,12 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         else:
             jobs = jobs.filter(location__icontains=location_name)
 
+    jobs = jobs.order_by('-is_pinned', '-created_at')
+    total_count = jobs.count()
+
+    from datetime import date as _date
+    _year = _date.today().year
+
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
         meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
@@ -676,12 +682,9 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find top {tool.name} roles. Marketing Automation & Ops jobs."
         header_text = f"Top <span class='text-martech-green'>{tool.name}</span> Jobs"
     else:
-        page_title = f"Marketing Ops Jobs in {location_name}"
-        meta_desc = f"Find the best MarTech and Marketing Operations jobs in {location_name}."
+        page_title = f"{total_count} {location_name} MarTech Jobs {_year}"
+        meta_desc = f"Browse {total_count} MarTech and Marketing Operations jobs in {location_name}. Updated daily."
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
-
-    jobs = jobs.order_by('-is_pinned', '-created_at')
-    total_count = jobs.count()
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
 
