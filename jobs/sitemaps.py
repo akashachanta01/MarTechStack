@@ -206,6 +206,22 @@ class InterviewGuideSitemap(Sitemap):
         return reverse('tool_interview', args=[obj.tool.slug])
 
 
+class CategorySitemap(Sitemap):
+    """The three top-level category hubs (/category/<slug>/). They're linked in
+    the nav and footer but were missing from the sitemap, so Google had no
+    explicit recrawl signal for them."""
+    changefreq = "daily"
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        from jobs.views import CATEGORY_CONFIG
+        return list(CATEGORY_CONFIG.keys())
+
+    def location(self, slug):
+        return reverse('category_detail', args=[slug])
+
+
 class CertificationGuideSitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.8
