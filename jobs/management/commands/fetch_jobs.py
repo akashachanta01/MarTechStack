@@ -29,11 +29,28 @@ logger = logging.getLogger("jobs.fetch")
 _COUNTRY_CODES = {
     "united states": "US", "usa": "US", "u.s.": "US", "u.s.a.": "US",
     "united kingdom": "GB", "uk": "GB", "u.k.": "GB", "england": "GB",
+    "scotland": "GB", "wales": "GB",
     "canada": "CA", "australia": "AU", "germany": "DE", "france": "FR",
     "netherlands": "NL", "ireland": "IE", "spain": "ES", "singapore": "SG",
     "mexico": "MX", "brazil": "BR", "india": "IN", "poland": "PL",
     "portugal": "PT", "italy": "IT", "sweden": "SE",
+    # International expansion targets (Sprint: non-US traffic).
+    "china": "CN", "hong kong": "HK",
+    "united arab emirates": "AE", "uae": "AE", "u.a.e.": "AE",
+    "dubai": "AE", "abu dhabi": "AE",
 }
+
+# SERP discovery country rotation (Google `gl` codes). Discovery seeds the
+# CompanySource registry; once a board is learned, daily --sources-only polls
+# it for free, so we only pay to DISCOVER each board once.
+#
+# US is the core market and is scanned EVERY day. Each day we add ONE rotating
+# international market on top, sweeping the whole list over a rolling window.
+# So the daily run is US + 1 country (2 passes); a manual `--countries all`
+# run seeds every market at once.
+_DISCOVERY_GL_PRIMARY = "us"
+_DISCOVERY_GL_ROTATION = ["gb", "in", "sg", "de", "cn", "fr", "ca", "nl", "ae"]
+_DISCOVERY_GL = [_DISCOVERY_GL_PRIMARY] + _DISCOVERY_GL_ROTATION
 
 class Command(BaseCommand):
     help = 'The "Direct-Apply" Hunter: Smart Deduplication + Geocoding + Clean URLs + Auto-Cleanup.'
@@ -50,11 +67,22 @@ class Command(BaseCommand):
             "--no-discovery", action="store_true",
             help="Alias for --sources-only.",
         )
+        parser.add_argument(
+            "--countries", type=str, default="",
+            help=(
+                "Comma-separated Google gl codes to run SERP discovery for "
+                "(e.g. 'us,gb,in'), or 'all' for every target market. "
+                "Default: rotate one country per day (cost-neutral)."
+            ),
+        )
 
     def handle(self, *args, **options):
         self.sources_only = options.get("sources_only") or options.get("no_discovery")
+        self.discovery_countries = self._resolve_discovery_countries(options.get("countries", ""))
         mode = "DIRECT POLL (registry only)" if self.sources_only else "SERP discovery + registry"
         self.stdout.write(f"🚀 Starting Job Hunt — mode: {mode}...")
+        if not self.sources_only:
+            self.stdout.write(f"🌍 Discovery countries (gl): {', '.join(self.discovery_countries)}")
 
         # --- 0. INIT ---
         self.location_cache = {}
@@ -160,37 +188,39 @@ class Command(BaseCommand):
         # Finds NEW boards we don't know about yet; each success is recorded into
         # the registry so future direct polls pick it up.
         if not self.sources_only:
-            for group_query in ats_groups:
-                for line in target_lines:
-                    # 1. Parse the OR line
-                    parts = [p.strip() for p in line.split(' OR ')]
+            for gl in self.discovery_countries:
+                self.stdout.write(f"\n🌍 ===== Discovery pass for country: {gl.upper()} =====")
+                for group_query in ats_groups:
+                    for line in target_lines:
+                        # 1. Parse the OR line
+                        parts = [p.strip() for p in line.split(' OR ')]
 
-                    intitle_parts = []
-                    exclude_str = ""
+                        intitle_parts = []
+                        exclude_str = ""
 
-                    for p in parts:
-                        clean_p = p.replace('"', '')
-                        intitle_parts.append(f'intitle:"{clean_p}"')
+                        for p in parts:
+                            clean_p = p.replace('"', '')
+                            intitle_parts.append(f'intitle:"{clean_p}"')
 
-                        if clean_p in vendor_domains:
-                            exclude_str += f" -site:{vendor_domains[clean_p]}"
+                            if clean_p in vendor_domains:
+                                exclude_str += f" -site:{vendor_domains[clean_p]}"
 
-                    joined_intitle = " OR ".join(intitle_parts)
-                    final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
+                        joined_intitle = " OR ".join(intitle_parts)
+                        final_query = f'({joined_intitle}) ({group_query}){exclude_str}'
 
-                    self.stdout.write(f"\n🔎 Hunting Batch: {parts[:3]}... (Last 14 Days)")
-                    time.sleep(1.0) # Respect rate limits
+                        self.stdout.write(f"\n🔎 [{gl.upper()}] Hunting Batch: {parts[:3]}... (Last 14 Days)")
+                        time.sleep(1.0) # Respect rate limits
 
-                    links = self.search_google(final_query, num=100, tbs="qdr:d14")
-                    self.stdout.write(f"   Found {len(links)} links. Processing...")
+                        links = self.search_google(final_query, num=100, tbs="qdr:d14", gl=gl)
+                        self.stdout.write(f"   Found {len(links)} links. Processing...")
 
-                    for link in links:
-                        try:
-                            self.analyze_and_fetch(link)
-                            time.sleep(0.5)
-                        except Exception as e:
-                            self.stats["link:error"] += 1
-                            logger.warning("Link processing failed for %s: %s", link, e)
+                        for link in links:
+                            try:
+                                self.analyze_and_fetch(link)
+                                time.sleep(0.5)
+                            except Exception as e:
+                                self.stats["link:error"] += 1
+                                logger.warning("Link processing failed for %s: %s", link, e)
 
         # --- PER-SOURCE RUN SUMMARY (observability) ---
         self.stdout.write(self.style.SUCCESS(f"\n✨ Done! Added {self.total_added} new jobs."))
@@ -206,18 +236,37 @@ class Command(BaseCommand):
         from django.core.cache import cache as django_cache
         django_cache.delete('salary_guide_data_v2')
 
-    def search_google(self, query, num=100, tbs="qdr:d14"):
-        if self.search_provider == 'serper':
-            return self._search_serper(query, num=num, tbs=tbs)
-        return self._search_serpapi(query, num=num, tbs=tbs)
+    def _resolve_discovery_countries(self, raw):
+        """Decide which Google `gl` codes this run discovers against.
 
-    def _search_serpapi(self, query, num=100, tbs="qdr:d14"):
+        Priority: explicit --countries arg > DISCOVERY_COUNTRIES env > daily
+        rotation. 'all' expands to the full target list. The default scans the
+        US (core market) EVERY day plus ONE rotating international market, so
+        the US is never starved while every other market is swept over a
+        rolling window — and the registry makes that coverage cumulative.
+        """
+        raw = (raw or "").strip() or os.environ.get("DISCOVERY_COUNTRIES", "").strip()
+        if raw.lower() == "all":
+            return list(_DISCOVERY_GL)
+        if raw:
+            picked = [c.strip().lower() for c in raw.split(",") if c.strip()]
+            return picked or [_DISCOVERY_GL_PRIMARY]
+        # Default: US every day + one rotating international market.
+        idx = datetime.utcnow().date().toordinal() % len(_DISCOVERY_GL_ROTATION)
+        return [_DISCOVERY_GL_PRIMARY, _DISCOVERY_GL_ROTATION[idx]]
+
+    def search_google(self, query, num=100, tbs="qdr:d14", gl="us"):
+        if self.search_provider == 'serper':
+            return self._search_serper(query, num=num, tbs=tbs, gl=gl)
+        return self._search_serpapi(query, num=num, tbs=tbs, gl=gl)
+
+    def _search_serpapi(self, query, num=100, tbs="qdr:d14", gl="us"):
         params = {
             "engine": "google",
             "q": query,
             "api_key": self.serpapi_key,
             "num": num,
-            "gl": "us",
+            "gl": gl,
             "hl": "en",
             "tbs": tbs
         }
@@ -229,7 +278,7 @@ class Command(BaseCommand):
             logger.warning("SerpAPI request failed: %s", e)
         return []
 
-    def _search_serper(self, query, num=100, tbs="qdr:d14"):
+    def _search_serper(self, query, num=100, tbs="qdr:d14", gl="us"):
         # Serper.dev: same Google results, pay-as-you-go credits.
         # Note: Serper charges extra credits above 10 results, so we cap at 30
         # (3 credits) — top results carry nearly all the relevant postings.
@@ -240,7 +289,7 @@ class Command(BaseCommand):
         payload = {
             "q": query,
             "num": min(num, 30),
-            "gl": "us",
+            "gl": gl,
             "hl": "en",
         }
         if tbs:
