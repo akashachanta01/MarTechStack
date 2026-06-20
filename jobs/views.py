@@ -101,6 +101,22 @@ SEO_COUNTRY_MATCH = {
     "china": ("CN", ["China", "Shanghai", "Beijing", "Shenzhen", "Hong Kong"]),
     "united-arab-emirates": ("AE", ["United Arab Emirates", "UAE", "Dubai", "Abu Dhabi"]),
 }
+# Unique intro paragraph per country page. Gives each international landing page
+# distinct, on-topic content so it isn't treated as thin/near-duplicate (the
+# job lists alone can overlap). Keep these specific to the market's hubs and
+# employers — no generic filler.
+COUNTRY_INTROS = {
+    "united-kingdom": "The UK is one of Europe's strongest MarTech hiring markets, with Marketing Operations, marketing automation and analytics roles concentrated in London, Manchester and Edinburgh. Expect demand for HubSpot, Salesforce, Marketo and Braze skills across fintech, SaaS and retail employers like Monzo, Wise and Deliveroo.",
+    "india": "India's MarTech job market is growing fast across Bengaluru, Mumbai, Hyderabad, Pune and Gurgaon, driven by global SaaS companies and homegrown product firms. Marketing Operations, marketing automation and CDP roles are in demand, with strong hiring from vendors like Freshworks, CleverTap and MoEngage.",
+    "singapore": "Singapore is the MarTech hub for APAC, with regional Marketing Operations and lifecycle roles based out of the city for companies scaling across Southeast Asia. Look for HubSpot, Salesforce Marketing Cloud, Braze and Segment skills at firms like Grab, Twilio and global vendor regional offices.",
+    "germany": "Germany's MarTech scene centres on Berlin and Munich, spanning marketing automation, CRM operations and analytics roles. Employers like Delivery Hero, N26, Personio and Celonis hire for HubSpot, Salesforce, Marketo and customer data platform expertise.",
+    "france": "France's MarTech market is anchored in Paris, with Marketing Operations and analytics roles at scaleups and enterprise SaaS firms. Contentsquare, Dataiku and Back Market are among employers hiring for marketing automation, CDP and digital analytics skills.",
+    "netherlands": "The Netherlands — especially Amsterdam — is a key European MarTech hub, with Marketing Operations and lifecycle roles at fintech and SaaS companies like Adyen, Mollie and Bird. HubSpot, Salesforce, Braze and Segment skills are consistently in demand.",
+    "canada": "Canada's MarTech hiring spans Toronto, Vancouver and Montréal, covering Marketing Operations, marketing automation and analytics. Employers like Shopify, Lightspeed, Wealthsimple and 1Password hire for HubSpot, Marketo, Salesforce and CDP expertise.",
+    "united-arab-emirates": "The UAE — Dubai and Abu Dhabi — is the fastest-growing MarTech market in the Middle East, with Marketing Operations and lifecycle roles at regional tech and commerce firms like Careem and Kitopi. Demand centres on Salesforce, HubSpot and marketing automation skills.",
+    "china": "China's MarTech roles, concentrated in Shanghai, Beijing and Shenzhen, sit largely within global companies' regional teams and international-facing product groups. Marketing Operations, analytics and marketing automation skills are most relevant for English-language postings.",
+    "australia": "Australia's MarTech market spans Sydney and Melbourne, with Marketing Operations, marketing automation and analytics roles at firms like Canva, Airwallex and SafetyCulture. HubSpot, Salesforce, Braze and Segment expertise is widely sought.",
+}
 # Full state name -> USPS code, so a state page (e.g. /california/jobs/) rolls
 # up city jobs stored with the abbreviation ("San Francisco, CA, United States").
 US_STATE_ABBR = {
@@ -726,11 +742,20 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     tool_indexable = (tool is None) or (tool.name.lower() in _CANONICAL_TOOL_NAMES)
     page_noindex = (total_count == 0) or (not loc_indexable) or (not tool_indexable)
 
+    # Unique intro + remote cross-link for international country pages (only on
+    # the location-only page, not tool combos, to keep tool pages focused).
+    country_intro = None
+    is_country_page = False
+    if not tool and _loc_slug in SEO_COUNTRY_MATCH:
+        is_country_page = True
+        country_intro = COUNTRY_INTROS.get(_loc_slug)
+
     return render(request, 'jobs/seo_landing.html', {
         'tool': tool, 'jobs': jobs_page, 'total_count': total_count,
         'page_noindex': page_noindex,
         'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc,
         'is_seo_landing': True, 'location_name': location_name,
+        'country_intro': country_intro, 'is_country_page': is_country_page,
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
     })
 

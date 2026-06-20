@@ -61,12 +61,22 @@ TOPIC_QUEUE = [
     {"type": "role_guide", "topic": "MarTech Specialist", "keyword": "martech specialist", "tool_slug": None},
     {"type": "role_guide", "topic": "Marketing Technology Analyst", "keyword": "marketing technology analyst jobs", "tool_slug": None},
     {"type": "company_careers", "company": "Optimizely", "tool_slug": "optimizely", "keyword": "optimizely careers", "volume": 112},
+    # Tier 6: International geo-targeted guides — capture non-US search demand
+    # (GA shows meaningful India/UK/SG/DE traffic). Each links to the matching
+    # country landing page so the blog feeds the programmatic country pages.
+    {"type": "location_guide", "topic": "MarTech Jobs in India", "keyword": "martech jobs in india", "location_slug": "india", "location_name": "India"},
+    {"type": "location_guide", "topic": "MarTech Jobs in the UK", "keyword": "martech jobs uk", "location_slug": "united-kingdom", "location_name": "the United Kingdom"},
+    {"type": "location_guide", "topic": "MarTech Jobs in Singapore", "keyword": "martech jobs singapore", "location_slug": "singapore", "location_name": "Singapore"},
+    {"type": "location_guide", "topic": "MarTech Jobs in Germany", "keyword": "martech jobs germany", "location_slug": "germany", "location_name": "Germany"},
+    {"type": "location_guide", "topic": "MarTech Jobs in Canada", "keyword": "martech jobs canada", "location_slug": "canada", "location_name": "Canada"},
+    {"type": "location_guide", "topic": "Marketing Operations Jobs in India", "keyword": "marketing operations jobs india", "location_slug": "india", "location_name": "India"},
 ]
 
 CATEGORY_MAP = {
     "company_careers": "Career Advice",
     "role_guide": "Career Advice",
     "salary_guide": "Salary Guides",
+    "location_guide": "Career Advice",
 }
 
 
@@ -134,6 +144,35 @@ Structure:
 6. CTA to browse related jobs on MarTechJobs
 
 Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
+    elif t == "location_guide":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        location_name = topic["location_name"]
+        location_slug = topic["location_slug"]
+        return f"""You are a senior content writer for MarTechJobs.io, the niche job board for Marketing Technology professionals.
+
+Write a comprehensive, SEO-optimized guide targeting the keyword: "{keyword}"
+
+Market: {location_name}
+
+Requirements:
+- H1: Use the keyword phrase naturally (e.g. "MarTech Jobs in {location_name}: Roles, Employers & Salaries")
+- Structure:
+  1. Intro — the state of the MarTech job market in {location_name} (key cities/hubs)
+  2. Most in-demand MarTech roles in {location_name} (Marketing Ops, automation, analytics, CDP)
+  3. Tools and skills employers in {location_name} hire for
+  4. Types of companies hiring (vendors, SaaS, local enterprises) — name realistic examples
+  5. Typical salary ranges in {location_name} (use LOCAL currency, be specific)
+  6. How to find and land these roles
+  7. CTA: "Browse open MarTech jobs in {location_name}" linking to https://martechjobs.io/{location_slug}/jobs/
+- Tone: Direct, credible, written for MarTech practitioners — not generic career advice
+- Length: 800-1200 words
+- Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only. No markdown. No code fences.
+- The CTA link MUST be: <a href="https://martechjobs.io/{location_slug}/jobs/">Browse open MarTech jobs in {location_name} →</a>
+
+Output strict JSON:
+{{"title": "...", "excerpt": "...", "content": "...", "meta_description": "...", "read_time": "..."}}"""
 
     raise ValueError(f"Unknown topic type: {t}")
 

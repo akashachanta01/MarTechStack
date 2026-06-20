@@ -227,6 +227,42 @@ class Job(models.Model):
             "region": parts[1] if len(parts) > 1 else "",
         }
 
+    # ISO-2 country -> ISO-4217 currency for the JobPosting baseSalary. Lets us
+    # stop hardcoding USD, which mislabeled every international salary (a £70k
+    # London role was advertised to Google as $70k) and erodes Google for Jobs
+    # trust in the structured data.
+    _COUNTRY_CURRENCY = {
+        "US": "USD", "GB": "GBP", "CA": "CAD", "AU": "AUD", "IN": "INR",
+        "SG": "SGD", "DE": "EUR", "FR": "EUR", "NL": "EUR", "IE": "EUR",
+        "ES": "EUR", "CN": "CNY", "HK": "HKD", "AE": "AED", "BR": "BRL",
+        "MX": "MXN",
+    }
+
+    def get_schema_currency(self):
+        """ISO-4217 currency for the salary in JobPosting schema. Prefer an
+        explicit currency symbol/code in the free-text salary, then the job's
+        country, then USD."""
+        txt = (self.salary_range or "")
+        low = txt.lower()
+        symbol_map = {"£": "GBP", "€": "EUR", "₹": "INR", "¥": "CNY",
+                      "₩": "KRW", "₪": "ILS"}
+        for sym, code in symbol_map.items():
+            if sym in txt:
+                return code
+        # Explicit 3-letter codes occasionally present in ATS salary strings.
+        for code in ("gbp", "eur", "inr", "sgd", "aed", "cad", "aud", "cny",
+                     "usd", "hkd", "brl", "mxn"):
+            if code in low:
+                return code.upper()
+        # "S$" Singapore, "A$"/"AU$" Australian, "C$"/"CA$" Canadian, "د.إ" AED.
+        if "s$" in low:
+            return "SGD"
+        if "a$" in low or "au$" in low:
+            return "AUD"
+        if "c$" in low or "ca$" in low:
+            return "CAD"
+        return self._COUNTRY_CURRENCY.get(self.get_schema_country(), "USD")
+
     def get_schema_valid_through(self):
         # Match the real cull window (clean_stale_jobs demotes at 60 days) so
         # Google for Jobs doesn't keep showing "open" roles that then 404.
