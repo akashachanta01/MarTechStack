@@ -138,23 +138,23 @@ Output strict JSON with title, excerpt, content (clean HTML), meta_description, 
     raise ValueError(f"Unknown topic type: {t}")
 
 
+def _topic_slug(entry: dict) -> str:
+    """Deterministic, keyword-based slug for a queue entry. Used both to detect
+    whether a topic was already written and as the published post's slug, so
+    detection is exact (no fragile title-substring matching) AND the URL is
+    keyword-rich (e.g. /blog/hubspot-careers/)."""
+    return slugify(entry["keyword"])
+
+
 def _pick_next_topic() -> dict | None:
-    """Return the first TOPIC_QUEUE entry not yet covered by an existing BlogPost title."""
-    existing_titles = set(BlogPost.objects.values_list("title", flat=True))
-    existing_lower = {t.lower() for t in existing_titles}
-
+    """Return the first TOPIC_QUEUE entry whose keyword-slug doesn't already
+    exist as a BlogPost. Exact-slug match avoids false positives from unrelated
+    posts that merely mention a company/keyword (e.g. a 'HubSpot vs Marketo'
+    post must NOT block the dedicated 'hubspot careers' guide)."""
+    existing_slugs = set(BlogPost.objects.values_list("slug", flat=True))
     for entry in TOPIC_QUEUE:
-        # Match heuristic: keyword or company name appears in an existing title
-        t = entry["type"]
-        if t == "company_careers":
-            marker = entry["company"].lower()
-        else:
-            marker = entry["keyword"].lower()
-
-        already_written = any(marker in title for title in existing_lower)
-        if not already_written:
+        if _topic_slug(entry) not in existing_slugs:
             return entry
-
     return None  # All topics covered
 
 
@@ -204,8 +204,9 @@ class Command(BaseCommand):
 
             data = json.loads(completion.choices[0].message.content)
 
-            # 4. Handle unique slugs & save to database
-            slug = slugify(data['title'])
+            # 4. Slug = deterministic keyword slug (keyword-rich URL + reliable
+            # dedup on the next run). Fall back to a suffix only on collision.
+            slug = _topic_slug(selected)
             if BlogPost.objects.filter(slug=slug).exists():
                 slug = f"{slug}-{random.randint(100, 9999)}"
 
