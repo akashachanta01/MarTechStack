@@ -1,7 +1,7 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}{{ job.title }} at {{ job.company }} — Role Closed | MarTechJobs{% endblock %}
-{% block meta_description %}This {{ job.title }} role at {{ job.company }} is no longer accepting applications. Browse similar live MarTech roles on MarTechJobs.{% endblock %}
+{% block title %}{% if job %}{{ job.title }} at {{ job.company }} — {% endif %}Role Closed | MarTechJobs{% endblock %}
+{% block meta_description %}This role is no longer accepting applications. Browse similar live MarTech roles on MarTechJobs.{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 
 {% block content %}
@@ -29,7 +29,8 @@
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
   </div>
   <h1>This role is no longer available</h1>
-  <p>The <span class="jc-role">{{ job.title }}</span> position at <span class="jc-role">{{ job.company }}</span> has closed or expired.</p>
+  {% if job %}<p>The <span class="jc-role">{{ job.title }}</span> position at <span class="jc-role">{{ job.company }}</span> has closed or expired.</p>
+  {% else %}<p>This position has closed or expired and is no longer listed.</p>{% endif %}
   <p>Good news — there are plenty of live MarTech roles, and we can email you when matching ones are posted.</p>
   <div class="jc-cta">
     <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse open roles →</a>

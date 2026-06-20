@@ -1038,18 +1038,30 @@ def _related_jobs_for(job, tool_ids, limit=6):
 def job_detail(request, id, slug):
     job = Job.objects.filter(id=id).first()
     if job is None:
-        raise Http404("Job not found")
+        # The URL matched /job/<id>/<slug>/ but the row is gone — this is a
+        # listing we ingested, indexed, then purged once expired. Return 410
+        # Gone (not 404) so Google de-indexes it promptly and stops wasting
+        # crawl budget re-checking it, while still showing the visitor live
+        # alternatives instead of a dead end.
+        return render(request, 'jobs/job_closed.html', {
+            'job': None,
+            'related_jobs': Job.objects.filter(
+                is_active=True, screening_status='approved'
+            ).order_by('-is_pinned', '-created_at')[:6],
+        }, status=410)
 
     tool_ids = list(job.tools.values_list('id', flat=True))
 
     # Closed/expired role: the row still exists (clean_stale_jobs demotes rather
     # than deletes) but is no longer live. Show a "no longer available → similar
-    # roles" page (200, noindex) instead of a dead-end 404.
+    # roles" page with HTTP 410 Gone (not 200) so Google stops classifying these
+    # as Soft 404s and de-indexes them cleanly, while the visitor still gets live
+    # alternatives instead of a dead end.
     if not (job.is_active and job.screening_status == 'approved'):
         return render(request, 'jobs/job_closed.html', {
             'job': job,
             'related_jobs': _related_jobs_for(job, tool_ids),
-        })
+        }, status=410)
 
     if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)
 
