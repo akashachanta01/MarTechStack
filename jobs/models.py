@@ -129,6 +129,13 @@ class Job(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Set the first time is_active flips to True (auto-approval at ingest or
+    # manual admin action). Used by send_daily_digest so it catches jobs
+    # approved any time — not just those ingested within the last 24 h.
+    went_live_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # Flipped to True once the job has been included in a digest email, so the
+    # same role is never re-sent in tomorrow's digest.
+    digest_sent = models.BooleanField(default=False, db_index=True)
 
     def __str__(self): return f"{self.title} at {self.company}"
 
@@ -227,6 +234,10 @@ class Job(models.Model):
                 old_status = Job.objects.filter(pk=self.pk).values_list('screening_status', flat=True).first()
             if old_status != 'approved':
                 self.is_active = True
+        # Stamp went_live_at the first time the job becomes active so the daily
+        # digest can find it regardless of when it was originally ingested.
+        if self.is_active and not self.went_live_at:
+            self.went_live_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:

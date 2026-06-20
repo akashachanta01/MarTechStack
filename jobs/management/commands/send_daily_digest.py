@@ -1,17 +1,14 @@
 """
-Send a daily digest of newly-posted jobs to all subscribers.
+Send a daily digest of newly-live jobs to all subscribers.
 
-Designed to run at the end of the daily ingestion cron (run_daily_tasks),
-right after fetch_jobs, so subscribers get one email per day covering the
-roles added that day. Skips quietly when there are no new jobs.
-
-Routes through emails.send_html_email so every message gets the
-List-Unsubscribe / one-click headers and a personalized unsubscribe link —
-critical for a bulk send to stay out of spam.
+Runs after fetch_jobs in the daily cron. Uses `went_live_at` (not
+`created_at`) so manually-approved jobs are caught regardless of when they
+were originally ingested. The `digest_sent` flag prevents the same job from
+appearing in tomorrow's digest.
 
 Manual/testing:
-  python manage.py send_daily_digest                # last 24h
-  python manage.py send_daily_digest --hours 48     # widen the window
+  python manage.py send_daily_digest                # jobs live in last 48h
+  python manage.py send_daily_digest --hours 72     # widen the window
   python manage.py send_daily_digest --dry-run      # don't send, just report
 """
 
@@ -26,10 +23,10 @@ from jobs.emails import send_html_email
 
 
 class Command(BaseCommand):
-    help = "Email subscribers a digest of jobs posted in the last 24 hours"
+    help = "Email subscribers a digest of jobs that went live since the last digest"
 
     def add_arguments(self, parser):
-        parser.add_argument("--hours", type=int, default=24, help="Look-back window in hours (default 24)")
+        parser.add_argument("--hours", type=int, default=48, help="Look-back window in hours (default 48 — safety buffer for slow-approval days)")
         parser.add_argument("--limit", type=int, default=20, help="Max jobs to include (default 20)")
         parser.add_argument("--dry-run", action="store_true", help="Report without sending")
 
@@ -39,13 +36,14 @@ class Command(BaseCommand):
             Job.objects.filter(
                 is_active=True,
                 screening_status="approved",
-                created_at__gte=since,
+                digest_sent=False,
+                went_live_at__gte=since,
             )
-            .order_by("-is_featured", "-created_at")[: options["limit"]]
+            .order_by("-is_featured", "-went_live_at")[: options["limit"]]
         )
 
         if not jobs:
-            self.stdout.write(self.style.WARNING("No new jobs in the window — skipping digest."))
+            self.stdout.write(self.style.WARNING("No new live jobs in the window — skipping digest."))
             return
 
         subscribers = list(Subscriber.objects.values_list("email", flat=True))
@@ -58,7 +56,7 @@ class Command(BaseCommand):
 
         if options["dry_run"]:
             for j in jobs:
-                self.stdout.write(f"  • {j.title} @ {j.company}")
+                self.stdout.write(f"  • {j.title} @ {j.company} (live: {j.went_live_at})")
             self.stdout.write(self.style.SUCCESS("Dry run — nothing sent."))
             return
 
@@ -70,10 +68,14 @@ class Command(BaseCommand):
                 template_name="emails/digest.html",
                 context={"jobs": jobs, "count": count},
                 to_email=[email],
-                unsubscribe_email=email,  # personalized one-click unsubscribe
+                unsubscribe_email=email,
             )
             if ok:
                 sent += 1
-            time.sleep(0.3)  # gentle pacing for SMTP / reputation
+            time.sleep(0.3)
 
-        self.stdout.write(self.style.SUCCESS(f"Daily digest sent to {sent}/{len(subscribers)} subscribers."))
+        # Mark these jobs so they're not re-sent tomorrow.
+        if sent > 0:
+            Job.objects.filter(pk__in=[j.pk for j in jobs]).update(digest_sent=True)
+
+        self.stdout.write(self.style.SUCCESS(f"Daily digest sent to {sent}/{len(subscribers)} subscribers ({count} jobs)."))
