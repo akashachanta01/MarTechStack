@@ -702,28 +702,43 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 def salary_guide(request):
     data = cache.get('salary_guide_data_v2')
     if not data:
+        # Eligible tools (those with at least one live job).
         tools = Tool.objects.annotate(
             job_count=Count('jobs', filter=Q(jobs__is_active=True))
-        ).filter(job_count__gt=0).order_by('-job_count')
-        
-        salary_stats = []
-        for tool in tools:
-            jobs = tool.jobs.filter(is_active=True, screening_status='approved')
-            min_sum, max_sum, count = 0, 0, 0
-            for job in jobs:
-                s_min, s_max = job.get_salary_min_max()
-                if s_min and s_max: 
-                    min_sum += s_min
-                    max_sum += s_max
-                    count += 1
-            if count > 0:
-                salary_stats.append({
-                    'tool': tool, 
-                    'avg_min': int(min_sum / count), 
-                    'avg_max': int(max_sum / count), 
-                    'count': count
-                })
-                
+        ).filter(job_count__gt=0)
+        tool_ids = set(tools.values_list('id', flat=True))
+        tool_by_id = {t.id: t for t in tools}
+
+        # ONE pass over the live, salaried jobs (plus a single prefetch of their
+        # tools) instead of a query-per-tool + query-per-job N+1. Each job's
+        # parsed salary is attributed to every in-scope tool it lists.
+        agg = {}  # tool_id -> [min_sum, max_sum, count]
+        jobs = (
+            Job.objects.filter(is_active=True, screening_status='approved')
+            .exclude(salary_range__isnull=True).exclude(salary_range='')
+            .prefetch_related('tools')
+        )
+        for job in jobs:
+            s_min, s_max = job.get_salary_min_max()
+            if not (s_min and s_max):
+                continue
+            for tool in job.tools.all():  # prefetched — no extra query
+                if tool.id not in tool_ids:
+                    continue
+                bucket = agg.setdefault(tool.id, [0, 0, 0])
+                bucket[0] += s_min
+                bucket[1] += s_max
+                bucket[2] += 1
+
+        salary_stats = [
+            {
+                'tool': tool_by_id[tid],
+                'avg_min': int(b[0] / b[2]),
+                'avg_max': int(b[1] / b[2]),
+                'count': b[2],
+            }
+            for tid, b in agg.items() if b[2] > 0
+        ]
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
         data = salary_stats
         cache.set('salary_guide_data_v2', data, 3600)
