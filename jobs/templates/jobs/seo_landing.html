@@ -112,6 +112,18 @@
   </div>
 </section>
 
+{% if country_intro %}
+<section style="padding:28px 0 4px;">
+  <div class="wrap" style="max-width:820px;">
+    <p style="font-size:15px;line-height:1.75;color:var(--ink2);">{{ country_intro }}</p>
+    <p style="font-size:14px;line-height:1.7;color:var(--ink3);margin-top:12px;">
+      Open to working remotely? Browse
+      <a href="{% url 'seo_loc_only' 'remote' %}" style="color:var(--amber);font-weight:600;">remote MarTech jobs open globally →</a>
+    </p>
+  </div>
+</section>
+{% endif %}
+
 <section class="sl-list-sec" id="sl-listings">
   <div class="wrap">
     <div class="sl-list-head">
