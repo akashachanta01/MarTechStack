@@ -147,7 +147,7 @@ class MarTechScreener:
             return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: non-MarTech role (sales/creative/CS).", "details": {}}
 
         # 1. SEO/Event/Social trap
-        bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations"]
+        bad_keywords = ["seo ", "seo&", "event ", "events ", "social media", "community manager", "brand manager", "pr manager", "public relations", "influencer", "software engineer", "data scientist"]
         if any(bad in t_low for bad in bad_keywords):
             if "operations" not in t_low and "technology" not in t_low:
                 return {"status": "rejected", "score": 0.0, "reason": "Hard Reject: Non-Technical Role (SEO/Event/Social)", "details": {}}
@@ -227,7 +227,7 @@ class MarTechScreener:
             # ABM / sales-marketing platforms
             "6sense", "demandbase", "salesloft",
             # Product / digital analytics (unambiguous tool names)
-            "amplitude", "mixpanel", "segment", "twilio segment",
+            "amplitude", "mixpanel", "twilio segment",
             "heap", "pendo", "fullstory", "contentsquare",
         }
         title_norm = self._normalize(title)
@@ -309,6 +309,9 @@ class MarTechScreener:
         - Generic software engineering or data science with NO marketing stack
           component (e.g. backend engineer, ML engineer, data scientist building
           internal tools unrelated to marketing)
+        - "GTM" meaning Go-To-Market (e.g. "GTM Data Science", "GTM Analytics",
+          "GTM Strategy") — NOT the same as Google Tag Manager. GTM = Go-To-Market
+          roles are sales/revenue roles, NOT MarTech.
         - Finance, legal, operations roles unrelated to marketing technology
 
         PENDING (50-70) only if genuinely ambiguous after reading the JD.
