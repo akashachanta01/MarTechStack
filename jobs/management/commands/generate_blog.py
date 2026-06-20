@@ -38,12 +38,17 @@ TOPIC_QUEUE = [
     {"type": "role_guide", "topic": "Salesforce Administrator", "keyword": "salesforce admin jobs martech", "tool_slug": "salesforce"},
     {"type": "role_guide", "topic": "Marketing Data Analyst", "keyword": "marketing data analyst jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Email Marketing Manager", "keyword": "email marketing manager jobs martech", "tool_slug": None},
-    # Tier 3: Salary guides
-    {"type": "salary_guide", "topic": "Marketing Operations Manager Salary", "keyword": "marketing ops manager salary", "tool_slug": None},
-    {"type": "salary_guide", "topic": "HubSpot Admin Salary", "keyword": "hubspot admin salary", "tool_slug": "hubspot"},
+    # Tier 3: Salary guides — keywords confirmed via Ahrefs Keyword Explorer
+    # marketing automation specialist salary: 200 vol, KD 2
+    {"type": "salary_guide", "topic": "Marketing Automation Specialist Salary", "keyword": "marketing automation specialist salary", "tool_slug": None},
+    # marketing operations salary: 60 vol, KD 0
+    {"type": "salary_guide", "topic": "Marketing Operations Salary", "keyword": "marketing operations salary", "tool_slug": None},
+    # hubspot admin salary: 20 vol, KD 0 (parent: hubspot administrator salary)
+    {"type": "salary_guide", "topic": "HubSpot Administrator Salary", "keyword": "hubspot admin salary", "tool_slug": "hubspot"},
+    # salesforce marketing cloud salary: 20 vol, KD 0
+    {"type": "salary_guide", "topic": "Salesforce Marketing Cloud Salary", "keyword": "salesforce marketing cloud salary", "tool_slug": "salesforce"},
+    # klaviyo specialist salary: estimated, hyper-targeted
     {"type": "salary_guide", "topic": "Klaviyo Specialist Salary", "keyword": "klaviyo specialist salary", "tool_slug": "klaviyo"},
-    {"type": "salary_guide", "topic": "Salesforce Marketing Cloud Salary", "keyword": "sfmc salary", "tool_slug": "salesforce"},
-    {"type": "salary_guide", "topic": "Marketing Automation Specialist Salary", "keyword": "marketing automation salary", "tool_slug": None},
 ]
 
 CATEGORY_MAP = {
