@@ -175,14 +175,18 @@
 
     <!-- Internal linking: MarTech jobs in other locations -->
     <div class="sl-cross">
+      {% if cross_cities %}
       <h3>MarTech jobs by city</h3>
       <div class="sl-cross-row">
         {% for city in cross_cities %}<a href="/{{ city|slugify }}/jobs/">{{ city }}</a>{% endfor %}
       </div>
-      <h3>MarTech jobs by state</h3>
+      {% endif %}
+      {% if cross_states %}
+      <h3>MarTech jobs by {{ region_label|default:"state" }}</h3>
       <div class="sl-cross-row">
         {% for state in cross_states %}<a href="/{{ state|slugify }}/jobs/">{{ state }}</a>{% endfor %}
       </div>
+      {% endif %}
     </div>
   </div>
 </section>

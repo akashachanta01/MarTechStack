@@ -62,6 +62,62 @@ TOOL_MAPPING = {
 SEO_CROSS_CITIES = ["New York", "San Francisco", "Austin", "Chicago", "Seattle", "Boston", "Los Angeles", "Denver", "Atlanta", "London"]
 SEO_CROSS_STATES = ["California", "Texas", "New York", "Florida", "Illinois", "Pennsylvania", "Washington", "Colorado"]
 
+# Per-country city/region cross-links. On an international page the "by city" /
+# "by state" rows must point to cities and regions IN THAT COUNTRY (not US),
+# both for the visitor and for sane internal linking. Region label varies by
+# country (state / province / emirate). Cities/regions with no jobs auto-noindex
+# via the existing thin-content gate, so a quiet link is harmless.
+COUNTRY_CROSS_CITIES = {
+    "india": ["Bengaluru", "Mumbai", "Delhi", "Hyderabad", "Pune", "Chennai", "Gurgaon", "Noida"],
+    "united-kingdom": ["London", "Manchester", "Edinburgh", "Birmingham", "Bristol", "Leeds"],
+    "singapore": ["Singapore"],
+    "germany": ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne"],
+    "france": ["Paris", "Lyon", "Toulouse"],
+    "netherlands": ["Amsterdam", "Rotterdam", "Utrecht", "The Hague"],
+    "canada": ["Toronto", "Vancouver", "Montreal", "Ottawa", "Calgary"],
+    "australia": ["Sydney", "Melbourne", "Brisbane", "Perth"],
+    "united-arab-emirates": ["Dubai", "Abu Dhabi"],
+    "china": ["Shanghai", "Beijing", "Shenzhen", "Hong Kong"],
+}
+COUNTRY_CROSS_REGIONS = {
+    "india": ["Karnataka", "Maharashtra", "Telangana", "Tamil Nadu", "Haryana"],
+    "canada": ["Ontario", "British Columbia", "Quebec", "Alberta"],
+    "australia": ["New South Wales", "Victoria", "Queensland"],
+    "united-kingdom": ["England", "Scotland", "Wales"],
+}
+COUNTRY_REGION_LABEL = {
+    "canada": "province", "united-arab-emirates": "emirate",
+    "united-kingdom": "region", "germany": "region", "france": "region",
+    "netherlands": "region",
+}
+# Reverse map: a city/region slug -> its country slug, so city pages (e.g.
+# /bengaluru/jobs/) also show their own country's siblings instead of US ones.
+_LOC_TO_COUNTRY = {}
+for _c, _cities in COUNTRY_CROSS_CITIES.items():
+    for _name in _cities:
+        _LOC_TO_COUNTRY.setdefault(slugify(_name), _c)
+for _c, _regions in COUNTRY_CROSS_REGIONS.items():
+    for _name in _regions:
+        _LOC_TO_COUNTRY.setdefault(slugify(_name), _c)
+
+
+def _cross_links_for(loc_slug):
+    """Return (cities, regions, region_label) for the country context of a page.
+    Country pages and their member city/region pages get that country's links;
+    everything else falls back to the US defaults."""
+    country = None
+    if loc_slug in COUNTRY_CROSS_CITIES:
+        country = loc_slug
+    elif loc_slug in _LOC_TO_COUNTRY:
+        country = _LOC_TO_COUNTRY[loc_slug]
+    if not country:
+        return SEO_CROSS_CITIES, SEO_CROSS_STATES, "state"
+    return (
+        COUNTRY_CROSS_CITIES.get(country, []),
+        COUNTRY_CROSS_REGIONS.get(country, []),
+        COUNTRY_REGION_LABEL.get(country, "state"),
+    )
+
 # --- INDEXABLE LOCATIONS (anti-thin-content) ---
 # The /<location>/jobs/ route is a catch-all, so Google found junk like
 # /beverly-hills/jobs/ and /usa/jobs/. Only a CURATED set of locations gets an
@@ -141,6 +197,10 @@ _SEO_CITIES = [
 INDEXABLE_LOCATION_SLUGS = (
     {"remote"} | set(_SEO_COUNTRIES)
     | {slugify(s) for s in _US_STATES} | {slugify(c) for c in _SEO_CITIES}
+    # International city/region pages linked from country pages must be indexable
+    # too (they still auto-noindex while empty via the thin-content gate).
+    | {slugify(c) for cities in COUNTRY_CROSS_CITIES.values() for c in cities}
+    | {slugify(r) for regions in COUNTRY_CROSS_REGIONS.values() for r in regions}
 )
 # Old/abbreviated slugs -> canonical slug (301 redirected to avoid duplicates).
 LOCATION_ALIASES = {
@@ -148,7 +208,6 @@ LOCATION_ALIASES = {
     "uk": "united-kingdom", "u-k": "united-kingdom", "nyc": "new-york",
     "sf": "san-francisco", "la": "los-angeles", "dfw": "dallas",
     "uae": "united-arab-emirates", "u-a-e": "united-arab-emirates",
-    "dubai": "united-arab-emirates",
 }
 
 # --- JOB-TITLE PAGES (programmatic SEO for high-intent title queries) ---
@@ -750,13 +809,18 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         is_country_page = True
         country_intro = COUNTRY_INTROS.get(_loc_slug)
 
+    # Country-aware cross-links: on India/UK/etc. (and their member cities), the
+    # "by city / by region" rows point to that country, not the US.
+    cross_cities, cross_states, region_label = _cross_links_for(_loc_slug)
+
     return render(request, 'jobs/seo_landing.html', {
         'tool': tool, 'jobs': jobs_page, 'total_count': total_count,
         'page_noindex': page_noindex,
         'custom_title': page_title, 'custom_header': header_text, 'custom_desc': meta_desc,
         'is_seo_landing': True, 'location_name': location_name,
         'country_intro': country_intro, 'is_country_page': is_country_page,
-        'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES
+        'cross_cities': cross_cities, 'cross_states': cross_states,
+        'region_label': region_label,
     })
 
 def salary_guide(request):
