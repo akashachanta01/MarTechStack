@@ -98,8 +98,38 @@ fragility for future real migrations.
   jobs default to `function="other"` and never appear on category pages. Add a
   function selector. Fold into the post-job/accounts work.
 
+## PAYMENTS / MONETIZATION (Stripe — DEFERRED until paid postings launch)
+
+> Not launching paid postings anytime soon, so these are parked. Do them BEFORE
+> the first real paid post goes live — they only matter once money changes hands.
+- [ ] **Stripe checkout has no error handling** (`views.py:~1085`):
+  `stripe.checkout.Session.create()` is not wrapped in try/except. A network
+  blip or bad param → the paying user sees a raw 500 instead of a friendly
+  "couldn't start checkout, try again" message. Wrap it and redirect back to
+  `post_job` with a message.
+- [ ] **Stripe webhook race condition** (`views.py:~1112`): duplicate webhook
+  deliveries for the same `checkout.session.completed` could approve the job and
+  fire alert emails twice. Add `select_for_update()` + an idempotency guard
+  (e.g. only approve `if not job.is_featured`) so the approval runs exactly once.
+- [ ] **Salary cache not busted on paid approval** (`views.py:~1113`): the
+  webhook clears `popular_tech_stacks_v4` and `available_countries_v2` but NOT
+  `salary_guide_data_v2`. A new paid job with salary data won't show in the
+  salary guide for up to 1 hour. Add the missing `cache.delete`.
+- [ ] **No logging on paid-job approval** (`views.py:~1112`): add `logger.info`
+  when a webhook auto-approves a job, so there's an audit trail if a payment
+  doesn't result in a live listing.
+
 ## SEO
 
+- [x] **Expired job URLs return 410 Gone** — DONE. GSC showed 1,291 hard 404s +
+  247 Soft 404s from expired listings (ingested → indexed → purged/demoted).
+  `job_detail` now returns HTTP 410 (with a "no longer available → browse
+  similar" page) for both deleted rows and demoted/closed jobs, so Google
+  de-indexes them promptly instead of wasting crawl budget. Run "Validate Fix"
+  on both GSC reports after deploy.
+- [ ] **Crawled – currently not indexed: 378** (GSC): thin/low-value pages
+  Google chose not to index. Not an error — a content-quality / internal-linking
+  project. Investigate which URL types dominate this bucket before acting.
 - [x] **tool_detail `rel=prev/next`** — already present (`tool_detail.html:7-9`).
   The audit flagged this in error.
 - [x] **robots.txt filter URLs** — DONE. Disallowed `?q=`, `?l=`, `?sort=`
