@@ -13,26 +13,38 @@ from jobs.models import BlogPost
 # Tier 2: Role/skill guides
 # Tier 3: Salary guides
 TOPIC_QUEUE = [
-    # Tier 1: Company careers guides (branded, low KD, high volume)
+    # Tier 1: Company careers guides — ordered by real KD/volume from Ahrefs
+    # hubspot careers: 14K vol, KD 4
     {"type": "company_careers", "company": "HubSpot", "tool_slug": "hubspot", "keyword": "hubspot careers", "volume": 14000},
-    {"type": "company_careers", "company": "Braze", "tool_slug": "braze", "keyword": "braze careers", "volume": 1700},
-    {"type": "company_careers", "company": "Amplitude", "tool_slug": "amplitude", "keyword": "amplitude careers", "volume": 1200},
-    {"type": "company_careers", "company": "Mixpanel", "tool_slug": "mixpanel", "keyword": "mixpanel careers", "volume": 500},
-    {"type": "company_careers", "company": "Salesforce", "tool_slug": "salesforce", "keyword": "salesforce marketing cloud careers", "volume": 800},
-    {"type": "company_careers", "company": "Adobe", "tool_slug": "adobe-experience-manager", "keyword": "adobe martech careers", "volume": 600},
-    {"type": "company_careers", "company": "Klaviyo", "tool_slug": "klaviyo", "keyword": "klaviyo careers", "volume": 400},
-    {"type": "company_careers", "company": "Iterable", "tool_slug": "iterable", "keyword": "iterable careers", "volume": 300},
-    {"type": "company_careers", "company": "Segment", "tool_slug": "segment", "keyword": "segment careers", "volume": 300},
-    {"type": "company_careers", "company": "Tealium", "tool_slug": "tealium", "keyword": "tealium careers", "volume": 200},
+    # klaviyo careers: 2.4K vol, KD 2
+    {"type": "company_careers", "company": "Klaviyo", "tool_slug": "klaviyo", "keyword": "klaviyo careers", "volume": 2400},
+    # braze careers: 1.6K vol, KD 0
+    {"type": "company_careers", "company": "Braze", "tool_slug": "braze", "keyword": "braze careers", "volume": 1600},
+    # amplitude careers: 1.1K vol, KD 4
+    {"type": "company_careers", "company": "Amplitude", "tool_slug": "amplitude", "keyword": "amplitude careers", "volume": 1100},
+    # marketo careers: 40 vol, KD 3 — low vol but hyper-targeted
+    {"type": "company_careers", "company": "Marketo", "tool_slug": "marketo", "keyword": "marketo careers", "volume": 40},
+    # mixpanel careers: estimated, not in export
+    {"type": "company_careers", "company": "Mixpanel", "tool_slug": "mixpanel", "keyword": "mixpanel careers", "volume": 300},
+    # iterable careers: estimated
+    {"type": "company_careers", "company": "Iterable", "tool_slug": "iterable", "keyword": "iterable careers", "volume": 200},
+    # tealium careers: estimated
+    {"type": "company_careers", "company": "Tealium", "tool_slug": "tealium", "keyword": "tealium careers", "volume": 150},
+    # mparticle careers: estimated
+    {"type": "company_careers", "company": "mParticle", "tool_slug": "mparticle", "keyword": "mparticle careers", "volume": 100},
     # Tier 2: Role/skill guides
     {"type": "role_guide", "topic": "Marketing Operations Manager", "keyword": "marketing operations manager jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Marketing Automation Specialist", "keyword": "marketing automation specialist jobs", "tool_slug": None},
     {"type": "role_guide", "topic": "Salesforce Administrator", "keyword": "salesforce admin jobs martech", "tool_slug": "salesforce"},
     {"type": "role_guide", "topic": "CDP Specialist", "keyword": "customer data platform jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Data Analyst", "keyword": "marketing data analyst jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Email Marketing Manager", "keyword": "email marketing manager jobs martech", "tool_slug": None},
     # Tier 3: Salary guides
     {"type": "salary_guide", "topic": "Marketing Operations Manager Salary", "keyword": "marketing ops manager salary", "tool_slug": None},
     {"type": "salary_guide", "topic": "HubSpot Admin Salary", "keyword": "hubspot admin salary", "tool_slug": "hubspot"},
+    {"type": "salary_guide", "topic": "Klaviyo Specialist Salary", "keyword": "klaviyo specialist salary", "tool_slug": "klaviyo"},
     {"type": "salary_guide", "topic": "Salesforce Marketing Cloud Salary", "keyword": "sfmc salary", "tool_slug": "salesforce"},
+    {"type": "salary_guide", "topic": "Marketing Automation Specialist Salary", "keyword": "marketing automation salary", "tool_slug": None},
 ]
 
 CATEGORY_MAP = {
