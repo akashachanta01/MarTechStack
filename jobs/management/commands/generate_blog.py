@@ -8,90 +8,175 @@ from django.utils.text import slugify
 from openai import OpenAI
 from jobs.models import BlogPost
 
+# Prioritized topic queue — worked through in order, not randomly.
+# Tier 1: Company careers guides (branded, low KD, high volume)
+# Tier 2: Role/skill guides
+# Tier 3: Salary guides
+TOPIC_QUEUE = [
+    # Tier 1: Company careers guides (branded, low KD, high volume)
+    {"type": "company_careers", "company": "HubSpot", "tool_slug": "hubspot", "keyword": "hubspot careers", "volume": 14000},
+    {"type": "company_careers", "company": "Braze", "tool_slug": "braze", "keyword": "braze careers", "volume": 1700},
+    {"type": "company_careers", "company": "Amplitude", "tool_slug": "amplitude", "keyword": "amplitude careers", "volume": 1200},
+    {"type": "company_careers", "company": "Mixpanel", "tool_slug": "mixpanel", "keyword": "mixpanel careers", "volume": 500},
+    {"type": "company_careers", "company": "Salesforce", "tool_slug": "salesforce", "keyword": "salesforce marketing cloud careers", "volume": 800},
+    {"type": "company_careers", "company": "Adobe", "tool_slug": "adobe-experience-manager", "keyword": "adobe martech careers", "volume": 600},
+    {"type": "company_careers", "company": "Klaviyo", "tool_slug": "klaviyo", "keyword": "klaviyo careers", "volume": 400},
+    {"type": "company_careers", "company": "Iterable", "tool_slug": "iterable", "keyword": "iterable careers", "volume": 300},
+    {"type": "company_careers", "company": "Segment", "tool_slug": "segment", "keyword": "segment careers", "volume": 300},
+    {"type": "company_careers", "company": "Tealium", "tool_slug": "tealium", "keyword": "tealium careers", "volume": 200},
+    # Tier 2: Role/skill guides
+    {"type": "role_guide", "topic": "Marketing Operations Manager", "keyword": "marketing operations manager jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Marketing Automation Specialist", "keyword": "marketing automation specialist jobs", "tool_slug": None},
+    {"type": "role_guide", "topic": "Salesforce Administrator", "keyword": "salesforce admin jobs martech", "tool_slug": "salesforce"},
+    {"type": "role_guide", "topic": "CDP Specialist", "keyword": "customer data platform jobs", "tool_slug": None},
+    # Tier 3: Salary guides
+    {"type": "salary_guide", "topic": "Marketing Operations Manager Salary", "keyword": "marketing ops manager salary", "tool_slug": None},
+    {"type": "salary_guide", "topic": "HubSpot Admin Salary", "keyword": "hubspot admin salary", "tool_slug": "hubspot"},
+    {"type": "salary_guide", "topic": "Salesforce Marketing Cloud Salary", "keyword": "sfmc salary", "tool_slug": "salesforce"},
+]
+
+CATEGORY_MAP = {
+    "company_careers": "Career Advice",
+    "role_guide": "Career Advice",
+    "salary_guide": "Salary Guides",
+}
+
+
+def _build_prompt(topic: dict) -> str:
+    t = topic["type"]
+    if t == "company_careers":
+        company = topic["company"]
+        keyword = topic["keyword"]
+        tool_slug = topic["tool_slug"]
+        return f"""You are a senior content writer for MarTechJobs.io, the niche job board for Marketing Technology professionals.
+
+Write a comprehensive, SEO-optimized careers guide targeting the keyword: "{keyword}"
+
+Target company: {company}
+Target keyword: {keyword}
+
+Requirements:
+- H1: Use the exact keyword phrase naturally (e.g. "HubSpot Careers: Roles, Hiring Process & How to Land a Job")
+- Structure:
+  1. Intro (why {company} is a top MarTech employer)
+  2. Types of MarTech/Marketing Ops roles at {company} (list 4-6 real role types)
+  3. What skills {company} looks for (tools, certs, experience)
+  4. The hiring process at {company} (typical stages)
+  5. Salary ranges for {company} MarTech roles
+  6. CTA: "Browse open {company} jobs on MarTechJobs" linking to https://martechjobs.io/jobs/{tool_slug}/
+- Tone: Direct, credible, written for MarTech practitioners (not generic career advice)
+- Length: 800-1200 words
+- Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only. No markdown. No code fences.
+- The CTA link MUST be: <a href="https://martechjobs.io/jobs/{tool_slug}/">Browse open {company} jobs on MarTechJobs →</a>
+
+Output strict JSON:
+{{"title": "...", "excerpt": "...", "content": "...", "meta_description": "...", "read_time": "..."}}"""
+
+    elif t == "role_guide":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        return f"""You are a senior content writer for MarTechJobs.io.
+
+Write a comprehensive role guide targeting: "{keyword}"
+Role: {topic_name}
+
+Structure:
+1. What does a {topic_name} do?
+2. Required skills and tools
+3. Career path and progression
+4. Salary expectations
+5. How to get hired (CTA to MarTechJobs search)
+
+Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
+    elif t == "salary_guide":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        return f"""You are a senior content writer for MarTechJobs.io.
+
+Write a data-driven salary guide targeting: "{keyword}"
+Topic: {topic_name}
+
+Structure:
+1. Average salary range (be specific with ranges like $85,000–$130,000)
+2. Salary by experience level (junior/mid/senior)
+3. Salary by city/location
+4. Factors that affect salary
+5. How to negotiate
+6. CTA to browse related jobs on MarTechJobs
+
+Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
+    raise ValueError(f"Unknown topic type: {t}")
+
+
+def _pick_next_topic() -> dict | None:
+    """Return the first TOPIC_QUEUE entry not yet covered by an existing BlogPost title."""
+    existing_titles = set(BlogPost.objects.values_list("title", flat=True))
+    existing_lower = {t.lower() for t in existing_titles}
+
+    for entry in TOPIC_QUEUE:
+        # Match heuristic: keyword or company name appears in an existing title
+        t = entry["type"]
+        if t == "company_careers":
+            marker = entry["company"].lower()
+        else:
+            marker = entry["keyword"].lower()
+
+        already_written = any(marker in title for title in existing_lower)
+        if not already_written:
+            return entry
+
+    return None  # All topics covered
+
+
 class Command(BaseCommand):
     help = 'Generates an SEO-optimized blog post using AI. Runs maximum once per week.'
 
     def handle(self, *args, **options):
-        self.stdout.write("🤖 Booting up AI Content Engine...")
+        self.stdout.write("Booting up AI Content Engine...")
 
         # 1. 7-DAY RULE: Check if we need to post
         latest_post = BlogPost.objects.filter(author="MarTechJobs AI").order_by('-published_at').first()
-        
+
         if latest_post and latest_post.published_at >= (timezone.now() - timedelta(days=6)).date():
-            self.stdout.write(self.style.SUCCESS("   ✅ A recent AI blog post already exists (less than 7 days old). Skipping generation."))
+            self.stdout.write(self.style.SUCCESS("   A recent AI blog post already exists (less than 7 days old). Skipping generation."))
             return
 
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            self.stdout.write(self.style.ERROR("   ❌ Missing OPENAI_API_KEY in environment variables."))
+            self.stdout.write(self.style.ERROR("   Missing OPENAI_API_KEY in environment variables."))
             return
 
         client = OpenAI(api_key=api_key, timeout=60, max_retries=2)
 
-        # 2. Strategic SEO Topic Matrix
-        topics = [
-            # Top-of-funnel ("What is" content)
-            {"topic": "What is Martech? A Beginner's Guide", "category": "Career Advice"},
-            {"topic": "What is a Martech Stack? (And How to Build One)", "category": "Tech Stacks"},
-            {"topic": "What is Marketing Operations?", "category": "Career Advice"},
-            {"topic": "What Does a Marketing Operations Manager Do?", "category": "Career Advice"},
-            
-            # Career guides (Job seeker intent)
-            {"topic": "How to Break Into Martech: A Career Guide", "category": "Career Advice"},
-            {"topic": "Top Martech Skills Employers Are Hiring For in 2026", "category": "Career Advice"},
-            {"topic": "How to Become a HubSpot Consultant", "category": "Career Advice"},
-            {"topic": "Salesforce Admin vs Salesforce Developer — Which Career Path is Right for You?", "category": "Career Advice"},
-            {"topic": "What is a Marketing Technologist? (And How to Become One)", "category": "Career Advice"},
-            
-            # Salary content (High intent, highly linkable)
-            {"topic": "Martech Salary Guide 2026: Benchmarks and Trends", "category": "Salary Guides"},
-            {"topic": "Marketing Operations Manager Salary: What to Expect in 2026", "category": "Salary Guides"},
-            {"topic": "Salesforce Administrator Salary Guide", "category": "Salary Guides"},
-            
-            # Tool/trend content (Attracts employers and senior professionals)
-            {"topic": "Top Martech Companies to Work For in 2026", "category": "Industry News"},
-            {"topic": "The Best Martech Stack Examples from Leading Companies", "category": "Tech Stacks"},
-            {"topic": "Top Martech Tools Every Marketing Ops Professional Should Know", "category": "Tech Stacks"}
-        ]
-        
-        selected = random.choice(topics)
-        self.stdout.write(f"   ✍️ Drafting article: '{selected['topic']}'...")
+        # 2. Pick next unwritten topic from the prioritized queue
+        selected = _pick_next_topic()
+        if selected is None:
+            self.stdout.write(self.style.SUCCESS("   All queued topics have been covered. Nothing to generate."))
+            return
 
-        # 3. The AI Prompt
-        prompt = f"""
-        You are the lead content writer for MarTechJobs.io, a niche job board for Marketing Operations, Analytics, and Technology professionals.
-        Write a highly technical, engaging, and SEO-optimized blog post about: "{selected['topic']}".
-        
-        Strict Requirements:
-        - Tone: Professional but conversational. Sound like a seasoned Marketing Operations veteran. Use industry terms accurately.
-        - Formatting: Output the content in clean HTML. Use <p>, <h2>, <h3>, <ul>, <li>, and <strong> tags. 
-        - DO NOT wrap the HTML in Markdown ticks (like ```html). Provide ONLY the raw HTML string for the content.
-        - Internal Linking: End the article with a brief, natural call to action telling the reader to either "search for open roles on MarTechJobs" or "try our free suite of MarTech tools at martechjobs.io/tools/".
-        
-        Output a strict JSON object with these exact keys:
-        {{
-            "title": "Catchy SEO Title (under 60 chars)",
-            "excerpt": "A compelling 2-sentence summary for the blog feed.",
-            "content": "<p>Your full HTML content goes here...</p>",
-            "meta_description": "A 150-character SEO description.",
-            "read_time": "X min read"
-        }}
-        """
+        label = selected.get("keyword") or selected.get("topic", "")
+        self.stdout.write(f"   Drafting article for: '{label}' (type={selected['type']})...")
+
+        # 3. Build type-specific prompt
+        prompt = _build_prompt(selected)
+        category = CATEGORY_MAP[selected["type"]]
 
         try:
             completion = client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an expert technical SEO writer. Output only valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.7 # Slight creativity for engaging writing
+                temperature=0.7
             )
-            
+
             data = json.loads(completion.choices[0].message.content)
-            
-            # 4. Handle Unique Slugs & Save to Database
+
+            # 4. Handle unique slugs & save to database
             slug = slugify(data['title'])
             if BlogPost.objects.filter(slug=slug).exists():
                 slug = f"{slug}-{random.randint(100, 9999)}"
@@ -104,13 +189,13 @@ class Command(BaseCommand):
                 meta_title=data['title'][:60],
                 meta_description=data['meta_description'],
                 author="MarTechJobs AI",
-                category=selected['category'],
+                category=category,
                 read_time=data['read_time'],
                 is_published=True,
                 published_at=timezone.now().date()
             )
 
-            self.stdout.write(self.style.SUCCESS(f"✨ Success! Automated post published: {post.title}"))
+            self.stdout.write(self.style.SUCCESS(f"Success! Automated post published: {post.title}"))
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ AI Generation Failed: {e}"))
+            self.stdout.write(self.style.ERROR(f"AI Generation Failed: {e}"))

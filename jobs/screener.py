@@ -72,6 +72,12 @@ class MarTechScreener:
             "looker", "snowflake", "optimizely", "6sense", "demandbase",
             "outreach", "salesloft", "customer.io", "activecampaign",
             "marketing cloud", "sfmc",
+            # CDP / data activation tools (were in desc_signal but not gate)
+            "heap", "rudderstack", "hightouch", "actioniq",
+            # Tag management (was in fast-approve but not gate)
+            "google tag manager", "gtm",
+            # Digital / product analytics tools
+            "pendo", "gainsight", "fullstory", "contentsquare",
         }
         self.gate_terms = set(self.REQUIRED_KEYWORDS) | _GATE_ROLE_TERMS | _GATE_TOOL_TERMS
 
@@ -220,6 +226,9 @@ class MarTechScreener:
             "tealium", "mparticle", "rudderstack", "hightouch", "actioniq",
             # ABM / sales-marketing platforms
             "6sense", "demandbase", "salesloft",
+            # Product / digital analytics (unambiguous tool names)
+            "amplitude", "mixpanel", "segment", "twilio segment",
+            "heap", "pendo", "fullstory", "contentsquare",
         }
         title_norm = self._normalize(title)
         for term in _FAST_APPROVE_TERMS:
