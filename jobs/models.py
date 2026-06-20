@@ -174,13 +174,27 @@ class Job(models.Model):
             return None, None
 
     def get_schema_country(self):
-        # Best-effort ISO country code for Google Jobs structured data.
+        # ISO country code for Google Jobs structured data. Prefer the
+        # structured `country` field captured at ingest (reliable) before
+        # falling back to parsing free-text location. Without this, jobs in
+        # "London, UK" / "Shanghai, China" / "Dubai, UAE" fell through to the
+        # US default and were mislabeled in Google for Jobs.
+        if self.country:
+            return self.country
         loc = (self.location or "").lower()
         country_map = {
-            "united kingdom": "GB", "india": "IN", "canada": "CA",
-            "australia": "AU", "germany": "DE", "france": "FR",
+            "united kingdom": "GB", "england": "GB", "scotland": "GB",
+            "wales": "GB", ", uk": "GB", "london": "GB",
+            "india": "IN", "bengaluru": "IN", "bangalore": "IN", "mumbai": "IN",
+            "chennai": "IN", "hyderabad": "IN", "pune": "IN", "gurgaon": "IN",
+            "gurugram": "IN", "noida": "IN", "delhi": "IN",
+            "canada": "CA", "australia": "AU", "germany": "DE", "france": "FR",
             "netherlands": "NL", "ireland": "IE", "spain": "ES",
             "singapore": "SG", "mexico": "MX", "brazil": "BR",
+            "china": "CN", "shanghai": "CN", "beijing": "CN", "shenzhen": "CN",
+            "hong kong": "HK",
+            "united arab emirates": "AE", "uae": "AE", "dubai": "AE",
+            "abu dhabi": "AE",
         }
         for name, code in country_map.items():
             if name in loc:
@@ -193,6 +207,7 @@ class Job(models.Model):
         "united states", "usa", "u.s.", "u.s.a.", "us", "united kingdom", "uk",
         "u.k.", "canada", "australia", "germany", "france", "netherlands",
         "ireland", "spain", "singapore", "mexico", "brazil", "india",
+        "china", "hong kong", "united arab emirates", "uae", "u.a.e.",
     }
 
     def get_address_parts(self):
