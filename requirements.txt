@@ -40,3 +40,4 @@ django-allauth==65.3.1
 # pip resolves a prebuilt wheel for its Python (no Rust/source build).
 PyJWT[crypto]>=2.0
 redis==5.0.8
+django-jazzmin==3.0.4
