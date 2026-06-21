@@ -372,9 +372,16 @@ class CertificationGuide(models.Model):
 class Subscriber(models.Model):
     # A row here = a CONFIRMED newsletter subscriber. New signups land in
     # PendingSubscriber first and are only promoted here after they click the
-    # confirmation link (double opt-in), so this table needs no 'confirmed' flag.
+    # confirmation link (double opt-in).
+    #
+    # Unsubscribe is a SOFT delete (is_active=False), not a row delete: keeping
+    # the row preserves the opt-out record so a stray get_or_create can't
+    # silently resurrect a suppressed address, and so all digests filter on
+    # is_active=True. Re-subscribing (via the double opt-in flow) reactivates it.
     email = models.EmailField(unique=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    unsubscribed_at = models.DateTimeField(null=True, blank=True)
     def __str__(self): return self.email
 
 
