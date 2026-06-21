@@ -19,6 +19,7 @@ touched, so genuinely ambiguous (50-70) review-queue jobs are left alone.
 from collections import defaultdict
 
 from django.core.management.base import BaseCommand
+from django.utils.timezone import now
 
 from jobs.models import Job
 
@@ -71,4 +72,8 @@ class Command(BaseCommand):
 
         ids = [j.id for j in to_promote]
         updated = Job.objects.filter(id__in=ids).update(screening_status="approved", is_active=True)
+        # .update() bypasses Job.save(), so went_live_at would never be stamped
+        # and these jobs would never reach the daily digest. Stamp it explicitly
+        # for any newly-live job that doesn't already have it.
+        Job.objects.filter(id__in=ids, went_live_at__isnull=True).update(went_live_at=now())
         self.stdout.write(self.style.SUCCESS(f"✨ Promoted {updated} jobs to live."))

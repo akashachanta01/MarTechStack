@@ -30,8 +30,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         since = timezone.now() - timedelta(hours=options["hours"])
+        # Use went_live_at (when the job actually became visible) instead of
+        # created_at, matching the daily digest window. A job ingested days ago
+        # but only just approved should still alert; one created recently but
+        # not yet live should not. Note: a job can land in both this alert and
+        # the general digest within the same window — a known, accepted overlap.
         new_jobs = Job.objects.filter(
-            is_active=True, screening_status="approved", created_at__gte=since
+            is_active=True, screening_status="approved", went_live_at__gte=since
         ).prefetch_related("tools")
 
         if not new_jobs.exists():

@@ -39,6 +39,13 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         if sociallogin.is_existing:
             return
 
+        # Only auto-link when Google asserts the email is verified. An
+        # unverified email is not proof of ownership, so auto-connecting it
+        # would let an attacker hijack a local account by registering an
+        # unverified Google account with someone else's address.
+        if not sociallogin.account.extra_data.get('email_verified', False):
+            return
+
         email = (sociallogin.user.email or '').strip().lower()
         if not email:
             return

@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 import html
+import bleach
 from bs4 import BeautifulSoup
 import re
 from datetime import timedelta
@@ -41,20 +42,19 @@ def normalize_location(loc):
     return cleaned
 
 # --- HELPER 2: DESCRIPTION CLEANER ---
+# Allowlist sanitization with bleach. Anything not explicitly permitted is
+# stripped, so hostile markup from ATS feeds (script/onclick/style/etc.) can
+# never reach the rendered page — far safer than the old blocklist.
+ALLOWED_TAGS = ['p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i',
+                'h2', 'h3', 'h4', 'a', 'span', 'div', 'table', 'thead',
+                'tbody', 'tr', 'th', 'td']
+ALLOWED_ATTRS = {'a': ['href', 'title'], 'span': ['class'], 'div': ['class']}
+
 def clean_html_description(text):
     if not text: return ""
     text = html.unescape(text)
-    soup = BeautifulSoup(text, 'html.parser')
-    for tag in soup(["script", "style", "meta", "link", "head", "title", "iframe", "input", "form", "button", "img", "svg"]):
-        tag.extract()
-    for tag in soup.find_all(True):
-        tag.attrs = {} 
-    allowed_tags = ['p', 'ul', 'li', 'ol', 'h3', 'h4', 'strong', 'b', 'em', 'i', 'br']
-    for tag in soup.find_all(True):
-        if tag.name not in allowed_tags:
-            tag.unwrap()
-    clean_text = str(soup).strip()
-    return re.sub(r'\n\s*\n', '\n\n', clean_text)
+    clean_text = bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+    return re.sub(r'\n\s*\n', '\n\n', clean_text).strip()
 
 # --- MODELS ---
 

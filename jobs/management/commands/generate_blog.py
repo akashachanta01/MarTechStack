@@ -204,7 +204,12 @@ class Command(BaseCommand):
         self.stdout.write("Booting up AI Content Engine...")
 
         # 1. 7-DAY RULE: Check if we need to post
-        latest_post = BlogPost.objects.filter(author="MarTechJobs AI").order_by('-published_at').first()
+        # normalize_blog_posts rewrites the author to "MarTechJobs Team", so the
+        # throttle must match both spellings or it would never see prior AI posts
+        # and would generate one every run.
+        latest_post = BlogPost.objects.filter(
+            author__in=["MarTechJobs AI", "MarTechJobs Team"]
+        ).order_by('-published_at').first()
 
         if latest_post and latest_post.published_at >= (timezone.now() - timedelta(days=6)).date():
             self.stdout.write(self.style.SUCCESS("   A recent AI blog post already exists (less than 7 days old). Skipping generation."))

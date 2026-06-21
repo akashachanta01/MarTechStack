@@ -47,55 +47,68 @@ CANDIDATES = [
 
     # --- United Kingdom ---
     ("Monzo", "united-kingdom", "greenhouse", ["monzo"]),
-    ("Wise", "united-kingdom", "greenhouse", ["wise", "transferwise"]),
+    ("Wise", "united-kingdom", "greenhouse", ["wise", "transferwise", "wisejobs"]),
     ("Deliveroo", "united-kingdom", "greenhouse", ["deliveroo"]),
     ("GoCardless", "united-kingdom", "greenhouse", ["gocardless"]),
-    ("Checkout.com", "united-kingdom", "greenhouse", ["checkoutcom", "checkout"]),
-    ("Trainline", "united-kingdom", "greenhouse", ["trainline"]),
+    ("Checkout.com", "united-kingdom", "greenhouse", ["checkoutcom", "checkout-com"]),
+    ("Trainline", "united-kingdom", "smartrecruiters", ["Trainline"]),
 
     # --- India ---
-    ("Freshworks", "india", "greenhouse", ["freshworks"]),
-    ("Razorpay", "india", "lever", ["razorpay"]),
+    ("Freshworks", "india", "greenhouse", ["freshworks", "freshdesk"]),
+    ("Razorpay", "india", "greenhouse", ["razorpaysoftwareprivatelimited", "razorpay"]),
     ("Postman", "india", "greenhouse", ["postman"]),
     ("Chargebee", "india", "lever", ["chargebee"]),
+    ("CleverTap", "india", "greenhouse", ["clevertap"]),
+    ("MoEngage", "india", "greenhouse", ["moengage"]),
     ("Hasura", "india", "greenhouse", ["hasura"]),
+    ("Zoho", "india", "greenhouse", ["zoho"]),
+    # HubSpot India office — same board as global but filters to India locations
+    ("HubSpot", "india", "greenhouse", ["hubspot"]),
 
     # --- Singapore ---
-    ("Grab", "singapore", "greenhouse", ["grab"]),
-    ("Carousell", "singapore", "greenhouse", ["carousell"]),
-    ("Nium", "singapore", "greenhouse", ["nium"]),
+    ("Nium", "singapore", "lever", ["nium"]),
+    ("Carousell", "singapore", "smartrecruiters", ["carousellgroup", "carousell"]),
+    ("Zendesk APAC", "singapore", "greenhouse", ["zendesk"]),
+    ("Intercom", "singapore", "greenhouse", ["intercom"]),
 
     # --- Germany ---
-    ("Delivery Hero", "germany", "greenhouse", ["deliveryhero"]),
+    ("Delivery Hero", "germany", "greenhouse", ["deliveryhero", "delivery-hero"]),
     ("N26", "germany", "greenhouse", ["n26"]),
     ("Personio", "germany", "greenhouse", ["personio"]),
     ("Celonis", "germany", "greenhouse", ["celonis"]),
-    ("HelloFresh", "germany", "lever", ["hellofresh"]),
+    ("HelloFresh", "germany", "greenhouse", ["4lu44n1n37w012k", "hellofresh"]),
 
     # --- France ---
     ("Dataiku", "france", "greenhouse", ["dataiku"]),
-    ("Back Market", "france", "greenhouse", ["backmarket"]),
-    ("Mirakl", "france", "lever", ["mirakl"]),
+    ("Back Market", "france", "ashby", ["backmarket"]),
+    ("Mirakl", "france", "greenhouse", ["mirakl"]),
+    ("Mirakl (Workable)", "france", "workable", ["mirakl-careers"]),
 
     # --- Netherlands ---
     ("Adyen", "netherlands", "greenhouse", ["adyen"]),
-    ("Mollie", "netherlands", "greenhouse", ["mollie"]),
+    ("Mollie", "netherlands", "ashby", ["mollie"]),
     ("Bird (MessageBird)", "netherlands", "greenhouse", ["messagebird", "bird"]),
 
     # --- Canada ---
-    ("Lightspeed", "canada", "greenhouse", ["lightspeed"]),
+    ("Lightspeed", "canada", "lever", ["lightspeed", "lightspeedhq"]),
     ("Wealthsimple", "canada", "lever", ["wealthsimple"]),
-    ("1Password", "canada", "greenhouse", ["1password", "agilebits"]),
+    ("Wealthsimple (Ashby)", "canada", "ashby", ["wealthsimple"]),
+    ("1Password", "canada", "lever", ["1password"]),
+    ("1Password (Ashby)", "canada", "ashby", ["1password"]),
     ("Hootsuite", "canada", "greenhouse", ["hootsuite"]),
+    ("Shopify", "canada", "greenhouse", ["shopify"]),
 
     # --- UAE ---
     ("Careem", "united-arab-emirates", "greenhouse", ["careem"]),
     ("Kitopi", "united-arab-emirates", "greenhouse", ["kitopi"]),
+    ("Tabby", "united-arab-emirates", "greenhouse", ["tabby", "tabby-ae"]),
 
     # --- Australia ---
-    ("Canva", "australia", "lever", ["canva"]),
-    ("Airwallex", "australia", "greenhouse", ["airwallex"]),
-    ("SafetyCulture", "australia", "greenhouse", ["safetyculture"]),
+    ("Canva", "australia", "smartrecruiters", ["Canva", "canva"]),
+    ("Airwallex", "australia", "lever", ["airwallex"]),
+    ("Airwallex (Ashby)", "australia", "ashby", ["airwallex"]),
+    ("SafetyCulture", "australia", "greenhouse", ["safetyculture", "safety-culture"]),
+    ("Atlassian", "australia", "greenhouse", ["atlassian"]),
 ]
 
 

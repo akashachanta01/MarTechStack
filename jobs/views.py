@@ -1092,6 +1092,14 @@ def tool_interview(request, tool_slug):
     recent_jobs = live_jobs.order_by('-is_pinned', '-created_at')[:6]
     has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
 
+    # Flatten all Q/A across sections for the FAQPage JSON-LD, so the template
+    # can emit a clean comma-separated list with no trailing/leading comma bugs
+    # even when some sections have no items.
+    faq_items = [
+        it for sec in (guide.questions or []) for it in sec.get('items', [])
+        if it.get('q') and it.get('a')
+    ]
+
     return render(request, 'jobs/interview_guide.html', {
         'guide': guide,
         'tool': tool,
@@ -1100,6 +1108,7 @@ def tool_interview(request, tool_slug):
         'hiring_companies': hiring_companies,
         'recent_jobs': recent_jobs,
         'has_cert_guide': has_cert_guide,
+        'faq_items': faq_items,
         # Index only once it has real content; thin guides stay out of the index.
         'page_noindex': guide.question_count() < 5,
     })
@@ -1294,11 +1303,18 @@ def subscribe(request):
                 if sarr == 'remote': parts.append('Remote')
                 if sloc: parts.append(sloc)
                 label = " · ".join(parts) or "MarTech jobs"
+                # Is this the first time we've ever seen this email? If they
+                # already have a saved search or are a confirmed subscriber,
+                # they've had a welcome — don't send a second one.
+                already_known = (
+                    SavedSearch.objects.filter(email=email).exists()
+                    or Subscriber.objects.filter(email=email).exists()
+                )
                 _, newly = SavedSearch.objects.get_or_create(
                     email=email, query=sq, tool=stool, location=sloc,
                     function=sfunc, arrangement=sarr, defaults={'label': label},
                 )
-                if newly:
+                if newly and not already_known:
                     send_welcome_email(email)
                 return JsonResponse({"success": True})
 
