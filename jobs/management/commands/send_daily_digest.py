@@ -46,7 +46,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("No new live jobs in the window — skipping digest."))
             return
 
-        subscribers = list(Subscriber.objects.values_list("email", flat=True))
+        subscribers = list(Subscriber.objects.filter(is_active=True).values_list("email", flat=True))
         if not subscribers:
             self.stdout.write(self.style.WARNING("No subscribers — skipping digest."))
             return

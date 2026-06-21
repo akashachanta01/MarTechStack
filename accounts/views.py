@@ -150,9 +150,17 @@ def _sync_newsletter_subscription(user, subscribed):
     if not email:
         return
     if subscribed:
-        Subscriber.objects.get_or_create(email=email)
+        # Verified account toggling on = explicit re-consent; (re)activate the row.
+        sub, created = Subscriber.objects.get_or_create(email=email)
+        if not created and not sub.is_active:
+            sub.is_active = True
+            sub.unsubscribed_at = None
+            sub.save(update_fields=["is_active", "unsubscribed_at"])
     else:
-        Subscriber.objects.filter(email=email).delete()
+        # Soft-delete (suppression record), not a row delete.
+        from django.utils import timezone
+        Subscriber.objects.filter(email=email, is_active=True).update(
+            is_active=False, unsubscribed_at=timezone.now())
 
 
 @login_required
@@ -162,7 +170,7 @@ def settings_view(request):
     # Reconcile the toggle with the real list (source of truth).
     from jobs.models import Subscriber
     on_list = Subscriber.objects.filter(
-        email=(request.user.email or '').lower()).exists()
+        email=(request.user.email or '').lower(), is_active=True).exists()
     if profile.email_newsletter != on_list:
         profile.email_newsletter = on_list
         profile.save(update_fields=['email_newsletter', 'updated_at'])

@@ -953,9 +953,12 @@ def unsubscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email:
-            deleted_count, _ = Subscriber.objects.filter(email=email).delete()
-            if deleted_count > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
-            else: messages.warning(request, "⚠️ That email was not found in our list.")
+            # Soft-delete: keep the row as a suppression record so the address
+            # can't be silently re-added, and stop all digests via is_active.
+            updated = Subscriber.objects.filter(email=email, is_active=True).update(
+                is_active=False, unsubscribed_at=timezone.now())
+            if updated > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
+            else: messages.warning(request, "⚠️ That email was not found on our active list.")
     return render(request, "jobs/unsubscribe.html")
 
 @csrf_exempt
@@ -972,7 +975,9 @@ def unsubscribe_oneclick(request, token):
     except signing.BadSignature:
         return render(request, "jobs/unsubscribe.html", {"oneclick_error": True})
 
-    Subscriber.objects.filter(email=email).delete()
+    # Soft-delete (suppression record), not a row delete — see Subscriber model.
+    Subscriber.objects.filter(email=email, is_active=True).update(
+        is_active=False, unsubscribed_at=timezone.now())
     # POST (mail-client one-click) just needs a 200; GET shows confirmation.
     if request.method == "POST":
         return HttpResponse("Unsubscribed", status=200)
@@ -1321,7 +1326,10 @@ def subscribe(request):
             # General newsletter signup -> double opt-in. Hold the email in
             # PendingSubscriber until they click the confirmation link; only
             # then do they become a real (sending-list) Subscriber.
-            if Subscriber.objects.filter(email=email).exists():
+            # Only an ACTIVE subscriber is "already subscribed". A previously
+            # unsubscribed (soft-deleted) row must be allowed back through the
+            # double opt-in flow, which reactivates it on confirmation.
+            if Subscriber.objects.filter(email=email, is_active=True).exists():
                 return JsonResponse({"success": True, "message": "You're already subscribed!"})
             pending, _ = PendingSubscriber.objects.update_or_create(
                 email=email, defaults={'token': secrets.token_urlsafe(32)})
@@ -1336,9 +1344,17 @@ def confirm_subscription(request, token):
     if not pending:
         return render(request, 'jobs/subscription_confirmed.html', {'invalid': True})
     email = pending.email
-    _, created = Subscriber.objects.get_or_create(email=email)
+    sub, created = Subscriber.objects.get_or_create(email=email)
+    # Re-subscribe after a prior unsubscribe: the user just completed double
+    # opt-in again, so it's an explicit re-consent — reactivate the row.
+    reactivated = False
+    if not created and not sub.is_active:
+        sub.is_active = True
+        sub.unsubscribed_at = None
+        sub.save(update_fields=["is_active", "unsubscribed_at"])
+        reactivated = True
     pending.delete()
-    if created:
+    if created or reactivated:
         send_welcome_email(email)
         ua = request.META.get('HTTP_USER_AGENT', 'Unknown')
         xff = request.META.get('HTTP_X_FORWARDED_FOR')

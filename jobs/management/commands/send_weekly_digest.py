@@ -27,8 +27,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("⚠️ No new jobs this week. Skipping email blast."))
             return
 
-        # 2. Get all subscribers
-        subscribers = Subscriber.objects.all()
+        # 2. Get all active subscribers (skip soft-deleted / unsubscribed rows)
+        subscribers = Subscriber.objects.filter(is_active=True)
         total_subs = subscribers.count()
         self.stdout.write(f"📫 Found {total_subs} active subscribers. Preparing to send...")
 
