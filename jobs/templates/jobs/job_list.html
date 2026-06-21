@@ -13,7 +13,7 @@
   "name": "MarTech Job Listings",
   "description": "Hand-curated marketing technology jobs refreshed daily",
   "url": "https://martechjobs.io/",
-  "numberOfItems": {{ jobs.paginator.count }},
+  "numberOfItems": {{ jobs|slice:":10"|length }},
   "itemListElement": [
     {% for job in jobs|slice:":10" %}
     {

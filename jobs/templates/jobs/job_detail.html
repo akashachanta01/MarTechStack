@@ -15,7 +15,7 @@
   "@context": "https://schema.org/",
   "@type": "JobPosting",
   "title": "{{ job.title|escapejs }}",
-  "description": "{{ job.description|striptags|escapejs|truncatechars:5000 }}",
+  "description": "{% if job.description %}{{ job.description|striptags|escapejs|truncatechars:5000 }}{% else %}{{ job.title|escapejs }} at {{ job.company|escapejs }} in {{ job.location|escapejs }}. Apply on MarTechJobs.{% endif %}",
   "identifier": {"@type":"PropertyValue","name":"{{ job.company|escapejs }}","value":"{{ job.id }}"},
   "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
   "validThrough": "{{ job.get_schema_valid_through }}",

@@ -68,9 +68,9 @@ def global_seo_data(request):
         cache.set('popular_tech_stacks_v4', popular_tech_stacks, 3600)
 
     # 2. POPULAR LOCATIONS
-    available_countries = cache.get('available_countries_v2')
+    available_countries = cache.get('available_countries_v3')
     if available_countries is None:
-        raw_locs = Job.objects.filter(is_active=True).values_list('location', flat=True).distinct()
+        raw_locs = Job.objects.filter(is_active=True, screening_status='approved').values_list('location', flat=True).distinct()
         country_set = set()
         blocklist = ["not specified", "on-site", "latin america", "va de los poblados"]
         
@@ -88,7 +88,7 @@ def global_seo_data(request):
                     country_set.add(country)
                     
         available_countries = sorted(list(country_set))
-        cache.set('available_countries_v2', available_countries, 3600)
+        cache.set('available_countries_v3', available_countries, 3600)
 
     return {
         'popular_tech_stacks': popular_tech_stacks,

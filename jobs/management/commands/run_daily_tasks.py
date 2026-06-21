@@ -29,6 +29,17 @@ class Command(BaseCommand):
     }
     DEFAULT_TIMEOUT = 10 * 60
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--weekly', action='store_true',
+            help=(
+                'Run the heavier WEEKLY pass: full paid SERP discovery (finds NEW '
+                'ATS boards) instead of the cheap daily registry poll. Schedule '
+                'this once a week in Render; the default (no flag) is the cheap '
+                'daily run.'
+            ),
+        )
+
     def _run(self, label, command_name, *args):
         # Isolate each step: a crash OR a hang (via SIGALRM) is caught here so
         # the remaining steps still run.
@@ -51,27 +62,37 @@ class Command(BaseCommand):
             signal.signal(signal.SIGALRM, old_handler)
 
     def handle(self, *args, **options):
-        self.stdout.write("🚀 STARTING DAILY AUTOPILOT SEQUENCE...")
+        weekly = options.get('weekly')
+        mode = "WEEKLY (full SERP discovery)" if weekly else "DAILY (cheap registry poll)"
+        self.stdout.write(f"🚀 STARTING AUTOPILOT SEQUENCE — mode: {mode}...")
 
         # 1. CLEANUP (Clear the deck)
-        self._run("\n[1/6] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
+        self._run("\n[1/7] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
         self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
         self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
 
         # 2. INGESTION (Get new jobs)
-        self._run("\n[2/6] 🏹 Hunting via API (Deep Search)...", 'fetch_jobs')
+        # Daily = --sources-only: polls the saved CompanySource registry (incl. all
+        # seeded international boards) for FREE, so every country stays fresh with
+        # no SERP spend. Weekly = full discovery to find NEW boards (paid SERP).
+        if weekly:
+            self._run("\n[2/7] 🏹 Hunting via API (FULL discovery — paid)...", 'fetch_jobs', '--countries', 'all')
+        else:
+            self._run("\n[2/7] 🏹 Polling known boards (cheap, all countries)...", 'fetch_jobs', '--sources-only')
 
         # 3. POLISH (Images)
-        self._run("\n[3/6] 🎨 Backfilling Logos...", 'update_logos')
+        self._run("\n[3/7] 🎨 Backfilling Logos...", 'update_logos')
 
         # 4. ALERTS (Email subscribers today's new roles — skips if none)
-        self._run("\n[4/6] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
+        self._run("\n[4/7] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
         self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
 
         # 5. CONTENT ENGINE (Automated Blog)
-        self._run("\n[5/6] ✍️ Running AI Blog Engine...", 'generate_blog')
+        self._run("\n[5/7] ✍️ Running AI Blog Engine...", 'generate_blog')
+        # Normalize the freshly-generated post (author/category/read_time/meta).
+        self._run("      🧽 Normalizing blog posts...", 'normalize_blog_posts')
 
         # 6. INDEXING (Ping Google)
-        self._run("\n[6/6] 📡 Pinging Google Indexing API...", 'index_jobs')
+        self._run("\n[6/7] 📡 Pinging Google Indexing API...", 'index_jobs')
 
-        self.stdout.write(self.style.SUCCESS("\n✨ AUTOPILOT COMPLETE. System is fresh."))
+        self.stdout.write(self.style.SUCCESS("\n[7/7] ✨ AUTOPILOT COMPLETE. System is fresh."))

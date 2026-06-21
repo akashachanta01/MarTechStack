@@ -516,7 +516,17 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 self.record_source("lever", token, token.capitalize())
                 for item in resp.json():
-                    if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=dt_timezone.utc) >= self.cutoff_date:
+                    # Fail OPEN on a missing/unparseable createdAt (consistent with
+                    # is_fresh() elsewhere) — a Lever posting without a timestamp
+                    # was silently dropped before, losing real jobs.
+                    ts = item.get('createdAt')
+                    fresh = True
+                    if ts:
+                        try:
+                            fresh = datetime.fromtimestamp(ts / 1000.0, tz=dt_timezone.utc) >= self.cutoff_date
+                        except (ValueError, OSError, TypeError):
+                            fresh = True
+                    if fresh:
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         sr = item.get('salaryRange') or {}
@@ -598,11 +608,18 @@ class Command(BaseCommand):
                 self.record_source("smartrecruiters", company, company.capitalize())
                 for item in resp.json().get('content', []):
                     if self.is_fresh(item.get('releasedDate')):
+                        desc = ""
                         try:
-                            d = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", timeout=5).json()
-                            desc = (d.get('jobAd') or {}).get('sections', {}).get('jobDescription', {}).get('text', '')
+                            dr = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", headers=self.get_headers(), timeout=5)
+                            if dr.status_code == 200:
+                                d = dr.json()
+                                desc = (d.get('jobAd') or {}).get('sections', {}).get('jobDescription', {}).get('text', '')
                         except Exception:
-                            desc = "See Job Post"
+                            desc = ""
+                        # Skip postings with no fetchable body — a placeholder
+                        # description produces a thin/invalid JobPosting schema.
+                        if not desc:
+                            continue
                         loc = item.get('location', {})
                         parts = [loc.get('city'), loc.get('region'), loc.get('country')]
                         raw_loc = ", ".join([p for p in parts if p])
