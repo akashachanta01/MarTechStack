@@ -1,6 +1,7 @@
 import os
 import json
 import random
+from typing import Optional
 from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -185,7 +186,7 @@ def _topic_slug(entry: dict) -> str:
     return slugify(entry["keyword"])
 
 
-def _pick_next_topic() -> dict | None:
+def _pick_next_topic() -> Optional[dict]:
     """Return the first TOPIC_QUEUE entry whose keyword-slug doesn't already
     exist as a BlogPost. Exact-slug match avoids false positives from unrelated
     posts that merely mention a company/keyword (e.g. a 'HubSpot vs Marketo'
