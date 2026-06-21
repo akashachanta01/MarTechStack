@@ -7,6 +7,7 @@ import os
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from urllib.parse import urlparse, urlunparse
 from typing import Any, Dict
 from bs4 import BeautifulSoup
@@ -19,7 +20,7 @@ from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Q
 
-from jobs.models import Job, Tool, Category, CompanySource, clean_html_description
+from jobs.models import Job, Tool, Category, CompanySource, clean_html_description, normalize_location
 from jobs.screener import MarTechScreener
 from jobs.tool_catalog import resolve_tool_name
 
@@ -328,18 +329,26 @@ class Command(BaseCommand):
         parsed = urlparse(url)
         return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
 
-    def _is_duplicate(self, title, company, clean_url, external_id=""):
+    def _is_duplicate(self, title, company, clean_url, external_id="", location=""):
         # Check in-memory caches first (no DB queries for the common case).
         if external_id and external_id in self._known_ids:
             return True
         if clean_url and clean_url in self._known_urls:
             return True
-        # Fall back to DB only for title/company fuzzy match (can't cache this).
-        if title and company and Job.objects.filter(
-            title__iexact=title, company__iexact=company,
-            created_at__gte=timezone.now() - timedelta(days=30)
-        ).exists():
-            return True
+        # Fall back to DB only for title/company/location fuzzy match (can't
+        # cache this). Including location matches the dedup key the project
+        # mandates (company + title + location) — without it, the same title at
+        # the same company in two different cities was wrongly merged.
+        if title and company:
+            # Normalize the incoming location the same way Job.save() does so the
+            # comparison matches what's stored.
+            norm_loc = normalize_location(location) if location else ""
+            if Job.objects.filter(
+                title__iexact=title, company__iexact=company,
+                location__iexact=norm_loc,
+                created_at__gte=timezone.now() - timedelta(days=30),
+            ).exists():
+                return True
         return False
 
     def analyze_and_fetch(self, url):
@@ -394,7 +403,14 @@ class Command(BaseCommand):
         if not country and re.search(r',\s*[a-z]{2}$', low):
             country = "US"
         parts = [p.strip() for p in (clean_loc or "").split(",") if p.strip()]
-        region = parts[1] if len(parts) >= 2 and parts[1].lower() not in _COUNTRY_CODES else ""
+        # Drop a trailing country token (full name OR 2-letter ISO code like "GB")
+        # so it's never mistaken for a region. The old check compared against
+        # _COUNTRY_CODES keys (which are country *names*), so an ISO suffix such
+        # as ", GB" slipped through and got stored as the region.
+        _iso_codes = {c.lower() for c in _COUNTRY_CODES.values()}
+        while parts and (parts[-1].lower() in _COUNTRY_CODES or parts[-1].lower() in _iso_codes):
+            parts = parts[:-1]
+        region = parts[1] if len(parts) >= 2 else ""
         remote_scope = ""
         if arrangement == "remote":
             remote_scope = country or "anywhere"
@@ -500,7 +516,7 @@ class Command(BaseCommand):
             if resp.status_code == 200:
                 self.record_source("lever", token, token.capitalize())
                 for item in resp.json():
-                    if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=timezone.utc) >= self.cutoff_date:
+                    if item.get('createdAt') and datetime.fromtimestamp(item['createdAt']/1000.0, tz=dt_timezone.utc) >= self.cutoff_date:
                         raw_loc = item.get('categories', {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         sr = item.get('salaryRange') or {}
@@ -743,7 +759,7 @@ class Command(BaseCommand):
             self._poll_seen += 1
         clean_url = self._clean_url(job_data.get("apply_url"))
         external_id = (job_data.get("external_id") or "").strip()
-        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url, external_id):
+        if self._is_duplicate(job_data.get("title"), job_data.get("company"), clean_url, external_id, job_data.get("location")):
             self.stats[f"{source}:dupe"] += 1
             return
         analysis = self.screener.screen(job_data.get("title",""), job_data.get("company"), job_data.get("location"), job_data.get("description"), clean_url)

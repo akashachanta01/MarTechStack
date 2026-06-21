@@ -75,11 +75,23 @@
             document.getElementById('feedbackDisplay').innerText = data.feedback;
             
             const list = document.getElementById('suggestionsList');
-            list.innerHTML = data.better_versions.map(s => 
-                `<li class="bg-white p-3 rounded border border-indigo-100 text-indigo-800 font-medium shadow-sm flex justify-between items-center group cursor-pointer hover:border-indigo-300" onclick="navigator.clipboard.writeText('${s}'); alert('Copied!')">
-                    ${s} <span class="material-symbols-outlined text-slate-300 group-hover:text-indigo-500 text-sm">content_copy</span>
-                </li>`
-            ).join('');
+            list.innerHTML = '';
+            (data.better_versions || []).forEach(s => {
+                const li = document.createElement('li');
+                li.className = "bg-white p-3 rounded border border-indigo-100 text-indigo-800 font-medium shadow-sm flex justify-between items-center group cursor-pointer hover:border-indigo-300";
+                const text = document.createElement('span');
+                text.textContent = s;
+                const icon = document.createElement('span');
+                icon.className = "material-symbols-outlined text-slate-300 group-hover:text-indigo-500 text-sm";
+                icon.textContent = "content_copy";
+                li.appendChild(text);
+                li.appendChild(icon);
+                li.addEventListener('click', () => {
+                    navigator.clipboard.writeText(s);
+                    alert('Copied!');
+                });
+                list.appendChild(li);
+            });
 
             results.classList.remove('hidden');
 

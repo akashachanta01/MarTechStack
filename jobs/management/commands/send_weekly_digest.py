@@ -7,6 +7,7 @@ from datetime import timedelta
 import time
 
 from jobs.models import Job, Subscriber
+from jobs.emails import _unsubscribe_url
 
 class Command(BaseCommand):
     help = 'Sends the weekly curated job digest to all active subscribers.'
@@ -31,26 +32,36 @@ class Command(BaseCommand):
         total_subs = subscribers.count()
         self.stdout.write(f"📫 Found {total_subs} active subscribers. Preparing to send...")
 
-        # 3. Prepare the Email Template
-        context = {
+        # 3. Prepare the shared template context. The unsubscribe link must be
+        # per-recipient (a signed token), so it's added inside the send loop —
+        # not baked into a single shared render. Without it the digest had no
+        # working unsubscribe and would fail Gmail/Yahoo bulk-sender rules.
+        domain = getattr(settings, 'DOMAIN_URL', 'https://martechjobs.io')
+        base_context = {
             'jobs': top_jobs,
             'job_count': top_jobs.count(),
-            'domain': getattr(settings, 'DOMAIN_URL', 'https://martechjobs.io')
+            'domain': domain,
         }
-        
-        # Note: Relies on your existing digest.html template
-        html_content = render_to_string('emails/digest.html', context)
         text_content = f"Here are your top {top_jobs.count()} MarTech Jobs this week! Visit martechjobs.io to apply."
 
         # 4. Send Emails (with a slight delay to avoid spam filters/rate limits)
         success_count = 0
         for sub in subscribers:
             try:
+                unsub_url = _unsubscribe_url(sub.email)
+                html_content = render_to_string(
+                    'emails/digest.html',
+                    {**base_context, 'unsubscribe_url': unsub_url},
+                )
                 msg = EmailMultiAlternatives(
                     subject="🔥 Top MarTech Jobs of the Week",
                     body=text_content,
                     from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'hello@martechjobs.io'),
-                    to=[sub.email]
+                    to=[sub.email],
+                    headers={
+                        "List-Unsubscribe": f"<{unsub_url}>",
+                        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                    },
                 )
                 msg.attach_alternative(html_content, "text/html")
                 msg.send(fail_silently=False)

@@ -8,6 +8,8 @@ noise they carry) should not be on the board.
   python manage.py purge_aggregator_jobs             # delete them
 """
 
+from urllib.parse import urlparse
+
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
@@ -27,11 +29,32 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--dry-run", action="store_true", help="Report without deleting")
 
+    def _host_is_aggregator(self, url):
+        """True only when the URL's HOST is an aggregator — not when the token
+        merely appears somewhere in the path/query. Prevents nuking a legit
+        company ATS link that happens to contain "indeed.com" as a tracking
+        param or referrer string."""
+        try:
+            host = (urlparse(url).hostname or "").lower()
+        except Exception:
+            return False
+        if not host:
+            return False
+        for token in AGGREGATOR_HOSTS:
+            t = token.rstrip(".").lower()
+            if host == t or host.endswith("." + t):
+                return True
+        return False
+
     def handle(self, *args, **options):
+        # Cheap DB pre-filter (icontains) to avoid scanning every job, then a
+        # strict host check in Python so we only delete true host matches.
         q = Q()
         for host in AGGREGATOR_HOSTS:
-            q |= Q(apply_url__icontains=host)
-        matches = Job.objects.filter(q)
+            q |= Q(apply_url__icontains=host.rstrip("."))
+        candidates = Job.objects.filter(q)
+        match_ids = [j.id for j in candidates if self._host_is_aggregator(j.apply_url)]
+        matches = Job.objects.filter(id__in=match_ids)
         total = matches.count()
 
         if total == 0:

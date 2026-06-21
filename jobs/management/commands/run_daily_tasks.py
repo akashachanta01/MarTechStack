@@ -1,3 +1,5 @@
+# NOTE: per-step timeouts use signal.SIGALRM, which is Unix-only. This is fine
+# on Render/Linux (where the cron runs) but won't work on Windows.
 import signal
 
 from django.core.management.base import BaseCommand
@@ -52,7 +54,7 @@ class Command(BaseCommand):
         self.stdout.write("🚀 STARTING DAILY AUTOPILOT SEQUENCE...")
 
         # 1. CLEANUP (Clear the deck)
-        self._run("\n[1/5] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
+        self._run("\n[1/6] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
         self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
         self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
 

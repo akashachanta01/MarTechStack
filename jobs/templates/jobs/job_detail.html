@@ -22,8 +22,7 @@
   "employmentType": "{% if job.role_type == 'contract' %}CONTRACTOR{% elif job.role_type == 'part_time' %}PART_TIME{% else %}FULL_TIME{% endif %}",
   "hiringOrganization": {
     "@type": "Organization",
-    "name": "{{ job.company|escapejs }}",
-    "sameAs": "https://martechjobs.io"{% if job.company_logo %},"logo": "{{ job.company_logo }}"{% endif %}
+    "name": "{{ job.company|escapejs }}"{% if job.company_logo %},"logo": "{{ job.company_logo }}"{% endif %}
   },
   {% if job.work_arrangement == 'remote' %}"jobLocationType": "TELECOMMUTE",
   "applicantLocationRequirements": {"@type":"Country","name":"{{ job.get_schema_country }}"},
