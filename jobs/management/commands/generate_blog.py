@@ -219,7 +219,7 @@ class Command(BaseCommand):
                 author__in=["MarTechJobs AI", "MarTechJobs Team"]
             ).order_by('-published_at').first()
 
-            if latest_post and latest_post.published_at >= (timezone.now() - timedelta(days=6)).date():
+            if latest_post and latest_post.published_at > (timezone.now() - timedelta(days=7)).date():
                 self.stdout.write(self.style.SUCCESS("   A recent AI blog post already exists (less than 7 days old). Skipping generation."))
                 return
 

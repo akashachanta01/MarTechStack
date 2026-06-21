@@ -266,7 +266,9 @@ class Job(models.Model):
     def get_schema_valid_through(self):
         # Match the real cull window (clean_stale_jobs demotes at 60 days) so
         # Google for Jobs doesn't keep showing "open" roles that then 404.
-        return (self.created_at + timedelta(days=60)).strftime('%Y-%m-%d')
+        # ISO 8601 *datetime* (not date-only): Google for Jobs requires the full
+        # timestamp on validThrough or it can reject the rich result.
+        return (self.created_at + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S')
 
     def save(self, *args, **kwargs):
         if self.location: self.location = normalize_location(self.location)

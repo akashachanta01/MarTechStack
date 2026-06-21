@@ -39,6 +39,9 @@ class Command(BaseCommand):
         domain = getattr(settings, 'DOMAIN_URL', 'https://martechjobs.io')
         base_context = {
             'jobs': top_jobs,
+            # Template (emails/digest.html) reads `count` in the H1/preheader —
+            # passing only `job_count` left a blank number in the subject line.
+            'count': top_jobs.count(),
             'job_count': top_jobs.count(),
             'domain': domain,
         }

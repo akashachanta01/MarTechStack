@@ -3,7 +3,7 @@
 {% load humanize %}
 
 {% block title %}{% if post.meta_title %}{{ post.meta_title }}{% else %}{{ post.title }} — MarTechJobs Blog{% endif %}{% endblock %}
-{% block meta_description %}{{ post.meta_description }}{% endblock %}
+{% block meta_description %}{% if post.meta_description %}{{ post.meta_description }}{% else %}{{ post.excerpt }}{% endif %}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ post.title }}{% endblock %}
 {% block og_desc %}{{ post.excerpt }}{% endblock %}
@@ -18,7 +18,7 @@
   "author": {"@type":"Person","name":"{{ post.author|escapejs }}"},
   "publisher": {"@type":"Organization","name":"MarTechJobs","url":"https://martechjobs.io","logo":{"@type":"ImageObject","url":"https://martechjobs.io{% static 'logo-512.png' %}"}},
   "datePublished": "{{ post.published_at|date:'Y-m-d' }}",
-  "dateModified": "{{ post.published_at|date:'Y-m-d' }}",
+  "dateModified": "{{ post.updated_at|default:post.published_at|date:'Y-m-d' }}",
   "url": "https://martechjobs.io{% url 'post_detail' post.slug %}",
   "mainEntityOfPage": {"@type":"WebPage","@id":"https://martechjobs.io{% url 'post_detail' post.slug %}"}
 }
