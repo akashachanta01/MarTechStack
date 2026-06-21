@@ -1,8 +1,11 @@
+import re
+
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count, Q
 from django.contrib import messages
+from django.utils.timezone import now
 
 # Import all models
 from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide, CertificationGuide
@@ -13,13 +16,21 @@ from .emails import send_job_alert, send_digest_alert
 @admin.action(description="🤖 Auto-Tag Tech Stack")
 def auto_tag_tools(modeladmin, request, queryset):
     all_tools = list(Tool.objects.all())
+    # Precompile a word-boundary matcher per tool so "CRM" doesn't match
+    # "scrum" and "Marketo" doesn't match inside a longer token.
+    tool_patterns = [(t, re.compile(r'\b' + re.escape(t.name.lower()) + r'\b')) for t in all_tools]
     affected_jobs = 0
+    # prefetch_related avoids a per-job-per-tool membership query (the old
+    # `tool in job.tools.all()` re-hit the DB inside the inner loop).
+    queryset = queryset.prefetch_related('tools')
     for job in queryset:
         text = (job.description + " " + job.title).lower()
+        existing = set(job.tools.values_list('id', flat=True))
         added_count = 0
-        for tool in all_tools:
-            if tool in job.tools.all(): continue
-            if tool.name.lower() in text:
+        for tool, pattern in tool_patterns:
+            if tool.id in existing:
+                continue
+            if pattern.search(text):
                 job.tools.add(tool)
                 added_count += 1
         if added_count > 0: affected_jobs += 1
@@ -126,6 +137,9 @@ class BaseJobAdmin(admin.ModelAdmin):
         jobs = list(qs.order_by('-created_at'))
         if not jobs: return
         qs.update(screening_status="approved", is_active=True)
+        # .update() bypasses Job.save(), so stamp went_live_at explicitly or
+        # these jobs never qualify for the daily digest window.
+        qs.filter(went_live_at__isnull=True).update(went_live_at=now())
         send_digest_alert(jobs)
         self.message_user(request, f"✅ Sent DIGEST with {len(jobs)} jobs.", messages.SUCCESS)
 
@@ -142,7 +156,11 @@ class BaseJobAdmin(admin.ModelAdmin):
     @admin.action(description="⏳ Pending")
     def mark_pending(self, request, qs): qs.update(screening_status="pending", is_active=False)
     @admin.action(description="👁️ Visible")
-    def activate_jobs(self, request, qs): qs.update(is_active=True)
+    def activate_jobs(self, request, qs):
+        qs.update(is_active=True)
+        # Stamp went_live_at for jobs going live for the first time (the bulk
+        # .update bypasses Job.save), so they can enter the digest window.
+        qs.filter(went_live_at__isnull=True).update(went_live_at=now())
     @admin.action(description="🚫 Hidden")
     def deactivate_jobs(self, request, qs): qs.update(is_active=False)
 

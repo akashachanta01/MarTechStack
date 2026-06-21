@@ -13,11 +13,11 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-  {% for section in guide.questions %}{% for item in section.items %}{
+  {% for item in faq_items %}{% if not forloop.first %},{% endif %}{
     "@type": "Question",
     "name": "{{ item.q|escapejs }}",
     "acceptedAnswer": {"@type": "Answer", "text": "{{ item.a|striptags|escapejs }}"}
-  }{% if not forloop.last %},{% endif %}{% endfor %}{% if not forloop.last %},{% endif %}{% endfor %}
+  }{% endfor %}
   ]
 }
 </script>

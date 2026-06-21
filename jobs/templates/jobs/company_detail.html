@@ -13,7 +13,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
-    {"@type":"ListItem","position":2,"name":"Companies","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Companies","item":"https://martechjobs.io{% url 'company_list' %}"},
     {"@type":"ListItem","position":3,"name":"{{ company_name }} Careers","item":"https://martechjobs.io{{ request.path }}"}
   ]
 }
@@ -51,7 +51,7 @@
     {% empty %}
       <div style="text-align:center;padding:60px 20px;color:var(--ink3);">
         <p style="font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No active roles right now</p>
-        <p style="font-size:14px;">Check back soon or <a href="/" style="color:var(--amber);font-weight:600;">browse all jobs</a>.</p>
+        <p style="font-size:14px;">Check back soon or <a href="{% url 'all_jobs' %}" style="color:var(--amber);font-weight:600;">browse all jobs</a>.</p>
       </div>
     {% endfor %}
   </div>

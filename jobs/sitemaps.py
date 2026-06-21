@@ -220,25 +220,6 @@ class TitleJobsSitemap(Sitemap):
         return f'/{slug}-jobs/'
 
 
-class InterviewGuideSitemap(Sitemap):
-    changefreq = "weekly"
-    priority = 0.8
-    protocol = 'https'
-
-    def items(self):
-        from .models import InterviewGuide
-        # Only emit guides that are actually indexable (>= 5 questions), matching
-        # the noindex gate in tool_interview — no point sitemapping noindex pages.
-        guides = InterviewGuide.objects.filter(is_published=True).select_related('tool').order_by('slug')
-        return [g for g in guides if g.question_count() >= 5]
-
-    def lastmod(self, obj):
-        return obj.updated_at
-
-    def location(self, obj):
-        return reverse('tool_interview', args=[obj.tool.slug])
-
-
 class CategorySitemap(Sitemap):
     """The three top-level category hubs (/category/<slug>/). They're linked in
     the nav and footer but were missing from the sitemap, so Google had no

@@ -112,7 +112,9 @@ def profile_edit(request):
         request.user.last_name = request.POST.get('last_name', '').strip()[:150]
         request.user.save()
 
-        profile.bio = request.POST.get('bio', '').strip()[:1000]
+        # Cap at 500 to match Profile.bio's max_length (the model and view were
+        # out of sync, letting a 1000-char bio exceed the declared field limit).
+        profile.bio = request.POST.get('bio', '').strip()[:500]
         profile.preferred_location = request.POST.get('preferred_location', '').strip()[:100]
         # Social links
         profile.linkedin_url = _clean_url(request.POST.get('linkedin_url'))
