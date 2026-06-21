@@ -201,6 +201,12 @@ def _pick_next_topic() -> Optional[dict]:
 class Command(BaseCommand):
     help = 'Generates an SEO-optimized blog post using AI. Runs maximum once per week.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force', action='store_true',
+            help='Skip the 7-day throttle and generate a post immediately.',
+        )
+
     def handle(self, *args, **options):
         self.stdout.write("Booting up AI Content Engine...")
 
@@ -208,13 +214,14 @@ class Command(BaseCommand):
         # normalize_blog_posts rewrites the author to "MarTechJobs Team", so the
         # throttle must match both spellings or it would never see prior AI posts
         # and would generate one every run.
-        latest_post = BlogPost.objects.filter(
-            author__in=["MarTechJobs AI", "MarTechJobs Team"]
-        ).order_by('-published_at').first()
+        if not options.get('force'):
+            latest_post = BlogPost.objects.filter(
+                author__in=["MarTechJobs AI", "MarTechJobs Team"]
+            ).order_by('-published_at').first()
 
-        if latest_post and latest_post.published_at >= (timezone.now() - timedelta(days=6)).date():
-            self.stdout.write(self.style.SUCCESS("   A recent AI blog post already exists (less than 7 days old). Skipping generation."))
-            return
+            if latest_post and latest_post.published_at >= (timezone.now() - timedelta(days=6)).date():
+                self.stdout.write(self.style.SUCCESS("   A recent AI blog post already exists (less than 7 days old). Skipping generation."))
+                return
 
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
