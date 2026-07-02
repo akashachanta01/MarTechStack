@@ -6,8 +6,8 @@ from django.conf import settings
 from datetime import timedelta
 import time
 
-from jobs.models import Job, Subscriber
-from jobs.emails import _unsubscribe_url
+from jobs.models import Job
+from jobs.emails import _unsubscribe_url, get_digest_recipients
 
 class Command(BaseCommand):
     help = 'Sends the weekly curated job digest to all active subscribers.'
@@ -27,9 +27,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("⚠️ No new jobs this week. Skipping email blast."))
             return
 
-        # 2. Get all active subscribers (skip soft-deleted / unsubscribed rows)
-        subscribers = Subscriber.objects.filter(is_active=True)
-        total_subs = subscribers.count()
+        # 2. Recipients = active subscribers + opted-in account holders,
+        # minus explicit unsubscribes (shared with the daily digest).
+        subscribers = get_digest_recipients()
+        total_subs = len(subscribers)
         self.stdout.write(f"📫 Found {total_subs} active subscribers. Preparing to send...")
 
         # 3. Prepare the shared template context. The unsubscribe link must be
@@ -49,9 +50,9 @@ class Command(BaseCommand):
 
         # 4. Send Emails (with a slight delay to avoid spam filters/rate limits)
         success_count = 0
-        for sub in subscribers:
+        for email in subscribers:
             try:
-                unsub_url = _unsubscribe_url(sub.email)
+                unsub_url = _unsubscribe_url(email)
                 html_content = render_to_string(
                     'emails/digest.html',
                     {**base_context, 'unsubscribe_url': unsub_url},
@@ -60,7 +61,7 @@ class Command(BaseCommand):
                     subject="🔥 Top MarTech Jobs of the Week",
                     body=text_content,
                     from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'hello@martechjobs.io'),
-                    to=[sub.email],
+                    to=[email],
                     headers={
                         "List-Unsubscribe": f"<{unsub_url}>",
                         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
@@ -69,10 +70,10 @@ class Command(BaseCommand):
                 msg.attach_alternative(html_content, "text/html")
                 msg.send(fail_silently=False)
                 success_count += 1
-                
+
                 # Sleep for 0.5 seconds between emails to respect SMTP limits
-                time.sleep(0.5) 
+                time.sleep(0.5)
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ Failed to send to {sub.email}: {e}"))
+                self.stdout.write(self.style.ERROR(f"❌ Failed to send to {email}: {e}"))
 
         self.stdout.write(self.style.SUCCESS(f"✨ Weekly Digest Complete! Sent to {success_count}/{total_subs} subscribers."))
