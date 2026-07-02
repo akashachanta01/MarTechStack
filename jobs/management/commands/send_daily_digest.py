@@ -18,8 +18,8 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from jobs.models import Job, Subscriber
-from jobs.emails import send_html_email
+from jobs.models import Job
+from jobs.emails import send_html_email, get_digest_recipients
 
 
 class Command(BaseCommand):
@@ -46,7 +46,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("No new live jobs in the window — skipping digest."))
             return
 
-        subscribers = list(Subscriber.objects.filter(is_active=True).values_list("email", flat=True))
+        # Recipients = active newsletter subscribers + opted-in account holders
+        # (accounts were silently excluded before), minus explicit unsubscribes.
+        subscribers = get_digest_recipients()
         if not subscribers:
             self.stdout.write(self.style.WARNING("No subscribers — skipping digest."))
             return

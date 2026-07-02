@@ -19,6 +19,46 @@ def _unsubscribe_url(email):
     return f"{DOMAIN}/u/{token}/"
 
 
+def get_digest_recipients():
+    """The full set of emails that should receive the job digest.
+
+    Union of two opt-in sources, minus anyone who explicitly unsubscribed:
+      1. Active newsletter Subscribers (double opt-in list).
+      2. Account holders whose UserProfile.email_newsletter is True
+         (defaults True on signup — accounts were silently excluded before).
+
+    Suppression: any email with a Subscriber row where is_active=False has
+    unsubscribed (one-click / settings toggle). Those are removed even if the
+    account's newsletter flag is still True, so an unsubscribe always wins.
+    """
+    from django.contrib.auth import get_user_model
+
+    suppressed = {
+        e.lower()
+        for e in Subscriber.objects.filter(is_active=False).values_list("email", flat=True)
+        if e
+    }
+
+    emails = set()
+    for e in Subscriber.objects.filter(is_active=True).values_list("email", flat=True):
+        if e and e.lower() not in suppressed:
+            emails.add(e.lower())
+
+    # Account holders opted into the newsletter (related lookup avoids importing
+    # UserProfile directly — no circular import with the accounts app).
+    User = get_user_model()
+    account_emails = (
+        User.objects.filter(userprofile__email_newsletter=True)
+        .exclude(email="")
+        .values_list("email", flat=True)
+    )
+    for e in account_emails:
+        if e and e.lower() not in suppressed:
+            emails.add(e.lower())
+
+    return sorted(emails)
+
+
 def send_html_email(subject, template_name, context, to_email=None, bcc_list=None,
                     unsubscribe_email=None):
     """
