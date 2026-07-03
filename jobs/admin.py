@@ -157,10 +157,16 @@ class BaseJobAdmin(admin.ModelAdmin):
     def mark_pending(self, request, qs): qs.update(screening_status="pending", is_active=False)
     @admin.action(description="👁️ Visible")
     def activate_jobs(self, request, qs):
-        qs.update(is_active=True)
+        # Only approved jobs may go visible — the bulk .update bypasses
+        # Job.save()'s safety rail, so enforce it here too.
+        approved = qs.filter(screening_status='approved')
+        approved.update(is_active=True)
         # Stamp went_live_at for jobs going live for the first time (the bulk
         # .update bypasses Job.save), so they can enter the digest window.
-        qs.filter(went_live_at__isnull=True).update(went_live_at=now())
+        approved.filter(went_live_at__isnull=True).update(went_live_at=now())
+        skipped = qs.count() - approved.count()
+        if skipped:
+            self.message_user(request, f"⚠️ Skipped {skipped} non-approved job(s) — approve them first.", messages.WARNING)
     @admin.action(description="🚫 Hidden")
     def deactivate_jobs(self, request, qs): qs.update(is_active=False)
 

@@ -17,11 +17,13 @@ class Command(BaseCommand):
 
         # 1. Get jobs from the last 7 days
         one_week_ago = timezone.now() - timedelta(days=7)
+        # Window on went_live_at (when the job became visible), matching the
+        # daily digest — created_at misses jobs approved after ingestion.
         top_jobs = Job.objects.filter(
-            is_active=True, 
+            is_active=True,
             screening_status='approved',
-            created_at__gte=one_week_ago
-        ).order_by('-is_featured', '-created_at')[:10] # Top 10 jobs
+            went_live_at__gte=one_week_ago
+        ).order_by('-is_featured', '-went_live_at')[:10] # Top 10 jobs
 
         if not top_jobs.exists():
             self.stdout.write(self.style.WARNING("⚠️ No new jobs this week. Skipping email blast."))

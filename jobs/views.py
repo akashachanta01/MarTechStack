@@ -30,24 +30,33 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def _client_ip(request):
-    # Render puts the real client IP first in X-Forwarded-For.
+    # Rightmost X-Forwarded-For hop = the value our trusted proxy (Render's
+    # load balancer) appended. The FIRST hop is client-supplied and spoofable —
+    # keying rate limits on it let attackers rotate fake IPs per request.
+    # (Same fix as tools/views.py.)
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
     if xff:
-        return xff.split(',')[0].strip()
+        return xff.split(',')[-1].strip()
     return request.META.get('REMOTE_ADDR', 'unknown')
 
 
 def _rate_limited(request, action, limit=5, window_seconds=3600):
-    """Returns True if this IP exceeded `limit` requests for `action` within the window."""
+    """Returns True if this IP exceeded `limit` requests for `action` within the window.
+
+    cache.add is atomic (returns False if the key already exists), so two
+    concurrent first requests can't both reset the counter the way the old
+    get_or_set + incr pattern could.
+    """
     key = f"ratelimit:{action}:{_client_ip(request)}"
-    count = cache.get_or_set(key, 0, timeout=window_seconds)
-    if count >= limit:
-        return True
+    if cache.add(key, 1, timeout=window_seconds):
+        return False  # first request in this window
     try:
-        cache.incr(key)
+        count = cache.incr(key)
     except ValueError:
-        cache.set(key, 1, timeout=window_seconds)
-    return False
+        # Key expired between add and incr — start a fresh window.
+        cache.add(key, 1, timeout=window_seconds)
+        return False
+    return count > limit
 
 TOOL_MAPPING = {
     'salesforce marketing cloud': 'Salesforce', 'sfmc': 'Salesforce', 'pardot': 'Salesforce',
@@ -949,14 +958,24 @@ def role_salary(request, role_slug):
     })
 
 
+def _unsubscribe_everywhere(email):
+    """Stop ALL recurring mail for an address: the newsletter digest
+    (Subscriber soft-delete/suppression) AND any saved-search alerts.
+    A one-click unsubscribe must silence every daily send or we violate
+    CAN-SPAM / Gmail bulk-sender rules — saved-search-only signups have no
+    Subscriber row, so touching only Subscriber left their alerts running.
+    Returns total rows deactivated."""
+    n = Subscriber.objects.filter(email=email, is_active=True).update(
+        is_active=False, unsubscribed_at=timezone.now())
+    n += SavedSearch.objects.filter(email=email, is_active=True).update(is_active=False)
+    return n
+
+
 def unsubscribe(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         if email:
-            # Soft-delete: keep the row as a suppression record so the address
-            # can't be silently re-added, and stop all digests via is_active.
-            updated = Subscriber.objects.filter(email=email, is_active=True).update(
-                is_active=False, unsubscribed_at=timezone.now())
+            updated = _unsubscribe_everywhere(email)
             if updated > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
             else: messages.warning(request, "⚠️ That email was not found on our active list.")
     return render(request, "jobs/unsubscribe.html")
@@ -975,9 +994,9 @@ def unsubscribe_oneclick(request, token):
     except signing.BadSignature:
         return render(request, "jobs/unsubscribe.html", {"oneclick_error": True})
 
-    # Soft-delete (suppression record), not a row delete — see Subscriber model.
-    Subscriber.objects.filter(email=email, is_active=True).update(
-        is_active=False, unsubscribed_at=timezone.now())
+    # Suppress the newsletter AND deactivate saved-search alerts — one click
+    # must stop every recurring send (see _unsubscribe_everywhere).
+    _unsubscribe_everywhere(email)
     # POST (mail-client one-click) just needs a 200; GET shows confirmation.
     if request.method == "POST":
         return HttpResponse("Unsubscribed", status=200)

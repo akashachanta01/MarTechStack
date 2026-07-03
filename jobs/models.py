@@ -264,11 +264,12 @@ class Job(models.Model):
         return self._COUNTRY_CURRENCY.get(self.get_schema_country(), "USD")
 
     def get_schema_valid_through(self):
-        # Match the real cull window (clean_stale_jobs demotes at 60 days) so
-        # Google for Jobs doesn't keep showing "open" roles that then 404.
-        # ISO 8601 *datetime* (not date-only): Google for Jobs requires the full
-        # timestamp on validThrough or it can reject the rich result.
-        return (self.created_at + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S')
+        # Match the real cull window (clean_stale_jobs demotes 60 days after a
+        # job GOES LIVE) so Google for Jobs doesn't keep showing "open" roles
+        # that then 404. ISO 8601 *datetime* (not date-only): Google for Jobs
+        # requires the full timestamp or it can reject the rich result.
+        anchor = self.went_live_at or self.created_at
+        return (anchor + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S')
 
     def save(self, *args, **kwargs):
         if self.location: self.location = normalize_location(self.location)
