@@ -832,6 +832,88 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         'region_label': region_label,
     })
 
+def market_stats(request):
+    """MarTech Job Market Statistics — a citable, auto-refreshing stats page
+    computed from LIVE listings (AEO: answer engines cite pages that are the
+    source of a number, and every figure here is real per the site's content
+    rules). Cached 1h; the underlying data changes at most daily via the cron.
+    """
+    data = cache.get('market_stats_v1')
+    if not data:
+        live = Job.objects.filter(is_active=True, screening_status='approved')
+        total = live.count()
+        remote = live.filter(work_arrangement='remote').count()
+        hybrid = live.filter(work_arrangement='hybrid').count()
+
+        # Jobs by platform/tool (canonical tools only, with live jobs).
+        canonical = {n.lower() for n in all_canonical_names()}
+        tools = (
+            Tool.objects.annotate(
+                n=Count('jobs', filter=Q(jobs__is_active=True, jobs__screening_status='approved'))
+            ).filter(n__gt=0).order_by('-n')
+        )
+        by_tool = [(t.name, t.n) for t in tools if (t.name or '').lower() in canonical][:15]
+
+        # Jobs by function.
+        func_labels = {'operations': 'Marketing Operations', 'engineering': 'MarTech Engineering',
+                       'data': 'Marketing Analytics & Data', 'other': 'Other'}
+        by_function = [
+            (func_labels.get(r['function'], r['function']), r['n'])
+            for r in live.values('function').annotate(n=Count('id')).order_by('-n')
+        ]
+
+        # Jobs by country (structured field first, text fallback via the same
+        # helper the JobPosting schema uses).
+        country_names = {
+            'US': 'United States', 'GB': 'United Kingdom', 'IN': 'India', 'CA': 'Canada',
+            'DE': 'Germany', 'FR': 'France', 'NL': 'Netherlands', 'SG': 'Singapore',
+            'AE': 'United Arab Emirates', 'AU': 'Australia', 'IE': 'Ireland', 'ES': 'Spain',
+            'CN': 'China', 'HK': 'Hong Kong', 'PL': 'Poland', 'PT': 'Portugal',
+            'IT': 'Italy', 'SE': 'Sweden', 'MX': 'Mexico', 'BR': 'Brazil',
+        }
+        country_counts = {}
+        for job in live.only('country', 'location'):
+            code = job.get_schema_country()
+            country_counts[code] = country_counts.get(code, 0) + 1
+        by_country = sorted(
+            ((country_names.get(c, c), n) for c, n in country_counts.items()),
+            key=lambda x: -x[1],
+        )[:10]
+
+        # Salary transparency: how many listings publish a range, and the
+        # midpoint spread across those that do (USD-denominated ones dominate).
+        sal_mins, sal_maxes = [], []
+        for job in live.exclude(salary_range__isnull=True).exclude(salary_range=''):
+            mn, mx = (job.get_salary_min_max() or (None, None))
+            if mn and mx and mn > 10000:  # ignore hourly/garbage parses
+                sal_mins.append(mn); sal_maxes.append(mx)
+        with_salary = len(sal_mins)
+        median_min = sorted(sal_mins)[with_salary // 2] if with_salary else None
+        median_max = sorted(sal_maxes)[with_salary // 2] if with_salary else None
+
+        data = {
+            'total': total,
+            'remote': remote,
+            'remote_pct': round(remote * 100 / total) if total else 0,
+            'hybrid': hybrid,
+            'companies': live.values('company').distinct().count(),
+            'by_tool': by_tool,
+            'by_function': by_function,
+            'by_country': by_country,
+            'with_salary': with_salary,
+            'salary_pct': round(with_salary * 100 / total) if total else 0,
+            'median_min': median_min,
+            'median_max': median_max,
+            'updated': timezone.now(),
+        }
+        cache.set('market_stats_v1', data, 3600)
+
+    return render(request, 'jobs/market_stats.html', {
+        **data,
+        'canonical_url': 'https://martechjobs.io/martech-job-market-statistics/',
+    })
+
+
 def salary_guide(request):
     data = cache.get('salary_guide_data_v2')
     if not data:

@@ -195,6 +195,7 @@ class StaticViewSitemap(Sitemap):
             'job_list',
             'blog_list',
             'salary_guide',
+            'market_stats',
             'directory',
             'company_list',
             'all_jobs',

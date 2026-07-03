@@ -1,0 +1,111 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}MarTech Job Market Statistics {% now "Y" %} — Live Data | MarTechJobs{% endblock %}
+{% block meta_description %}Live MarTech job market data: {{ total }} open Marketing Ops & MarTech roles, {{ remote_pct }}% remote, demand by platform (Salesforce, Marketo, HubSpot), function, and country. Updated daily from company hiring systems.{% endblock %}
+{% block meta_keywords %}martech job market statistics, marketing operations job market, martech hiring trends {% now "Y" %}, marketing technology jobs data{% endblock %}
+{% block og_title %}MarTech Job Market Statistics {% now "Y" %} — Live Data{% endblock %}
+{% block og_desc %}{{ total }} live MarTech roles analyzed: demand by platform, function, country, and remote share. Refreshed daily.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "MarTech Job Market Statistics",
+  "description": "Live counts of open Marketing Operations, Marketing Automation, MarTech Engineering, and Marketing Analytics jobs, broken down by platform, function, country, and work arrangement. Compiled daily from company applicant-tracking systems (Greenhouse, Lever, Ashby, Workday, SmartRecruiters).",
+  "url": "https://martechjobs.io/martech-job-market-statistics/",
+  "creator": {"@type": "Organization", "name": "MarTechJobs", "url": "https://martechjobs.io"},
+  "temporalCoverage": "{{ updated|date:'Y-m-d' }}",
+  "license": "https://martechjobs.io/terms/",
+  "isAccessibleForFree": true
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How many MarTech jobs are open right now?","acceptedAnswer":{"@type":"Answer","text":"There are {{ total }} live MarTech and Marketing Operations jobs listed on MarTechJobs as of {{ updated|date:'F j, Y' }}, pulled directly from company hiring systems and refreshed daily."}},
+    {"@type":"Question","name":"What percentage of MarTech jobs are remote?","acceptedAnswer":{"@type":"Answer","text":"{{ remote_pct }}% of live MarTech roles ({{ remote }} of {{ total }}) are fully remote, with a further {{ hybrid }} hybrid positions."}},
+    {"@type":"Question","name":"Which MarTech platform has the most job demand?","acceptedAnswer":{"@type":"Answer","text":"{% if by_tool %}{{ by_tool.0.0 }} currently leads MarTech hiring demand with {{ by_tool.0.1 }} live roles requiring it{% if by_tool.1 %}, followed by {{ by_tool.1.0 }} ({{ by_tool.1.1 }} roles){% endif %}.{% else %}Platform demand data is refreshed daily from live listings.{% endif %}"}},
+    {"@type":"Question","name":"How is this data collected?","acceptedAnswer":{"@type":"Answer","text":"Every statistic is computed from live job listings ingested directly from company applicant-tracking systems (Greenhouse, Lever, Ashby, Workday, SmartRecruiters). Stale and filled roles are removed daily, and no figures are estimated or fabricated."}}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"MarTech Job Market Statistics","item":"https://martechjobs.io/martech-job-market-statistics/"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .ms-hero { padding: 64px 0 48px; background: var(--navy3); color: #fff; text-align: center; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .ms-hero .eyebrow { color: var(--amber-accent); margin-bottom: 14px; }
+  .ms-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px,4.5vw,52px); font-weight: 800; line-height: 1.12; color: #fff; margin-bottom: 18px; }
+  .ms-hero p { font-size: 16px; color: rgba(255,255,255,.72); max-width: 640px; margin: 0 auto; line-height: 1.7; }
+  .ms-stats { display: flex; justify-content: center; gap: 40px; padding: 36px 0; flex-wrap: wrap; background: var(--navy2); border-bottom: 1px solid rgba(255,255,255,.07); }
+  .ms-stat { text-align: center; }
+  .ms-stat-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--amber-accent); display: block; }
+  .ms-stat-label { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,.5); margin-top: 4px; }
+  .ms-content { padding: 56px 0 80px; }
+  .ms-inner { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+  .ms-inner h2 { font-family: 'Playfair Display', serif; font-size: 26px; margin: 44px 0 12px; }
+  .ms-inner p { line-height: 1.75; margin-bottom: 14px; }
+  .ms-table { width: 100%; border-collapse: collapse; margin: 18px 0 8px; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .ms-table th, .ms-table td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--rule); }
+  .ms-table th { font-family: 'Courier Prime', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .ms-table tr:last-child td { border-bottom: none; }
+  .ms-note { font-size: 13px; opacity: .7; }
+</style>
+
+<section class="ms-hero">
+  <div class="eyebrow">LIVE MARKET DATA · UPDATED {{ updated|date:"M j, Y"|upper }}</div>
+  <h1>MarTech Job Market Statistics</h1>
+  <p>There are <strong>{{ total }}</strong> live MarTech and Marketing Operations jobs right now across <strong>{{ companies }}</strong> companies — <strong>{{ remote_pct }}%</strong> of them fully remote. Every number on this page is computed daily from listings pulled directly out of company hiring systems; nothing is estimated.</p>
+</section>
+
+<section class="ms-stats">
+  <div class="ms-stat"><span class="ms-stat-val">{{ total }}</span><span class="ms-stat-label">Live jobs</span></div>
+  <div class="ms-stat"><span class="ms-stat-val">{{ remote_pct }}%</span><span class="ms-stat-label">Remote</span></div>
+  <div class="ms-stat"><span class="ms-stat-val">{{ companies }}</span><span class="ms-stat-label">Companies hiring</span></div>
+  <div class="ms-stat"><span class="ms-stat-val">{{ salary_pct }}%</span><span class="ms-stat-label">Post salary ranges</span></div>
+</section>
+
+<section class="ms-content"><div class="ms-inner">
+
+  <h2>Which MarTech platforms are companies hiring for?</h2>
+  <p>{% if by_tool %}<strong>{{ by_tool.0.0 }}</strong> leads current demand with <strong>{{ by_tool.0.1 }}</strong> live roles{% if by_tool.1 %}, followed by {{ by_tool.1.0 }} ({{ by_tool.1.1 }}){% endif %}.{% endif %} Counts reflect the platforms named in live job listings today:</p>
+  <table class="ms-table">
+    <tr><th>Platform</th><th>Live jobs</th></tr>
+    {% for name, n in by_tool %}<tr><td><a href="/jobs/{{ name|slugify }}/">{{ name }}</a></td><td>{{ n }}</td></tr>{% endfor %}
+  </table>
+
+  <h2>What kinds of MarTech roles are in demand?</h2>
+  <table class="ms-table">
+    <tr><th>Function</th><th>Live jobs</th></tr>
+    {% for name, n in by_function %}<tr><td>{{ name }}</td><td>{{ n }}</td></tr>{% endfor %}
+  </table>
+
+  <h2>Where are MarTech jobs located?</h2>
+  <table class="ms-table">
+    <tr><th>Country</th><th>Live jobs</th></tr>
+    {% for name, n in by_country %}<tr><td>{{ name }}</td><td>{{ n }}</td></tr>{% endfor %}
+  </table>
+
+  <h2>How many MarTech jobs publish salary ranges?</h2>
+  <p><strong>{{ salary_pct }}%</strong> of live listings ({{ with_salary }} of {{ total }}) publish a salary range.{% if median_min %} Among those, the median advertised range is <strong>${{ median_min|intcomma }} – ${{ median_max|intcomma }}</strong> per year.{% endif %} For role-by-role breakdowns, see the <a href="{% url 'salary_guide' %}">MarTech salary guide</a>.</p>
+
+  <h2>How is this data collected?</h2>
+  <p>Listings are ingested daily, directly from company applicant-tracking systems — Greenhouse, Lever, Ashby, Workday, and SmartRecruiters — then screened so only genuine Marketing Operations, Marketing Automation, MarTech Engineering, and Marketing Analytics roles are counted. Stale and filled roles are removed daily. Cite this page as: <em>MarTechJobs.io Job Market Statistics, {{ updated|date:"F Y" }}</em>.</p>
+  <p class="ms-note">Browse the underlying listings: <a href="{% url 'all_jobs' %}">all live MarTech jobs</a> · <a href="/remote/jobs/">remote roles</a> · <a href="{% url 'blog_list' %}">guides &amp; analysis</a></p>
+
+</div></section>
+{% endblock %}
