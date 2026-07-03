@@ -8,6 +8,7 @@ urlpatterns = [
     
     # --- GROWTH ENGINE ---
     path('salary-guide/', views.salary_guide, name='salary_guide'),
+    path('martech-job-market-statistics/', views.market_stats, name='market_stats'),
     path('feed/', LatestJobsFeed(), name='job_feed'),
     
     # --- BLOG (DYNAMIC) ---

@@ -92,7 +92,8 @@ class Command(BaseCommand):
         # Normalize the freshly-generated post (author/category/read_time/meta).
         self._run("      🧽 Normalizing blog posts...", 'normalize_blog_posts')
 
-        # 6. INDEXING (Ping Google)
+        # 6. INDEXING (Ping Google + Bing/IndexNow — Bing's index feeds ChatGPT search)
         self._run("\n[6/7] 📡 Pinging Google Indexing API...", 'index_jobs')
+        self._run("      📡 Pinging IndexNow (Bing/ChatGPT search)...", 'ping_indexnow')
 
         self.stdout.write(self.style.SUCCESS("\n[7/7] ✨ AUTOPILOT COMPLETE. System is fresh."))

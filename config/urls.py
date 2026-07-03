@@ -88,7 +88,7 @@ def llms_txt(request):
     AI quotes about us are always real — per the site rule that every number
     shown must be true."""
     from django.core.cache import cache
-    content = cache.get("llms_txt_v1")
+    content = cache.get("llms_txt_v2")
     if content is None:
         try:
             from jobs.models import Job, Tool
@@ -118,6 +118,7 @@ def llms_txt(request):
 - [United States](https://martechjobs.io/jobs/), [India](https://martechjobs.io/india/jobs/), [United Kingdom](https://martechjobs.io/united-kingdom/jobs/), [Singapore](https://martechjobs.io/singapore/jobs/), [Germany](https://martechjobs.io/germany/jobs/), [Canada](https://martechjobs.io/canada/jobs/)
 
 ## Guides & data
+- [MarTech job market statistics](https://martechjobs.io/martech-job-market-statistics/): live counts by platform, function, country, remote share, and salary transparency — refreshed daily, citable
 - [Blog](https://martechjobs.io/blog/): salary guides, role guides, and market analyses for MarTech careers
 - [Salary guide](https://martechjobs.io/salary-guide/): compensation data for Marketing Ops and MarTech roles
 - [Free tools](https://martechjobs.io/tools/): salary calculator, JD generator, interview-question generator, and other MarTech utilities
@@ -126,8 +127,22 @@ def llms_txt(request):
 - [About MarTechJobs](https://martechjobs.io/about/): who runs the site and how jobs are sourced and screened
 - [For employers](https://martechjobs.io/for-employers/): how to list roles
 """
-        cache.set("llms_txt_v1", content, 3600)
+        cache.set("llms_txt_v2", content, 3600)
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
+
+# --- 2c. INDEXNOW KEY FILE ---
+def indexnow_key(request):
+    """Serves the IndexNow verification key (INDEXNOW_KEY env var). The
+    ping_indexnow command points Bing/Seznam/Yandex here via keyLocation, which
+    proves we own the host. ChatGPT search is built on Bing's index, so fast
+    Bing indexing = fast visibility in ChatGPT answers. 404s if unconfigured."""
+    import os
+    key = os.environ.get("INDEXNOW_KEY", "").strip()
+    if not key:
+        from django.http import Http404
+        raise Http404
+    return HttpResponse(key, content_type="text/plain")
+
 
 urlpatterns = [
     # Admin & Apps
@@ -140,6 +155,7 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', robots_txt),
     path('llms.txt', llms_txt),
+    path('indexnow.txt', indexnow_key),
 ]
 
 # Static media serving for debug mode (Local development)
