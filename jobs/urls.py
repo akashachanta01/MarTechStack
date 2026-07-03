@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 from . import views
-from .feeds import LatestJobsFeed
+from .feeds import LatestJobsFeed, BlogFeed
 
 urlpatterns = [
     path('', views.job_list, name='job_list'),
@@ -13,6 +13,7 @@ urlpatterns = [
     
     # --- BLOG (DYNAMIC) ---
     path('blog/', views.blog_list, name='blog_list'),
+    path('blog/feed/', BlogFeed(), name='blog_feed'),
     path('blog/<slug:slug>/', views.post_detail, name='post_detail'),
 
     # --- STATIC PAGES ---

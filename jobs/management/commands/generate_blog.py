@@ -81,6 +81,15 @@ TOPIC_QUEUE = [
     {"type": "intl_salary_guide", "topic": "Marketing Operations Salary in India", "keyword": "marketing operations salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Mumbai, Delhi NCR, Hyderabad, Pune", "location_slug": "india"},
     {"type": "intl_salary_guide", "topic": "AEM Developer Salary in India", "keyword": "aem developer salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Hyderabad, Pune, Noida", "location_slug": "india"},
     {"type": "intl_salary_guide", "topic": "Marketing Automation Salary in India", "keyword": "marketing automation salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Mumbai, Hyderabad, Gurgaon", "location_slug": "india"},
+    # Tier 8: AI × MarTech — the questions practitioners persistently ask and
+    # that AI answer engines get asked constantly. Evergreen, high-intent, and
+    # each post doubles as LinkedIn material (auto-shared via /blog/feed/).
+    {"type": "ai_martech", "topic": "Will AI Replace Marketing Operations?", "keyword": "will ai replace marketing operations", "angle": "An honest assessment of which MOps tasks AI automates (list building, QA, campaign assembly) vs what it can't (strategy, governance, stakeholder management, data judgment) — and how the role is shifting rather than disappearing."},
+    {"type": "ai_martech", "topic": "AI Skills Every MarTech Professional Needs", "keyword": "ai skills for martech professionals", "angle": "Concrete, learnable skills: prompt engineering for campaign copy/QA, AI features inside Marketo/HubSpot/Braze/SFMC, CDP + AI activation, AI governance and brand-safety guardrails. Skip the hype; name actual product features."},
+    {"type": "ai_martech", "topic": "How AI Is Changing Salesforce Marketing Cloud Work", "keyword": "ai in salesforce marketing cloud", "angle": "Einstein features (send-time optimization, engagement scoring, generative journeys), what SFMC practitioners should learn, and how job requirements are shifting based on what live SFMC postings now ask for."},
+    {"type": "ai_martech", "topic": "AI in Marketing Automation: What's Real and What's Hype", "keyword": "ai marketing automation", "angle": "A practitioner's cut-through: AI features that deliver today (subject-line generation, predictive scoring, content variants) vs vaporware. Include how to evaluate vendor AI claims."},
+    {"type": "ai_martech", "topic": "How to Future-Proof Your Marketing Ops Career in the AI Era", "keyword": "future proof marketing operations career ai", "angle": "Career strategy: move up the stack toward architecture/strategy/governance, own the data layer, become the person who deploys AI rather than the person it replaces. Practical 12-month plan."},
+    {"type": "ai_martech", "topic": "AI Prompt Engineering for Marketing Operations", "keyword": "prompt engineering marketing operations", "angle": "Hands-on: reusable prompt patterns for campaign QA, UTM audits, email copy variants, data-hygiene checks, and JD screening — with concrete example prompts practitioners can copy."},
 ]
 
 CATEGORY_MAP = {
@@ -89,6 +98,7 @@ CATEGORY_MAP = {
     "salary_guide": "Salary Guides",
     "intl_salary_guide": "Salary Guides",
     "location_guide": "Career Advice",
+    "ai_martech": "AI in MarTech",
 }
 
 
@@ -208,6 +218,27 @@ Use widely-reported {market} salary ranges and hedge honestly ("commonly reporte
 Tone: direct, technically credible, written for {market}-based practitioners.
 Length: 900-1300 words.
 Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only.
+
+Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
+    elif t == "ai_martech":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        angle = topic["angle"]
+        return f"""You are a senior MarTech practitioner writing for MarTechJobs.io, the niche job board for Marketing Technology professionals.
+
+Write a credible, practitioner-grade article targeting: "{keyword}"
+Topic: {topic_name}
+
+Editorial angle (follow this closely): {angle}
+
+Hard rules:
+- NO breathless AI hype and NO doom. The reader is a working MOps/MarTech professional who wants the honest, useful answer.
+- Name REAL products and features where relevant (Marketo, HubSpot, Braze, SFMC/Einstein, Segment, Adobe Experience Platform) — never invent product capabilities.
+- Include practical, do-this-tomorrow takeaways, not abstractions.
+- Where the topic touches hiring/careers, tie it to what employers actually list in job requirements, and CTA to <a href="https://martechjobs.io/jobs/">live MarTech jobs on MarTechJobs</a>.
+- Length: 900-1300 words.
+- Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only.
 
 Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
 
