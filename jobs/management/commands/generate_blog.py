@@ -81,7 +81,29 @@ CATEGORY_MAP = {
 }
 
 
+# Appended to every generated-post prompt. AI answer engines (ChatGPT search,
+# Perplexity, Google AI Overviews, Claude) extract and cite content that leads
+# with the answer, uses question-form headings, and includes concrete stats —
+# cited/statistic-bearing content is ~30-40% more visible in AI search (GEO,
+# Aggarwal et al., 2023). GA4 already shows ~12% of our traffic arriving from
+# AI assistants, so every post is written to be quotable by them.
+_AEO_SUFFIX = """
+
+ANSWER-ENGINE OPTIMIZATION (mandatory — this content must be quotable by AI search engines like ChatGPT, Perplexity, and Google AI Overviews):
+- The FIRST paragraph must directly answer the core question of the piece in 2-3 self-contained sentences (a reader — or an AI — should get the complete short answer without reading further).
+- Phrase most <h2> headings as natural-language questions people actually ask (e.g. "How much does a Marketing Operations Manager make in London?").
+- Immediately under each question heading, give the direct answer in the first sentence, THEN elaborate.
+- Include concrete numbers wherever honest and defensible (salary ranges, tool counts, timelines). Never fabricate statistics — use widely-reported industry ranges and hedge appropriately ("typically", "commonly reported").
+- End with an <h2>Frequently Asked Questions</h2> section containing 3-5 <h3> question/answer pairs, each answer 2-4 sentences and fully self-contained.
+- Write in a natural, conversational register — the way an expert would answer a colleague's question — while staying technically precise."""
+
+
 def _build_prompt(topic: dict) -> str:
+    base = _build_prompt_base(topic)
+    return base + _AEO_SUFFIX
+
+
+def _build_prompt_base(topic: dict) -> str:
     t = topic["type"]
     if t == "company_careers":
         company = topic["company"]
