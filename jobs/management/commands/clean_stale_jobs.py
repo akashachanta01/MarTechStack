@@ -14,11 +14,17 @@ class Command(BaseCommand):
         # Define the cutoff date: 60 days ago
         cutoff_date = timezone.now() - timedelta(days=60)
 
-        # Find jobs that are currently active (approved) AND older than the cutoff
+        # Staleness is measured from when the job WENT LIVE, not when it was
+        # first ingested — a job ingested months ago but only just approved
+        # would otherwise be demoted the day after it appeared on the site.
+        # went_live_at can be null on legacy rows; fall back to created_at.
+        from django.db.models import Q
         stale_jobs = Job.objects.filter(
             is_active=True,
             screening_status='approved',
-            created_at__lt=cutoff_date
+        ).filter(
+            Q(went_live_at__lt=cutoff_date)
+            | Q(went_live_at__isnull=True, created_at__lt=cutoff_date)
         )
         
         count = stale_jobs.count()

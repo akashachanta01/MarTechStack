@@ -496,7 +496,9 @@ class Command(BaseCommand):
                 self.record_source("greenhouse", token, token.capitalize())
                 for item in resp.json().get('jobs', []):
                     if self.is_fresh(item.get('updated_at')):
-                        raw_loc = item.get('location', {}).get('name')
+                        # (item.get('location') or {}) — the API can return an
+                        # explicit null, which a plain .get default won't cover.
+                        raw_loc = (item.get('location') or {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         self.screen_and_upsert({
                             "title": item.get('title'), "company": token.capitalize(), "location": clean_loc,
@@ -527,7 +529,7 @@ class Command(BaseCommand):
                         except (ValueError, OSError, TypeError):
                             fresh = True
                     if fresh:
-                        raw_loc = item.get('categories', {}).get('location')
+                        raw_loc = (item.get('categories') or {}).get('location')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         sr = item.get('salaryRange') or {}
                         salary = (f"{int(sr['min']):,} - {int(sr['max']):,} {sr.get('currency','')}".strip()
@@ -620,7 +622,7 @@ class Command(BaseCommand):
                         # description produces a thin/invalid JobPosting schema.
                         if not desc:
                             continue
-                        loc = item.get('location', {})
+                        loc = item.get('location') or {}
                         parts = [loc.get('city'), loc.get('region'), loc.get('country')]
                         raw_loc = ", ".join([p for p in parts if p])
                         clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
@@ -715,9 +717,27 @@ class Command(BaseCommand):
                     raw_loc = str(item.get('locationsText') or _bullet0 or "")
                     is_remote = "remote" in raw_loc.lower()
                     clean_loc, arr = self._clean_location(raw_loc, is_remote)
+                    # Fetch the real JD from the CXS detail endpoint (same path
+                    # shape as the list API). Storing the title as the
+                    # description made every Workday job thin content — bad for
+                    # the screener AND the JobPosting schema. Skip postings with
+                    # no fetchable body (consistent with SmartRecruiters).
+                    desc = ""
+                    try:
+                        dr = requests.get(
+                            f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}{ext_path}",
+                            headers=self.get_headers(), timeout=8,
+                        )
+                        if dr.status_code == 200:
+                            desc = ((dr.json().get('jobPostingInfo') or {}).get('jobDescription') or "")
+                    except Exception:
+                        desc = ""
+                    if not desc:
+                        self.stats["Workday:no_description"] += 1
+                        continue
                     self.screen_and_upsert({
                         "title": item.get('title'), "company": tenant.capitalize(), "location": clean_loc,
-                        "description": item.get('title'), "apply_url": f"{base}{ext_path}",
+                        "description": desc, "apply_url": f"{base}{ext_path}",
                         "work_arrangement": arr, "source": "Workday",
                         "external_id": f"workday:{ext_path}",
                     })

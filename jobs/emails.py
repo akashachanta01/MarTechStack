@@ -174,7 +174,10 @@ def send_job_alert(job):
     but for a production app with 15k subs, consider moving this to Celery/Redis later.
     """
     def _send():
-        subscribers = list(Subscriber.objects.filter(is_active=True).values_list('email', flat=True))
+        # Same recipient set as the daily digest (subscribers ∪ opted-in
+        # account holders, minus unsubscribes) — querying Subscriber directly
+        # silently skipped account holders.
+        subscribers = get_digest_recipients()
         if not subscribers: return
 
         print(f"📧 Sending SINGLE alert to {len(subscribers)} subscribers...")
@@ -197,7 +200,8 @@ def send_digest_alert(jobs):
     Sends a BATCH of jobs (Digest) to ALL subscribers.
     """
     def _send():
-        subscribers = list(Subscriber.objects.filter(is_active=True).values_list('email', flat=True))
+        # Same recipient set as the daily digest — see send_job_alert.
+        subscribers = get_digest_recipients()
         if not subscribers: return
 
         count = len(jobs)
