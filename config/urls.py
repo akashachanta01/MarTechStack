@@ -130,6 +130,7 @@ def llms_txt(request):
         cache.set("llms_txt_v2", content, 3600)
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
 
+
 # --- 2c. INDEXNOW KEY FILE ---
 def indexnow_key(request):
     """Serves the IndexNow verification key (INDEXNOW_KEY env var). The
@@ -142,6 +143,7 @@ def indexnow_key(request):
         from django.http import Http404
         raise Http404
     return HttpResponse(key, content_type="text/plain")
+
 
 
 urlpatterns = [
