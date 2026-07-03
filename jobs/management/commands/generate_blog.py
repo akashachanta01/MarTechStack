@@ -71,12 +71,23 @@ TOPIC_QUEUE = [
     {"type": "location_guide", "topic": "MarTech Jobs in Germany", "keyword": "martech jobs germany", "location_slug": "germany", "location_name": "Germany"},
     {"type": "location_guide", "topic": "MarTech Jobs in Canada", "keyword": "martech jobs canada", "location_slug": "canada", "location_name": "Canada"},
     {"type": "location_guide", "topic": "Marketing Operations Jobs in India", "keyword": "marketing operations jobs india", "location_slug": "india", "location_name": "India"},
+    # Tier 7: India salary guides in INR/LPA — the format Indian job seekers
+    # actually search in ("salesforce admin salary india"). Huge volume, thin
+    # competition, and India is our #2 traffic market. Live listings skew
+    # heavily SFMC/Marketo/AEM/Salesforce, matching these exactly.
+    {"type": "intl_salary_guide", "topic": "Salesforce Administrator Salary in India", "keyword": "salesforce admin salary india", "market": "India", "currency": "INR (express figures in lakhs per annum, e.g. ₹8–14 LPA)", "cities": "Bengaluru, Mumbai, Hyderabad, Pune, Gurgaon, Chennai", "location_slug": "india"},
+    {"type": "intl_salary_guide", "topic": "Salesforce Marketing Cloud (SFMC) Salary in India", "keyword": "sfmc salary india", "market": "India", "currency": "INR (express figures in lakhs per annum, e.g. ₹10–18 LPA)", "cities": "Bengaluru, Mumbai, Hyderabad, Pune, Gurgaon", "location_slug": "india"},
+    {"type": "intl_salary_guide", "topic": "Marketo Salary in India", "keyword": "marketo salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Mumbai, Hyderabad, Pune", "location_slug": "india"},
+    {"type": "intl_salary_guide", "topic": "Marketing Operations Salary in India", "keyword": "marketing operations salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Mumbai, Delhi NCR, Hyderabad, Pune", "location_slug": "india"},
+    {"type": "intl_salary_guide", "topic": "AEM Developer Salary in India", "keyword": "aem developer salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Hyderabad, Pune, Noida", "location_slug": "india"},
+    {"type": "intl_salary_guide", "topic": "Marketing Automation Salary in India", "keyword": "marketing automation salary india", "market": "India", "currency": "INR (express figures in lakhs per annum)", "cities": "Bengaluru, Mumbai, Hyderabad, Gurgaon", "location_slug": "india"},
 ]
 
 CATEGORY_MAP = {
     "company_careers": "Career Advice",
     "role_guide": "Career Advice",
     "salary_guide": "Salary Guides",
+    "intl_salary_guide": "Salary Guides",
     "location_guide": "Career Advice",
 }
 
@@ -165,6 +176,38 @@ Structure:
 4. Factors that affect salary
 5. How to negotiate
 6. CTA to browse related jobs on MarTechJobs
+
+Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
+    elif t == "intl_salary_guide":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        market = topic["market"]
+        currency = topic["currency"]
+        cities = topic["cities"]
+        location_slug = topic["location_slug"]
+        return f"""You are a senior content writer for MarTechJobs.io, the niche job board for Marketing Technology professionals.
+
+Write a data-driven salary guide for the {market} market targeting: "{keyword}"
+Topic: {topic_name}
+
+CRITICAL — currency and format: {currency}. Use the salary notation local job
+seekers in {market} actually use and search for. Do NOT quote US dollar figures
+except for a single brief global comparison.
+
+Structure:
+1. Direct answer first: the typical salary range for this role in {market} today
+2. Salary by experience level (0-2 yrs / 3-5 yrs / 6+ yrs)
+3. Salary by city ({cities}) — note which cities pay a premium and why
+4. Product companies vs services/consulting firms (GCCs, SIs like Accenture/Deloitte/Infosys) — how compensation differs, since much of {market}'s MarTech hiring is services-side
+5. Skills and certifications that move the number most
+6. How to negotiate in the {market} market
+7. CTA: <a href="https://martechjobs.io/{location_slug}/jobs/">Browse live MarTech jobs in {market} on MarTechJobs →</a>
+
+Use widely-reported {market} salary ranges and hedge honestly ("commonly reported", "typically") — never invent precise statistics.
+Tone: direct, technically credible, written for {market}-based practitioners.
+Length: 900-1300 words.
+Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only.
 
 Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
 
