@@ -30,18 +30,35 @@ _AI_WEAK_RE = re.compile(
     r'ai[- ](?:driven|powered|assisted|native|enabled))\b',
     re.IGNORECASE,
 )
+# Candidate-facing requirement phrasing. Deliberately excludes company-voice
+# verbs ("we leverage AI", "AI is at the heart of...") — those are the
+# boilerplate that made a repetition-count rule flag DoorDash/WPP campaign
+# roles. Only what the JD asks OF THE CANDIDATE counts.
+_AI_CONTEXT_RE = re.compile(
+    r'(experience|expertise|proficien\w*|familiar\w*|knowledge|skills?|'
+    r'hands[- ]on|background|understanding)\b',
+    re.IGNORECASE,
+)
+_CONTEXT_WINDOW = 80  # chars either side of a weak AI mention
 
 
 def detect_ai_requirement(title, description):
     """True when a listing genuinely requires AI skills — not when the JD
-    merely name-drops AI once in company boilerplate."""
+    merely name-drops AI in company boilerplate."""
     title = title or ""
     description = description or ""
     if _AI_STRONG_RE.search(f"{title} {description}"):
         return True
     if _AI_WEAK_RE.search(title):
         return True
-    return len(_AI_WEAK_RE.findall(description)) >= 3
+    # Weak mention counts only in a requirement context ("experience with
+    # AI-powered tools"), not in company-voice boilerplate.
+    for m in _AI_WEAK_RE.finditer(description):
+        start = max(0, m.start() - _CONTEXT_WINDOW)
+        window = description[start:m.end() + _CONTEXT_WINDOW]
+        if _AI_CONTEXT_RE.search(window):
+            return True
+    return False
 
 
 def normalize_location(loc):
