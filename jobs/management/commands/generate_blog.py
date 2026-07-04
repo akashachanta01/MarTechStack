@@ -90,6 +90,20 @@ TOPIC_QUEUE = [
     {"type": "ai_martech", "topic": "AI in Marketing Automation: What's Real and What's Hype", "keyword": "ai marketing automation", "angle": "A practitioner's cut-through: AI features that deliver today (subject-line generation, predictive scoring, content variants) vs vaporware. Include how to evaluate vendor AI claims."},
     {"type": "ai_martech", "topic": "How to Future-Proof Your Marketing Ops Career in the AI Era", "keyword": "future proof marketing operations career ai", "angle": "Career strategy: move up the stack toward architecture/strategy/governance, own the data layer, become the person who deploys AI rather than the person it replaces. Practical 12-month plan."},
     {"type": "ai_martech", "topic": "AI Prompt Engineering for Marketing Operations", "keyword": "prompt engineering marketing operations", "angle": "Hands-on: reusable prompt patterns for campaign QA, UTM audits, email copy variants, data-hygiene checks, and JD screening — with concrete example prompts practitioners can copy."},
+    # Tier 9: Data pieces + opinion/prediction pieces — the "hot topics" set.
+    # data_piece entries get a LIVE stats digest computed from the DB at
+    # generation time and may cite ONLY those numbers (site rule: every number
+    # shown must be real). Opinion/prediction pieces stay in ai_martech type.
+    {"type": "data_piece", "topic": "Which MarTech Skills Appear Most in Job Listings Right Now", "keyword": "most in demand martech skills", "angle": "Rank the platforms/skills by how often they appear in our live listings. Lead with the #1. What the distribution says about where the market is heading."},
+    {"type": "data_piece", "topic": "The AI Skills Gap in MarTech Job Descriptions", "keyword": "ai skills gap martech", "angle": "Contrast how many live listings mention AI against the total, and what that ratio means: employers are ahead of (or behind) candidates. What 'AI experience' requirements look like in practice and how a candidate closes the gap."},
+    {"type": "data_piece", "topic": "What Employers Actually Mean When They Ask for 'AI Experience'", "keyword": "ai experience job requirements marketing", "angle": "Decode the phrase using the real patterns in our listings: platform AI features (Einstein, predictive scoring), prompt fluency, AI governance. Give candidates concrete ways to demonstrate each."},
+    {"type": "data_piece", "topic": "Salary Signals: What AI Skills Add to MarTech Pay", "keyword": "ai skills salary martech", "angle": "Use the salary-transparency stats provided (share of listings with published ranges, median range). Be honest that AI-skill premium data is early; frame directional signals, not fake precision."},
+    {"type": "data_piece", "topic": "What Our Live MarTech Job Listings Taught Me About Hiring in the AI Era", "keyword": "martech hiring trends ai era", "angle": "A founder's field-notes piece: the patterns across ALL our live listings — which functions dominate, remote share, platform demand, how often AI appears. Use the exact live-listing count from the data digest in the title and intro (e.g. 'What 300 MarTech Job Posts...')."},
+    {"type": "data_piece", "topic": "The One Skill That Shows Up in Every Senior MarTech Listing", "keyword": "senior martech skills", "angle": "Use the senior-role stats in the digest: what share of live listings are senior, and which platforms/skills dominate those. Build the piece around the top one and why it keeps appearing at the senior level."},
+    {"type": "ai_martech", "topic": "The MarTech Career Ladder, Redrawn for the AI Era", "keyword": "martech career path ai", "angle": "An original framework: the old ladder (specialist → admin → manager) vs the new one (tool operator → systems designer → AI orchestrator → architecture/governance). Name what to learn at each rung."},
+    {"type": "ai_martech", "topic": "Stop Learning Tools, Start Learning Systems", "keyword": "martech skills strategy", "angle": "Opinion piece with a spine: tool certifications depreciate, systems thinking compounds. Data models, integration patterns, and lifecycle logic transfer across every platform; the tool-of-the-month does not. Concrete examples of 'systems' skills and how to build them."},
+    {"type": "ai_martech", "topic": "MarTech Roles That Will Exist in 2028", "keyword": "future martech roles 2028", "angle": "Grounded prediction piece: extrapolate from real, present hiring signals (CDP engineering growth, AI governance requirements, journey orchestration) to roles like AI Campaign Orchestrator, Marketing Data Governance Lead, GTM Systems Architect. Clearly label as prediction; explain the signal behind each."},
+    {"type": "ai_martech", "topic": "Red Flags in AI-Era MarTech Job Descriptions", "keyword": "martech job description red flags", "angle": "Practical, shareable checklist: 'AI experience' with no specifics, one-person-stack roles disguised as 'AI-leveraged efficiency', tool soup with no seniority match, AI mandates with no data foundation. For each red flag: why it matters and the interview question that exposes it."},
 ]
 
 CATEGORY_MAP = {
@@ -99,7 +113,60 @@ CATEGORY_MAP = {
     "intl_salary_guide": "Salary Guides",
     "location_guide": "Career Advice",
     "ai_martech": "AI in MarTech",
+    "data_piece": "AI in MarTech",
 }
+
+
+def _live_data_digest():
+    """Compute a compact, REAL stats digest from live listings for data_piece
+    posts. The prompt forbids any number not present here, so nothing in a
+    'your data' article can be fabricated (site rule: every number is real)."""
+    from django.db.models import Count, Q as _Q
+    from jobs.models import Job, Tool
+
+    live = Job.objects.filter(is_active=True, screening_status='approved')
+    total = live.count()
+    if not total:
+        return None
+    remote = live.filter(work_arrangement='remote').count()
+
+    top_tools = list(
+        Tool.objects.annotate(
+            n=Count('jobs', filter=_Q(jobs__is_active=True, jobs__screening_status='approved'))
+        ).filter(n__gt=0).order_by('-n')[:10].values_list('name', 'n')
+    )
+
+    ai_q = (_Q(description__icontains='artificial intelligence')
+            | _Q(description__icontains=' ai ') | _Q(description__icontains=' ai,')
+            | _Q(description__icontains=' ai.') | _Q(description__icontains='genai')
+            | _Q(description__icontains='generative ai') | _Q(description__icontains='machine learning'))
+    ai_mentions = live.filter(ai_q).count()
+
+    senior_q = (_Q(title__icontains='senior') | _Q(title__icontains='lead')
+                | _Q(title__icontains='staff') | _Q(title__icontains='principal')
+                | _Q(title__icontains='director') | _Q(title__icontains='head of'))
+    senior = live.filter(senior_q)
+    senior_count = senior.count()
+    senior_tools = list(
+        Tool.objects.annotate(
+            n=Count('jobs', filter=_Q(jobs__in=senior))
+        ).filter(n__gt=0).order_by('-n')[:5].values_list('name', 'n')
+    )
+
+    with_salary = live.exclude(salary_range__isnull=True).exclude(salary_range='').count()
+    by_function = list(live.values('function').annotate(n=Count('id')).order_by('-n').values_list('function', 'n'))
+
+    lines = [
+        f"- Total live MarTech job listings analyzed: {total}",
+        f"- Fully remote: {remote} ({round(remote * 100 / total)}%)",
+        f"- Listings whose description mentions AI / machine learning: {ai_mentions} ({round(ai_mentions * 100 / total)}%)",
+        f"- Senior-level listings (Senior/Lead/Staff/Principal/Director titles): {senior_count} ({round(senior_count * 100 / total)}%)",
+        f"- Listings publishing a salary range: {with_salary} ({round(with_salary * 100 / total)}%)",
+        "- Platform demand (live listings naming each): " + ", ".join(f"{n} ({c})" for n, c in top_tools),
+        "- Platforms in SENIOR listings: " + ", ".join(f"{n} ({c})" for n, c in senior_tools),
+        "- Listings by function: " + ", ".join(f"{f} ({c})" for f, c in by_function),
+    ]
+    return "\n".join(lines)
 
 
 # Appended to every generated-post prompt. AI answer engines (ChatGPT search,
@@ -221,6 +288,32 @@ Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only.
 
 Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
 
+    elif t == "data_piece":
+        topic_name = topic["topic"]
+        keyword = topic["keyword"]
+        angle = topic["angle"]
+        data = topic.get("data") or "(no live data available)"
+        return f"""You are the founder of MarTechJobs.io writing a data-driven analysis piece from the job board's own live listings.
+
+Write an original analysis targeting: "{keyword}"
+Topic: {topic_name}
+
+Editorial angle (follow closely): {angle}
+
+LIVE DATA FROM OUR LISTINGS (computed today — this is the article's spine):
+{data}
+
+HARD DATA RULES:
+- You may cite ONLY the numbers in the LIVE DATA block above. Do not invent, extrapolate to, or "estimate" any other statistic about our listings.
+- Attribute the data naturally: "across the {'{'}total{'}'} live listings on MarTechJobs" / "our live listings show…". Use the actual total from the data block.
+- General industry context is allowed but must be hedged ("widely reported", "industry surveys suggest") and clearly separate from OUR data.
+- Voice: first-person founder field notes — direct, technically credible, zero recruiter fluff.
+- Where natural, link to <a href="https://martechjobs.io/martech-job-market-statistics/">our live market statistics page</a> and CTA to <a href="https://martechjobs.io/jobs/">live MarTech jobs</a>.
+- Length: 900-1300 words.
+- Output: Clean HTML using <h2>, <h3>, <p>, <ul>, <li>, <strong> only.
+
+Output strict JSON with title, excerpt, content (clean HTML), meta_description, read_time."""
+
     elif t == "ai_martech":
         topic_name = topic["topic"]
         keyword = topic["keyword"]
@@ -335,7 +428,14 @@ class Command(BaseCommand):
         label = selected.get("keyword") or selected.get("topic", "")
         self.stdout.write(f"   Drafting article for: '{label}' (type={selected['type']})...")
 
-        # 3. Build type-specific prompt
+        # 3. Build type-specific prompt. data_piece articles get a live stats
+        # digest computed from the DB NOW, so every number they cite is real.
+        if selected["type"] == "data_piece":
+            digest = _live_data_digest()
+            if not digest:
+                self.stdout.write(self.style.WARNING("   No live jobs to analyze — skipping data piece."))
+                return
+            selected = {**selected, "data": digest}
         prompt = _build_prompt(selected)
         category = CATEGORY_MAP[selected["type"]]
 
