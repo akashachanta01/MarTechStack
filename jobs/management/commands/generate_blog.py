@@ -478,7 +478,11 @@ class Command(BaseCommand):
                 content=data['content'],
                 meta_title=data['title'][:60],
                 meta_description=data['meta_description'],
-                author="MarTechJobs AI",
+                # Byline is the editorial brand, not the generation method
+                # ("MarTechJobs AI" read as auto-generated content to readers
+                # and to Google's content raters alike). The 7-day throttle
+                # still matches the legacy spelling via author__in above.
+                author="MarTechJobs Team",
                 category=category,
                 read_time=data['read_time'],
                 is_published=True,

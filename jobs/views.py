@@ -510,6 +510,19 @@ CATEGORY_CONFIG = {
         "tool_slugs": ["snowflake", "segment", "ga4", "amplitude", "looker", "bigquery",
                        "tableau", "mixpanel", "dbt"],
     },
+    # Cross-cutting overlay category, NOT a function: matches on Job.requires_ai
+    # (AI-skill detection at save time), so an "AI Campaign Engineer" appears
+    # here AND under Engineering. See category_detail for the special filter.
+    "ai-automation": {
+        "name": "AI & Automation",
+        "eyebrow": "The AI-era stack",
+        "description": "MarTech roles that pair platform skills with AI — agentic campaign workflows, AI-assisted marketing automation, Einstein/Agentforce, prompt-driven ops, and machine-learning-adjacent marketing roles.",
+        "placeholder": "Search AI MarTech jobs…",
+        "keywords": [],  # unused — this category filters on requires_ai
+        "tool_slugs": ["salesforce", "hubspot", "braze", "segment", "marketo",
+                       "amplitude", "marketing-cloud"],
+        "ai_overlay": True,
+    },
 }
 
 def category_detail(request, slug):
@@ -524,16 +537,21 @@ def category_detail(request, slug):
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
-    # Prefer stored function field; fall back to keyword+tool matching for
-    # legacy jobs that haven't been classified yet (function='other').
-    classified = jobs.filter(function=slug)
-    unclassified = jobs.filter(function="other")
-    cat_q = Q()
-    for kw in config["keywords"]:
-        cat_q |= Q(title__icontains=kw)
-    cat_q |= Q(tools__slug__in=config["tool_slugs"])
-    unclassified = unclassified.filter(cat_q)
-    jobs = (classified | unclassified)
+    if config.get("ai_overlay"):
+        # AI & Automation is a cross-cutting overlay (a job keeps its function
+        # AND appears here when it genuinely asks for AI skills).
+        jobs = jobs.filter(requires_ai=True)
+    else:
+        # Prefer stored function field; fall back to keyword+tool matching for
+        # legacy jobs that haven't been classified yet (function='other').
+        classified = jobs.filter(function=slug)
+        unclassified = jobs.filter(function="other")
+        cat_q = Q()
+        for kw in config["keywords"]:
+            cat_q |= Q(title__icontains=kw)
+        cat_q |= Q(tools__slug__in=config["tool_slugs"])
+        unclassified = unclassified.filter(cat_q)
+        jobs = (classified | unclassified)
 
     # Optional user refinements within the category.
     if query:
@@ -594,15 +612,18 @@ def all_jobs(request):
 
     jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
 
-    # Optional function scope (Engineering / Operations / Data).
+    # Optional function scope (Engineering / Operations / Data / AI overlay).
     # Prefer stored function field; fall back to keyword matching for unclassified jobs.
     if function in CATEGORY_CONFIG:
         config = CATEGORY_CONFIG[function]
-        cat_q = Q()
-        for kw in config["keywords"]:
-            cat_q |= Q(title__icontains=kw)
-        cat_q |= Q(tools__slug__in=config["tool_slugs"])
-        jobs = jobs.filter(Q(function=function) | (Q(function="other") & cat_q))
+        if config.get("ai_overlay"):
+            jobs = jobs.filter(requires_ai=True)
+        else:
+            cat_q = Q()
+            for kw in config["keywords"]:
+                cat_q |= Q(title__icontains=kw)
+            cat_q |= Q(tools__slug__in=config["tool_slugs"])
+            jobs = jobs.filter(Q(function=function) | (Q(function="other") & cat_q))
 
     if query:
         jobs = jobs.filter(

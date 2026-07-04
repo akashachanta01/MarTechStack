@@ -118,7 +118,7 @@
 .lanes-head { text-align: center; margin-bottom: 40px; }
 .lanes-head h2 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 36px); font-weight: 800; margin-top: 8px; letter-spacing: -.01em; }
 .lanes-sub { font-size: 15px; color: var(--ink2); margin-top: 8px; }
-.lanes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.lanes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
 .lane-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 24px; display: flex; align-items: flex-start; gap: 16px; cursor: pointer; transition: all .18s; text-decoration: none; color: inherit; }
 .lane-card:hover { border-color: var(--amber); box-shadow: var(--shadow); transform: translateY(-2px); }
 .lane-ico { width: 44px; height: 44px; border-radius: 11px; background: var(--amber-light); color: var(--amber); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -507,6 +507,13 @@
         <div class="lane-body">
           <div class="lane-top"><span class="lane-name">Data</span><span class="lane-count">Fast-growing</span></div>
           <p class="lane-desc">Analytics engineers, CDP, BI — Segment, Snowflake, GA4, attribution</p>
+        </div>
+      </a>
+      <a href="{% url 'category_detail' 'ai-automation' %}" class="lane-card">
+        <div class="lane-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.4L22 18.3l-2.1.9L19 21.5l-.9-2.3-2.1-.9 2.1-.9z"/></svg></div>
+        <div class="lane-body">
+          <div class="lane-top"><span class="lane-name">AI &amp; Automation</span><span class="lane-count">Emerging</span></div>
+          <p class="lane-desc">Roles pairing MarTech + AI skills — agentic workflows, Einstein/Agentforce, prompt-driven ops</p>
         </div>
       </a>
     </div>
