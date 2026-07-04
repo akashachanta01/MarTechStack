@@ -42,21 +42,48 @@ _AI_CONTEXT_RE = re.compile(
 _CONTEXT_WINDOW = 80  # chars either side of a weak AI mention
 
 
+# Vetoes calibrated against observed false positives in live JDs:
+#   "...our agentic marketing platform..."        → possessive product blurb
+#   "...with data and AI, we design solutions..." → company-voice pivot
+#   "...use of AI ... during live interviews is not permitted" → HR policy
+_AI_POSSESSIVE_BEFORE_RE = re.compile(r'\bour\s+(?:\w+\s+){0,2}$', re.IGNORECASE)
+_AI_COMPANY_PIVOT_AFTER_RE = re.compile(r'^\s*[,–—-]?\s*we\b', re.IGNORECASE)
+_AI_POLICY_RE = re.compile(
+    r'interview|application process|recruit\w*|not permitted|recording tools',
+    re.IGNORECASE,
+)
+
+
+def _match_is_boilerplate(text, m, window):
+    before = text[max(0, m.start() - 30):m.start()]
+    after = text[m.end():m.end() + 25]
+    if _AI_POSSESSIVE_BEFORE_RE.search(before):
+        return True   # "our agentic platform", "our AI tools"
+    if _AI_COMPANY_PIVOT_AFTER_RE.search(after):
+        return True   # "…data and AI, we design solutions…"
+    if _AI_POLICY_RE.search(window):
+        return True   # AI-use-in-interviews HR policy
+    return False
+
+
 def detect_ai_requirement(title, description):
     """True when a listing genuinely requires AI skills — not when the JD
     merely name-drops AI in company boilerplate."""
     title = title or ""
     description = description or ""
-    if _AI_STRONG_RE.search(f"{title} {description}"):
+    if _AI_STRONG_RE.search(title) or _AI_WEAK_RE.search(title):
         return True
-    if _AI_WEAK_RE.search(title):
-        return True
+    for m in _AI_STRONG_RE.finditer(description):
+        start = max(0, m.start() - _CONTEXT_WINDOW)
+        window = description[start:m.end() + _CONTEXT_WINDOW]
+        if not _match_is_boilerplate(description, m, window):
+            return True
     # Weak mention counts only in a requirement context ("experience with
-    # AI-powered tools"), not in company-voice boilerplate.
+    # AI-powered tools"), and never in boilerplate.
     for m in _AI_WEAK_RE.finditer(description):
         start = max(0, m.start() - _CONTEXT_WINDOW)
         window = description[start:m.end() + _CONTEXT_WINDOW]
-        if _AI_CONTEXT_RE.search(window):
+        if _AI_CONTEXT_RE.search(window) and not _match_is_boilerplate(description, m, window):
             return True
     return False
 
