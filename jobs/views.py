@@ -726,6 +726,9 @@ def blog_category(request, section_slug):
         'section_meta': section['meta'],
         'section_intro': section['intro'],
         'canonical_url': f'https://martechjobs.io/blog/{section_slug}/',
+        # A section with no posts yet must not be indexed (thin content) —
+        # keeps the robots meta consistent with BlogSectionSitemap's gating.
+        'page_noindex': not posts.exists(),
     })
 
 
@@ -776,15 +779,60 @@ def blog_list(request):
 
     return render(request, 'jobs/blog_list.html', ctx)
 
+def _extract_post_faqs(html):
+    """Pull Q/A pairs out of a post's 'Frequently Asked Questions' section
+    (the AEO prompt makes every generated post end with <h2>FAQ…</h2> followed
+    by <h3> question / <p> answer pairs). Returns [(question, answer)] so the
+    template can emit FAQPage JSON-LD — the content is already answer-shaped;
+    this just marks it up. Empty list when a post has no FAQ block."""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html or "", "html.parser")
+        faq_h2 = None
+        for h2 in soup.find_all("h2"):
+            if "frequently asked" in h2.get_text(" ", strip=True).lower():
+                faq_h2 = h2
+                break
+        if not faq_h2:
+            return []
+        faqs = []
+        node = faq_h2.find_next_sibling()
+        question, answer_parts = None, []
+        while node is not None and node.name != "h2":
+            if node.name == "h3":
+                if question and answer_parts:
+                    faqs.append((question, " ".join(answer_parts)))
+                question, answer_parts = node.get_text(" ", strip=True), []
+            elif question and node.name in ("p", "ul", "ol"):
+                text = node.get_text(" ", strip=True)
+                if text:
+                    answer_parts.append(text)
+            node = node.find_next_sibling()
+        if question and answer_parts:
+            faqs.append((question, " ".join(answer_parts)))
+        return faqs[:8]
+    except Exception:
+        return []
+
+
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
     related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
     sidebar_jobs = Job.objects.filter(is_active=True, screening_status='approved').order_by('-is_featured', '-created_at')[:2]
-    
+
+    # FAQPage schema from the post's own FAQ section (cached — parsing is
+    # pure-function of the content, keyed on updated_at).
+    cache_key = f"post_faqs:{post.id}:{post.updated_at.timestamp() if post.updated_at else 0}"
+    faq_items = cache.get(cache_key)
+    if faq_items is None:
+        faq_items = _extract_post_faqs(post.content)
+        cache.set(cache_key, faq_items, 60 * 60 * 24)
+
     return render(request, 'jobs/post_detail.html', {
         'post': post,
         'related_posts': related_posts,
         'sidebar_jobs': sidebar_jobs,
+        'faq_items': faq_items,
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---

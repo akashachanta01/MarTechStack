@@ -137,11 +137,14 @@ def _live_data_digest():
         ).filter(n__gt=0).order_by('-n')[:10].values_list('name', 'n')
     )
 
-    ai_q = (_Q(description__icontains='artificial intelligence')
-            | _Q(description__icontains=' ai ') | _Q(description__icontains=' ai,')
-            | _Q(description__icontains=' ai.') | _Q(description__icontains='genai')
-            | _Q(description__icontains='generative ai') | _Q(description__icontains='machine learning'))
-    ai_mentions = live.filter(ai_q).count()
+    # Word-boundary matching in Python (icontains substrings over-count:
+    # ' ai.' matches "Dubai." etc.). These figures get PUBLISHED as real
+    # stats, so precision beats query elegance. ~300 rows — cheap.
+    import re as _re
+    ai_pat = _re.compile(r'\b(ai|genai|artificial intelligence|generative ai|machine learning|llms?)\b', _re.IGNORECASE)
+    ai_mentions = sum(
+        1 for d in live.values_list('description', flat=True) if d and ai_pat.search(d)
+    )
 
     senior_q = (_Q(title__icontains='senior') | _Q(title__icontains='lead')
                 | _Q(title__icontains='staff') | _Q(title__icontains='principal')
@@ -376,6 +379,11 @@ def _topic_slug(entry: dict) -> str:
     return slugify(entry["keyword"])
 
 
+# Slugs owned by non-post routes under /blog/ — a post with one of these slugs
+# would be created but unreachable (the section/feed route matches first).
+_RESERVED_POST_SLUGS = {"ai-in-martech", "salary-guides", "career-advice", "tech-stacks", "feed"}
+
+
 def _pick_next_topic() -> Optional[dict]:
     """Return the first TOPIC_QUEUE entry whose keyword-slug doesn't already
     exist as a BlogPost. Exact-slug match avoids false positives from unrelated
@@ -383,7 +391,10 @@ def _pick_next_topic() -> Optional[dict]:
     post must NOT block the dedicated 'hubspot careers' guide)."""
     existing_slugs = set(BlogPost.objects.values_list("slug", flat=True))
     for entry in TOPIC_QUEUE:
-        if _topic_slug(entry) not in existing_slugs:
+        slug = _topic_slug(entry)
+        if slug in _RESERVED_POST_SLUGS:
+            continue  # would be shadowed by a section/feed route — skip
+        if slug not in existing_slugs:
             return entry
     return None  # All topics covered
 

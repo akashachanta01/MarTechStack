@@ -35,8 +35,8 @@
 .bl-mast-meta { display: flex; justify-content: space-between; align-items: center; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
 .bl-mast-meta .hl { color: var(--amber); }
 .bl-nameplate { text-align: center; padding: 28px 0 20px; }
-.bl-nameplate h1 { font-family: 'Playfair Display', serif; font-size: clamp(38px, 6vw, 80px); font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -.01em; margin: 0; }
-.bl-nameplate h1 em { font-style: italic; color: var(--amber); }
+.bl-nameplate h1, .bl-nameplate .bl-masthead-h { font-family: 'Playfair Display', serif; font-size: clamp(38px, 6vw, 80px); font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -.01em; margin: 0; }
+.bl-nameplate h1 em, .bl-nameplate .bl-masthead-h em { font-style: italic; color: var(--amber); }
 .bl-tagline { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
 .bl-tagline::before, .bl-tagline::after { content: ""; height: 1px; width: 44px; background: var(--rule2); }
 
@@ -176,7 +176,7 @@
     </div>
     <div class="bl-nameplate">
       <div class="eyebrow" style="margin-bottom:12px;">Industry Insights &amp; Career Advice</div>
-      <h1>The MarTech <em>Chronicles</em></h1>
+      {% if section_intro %}<div class="bl-masthead-h">The MarTech <em>Chronicles</em></div>{% else %}<h1>The MarTech <em>Chronicles</em></h1>{% endif %}
       <div class="bl-tagline">Written by practitioners · for practitioners</div>
     </div>
     <p style="text-align:center;max-width:520px;margin:14px auto 0;padding-bottom:28px;font-size:15.5px;color:var(--ink2);line-height:1.7;font-style:italic;">Field notes on marketing operations, technology stacks, career growth, and the future of MarTech.</p>
@@ -507,6 +507,12 @@
     <div style="margin-bottom:24px;">
       <h1 style="font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,38px);font-weight:800;margin-bottom:8px;">{{ current_category }}</h1>
       <p style="max-width:640px;font-size:15.5px;color:var(--ink2);line-height:1.7;">{{ section_intro }}</p>
+      {# Internal-linking rule: content hubs must link toward the money pages. #}
+      <p style="margin-top:10px;font-size:14.5px;">
+        <a href="{% url 'all_jobs' %}" style="font-weight:600;">Browse live MarTech jobs →</a>
+        <span style="color:var(--ink3);margin:0 8px;">·</span>
+        <a href="{% url 'market_stats' %}" style="font-weight:600;">Live job-market statistics →</a>
+      </p>
     </div>
     {% endif %}
 

@@ -23,6 +23,17 @@
   "mainEntityOfPage": {"@type":"WebPage","@id":"https://martechjobs.io{% url 'post_detail' post.slug %}"}
 }
 </script>
+{% if faq_items|length >= 2 %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for q, a in faq_items %}{"@type":"Question","name":"{{ q|escapejs }}","acceptedAnswer":{"@type":"Answer","text":"{{ a|escapejs }}"}}{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endif %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
