@@ -1,20 +1,20 @@
 {% extends "jobs/base.html" %}
 {% load static %}
 
-{% block title %}Blog — MarTech Insights, Career Advice & Salary Guides | MarTechJobs{% endblock %}
-{% block meta_description %}Expert articles on marketing operations, technology stacks, career growth, salary guides and the future of MarTech. Written for practitioners, by practitioners.{% endblock %}
+{% block title %}{% if section_title %}{{ section_title }} | MarTechJobs{% else %}Blog — MarTech Insights, Career Advice & Salary Guides | MarTechJobs{% endif %}{% endblock %}
+{% block meta_description %}{% if section_meta %}{{ section_meta }}{% else %}Expert articles on marketing operations, technology stacks, career growth, salary guides and the future of MarTech. Written for practitioners, by practitioners.{% endif %}{% endblock %}
 {% block meta_keywords %}martech blog, marketing operations articles, martech careers, HubSpot tips, Salesforce guides, marketing salary guide{% endblock %}
-{% block og_title %}Blog — MarTech Insights, Career Advice & Salary Guides{% endblock %}
-{% block og_desc %}Expert articles on marketing operations, tech stacks, career growth, salary guides and the future of MarTech.{% endblock %}
+{% block og_title %}{% if section_title %}{{ section_title }}{% else %}Blog — MarTech Insights, Career Advice & Salary Guides{% endif %}{% endblock %}
+{% block og_desc %}{% if section_meta %}{{ section_meta }}{% else %}Expert articles on marketing operations, tech stacks, career growth, salary guides and the future of MarTech.{% endif %}{% endblock %}
 
 {% block extra_schema %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Blog",
-  "name": "MarTechJobs Blog — The MarTech Chronicles",
-  "description": "Expert articles on marketing operations, tech stacks, career advice and salary guides.",
-  "url": "https://martechjobs.io/blog/",
+  "name": "{% if section_title %}{{ section_title|escapejs }}{% else %}MarTechJobs Blog — The MarTech Chronicles{% endif %}",
+  "description": "{% if section_meta %}{{ section_meta|escapejs }}{% else %}Expert articles on marketing operations, tech stacks, career advice and salary guides.{% endif %}",
+  "url": "{% if canonical_url %}{{ canonical_url }}{% else %}https://martechjobs.io/blog/{% endif %}",
   "publisher": {"@type":"Organization","name":"MarTechJobs","url":"https://martechjobs.io"}
 }
 </script>
@@ -189,11 +189,12 @@
     <div class="bl-nav-inner">
       <nav class="bl-tabs" aria-label="Blog sections">
         <a href="{% url 'blog_list' %}" class="bl-tab {% if not current_category and not search_query %}active{% endif %}">All Posts</a>
-        <a href="?category=Tech+Stacks" class="bl-tab {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
-        <a href="?category=Career+Advice" class="bl-tab {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
+        <a href="{% url 'blog_ai_martech' %}" class="bl-tab {% if current_category == 'AI in MarTech' %}active{% endif %}">AI in MarTech</a>
+        <a href="{% url 'blog_tech_stacks' %}" class="bl-tab {% if current_category == 'Tech Stacks' %}active{% endif %}">Tech Stacks</a>
+        <a href="{% url 'blog_career_advice' %}" class="bl-tab {% if current_category == 'Career Advice' %}active{% endif %}">Career Advice</a>
         <a href="{% url 'blog_list' %}#interview-guides" class="bl-tab {% if current_category == 'Interview Guides' %}active{% endif %}">Interview Guides</a>
         <a href="{% url 'blog_list' %}#cert-guides" class="bl-tab {% if current_category == 'Certification Guides' %}active{% endif %}">Cert Guides</a>
-        <a href="?category=Salary+Guides" class="bl-tab {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
+        <a href="{% url 'blog_salary_guides' %}" class="bl-tab {% if current_category == 'Salary Guides' %}active{% endif %}">Salary Guides</a>
         <a href="?category=Industry+News" class="bl-tab {% if current_category == 'Industry News' %}active{% endif %}">Industry News</a>
       </nav>
       <form method="get" action="{% url 'blog_list' %}" class="bl-search" role="search">
@@ -502,10 +503,17 @@
     </a>
     {% endif %}
 
+    {% if section_intro %}
+    <div style="margin-bottom:24px;">
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(26px,3.5vw,38px);font-weight:800;margin-bottom:8px;">{{ current_category }}</h1>
+      <p style="max-width:640px;font-size:15.5px;color:var(--ink2);line-height:1.7;">{{ section_intro }}</p>
+    </div>
+    {% endif %}
+
     <div class="bl-filter-label">
       {% if search_query %}Results for <span>"{{ search_query }}"</span>{% endif %}
-      {% if current_category %}<span>{{ current_category }}</span>{% endif %}
-      — <a href="{% url 'blog_list' %}" style="color:var(--ink3);text-decoration:underline;">Clear</a>
+      {% if current_category and not section_intro %}<span>{{ current_category }}</span>{% endif %}
+      {% if not section_intro %}— <a href="{% url 'blog_list' %}" style="color:var(--ink3);text-decoration:underline;">Clear</a>{% endif %}
     </div>
 
     <div class="bl-grid">

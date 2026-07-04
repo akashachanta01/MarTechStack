@@ -676,6 +676,59 @@ def title_jobs(request, title_slug):
     })
 
 
+# Clean-URL blog sections. The ?category= filter works but is deliberately
+# noindexed (FILTER_PARAMS), so each section gets an indexable path with its
+# own title/meta/intro — /blog/ai-in-martech/ is the flagship.
+BLOG_SECTIONS = {
+    'ai-in-martech': {
+        'category': 'AI in MarTech',
+        'title': 'AI in MarTech — Practical Guides for Marketing Ops Professionals',
+        'meta': 'How AI is changing Marketing Operations, Marketing Automation, and MarTech careers: honest, practitioner-grade guides on AI skills, tools, and staying ahead.',
+        'intro': 'No hype, no doom — practitioner-grade coverage of how AI is actually changing Marketing Operations work, which skills matter, and how to stay ahead of it.',
+    },
+    'salary-guides': {
+        'category': 'Salary Guides',
+        'title': 'MarTech & Marketing Ops Salary Guides',
+        'meta': 'Salary guides for Marketing Operations, Marketing Automation, Salesforce, HubSpot, Marketo, and MarTech roles — by experience level, city, and market.',
+        'intro': 'Compensation guides for MarTech and Marketing Operations roles, by platform, seniority, and market.',
+    },
+    'career-advice': {
+        'category': 'Career Advice',
+        'title': 'MarTech Career Advice & Role Guides',
+        'meta': 'Role guides and career advice for Marketing Operations, MarTech engineering, and marketing analytics professionals.',
+        'intro': 'Role guides, career paths, and hiring insight for MarTech and Marketing Ops professionals.',
+    },
+    'tech-stacks': {
+        'category': 'Tech Stacks',
+        'title': 'MarTech Stacks & Platform Guides',
+        'meta': 'Deep dives on MarTech platforms and stacks: Salesforce, HubSpot, Marketo, Braze, Segment, Adobe Experience Cloud, and more.',
+        'intro': 'Platform deep-dives and stack guides for the tools MarTech teams run on.',
+    },
+}
+
+
+def blog_category(request, section_slug):
+    """Indexable landing page for one blog category (e.g. /blog/ai-in-martech/)."""
+    section = BLOG_SECTIONS.get(section_slug)
+    if not section:
+        raise Http404
+    posts = BlogPost.objects.filter(
+        is_published=True, category__iexact=section['category']
+    ).order_by('-published_at')
+    return render(request, 'jobs/blog_list.html', {
+        'posts': posts,
+        'interview_guides': [],
+        'cert_guides': [],
+        'search_query': '',
+        'current_category': section['category'],
+        'is_hub': False,
+        'section_title': section['title'],
+        'section_meta': section['meta'],
+        'section_intro': section['intro'],
+        'canonical_url': f'https://martechjobs.io/blog/{section_slug}/',
+    })
+
+
 def blog_list(request):
     search_query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
