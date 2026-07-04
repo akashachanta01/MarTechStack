@@ -10,7 +10,7 @@ from jobs.sitemaps import (
     JobSitemap, ToolSitemap, SEOLandingSitemap,
     StaticViewSitemap, BlogSitemap, ToolsStaticSitemap, TitleJobsSitemap,
     InterviewGuideSitemap, RoleSalarySitemap, CertificationGuideSitemap,
-    CategorySitemap
+    CategorySitemap, BlogSectionSitemap
 )
 
 # --- 1. DEFINE SITEMAPS ---
@@ -26,6 +26,7 @@ sitemaps = {
     'categories': CategorySitemap,
     'static': StaticViewSitemap,
     'blog': BlogSitemap,
+    'blog_sections': BlogSectionSitemap,
 }
 
 # --- 2. ROBOTS.TXT VIEW ---
@@ -88,7 +89,7 @@ def llms_txt(request):
     AI quotes about us are always real — per the site rule that every number
     shown must be true."""
     from django.core.cache import cache
-    content = cache.get("llms_txt_v2")
+    content = cache.get("llms_txt_v3")
     if content is None:
         try:
             from jobs.models import Job, Tool
@@ -119,6 +120,7 @@ def llms_txt(request):
 
 ## Guides & data
 - [MarTech job market statistics](https://martechjobs.io/martech-job-market-statistics/): live counts by platform, function, country, remote share, and salary transparency — refreshed daily, citable
+- [AI in MarTech](https://martechjobs.io/blog/ai-in-martech/): practitioner-grade guides on how AI is changing Marketing Operations work, skills, and careers
 - [Blog](https://martechjobs.io/blog/): salary guides, role guides, and market analyses for MarTech careers
 - [Salary guide](https://martechjobs.io/salary-guide/): compensation data for Marketing Ops and MarTech roles
 - [Free tools](https://martechjobs.io/tools/): salary calculator, JD generator, interview-question generator, and other MarTech utilities
@@ -127,7 +129,7 @@ def llms_txt(request):
 - [About MarTechJobs](https://martechjobs.io/about/): who runs the site and how jobs are sourced and screened
 - [For employers](https://martechjobs.io/for-employers/): how to list roles
 """
-        cache.set("llms_txt_v2", content, 3600)
+        cache.set("llms_txt_v3", content, 3600)
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
 
 

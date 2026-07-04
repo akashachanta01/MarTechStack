@@ -20,6 +20,7 @@
   "datePosted": "{{ job.created_at|date:'Y-m-d' }}",
   "validThrough": "{{ job.get_schema_valid_through }}",
   "employmentType": "{% if job.role_type == 'contract' %}CONTRACTOR{% elif job.role_type == 'part_time' %}PART_TIME{% else %}FULL_TIME{% endif %}",
+  "directApply": false,
   "hiringOrganization": {
     "@type": "Organization",
     "name": "{{ job.company|escapejs }}"{% if job.company_logo %},"logo": "{{ job.company_logo }}"{% endif %}

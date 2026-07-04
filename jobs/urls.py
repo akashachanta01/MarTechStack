@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import RedirectView
 from . import views
-from .feeds import LatestJobsFeed
+from .feeds import LatestJobsFeed, BlogFeed
 
 urlpatterns = [
     path('', views.job_list, name='job_list'),
@@ -13,6 +13,12 @@ urlpatterns = [
     
     # --- BLOG (DYNAMIC) ---
     path('blog/', views.blog_list, name='blog_list'),
+    path('blog/feed/', BlogFeed(), name='blog_feed'),
+    # Clean-URL category sections — MUST precede the post-detail slug route.
+    path('blog/ai-in-martech/', views.blog_category, {'section_slug': 'ai-in-martech'}, name='blog_ai_martech'),
+    path('blog/salary-guides/', views.blog_category, {'section_slug': 'salary-guides'}, name='blog_salary_guides'),
+    path('blog/career-advice/', views.blog_category, {'section_slug': 'career-advice'}, name='blog_career_advice'),
+    path('blog/tech-stacks/', views.blog_category, {'section_slug': 'tech-stacks'}, name='blog_tech_stacks'),
     path('blog/<slug:slug>/', views.post_detail, name='post_detail'),
 
     # --- STATIC PAGES ---

@@ -676,6 +676,62 @@ def title_jobs(request, title_slug):
     })
 
 
+# Clean-URL blog sections. The ?category= filter works but is deliberately
+# noindexed (FILTER_PARAMS), so each section gets an indexable path with its
+# own title/meta/intro — /blog/ai-in-martech/ is the flagship.
+BLOG_SECTIONS = {
+    'ai-in-martech': {
+        'category': 'AI in MarTech',
+        'title': 'AI in MarTech — Practical Guides for Marketing Ops Professionals',
+        'meta': 'How AI is changing Marketing Operations, Marketing Automation, and MarTech careers: honest, practitioner-grade guides on AI skills, tools, and staying ahead.',
+        'intro': 'No hype, no doom — practitioner-grade coverage of how AI is actually changing Marketing Operations work, which skills matter, and how to stay ahead of it.',
+    },
+    'salary-guides': {
+        'category': 'Salary Guides',
+        'title': 'MarTech & Marketing Ops Salary Guides',
+        'meta': 'Salary guides for Marketing Operations, Marketing Automation, Salesforce, HubSpot, Marketo, and MarTech roles — by experience level, city, and market.',
+        'intro': 'Compensation guides for MarTech and Marketing Operations roles, by platform, seniority, and market.',
+    },
+    'career-advice': {
+        'category': 'Career Advice',
+        'title': 'MarTech Career Advice & Role Guides',
+        'meta': 'Role guides and career advice for Marketing Operations, MarTech engineering, and marketing analytics professionals.',
+        'intro': 'Role guides, career paths, and hiring insight for MarTech and Marketing Ops professionals.',
+    },
+    'tech-stacks': {
+        'category': 'Tech Stacks',
+        'title': 'MarTech Stacks & Platform Guides',
+        'meta': 'Deep dives on MarTech platforms and stacks: Salesforce, HubSpot, Marketo, Braze, Segment, Adobe Experience Cloud, and more.',
+        'intro': 'Platform deep-dives and stack guides for the tools MarTech teams run on.',
+    },
+}
+
+
+def blog_category(request, section_slug):
+    """Indexable landing page for one blog category (e.g. /blog/ai-in-martech/)."""
+    section = BLOG_SECTIONS.get(section_slug)
+    if not section:
+        raise Http404
+    posts = BlogPost.objects.filter(
+        is_published=True, category__iexact=section['category']
+    ).order_by('-published_at')
+    return render(request, 'jobs/blog_list.html', {
+        'posts': posts,
+        'interview_guides': [],
+        'cert_guides': [],
+        'search_query': '',
+        'current_category': section['category'],
+        'is_hub': False,
+        'section_title': section['title'],
+        'section_meta': section['meta'],
+        'section_intro': section['intro'],
+        'canonical_url': f'https://martechjobs.io/blog/{section_slug}/',
+        # A section with no posts yet must not be indexed (thin content) —
+        # keeps the robots meta consistent with BlogSectionSitemap's gating.
+        'page_noindex': not posts.exists(),
+    })
+
+
 def blog_list(request):
     search_query = request.GET.get('q', '').strip()
     category_filter = request.GET.get('category', '').strip()
@@ -723,15 +779,60 @@ def blog_list(request):
 
     return render(request, 'jobs/blog_list.html', ctx)
 
+def _extract_post_faqs(html):
+    """Pull Q/A pairs out of a post's 'Frequently Asked Questions' section
+    (the AEO prompt makes every generated post end with <h2>FAQ…</h2> followed
+    by <h3> question / <p> answer pairs). Returns [(question, answer)] so the
+    template can emit FAQPage JSON-LD — the content is already answer-shaped;
+    this just marks it up. Empty list when a post has no FAQ block."""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html or "", "html.parser")
+        faq_h2 = None
+        for h2 in soup.find_all("h2"):
+            if "frequently asked" in h2.get_text(" ", strip=True).lower():
+                faq_h2 = h2
+                break
+        if not faq_h2:
+            return []
+        faqs = []
+        node = faq_h2.find_next_sibling()
+        question, answer_parts = None, []
+        while node is not None and node.name != "h2":
+            if node.name == "h3":
+                if question and answer_parts:
+                    faqs.append((question, " ".join(answer_parts)))
+                question, answer_parts = node.get_text(" ", strip=True), []
+            elif question and node.name in ("p", "ul", "ol"):
+                text = node.get_text(" ", strip=True)
+                if text:
+                    answer_parts.append(text)
+            node = node.find_next_sibling()
+        if question and answer_parts:
+            faqs.append((question, " ".join(answer_parts)))
+        return faqs[:8]
+    except Exception:
+        return []
+
+
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
     related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
     sidebar_jobs = Job.objects.filter(is_active=True, screening_status='approved').order_by('-is_featured', '-created_at')[:2]
-    
+
+    # FAQPage schema from the post's own FAQ section (cached — parsing is
+    # pure-function of the content, keyed on updated_at).
+    cache_key = f"post_faqs:{post.id}:{post.updated_at.timestamp() if post.updated_at else 0}"
+    faq_items = cache.get(cache_key)
+    if faq_items is None:
+        faq_items = _extract_post_faqs(post.content)
+        cache.set(cache_key, faq_items, 60 * 60 * 24)
+
     return render(request, 'jobs/post_detail.html', {
         'post': post,
         'related_posts': related_posts,
         'sidebar_jobs': sidebar_jobs,
+        'faq_items': faq_items,
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---

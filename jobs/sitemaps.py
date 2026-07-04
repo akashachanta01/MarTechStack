@@ -124,6 +124,26 @@ class BlogSitemap(Sitemap):
     def location(self, obj):
         return reverse('post_detail', args=[obj.slug])
 
+class BlogSectionSitemap(Sitemap):
+    """Clean-URL blog category sections (/blog/ai-in-martech/ etc.) — only
+    those that actually have published posts, so we never sitemap an empty
+    section page."""
+    changefreq = "weekly"
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from .models import BlogPost
+        from .views import BLOG_SECTIONS
+        return [
+            slug for slug, cfg in BLOG_SECTIONS.items()
+            if BlogPost.objects.filter(is_published=True, category__iexact=cfg['category']).exists()
+        ]
+
+    def location(self, slug):
+        return f'/blog/{slug}/'
+
+
 class RoleSalarySitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.7
