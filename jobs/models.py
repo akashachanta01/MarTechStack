@@ -10,23 +10,38 @@ from datetime import timedelta
 
 # --- HELPER 1: LOCATION STANDARDIZER ---
 # Word-boundary AI-skill detection (shared by Job.save, ingest, and the
-# tag_ai_jobs backfill). Word boundaries matter: a bare `icontains=' ai'`
-# matches "Dubai"/"Mumbai". Requires a genuine AI term, not a passing buzzword:
-# the marketing-AI product terms count, generic "we're an AI company" boilerplate
-# is filtered by requiring the term near a skill/requirement context OR a
-# specific AI-product term.
-_AI_TERM_RE = re.compile(
-    r'\b(genai|generative ai|artificial intelligence|machine learning|llms?|'
-    r'prompt engineering|ai agents?|agentic|ai[- ](?:driven|powered|assisted|native)|'
-    r'einstein (?:ai|gpt)|agentforce|copilot)\b|\bai\b',
+# tag_ai_jobs backfill). Word boundaries matter: a bare substring match hits
+# "Dubai"/"Mumbai". Calibration note: a naive "mentions AI anywhere" rule
+# flagged 65% of live jobs — almost all boilerplate ("we're an AI-driven
+# company"). The category means "this role genuinely requires AI skills", so:
+#   - a STRONG term anywhere (specific AI skills/products) → flagged
+#   - any AI term in the TITLE → flagged
+#   - bare "AI"/weak mentions in the body only count with repetition (>=3),
+#     which separates real AI-centric JDs from a single about-us buzzword.
+_AI_STRONG_RE = re.compile(
+    r'\b(genai|generative ai|prompt engineering|ai agents?|agentic|'
+    r'llms?|large language models?|'
+    r'einstein (?:ai|gpt)|agentforce|ai copilot|copilot for|'
+    r'machine[- ]learning models?|ml models?)\b',
+    re.IGNORECASE,
+)
+_AI_WEAK_RE = re.compile(
+    r'\b(ai|artificial intelligence|machine learning|'
+    r'ai[- ](?:driven|powered|assisted|native|enabled))\b',
     re.IGNORECASE,
 )
 
 
 def detect_ai_requirement(title, description):
-    """True when a listing genuinely references AI skills/usage."""
-    text = f"{title or ''} {description or ''}"
-    return bool(_AI_TERM_RE.search(text))
+    """True when a listing genuinely requires AI skills — not when the JD
+    merely name-drops AI once in company boilerplate."""
+    title = title or ""
+    description = description or ""
+    if _AI_STRONG_RE.search(f"{title} {description}"):
+        return True
+    if _AI_WEAK_RE.search(title):
+        return True
+    return len(_AI_WEAK_RE.findall(description)) >= 3
 
 
 def normalize_location(loc):
