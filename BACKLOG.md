@@ -5,6 +5,36 @@ ships. Newest decisions at the top of each section.
 
 ---
 
+## FOUNDER OPS / DISTRIBUTION
+
+- [ ] **LinkedIn auto-posting for blog articles (Zapier)** — plumbing is live
+  (`/blog/feed/` RSS announces every published post); just needs the no-code
+  bridge connected (~10 min):
+  1. zapier.com → Create Zap → Trigger: "RSS by Zapier → New Item in Feed",
+     feed URL `https://martechjobs.io/blog/feed/`
+  2. Action: "LinkedIn Pages → Create Company Update" (must be page admin);
+     text = `{{Title}}` + `{{Description}}` + link `{{Link}}`
+  3. Turn on. Free tier (100 tasks/mo) covers ~1-3 posts/week easily.
+  Alternatives: Make.com or dlvr.it. Keep the manual habit: reshare the best
+  data pieces from the personal profile with one added sentence — personal
+  posts get ~10x company-page reach.
+- [ ] **IndexNow one-time setup** — set `INDEXNOW_KEY=<random 32-char hex>` in
+  Render env (web + cron); verify site in Bing Webmaster Tools + submit
+  sitemap. Until then the daily `ping_indexnow` step politely skips.
+  (ChatGPT search runs on Bing's index.)
+- [ ] **Rotate Resend API key + DB password** — both appeared in a shared
+  screenshot; treat as burned. Resend: dashboard → new key → update
+  `EMAIL_HOST_PASSWORD` → delete old. DB: rotate in Render Postgres settings.
+- [ ] **Ahrefs API quota** — at 0 units; recheck next cycle and pull baseline
+  (DR, referring domains, AI-citation counts via `ai-responses-count`).
+- [ ] **Monthly AEO scoreboard** — ask ChatGPT/Perplexity/Gemini "best job
+  boards for marketing operations roles"; log whether martechjobs.io appears.
+- [ ] **Community distribution** — MO Pros Slack intro post (draft written),
+  10 backlink outreach emails (ChiefMartec, MarTech Alliance, …), Antara
+  (Mavlers) recruiter email (draft written, send to Antara@mavlers.com).
+
+---
+
 ## TECH DEBT
 
 ### Migration history baseline reset (planned)
@@ -68,10 +98,10 @@ fragility for future real migrations.
 - [x] **Ashby description is placeholder** — DONE. Now uses the real
   `descriptionHtml`/`descriptionPlain` from Ashby's job-board API (cleaned via
   `clean_html_description`), falling back to the URL pointer only if absent.
-- [ ] **Workday description is title-only** (`fetch_jobs.py`): DEFERRED — the
-  CXS list endpoint doesn't carry the JD; getting it needs a second per-job
-  request to the job-detail CXS endpoint, which I can't verify against a live
-  Workday tenant from here. Needs testing before shipping.
+- [x] **Workday description is title-only** — DONE (audit round 4). Now fetches
+  the real JD from the per-job CXS detail endpoint; postings with no fetchable
+  body are skipped (`Workday:no_description` stat). Verify the stat in cron
+  logs looks sane after a few runs.
 - [x] **Empty-description fallback** — DONE. `job_detail.html` shows a clear
   "available on the employer's site → Apply Now" message when description is
   blank, so a page never renders an empty content block.
@@ -91,9 +121,9 @@ fragility for future real migrations.
 
 ## FEATURES (tracked with the accounts/dashboard build)
 
-- [ ] **Email subscribe has no verification** (`views.py`): any email can
-  subscribe; no confirmation link. Add token-based double opt-in. Fold into the
-  user-accounts work.
+- [x] **Email subscribe has no verification** — DONE. Double opt-in shipped:
+  signups land in `PendingSubscriber` and are only promoted to `Subscriber` on
+  the emailed confirmation link; unsubscribe is a soft-delete suppression.
 - [ ] **post_job missing function/category field** (`views.py`): user-posted
   jobs default to `function="other"` and never appear on category pages. Add a
   function selector. Fold into the post-job/accounts work.
