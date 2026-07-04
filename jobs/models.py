@@ -9,6 +9,26 @@ import re
 from datetime import timedelta
 
 # --- HELPER 1: LOCATION STANDARDIZER ---
+# Word-boundary AI-skill detection (shared by Job.save, ingest, and the
+# tag_ai_jobs backfill). Word boundaries matter: a bare `icontains=' ai'`
+# matches "Dubai"/"Mumbai". Requires a genuine AI term, not a passing buzzword:
+# the marketing-AI product terms count, generic "we're an AI company" boilerplate
+# is filtered by requiring the term near a skill/requirement context OR a
+# specific AI-product term.
+_AI_TERM_RE = re.compile(
+    r'\b(genai|generative ai|artificial intelligence|machine learning|llms?|'
+    r'prompt engineering|ai agents?|agentic|ai[- ](?:driven|powered|assisted|native)|'
+    r'einstein (?:ai|gpt)|agentforce|copilot)\b|\bai\b',
+    re.IGNORECASE,
+)
+
+
+def detect_ai_requirement(title, description):
+    """True when a listing genuinely references AI skills/usage."""
+    text = f"{title or ''} {description or ''}"
+    return bool(_AI_TERM_RE.search(text))
+
+
 def normalize_location(loc):
     if not loc: return "Remote"
     cleaned = loc.strip().replace(" - ", ", ").replace(" | ", ", ").replace("/", ", ")
@@ -126,6 +146,11 @@ class Job(models.Model):
     # country code the remote role is restricted to (e.g. "US"). Lets us serve
     # both "remote anywhere" and "remote in <country>" without parsing text.
     remote_scope = models.CharField(max_length=20, blank=True, default="")
+    # AI overlay: True when the listing genuinely asks for AI skills alongside
+    # MarTech skills (word-boundary detection on title+description at save).
+    # Deliberately NOT a `function` value — an "AI Campaign Engineer" is still
+    # engineering; this powers the cross-cutting /category/ai-automation/ page.
+    requires_ai = models.BooleanField(default=False, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -275,6 +300,8 @@ class Job(models.Model):
         if self.location: self.location = normalize_location(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
+        # AI overlay is recomputed deterministically on every save (cheap regex).
+        self.requires_ai = detect_ai_requirement(self.title, self.description)
         # Safety: a job that isn't approved can never be visible.
         if self.screening_status != 'approved':
             self.is_active = False
