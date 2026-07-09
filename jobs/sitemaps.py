@@ -242,16 +242,27 @@ class TitleJobsSitemap(Sitemap):
 
 
 class CategorySitemap(Sitemap):
-    """The three top-level category hubs (/category/<slug>/). They're linked in
-    the nav and footer but were missing from the sitemap, so Google had no
-    explicit recrawl signal for them."""
+    """Top-level category hubs (/category/<slug>/). They're linked in the nav
+    and footer but were missing from the sitemap, so Google had no explicit
+    recrawl signal for them. Overlay categories (ai-automation) are gated on
+    having live jobs — category_detail noindexes them when empty, and the
+    sitemap must agree with the robots meta."""
     changefreq = "daily"
     priority = 0.8
     protocol = 'https'
 
     def items(self):
         from jobs.views import CATEGORY_CONFIG
-        return list(CATEGORY_CONFIG.keys())
+        from .models import Job
+        slugs = []
+        for slug, cfg in CATEGORY_CONFIG.items():
+            if cfg.get('ai_overlay'):
+                if not Job.objects.filter(
+                    is_active=True, screening_status='approved', requires_ai=True
+                ).exists():
+                    continue
+            slugs.append(slug)
+        return slugs
 
     def location(self, slug):
         return reverse('category_detail', args=[slug])

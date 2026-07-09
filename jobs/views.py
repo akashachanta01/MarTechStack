@@ -1588,7 +1588,6 @@ def confirm_subscription(request, token):
 
 
 @staff_member_required
-@staff_member_required
 def founder_hq(request):
     """Founder HQ — the one page that answers 'who are my users and how is
     the site doing', with every person listed alongside their engagement
@@ -1618,7 +1617,10 @@ def founder_hq(request):
         if active:
             saved_search_counts[e][1] += 1
 
-    subscriber_status = dict(Subscriber.objects.values_list('email', 'is_active'))
+    # Lowercased keys — signups lowercase at write time, but legacy rows may not.
+    subscriber_status = {
+        (e or '').lower(): a for e, a in Subscriber.objects.values_list('email', 'is_active')
+    }
 
     people = []
     for u in users:
@@ -1626,12 +1628,15 @@ def founder_hq(request):
         email_l = (u.email or '').lower()
         ss = saved_search_counts.get(email_l, [0, 0])
         days_since_seen = (now - u.last_login).days if u.last_login else None
+        # len(...all()) hits the prefetch cache; .count()/.exists() would issue
+        # a fresh query per user and defeat the prefetch entirely.
+        saved_jobs_n = len(profile.saved_jobs.all()) if profile else 0
         people.append({
             'user': u,
-            'auth_method': 'Google' if u.socialaccount_set.exists() else 'Email',
+            'auth_method': 'Google' if len(u.socialaccount_set.all()) else 'Email',
             'newsletter': bool(profile and profile.email_newsletter),
             'is_subscriber': subscriber_status.get(email_l),
-            'saved_jobs': profile.saved_jobs.count() if profile else 0,
+            'saved_jobs': saved_jobs_n,
             'stack': [t.name for t in profile.preferred_stack.all()[:4]] if profile else [],
             'location': (profile.preferred_location if profile else '') or '',
             'linkedin': (profile.linkedin_url if profile else '') or '',
@@ -1639,7 +1644,7 @@ def founder_hq(request):
             'saved_searches': ss[1],
             'days_since_seen': days_since_seen,
             # Engagement tier for at-a-glance triage.
-            'engaged': (ss[1] > 0) or (profile and profile.saved_jobs.exists()) or (profile and profile.pro_waitlist),
+            'engaged': (ss[1] > 0) or saved_jobs_n > 0 or bool(profile and profile.pro_waitlist),
         })
 
     # --- Newsletter-only subscribers (no account) ---
@@ -1677,6 +1682,7 @@ def founder_hq(request):
     })
 
 
+@staff_member_required
 def review_queue(request):
     status = request.GET.get("status", "pending").strip().lower()
     q = request.GET.get("q", "").strip()
