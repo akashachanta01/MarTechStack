@@ -193,7 +193,11 @@ class UserSubmissionAdmin(BaseJobAdmin):
     list_display = ("logo_preview", "job_card_header", "location", "score_display", "screening_status", "posted_date")
 
 @admin.register(Subscriber)
-class SubscriberAdmin(admin.ModelAdmin): list_display = ("email", "created_at")
+class SubscriberAdmin(admin.ModelAdmin):
+    list_display = ("email", "is_active", "created_at", "unsubscribed_at")
+    list_filter = ("is_active",)
+    search_fields = ("email",)
+    ordering = ("-created_at",)
 
 @admin.register(SavedSearch)
 class SavedSearchAdmin(admin.ModelAdmin):
