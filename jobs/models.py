@@ -471,6 +471,9 @@ class Subscriber(models.Model):
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     unsubscribed_at = models.DateTimeField(null=True, blank=True)
+    # Stamped when the "create a free account" invite is sent, so the
+    # invite_subscribers_to_account command never emails the same person twice.
+    account_invite_sent_at = models.DateTimeField(null=True, blank=True)
     def __str__(self): return self.email
 
 

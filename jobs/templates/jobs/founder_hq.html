@@ -107,7 +107,9 @@
 
   <!-- ── PEOPLE: NEWSLETTER-ONLY ───────────────── -->
   <h2>Newsletter-only subscribers ({{ newsletter_only|length }})</h2>
-  <div class="hq-secsub">On the daily digest but no account yet — your "invite to create an account" list.</div>
+  <div class="hq-secsub">On the daily digest but no account yet — your "invite to create an account" list.
+  Send the campaign from the Render shell: <code>python manage.py invite_subscribers_to_account --limit 50 --confirm</code>
+  (safe to re-run — it never double-emails).</div>
   <div class="hq-scroll">
   <table class="hq-table">
     <tr><th>Email</th><th>Subscribed</th><th>Status</th></tr>
