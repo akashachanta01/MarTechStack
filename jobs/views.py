@@ -2,6 +2,7 @@ import stripe
 import json
 import os
 import secrets
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
@@ -1587,6 +1588,95 @@ def confirm_subscription(request, token):
 
 
 @staff_member_required
+@staff_member_required
+def founder_hq(request):
+    """Founder HQ — the one page that answers 'who are my users and how is
+    the site doing', with every person listed alongside their engagement
+    signals so outreach can be planned per-user. Staff-only."""
+    from django.contrib.auth import get_user_model
+    from accounts.models import UserProfile
+
+    now = timezone.now()
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+
+    live = Job.objects.filter(is_active=True, screening_status='approved')
+    User = get_user_model()
+
+    # --- People: every account, enriched with engagement signals ---
+    users = (
+        User.objects.filter(is_staff=False)
+        .select_related('userprofile')
+        .prefetch_related('socialaccount_set', 'userprofile__saved_jobs', 'userprofile__preferred_stack')
+        .order_by('-date_joined')
+    )
+    saved_search_counts = {}
+    for email, active in SavedSearch.objects.values_list('email', 'is_active'):
+        e = (email or '').lower()
+        saved_search_counts.setdefault(e, [0, 0])
+        saved_search_counts[e][0] += 1
+        if active:
+            saved_search_counts[e][1] += 1
+
+    subscriber_status = dict(Subscriber.objects.values_list('email', 'is_active'))
+
+    people = []
+    for u in users:
+        profile = getattr(u, 'userprofile', None)
+        email_l = (u.email or '').lower()
+        ss = saved_search_counts.get(email_l, [0, 0])
+        days_since_seen = (now - u.last_login).days if u.last_login else None
+        people.append({
+            'user': u,
+            'auth_method': 'Google' if u.socialaccount_set.exists() else 'Email',
+            'newsletter': bool(profile and profile.email_newsletter),
+            'is_subscriber': subscriber_status.get(email_l),
+            'saved_jobs': profile.saved_jobs.count() if profile else 0,
+            'stack': [t.name for t in profile.preferred_stack.all()[:4]] if profile else [],
+            'location': (profile.preferred_location if profile else '') or '',
+            'linkedin': (profile.linkedin_url if profile else '') or '',
+            'pro_waitlist': bool(profile and profile.pro_waitlist),
+            'saved_searches': ss[1],
+            'days_since_seen': days_since_seen,
+            # Engagement tier for at-a-glance triage.
+            'engaged': (ss[1] > 0) or (profile and profile.saved_jobs.exists()) or (profile and profile.pro_waitlist),
+        })
+
+    # --- Newsletter-only subscribers (no account) ---
+    account_emails = {p['user'].email.lower() for p in people if p['user'].email}
+    newsletter_only = [
+        s for s in Subscriber.objects.order_by('-created_at')
+        if (s.email or '').lower() not in account_emails
+    ]
+
+    # --- Active saved searches (the highest-intent signal on the site) ---
+    active_searches = SavedSearch.objects.filter(is_active=True).order_by('-created_at')[:25]
+
+    kpis = {
+        'users': users.count(),
+        'users_week': users.filter(date_joined__gte=week_ago).count(),
+        'subscribers': Subscriber.objects.filter(is_active=True).count(),
+        'unsubscribed': Subscriber.objects.filter(is_active=False).count(),
+        'saved_searches': SavedSearch.objects.filter(is_active=True).count(),
+        'pro_waitlist': UserProfile.objects.filter(pro_waitlist=True).count(),
+        'live_jobs': live.count(),
+        'jobs_week': live.filter(went_live_at__gte=week_ago).count(),
+        'ai_jobs': live.filter(requires_ai=True).count(),
+        'companies': live.values('company').distinct().count(),
+        'pending_review': Job.objects.filter(screening_status='pending').count(),
+        'posts': BlogPost.objects.filter(is_published=True).count(),
+        'posts_month': BlogPost.objects.filter(is_published=True, published_at__gte=month_ago.date()).count(),
+    }
+
+    return render(request, 'jobs/founder_hq.html', {
+        'kpis': kpis,
+        'people': people,
+        'newsletter_only': newsletter_only,
+        'active_searches': active_searches,
+        'page_noindex': True,
+    })
+
+
 def review_queue(request):
     status = request.GET.get("status", "pending").strip().lower()
     q = request.GET.get("q", "").strip()

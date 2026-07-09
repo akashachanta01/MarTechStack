@@ -305,20 +305,36 @@ JAZZMIN_SETTINGS = {
     "site_brand": "MarTechJobs",
     "welcome_sign": "Welcome to MarTechJobs Admin",
     "copyright": "MarTechJobs.io",
-    "search_model": ["jobs.Job", "jobs.ActiveJob"],
+    "search_model": ["jobs.Job", "jobs.ActiveJob", "auth.User"],
     "topmenu_links": [
-        {"name": "View Site", "url": "/", "new_window": True},
+        {"name": "🏠 Founder HQ", "url": "/staff/"},
+        {"name": "🧐 Review Queue", "url": "/staff/review/"},
         {"model": "jobs.ActiveJob"},
-        {"model": "jobs.Job"},
+        {"name": "View Site", "url": "/", "new_window": True},
     ],
     "usermenu_links": [
+        {"name": "Founder HQ", "url": "/staff/"},
         {"name": "View Site", "url": "/", "new_window": True},
     ],
     "show_sidebar": True,
     "navigation_expanded": True,
     "hide_apps": [],
     "hide_models": [],
+    # Sidebar quick links — the "sections" of the admin, website-style.
+    "custom_links": {
+        "jobs": [
+            {"name": "🏠 Founder HQ", "url": "/staff/", "icon": "fas fa-home"},
+            {"name": "🧐 Review Queue", "url": "/staff/review/", "icon": "fas fa-clipboard-check"},
+            {"name": "📊 Public Stats Page", "url": "/martech-job-market-statistics/", "icon": "fas fa-chart-bar", "new_window": True},
+        ],
+    },
+    # People first (the founder's #1 question is "who are my users"), then the
+    # job pipeline, then content, then system config.
     "order_with_respect_to": [
+        "auth.User",
+        "accounts.ProWaitlistEntry",
+        "jobs.Subscriber",
+        "jobs.SavedSearch",
         "jobs.ActiveJob",
         "jobs.Job",
         "jobs.UserSubmission",
@@ -328,8 +344,6 @@ JAZZMIN_SETTINGS = {
         "jobs.CertificationGuide",
         "jobs.Tool",
         "jobs.Category",
-        "jobs.Subscriber",
-        "jobs.SavedSearch",
         "jobs.BlockRule",
         "auth",
     ],
@@ -337,6 +351,7 @@ JAZZMIN_SETTINGS = {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "accounts.ProWaitlistEntry": "fas fa-gem",
         "jobs.ActiveJob": "fas fa-briefcase",
         "jobs.Job": "fas fa-hourglass-half",
         "jobs.UserSubmission": "fas fa-inbox",
