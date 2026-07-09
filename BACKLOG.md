@@ -18,10 +18,12 @@ ships. Newest decisions at the top of each section.
   Alternatives: Make.com or dlvr.it. Keep the manual habit: reshare the best
   data pieces from the personal profile with one added sentence — personal
   posts get ~10x company-page reach.
-- [ ] **IndexNow one-time setup** — set `INDEXNOW_KEY=<random 32-char hex>` in
-  Render env (web + cron); verify site in Bing Webmaster Tools + submit
-  sitemap. Until then the daily `ping_indexnow` step politely skips.
-  (ChatGPT search runs on Bing's index.)
+- [~] **IndexNow** — DONE except Bing verification. `INDEXNOW_KEY` set in
+  Render (web + cron); `/indexnow.txt` serves the key; daily `ping_indexnow`
+  runs. First submit returned 403 `SiteVerificationNotCompleted` (normal on a
+  new domain). LAST STEP: add martechjobs.io to Bing Webmaster Tools (import
+  from GSC) + submit sitemap, then re-run `ping_indexnow --hours 720` → should
+  return 200/202. (ChatGPT search runs on Bing's index.)
 - [ ] **Rotate Resend API key + DB password** — both appeared in a shared
   screenshot; treat as burned. Resend: dashboard → new key → update
   `EMAIL_HOST_PASSWORD` → delete old. DB: rotate in Render Postgres settings.
