@@ -872,6 +872,61 @@
     });
     </script>
 
+    {% if not user.is_authenticated %}
+    <!-- ── SIGNUP NUDGE BAR ─────────────────────────────────────────────
+         Slim, dismissible bottom bar for anonymous visitors. Deliberately
+         NOT a modal: intrusive interstitials annoy users and carry a Google
+         mobile ranking penalty. Dismissal snoozes it for 14 days via
+         localStorage; it never shows on the auth pages themselves. -->
+    <style>
+      #signup-bar { position: fixed; left: 50%; bottom: 14px; transform: translate(-50%, 120%); z-index: 900;
+        display: flex; align-items: center; gap: 14px; max-width: min(680px, calc(100vw - 24px));
+        background: var(--navy3, #1e2a3a); color: #fff; border-radius: 14px; padding: 12px 14px 12px 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25); transition: transform .35s ease; }
+      #signup-bar.sb-in { transform: translate(-50%, 0); }
+      #signup-bar p { margin: 0; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.92); }
+      #signup-bar p b { color: #fff; }
+      #signup-bar .sb-cta { flex-shrink: 0; background: #bf5420; color: #fff; font-weight: 700; font-size: 13.5px;
+        padding: 9px 16px; border-radius: 9px; text-decoration: none; white-space: nowrap; }
+      #signup-bar .sb-close { flex-shrink: 0; background: none; border: none; color: rgba(255,255,255,.55);
+        font-size: 18px; line-height: 1; cursor: pointer; padding: 4px 6px; }
+      #signup-bar .sb-close:hover { color: #fff; }
+      @media (max-width: 560px) { #signup-bar { flex-wrap: wrap; padding: 12px 14px; } #signup-bar .sb-cta { flex: 1; text-align: center; } }
+    </style>
+    <div id="signup-bar" hidden role="complementary" aria-label="Create a free account">
+      <p><b>Job hunting in MarTech?</b> Save roles &amp; get alerts tuned to your stack — free forever.</p>
+      <a class="sb-cta" href="{% url 'account_signup' %}">Create free account</a>
+      <button class="sb-close" id="signup-bar-close" aria-label="Dismiss">&times;</button>
+    </div>
+    <script>
+    (function () {
+      if (location.pathname.indexOf('/accounts/') === 0 || location.pathname.indexOf('/admin') === 0) return;
+      var KEY = 'mtj_signup_snooze';
+      try { if (Date.now() < (+localStorage.getItem(KEY) || 0)) return; } catch (e) {}
+      var bar = document.getElementById('signup-bar');
+      if (!bar) return;
+      // Appear after a genuine engagement signal: 25% scroll or 8s on page.
+      var shown = false;
+      function show() {
+        if (shown) return; shown = true;
+        bar.hidden = false;
+        requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add('sb-in'); }); });
+      }
+      var t = setTimeout(show, 8000);
+      window.addEventListener('scroll', function onScroll() {
+        var h = document.documentElement;
+        if ((h.scrollTop + h.clientHeight) / h.scrollHeight > 0.25) { show(); window.removeEventListener('scroll', onScroll); }
+      }, { passive: true });
+      document.getElementById('signup-bar-close').addEventListener('click', function () {
+        bar.classList.remove('sb-in');
+        setTimeout(function () { bar.hidden = true; }, 350);
+        clearTimeout(t);
+        try { localStorage.setItem(KEY, String(Date.now() + 14 * 864e5)); } catch (e) {}
+      });
+    })();
+    </script>
+    {% endif %}
+
     {% block extra_js %}{% endblock %}
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
