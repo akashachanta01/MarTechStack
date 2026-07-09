@@ -859,6 +859,17 @@ def post_detail(request, slug):
 
 # --- SEO: LANDING PAGE GENERATOR ---
 def seo_landing_page(request, location_slug=None, tool_slug=None):
+    # Canonicalize casing: the URL converter accepts uppercase, so Google found
+    # mixed-case variants like /charlotte/Salesforce-jobs/ that are duplicates
+    # of the lowercase page and get flagged Soft 404. 301 them to lowercase.
+    if (location_slug and location_slug != location_slug.lower()) or \
+       (tool_slug and tool_slug != tool_slug.lower()):
+        if tool_slug:
+            return redirect('seo_tool_loc',
+                            location_slug=(location_slug or '').lower(),
+                            tool_slug=tool_slug.lower(), permanent=True)
+        return redirect('seo_loc_only', location_slug=location_slug.lower(), permanent=True)
+
     # 301 abbreviated/old location slugs to the canonical one (no duplicates).
     if location_slug and location_slug.lower() in LOCATION_ALIASES:
         canonical = LOCATION_ALIASES[location_slug.lower()]
@@ -929,9 +940,18 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     # Index only curated, populated pages. Non-curated locations (Beverly Hills,
     # Noida, …) and non-canonical tools are noindex'd to avoid thin auto-pages.
+    #
+    # Thin-content thresholds (GSC showed ~700 location×tool combos as Soft 404 /
+    # crawled-not-indexed — a "Charlotte Salesforce jobs" page with 1 role is too
+    # thin for Google): a location×tool COMBO needs >= 3 live jobs to be indexed;
+    # a single-facet page (location-only or tool-only) needs >= 2. Below that we
+    # noindex — the page still serves visitors, it just won't waste crawl budget.
+    COMBO_MIN, SINGLE_MIN = 3, 2
+    is_combo = bool(tool and location_slug)
+    thin = total_count < (COMBO_MIN if is_combo else SINGLE_MIN)
     loc_indexable = (not location_slug) or (location_slug.lower() in INDEXABLE_LOCATION_SLUGS)
     tool_indexable = (tool is None) or (tool.name.lower() in _CANONICAL_TOOL_NAMES)
-    page_noindex = (total_count == 0) or (not loc_indexable) or (not tool_indexable)
+    page_noindex = thin or (not loc_indexable) or (not tool_indexable)
 
     # Unique intro + remote cross-link for international country pages (only on
     # the location-only page, not tool combos, to keep tool pages focused).

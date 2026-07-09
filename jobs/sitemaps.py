@@ -54,18 +54,40 @@ class SEOLandingSitemap(Sitemap):
 
         seo_pages = set()
 
-        # 1. Base remote pages for canonical tools
+        from django.db.models import Q, Count
+        from .models import Job
+
+        # Live-job count per tool slug — used to gate combos so we never
+        # sitemap a thin location×tool page (Google Soft-404s combos with <3
+        # jobs; matches the seo_landing_page COMBO_MIN threshold).
+        COMBO_MIN = 3
+        live = Job.objects.filter(is_active=True, screening_status='approved')
+
+        # 1. Base remote pages for canonical tools (only those with live remote jobs)
         seo_pages.add(('remote', ''))
+        remote_tool_slugs = set(
+            live.filter(work_arrangement='remote', tools__slug__in=[t.slug for t in canonical_tools])
+            .values_list('tools__slug', flat=True)
+        )
         for tool in canonical_tools:
-            seo_pages.add(('remote', tool.slug))
+            if tool.slug in remote_tool_slugs:
+                seo_pages.add(('remote', tool.slug))
 
-        # 2. Curated hubs × canonical tools (no arbitrary cities)
+        # 2. Curated hubs × canonical tools — only combos that clear COMBO_MIN
+        # live jobs, so the sitemap stops feeding Google thin Soft-404 pages.
         top_hubs = ["new-york", "san-francisco", "austin", "chicago", "london", "texas", "california"]
-
+        # Map hub slug -> location text fragment for the count query.
+        hub_terms = {
+            "new-york": "new york", "san-francisco": "san francisco", "austin": "austin",
+            "chicago": "chicago", "london": "london", "texas": "texas", "california": "california",
+        }
         for hub in top_hubs:
             seo_pages.add((hub, ''))
+            term = hub_terms.get(hub, hub.replace('-', ' '))
+            hub_jobs = live.filter(location__icontains=term)
             for tool in canonical_tools[:20]:
-                seo_pages.add((hub, tool.slug))
+                if hub_jobs.filter(tools__slug=tool.slug).count() >= COMBO_MIN:
+                    seo_pages.add((hub, tool.slug))
 
         # 3. International country hubs — only those with live jobs, so we never
         # publish a thin/empty country page. Uses the same country-match logic
