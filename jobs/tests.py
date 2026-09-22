@@ -189,6 +189,37 @@ class ATSMatchAPITests(TestCase):
             r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
             self.assertNotContains(r, "posthog.init")       # founder excluded
 
+    def test_job_page_tracks_apply_and_save(self):
+        r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+        self.assertContains(r, "apply_click")
+        self.assertContains(r, 'js-apply" data-placement="top"')
+        self.assertContains(r, 'js-apply" data-placement="bottom"')
+        self.assertContains(r, "job_saved")
+        self.assertContains(r, 'window.mtjPageType = "job_detail"')
+
+    def test_search_is_tracked_only_when_searching(self):
+        r = self.client.get("/jobs/?q=Marketo")
+        self.assertContains(r, "window.mtjTrack('job_search'")
+        self.assertContains(r, 'query: "marketo"')
+        r = self.client.get("/jobs/")
+        self.assertNotContains(r, "window.mtjTrack('job_search'")
+
+    def test_signup_completed_fires_once(self):
+        from django.contrib.auth.models import User
+        u = User.objects.create_user("sg", "sg@example.com", "pw12345!x")
+        self.client.force_login(u)
+        session = self.client.session
+        session["mtj_signed_up"] = "google"; session.save()
+        r = self.client.get("/")
+        self.assertContains(r, "window.mtjTrack('signup_completed', { method: \"google\" })")
+        r = self.client.get("/")
+        self.assertNotContains(r, "signup_completed")
+
+    def test_subscribe_success_is_tracked(self):
+        r = self.client.get("/")
+        self.assertContains(r, "window.mtjTrack('newsletter_subscribe'")
+        self.assertContains(r, "window.mtjTrack('signup_click'")
+
     def test_tool_page_tracks_funnel_events(self):
         r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
         for event in ["ats_check_submit", "ats_check_result", "ats_gate_shown", "ats_signup_click"]:

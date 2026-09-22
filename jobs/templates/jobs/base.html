@@ -7,7 +7,9 @@
       // Analytics events -> Google Tag Manager dataLayer (GA4 reads them via
       // GTM). Never put names/emails in params: GA4 forbids PII.
       window.dataLayer = window.dataLayer || [];
+      window.mtjPageType = "{{ request.resolver_match.url_name|default:'other'|escapejs }}";
       window.mtjTrack = function (eventName, params) {
+        params = Object.assign({ page_type: window.mtjPageType }, params || {});
         try { window.dataLayer.push(Object.assign({ event: eventName }, params || {})); } catch (e) {}
         try { window.posthog && window.posthog.capture(eventName, params || {}); } catch (e) {}
       };
@@ -18,6 +20,7 @@
       // founder's own clicks don't skew the numbers.
       !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias reset people.set people.set_once opt_out_capturing opt_in_capturing has_opted_out_capturing get_distinct_id get_property".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
       posthog.init("{{ posthog_key|escapejs }}", {api_host: "{{ posthog_host|escapejs }}", person_profiles: "identified_only"});
+      posthog.register({ page_type: window.mtjPageType });
       {% if user.is_authenticated %}posthog.identify("{{ user.id }}", {email: "{{ user.email|escapejs }}", name: "{{ user.get_full_name|escapejs }}"});{% endif %}
     </script>
     {% endif %}
@@ -869,6 +872,7 @@
         }).then(r => { if (r.status === 429) throw new Error('Too many requests'); return r.json(); })
           .then(d => {
             if (d.success) {
+              window.mtjTrack('newsletter_subscribe', { form: formId });
               btn.textContent = 'Subscribed!';
               if (msg) msg.innerHTML = '<span style="color:var(--green)">✓ Welcome to the club!</span>';
               form.reset();
@@ -945,6 +949,23 @@
     </script>
     {% endif %}
 
+    <script>
+      // Site-wide analytics events (PostHog + GA dataLayer). No PII in params.
+      {% if request.GET.q or request.GET.tool or request.GET.l or request.GET.function or request.GET.arrangement %}
+      window.mtjTrack('job_search', {
+        query: "{{ request.GET.q|default:''|lower|truncatechars:100|escapejs }}",
+        tool: "{{ request.GET.tool|default:''|escapejs }}",
+        location: "{{ request.GET.l|default:''|escapejs }}",
+        job_function: "{{ request.GET.function|default:''|escapejs }}",
+        arrangement: "{{ request.GET.arrangement|default:''|escapejs }}"
+      });
+      {% endif %}
+      {% if just_signed_up %}window.mtjTrack('signup_completed', { method: "{{ just_signed_up|escapejs }}" });{% endif %}
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href*="/accounts/signup"], a[href*="/accounts/google/login"]');
+        if (a) window.mtjTrack('signup_click', { method: a.href.indexOf('google') > -1 ? 'google' : 'email', link_text: (a.textContent || '').trim().slice(0, 40) });
+      });
+    </script>
     {% block extra_js %}{% endblock %}
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
