@@ -105,6 +105,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# PostHog product analytics (public project key; empty = disabled)
+POSTHOG_KEY = os.environ.get('POSTHOG_KEY', '')
+POSTHOG_HOST = os.environ.get('POSTHOG_HOST', 'https://us.i.posthog.com')
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

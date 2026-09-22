@@ -169,6 +169,26 @@ class ATSMatchAPITests(TestCase):
         self.assertContains(r, 'data-placement="top"')
         self.assertContains(r, 'data-placement="bottom"')  # top + bottom CTAs
 
+    def test_posthog_off_without_key(self):
+        with self.settings(POSTHOG_KEY=""):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+        self.assertNotContains(r, "posthog.init")
+
+    def test_posthog_loads_and_identifies_signed_in_user(self):
+        from django.contrib.auth.models import User
+        u = User.objects.create_user("ph", "ph@example.com", "pw12345!x")
+        with self.settings(POSTHOG_KEY="phc_test123"):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertContains(r, 'posthog.init("phc_test123"')
+            self.assertNotContains(r, "posthog.identify")   # anonymous
+            self.client.force_login(u)
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertContains(r, "ph@example.com")
+            self.assertContains(r, "posthog.identify")
+            u.is_staff = True; u.save()
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertNotContains(r, "posthog.init")       # founder excluded
+
     def test_tool_page_tracks_funnel_events(self):
         r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
         for event in ["ats_check_submit", "ats_check_result", "ats_gate_shown", "ats_signup_click"]:

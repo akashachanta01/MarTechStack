@@ -3,7 +3,11 @@ from django.conf import settings
 
 def feature_flags(request):
     """Expose toggles templates need (e.g. whether to show the Google button)."""
-    return {'google_oauth_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False)}
+    return {
+        'google_oauth_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False),
+        'posthog_key': getattr(settings, 'POSTHOG_KEY', ''),
+        'posthog_host': getattr(settings, 'POSTHOG_HOST', ''),
+    }
 
 
 def saved_job_ids(request):
