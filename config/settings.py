@@ -172,25 +172,28 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# SMTP server is env-driven so we can switch providers (Gmail -> Resend) by
-# changing Render env vars only, no code deploy. Defaults keep Gmail working.
+# SMTP server is env-driven so we can switch providers by changing Render env
+# vars only, no code deploy. Defaults point at RESEND (our provider) — NOT
+# Gmail — so if a service ever loses the EMAIL_HOST env var it falls back to
+# Resend, never to a personal Gmail account. (Falling back to Gmail silently
+# routed bulk sends through Gmail's ~500/day cap and bounced with
+# "You have reached a limit for sending mail".)
 #   Resend:  EMAIL_HOST=smtp.resend.com  EMAIL_PORT=587  EMAIL_HOST_USER=resend
 #            EMAIL_HOST_PASSWORD=<resend api key>  DEFAULT_FROM_EMAIL="MarTechJobs <alerts@martechjobs.io>"
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com').strip()
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.resend.com').strip()
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').strip().lower() == 'true'
 
-# SAFE DEFAULTS: Prevents 500 error if these variables are missing
-# EMAIL_HOST_USER is the SMTP *username* (Gmail: the address; Resend: "resend").
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'martechjobs@gmail.com').strip()
-# Gmail App Passwords are 16 chars and NEVER contain spaces — Google only
-# *displays* them in groups of four. Strip any spaces so a copy-paste with the
-# display formatting (e.g. "evov hyih ilex xcox") still authenticates correctly.
+# SAFE DEFAULTS: Prevents 500 error if these variables are missing.
+# EMAIL_HOST_USER is the SMTP *username* — for Resend it's the literal "resend".
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'resend').strip()
+# Resend API key (re_...) or a Gmail App Password (16 chars, spaces stripped so
+# a copy-paste with Google's display formatting still authenticates).
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
-# The visible "From" address. With Resend this must be on a verified domain.
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f'MarTechJobs <{EMAIL_HOST_USER}>').strip()
+# The visible "From" address. With Resend this must be on the verified domain.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MarTechJobs <alerts@martechjobs.io>').strip()
 # A real, monitored inbox for replies and admin notifications. Kept separate
-# from EMAIL_HOST_USER because the SMTP username may not be a real address.
+# from EMAIL_HOST_USER because the SMTP username ("resend") is not an address.
 CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'martechjobs@gmail.com').strip()
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
