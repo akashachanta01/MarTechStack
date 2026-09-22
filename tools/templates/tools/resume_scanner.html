@@ -1,83 +1,214 @@
 {% extends "jobs/base.html" %}
 {% block title %}{{ seo_title }}{% endblock %}
-{% block meta_description %}{{ meta_description|default:seo_description }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block og_title %}MarTech Resume ATS Checker{% endblock %}
+{% block og_desc %}See which MarTech platforms, skills and certs a job requires that your resume is missing.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How does the MarTech ATS checker work?","acceptedAnswer":{"@type":"Answer","text":"It compares your resume to a specific job description using a MarTech-specific taxonomy of platforms (Marketo, Salesforce Marketing Cloud, HubSpot, Segment and more), skills (lead scoring, attribution, lifecycle) and certifications — the same literal keyword matching applicant tracking systems use."}},
+    {"@type":"Question","name":"Why does wording matter if I listed the platform?","acceptedAnswer":{"@type":"Answer","text":"Many ATS match the job description's exact wording. If a job says Marketing Cloud Account Engagement and your resume only says Pardot, a literal match can miss it even though they are the same product. Listing both covers you."}},
+    {"@type":"Question","name":"Do you store my resume?","acceptedAnswer":{"@type":"Answer","text":"No. Your resume text is used only to run the check and is never saved."}},
+    {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your first check needs no account. A free account gives you {{ monthly_runs }} checks a month plus wording fixes and rewrite tips."}}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 min-h-screen py-12">
-    <div class="max-w-3xl mx-auto px-4">
-        <div class="text-center mb-8">
-            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase">AI Tool</span>
-            <h1 class="text-4xl font-serif font-bold text-slate-900 mt-4">ATS Resume Scanner</h1>
-            <p class="text-slate-600 mt-2">Will your resume pass the bot? Paste it below to check.</p>
-        </div>
+<style>
+  .ats { max-width: 820px; margin: 0 auto; padding: 48px 20px 80px; }
+  .ats-eyebrow { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--amber, #c05621); }
+  .ats h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4.5vw, 46px); font-weight: 800; line-height: 1.12; margin: 10px 0 12px; }
+  .ats-lead { font-size: 16px; line-height: 1.7; color: var(--ink2); max-width: 640px; }
+  .ats-card { background: var(--card, #fff); border: 1px solid var(--rule); border-radius: 14px; padding: 22px; margin-top: 24px; }
+  .ats-card label { display: block; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin: 0 0 8px; }
+  .ats-card textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.55; font-family: inherit; resize: vertical; }
+  .ats-job { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper2, #f7f4ef); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+  .ats-job a { font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+  .ats-btn { width: 100%; margin-top: 16px; background: var(--amber, #bf5420); color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .ats-btn:disabled { opacity: .6; cursor: wait; }
+  .ats-note { font-size: 12.5px; color: var(--ink3); margin-top: 10px; text-align: center; }
+  .ats-err { display: none; margin-top: 16px; padding: 14px 16px; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: 14px; }
+  .ats-err a { font-weight: 700; }
+  #ats-results { display: none; }
+  .ats-score { display: flex; align-items: baseline; gap: 12px; }
+  .ats-score b { font-family: 'Playfair Display', serif; font-size: 44px; }
+  .ats-sec { margin-top: 22px; }
+  .ats-sec h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .ats-sec p.ats-sub { font-size: 13px; color: var(--ink3); margin: 0 0 10px; }
+  .ats-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ats-chip { border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; background: #fef2f2; color: #991b1b; }
+  .ats-chip small { font-weight: 500; opacity: .7; margin-left: 4px; }
+  .ats-list { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
+  .ats-locked { background: var(--paper2, #f7f4ef); border: 1px dashed var(--rule); border-radius: 10px; padding: 14px; font-size: 14px; }
+  .ats-faq h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin: 48px 0 8px; }
+  .ats-faq h3 { font-size: 16px; margin: 20px 0 4px; }
+  .ats-faq p { font-size: 15px; line-height: 1.7; color: var(--ink2); margin: 0; }
+</style>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Target Role</label>
-            <input type="text" id="role" value="Marketing Operations Manager" class="w-full border p-3 rounded-lg mb-4">
-            
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Paste Resume Text</label>
-            <textarea id="resume" rows="8" class="w-full border p-3 rounded-lg text-sm" placeholder="Paste your full resume content here..."></textarea>
-            
-            <button onclick="scanResume()" id="scanBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg mt-4 transition">
-                Scan My Resume
-            </button>
-        </div>
+<div class="ats">
+  <div class="ats-eyebrow">Free tool · Built for MarTech</div>
+  <h1>MarTech Resume ATS Checker</h1>
+  <p class="ats-lead">Applicant tracking systems filter Marketing Ops resumes on literal platform names. This checks your resume against a real job and shows exactly which platforms, skills and certifications you're missing — and where your wording won't match (like <em>Pardot</em> vs <em>Account Engagement</em>).</p>
 
-        <div id="results" class="hidden mt-8 bg-white p-6 rounded-xl border-2 border-blue-600 shadow-lg">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <h3 class="font-bold text-slate-900">ATS Score</h3>
-                <span class="text-3xl font-black text-blue-600" id="scoreDisplay">0/100</span>
-            </div>
-            
-            <div class="mb-4">
-                <p class="text-xs font-bold text-red-500 uppercase mb-2">Missing Keywords</p>
-                <div id="missingKeywords" class="flex flex-wrap gap-2"></div>
-            </div>
-            
-            <div class="bg-slate-50 p-4 rounded text-sm text-slate-700 italic" id="tipDisplay"></div>
-        </div>
+  <div class="ats-card">
+    {% if job %}
+      <div class="ats-job">
+        <span>Checking against: <strong>{{ job.title }}</strong> at {{ job.company }}</span>
+        <a href="{% url 'resume_scanner' %}">Use a different job</a>
+      </div>
+    {% else %}
+      <label for="ats-jd">Job description</label>
+      <textarea id="ats-jd" rows="7" placeholder="Paste the full job description — or click “Check my resume” on any job on MarTechJobs."></textarea>
+      <div style="height:16px"></div>
+    {% endif %}
+
+    <label for="ats-resume">Your resume</label>
+    <textarea id="ats-resume" rows="10" placeholder="Paste your resume text here…"></textarea>
+    <button class="ats-btn" id="ats-btn" type="button">Check my resume</button>
+    <div class="ats-note">Your resume is never stored.{% if not user.is_authenticated %} First check free, no account needed.{% endif %}</div>
+    <div class="ats-err" id="ats-err"></div>
+  </div>
+
+  <div class="ats-card" id="ats-results">
+    <div class="ats-score"><b id="ats-score"></b><span id="ats-score-label"></span></div>
+    <div class="ats-sec">
+      <h2>Missing from your resume</h2>
+      <p class="ats-sub">The job asks for these. Add the ones you genuinely have, using this exact wording.</p>
+      <div class="ats-chips" id="ats-missing"></div>
     </div>
+    <div class="ats-sec">
+      <h2>Wording fixes</h2>
+      <p class="ats-sub">Same product, different name — a literal ATS match can miss it. List both.</p>
+      <div id="ats-fixes"></div>
+    </div>
+    <div class="ats-sec">
+      <h2>Quantified impact</h2>
+      <p class="ats-sub" id="ats-metrics"></p>
+    </div>
+    <div class="ats-sec" id="ats-tips-sec">
+      <h2>Rewrite tips</h2>
+      <div id="ats-tips"></div>
+    </div>
+  </div>
+
+  <div class="ats-faq">
+    <h2>Why a MarTech-specific ATS checker?</h2>
+    <h3>Platform names are the filter</h3>
+    <p>Marketing Ops job descriptions list specific platforms — Marketo Engage, Salesforce Marketing Cloud, HubSpot, Segment — and ATS filters look for those literal names. Generic resume tools treat them as ordinary words; this checker knows the MarTech stack.</p>
+    <h3>Rebrands break keyword matches</h3>
+    <p>Pardot is now Marketing Cloud Account Engagement. Marketo is Adobe Marketo Engage. If the job uses the new name and your resume uses the old one, a literal match can miss it. The wording-fix section catches this.</p>
+    <h3>Numbers win interviews</h3>
+    <p>Hiring managers for MarTech roles look for measurable impact: sourced pipeline, MQL-to-SQL conversion, deliverability, database size. The checker shows how many of your resume lines include a number.</p>
+    <p style="margin-top:20px"><a href="{% url 'all_jobs' %}">Browse live MarTech jobs →</a></p>
+  </div>
 </div>
 
 <script>
-    async function scanResume() {
-        const btn = document.getElementById('scanBtn');
-        const results = document.getElementById('results');
-        const text = document.getElementById('resume').value;
-        const role = document.getElementById('role').value;
+(function () {
+  var jobId = {% if job %}{{ job.id }}{% else %}null{% endif %};
+  var signupUrl = "{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}";
+  var btn = document.getElementById('ats-btn');
+  var errBox = document.getElementById('ats-err');
 
-        if(text.length < 50) return alert("Please paste a resume.");
-
-        btn.disabled = true;
-        btn.innerText = "Scanning...";
-        
-        try {
-            const res = await fetch("{% url 'api_scan_resume' %}", {
-                method: "POST",
-                headers: {"Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}"},
-                body: JSON.stringify({ resume_text: text, target_role: role })
-            });
-            const data = await res.json();
-            
-            document.getElementById('scoreDisplay').innerText = data.score + "/100";
-            document.getElementById('tipDisplay').innerText = "💡 Tip: " + data.tip;
-            
-            const kwContainer = document.getElementById('missingKeywords');
-            kwContainer.innerHTML = '';
-            (data.missing || []).forEach(k => {
-                const span = document.createElement('span');
-                span.className = "bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-bold";
-                span.textContent = k;
-                kwContainer.appendChild(span);
-            });
-
-            results.classList.remove('hidden');
-        } catch(e) {
-            alert("Error scanning resume.");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Scan My Resume";
-        }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function showError(msg, gate) {
+    errBox.textContent = msg + ' ';
+    if (gate === 'signup') {
+      var a = el('a', '', 'Create free account →');
+      a.href = signupUrl;
+      errBox.appendChild(a);
     }
+    errBox.style.display = 'block';
+  }
+
+  btn.addEventListener('click', async function () {
+    errBox.style.display = 'none';
+    var resume = document.getElementById('ats-resume').value;
+    var jdBox = document.getElementById('ats-jd');
+    var body = { resume_text: resume };
+    if (jobId) { body.job_id = jobId; } else { body.jd_text = jdBox ? jdBox.value : ''; }
+
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try {
+      var res = await fetch("{% url 'api_ats_match' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify(body)
+      });
+      var d = await res.json();
+      if (!res.ok) { showError(d.error || 'Something went wrong.', d.gate); return; }
+      render(d);
+    } catch (e) {
+      showError('Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Check my resume';
+    }
+  });
+
+  function render(d) {
+    document.getElementById('ats-score').textContent = d.matched_count + ' / ' + d.required_count;
+    document.getElementById('ats-score-label').textContent =
+      'platforms, skills & certs from this job found in your resume' +
+      (d.runs_left !== null && d.runs_left !== undefined ? ' · ' + d.runs_left + ' checks left this month' : '');
+
+    var miss = document.getElementById('ats-missing');
+    miss.textContent = '';
+    if (!d.missing.length) miss.appendChild(el('span', '', 'Nothing missing — great match.'));
+    d.missing.forEach(function (m) {
+      var c = el('span', 'ats-chip', m.term);
+      c.appendChild(el('small', '', m.kind));
+      miss.appendChild(c);
+    });
+
+    var fixes = document.getElementById('ats-fixes');
+    fixes.textContent = '';
+    if (d.signed_in) {
+      if (!d.alias_fixes.length) fixes.appendChild(el('p', 'ats-sub', 'No wording mismatches found.'));
+      else {
+        var ul = el('ul', 'ats-list');
+        d.alias_fixes.forEach(function (f) {
+          ul.appendChild(el('li', '', 'You wrote “' + f.you_wrote + '” — this job says “' + f.jd_says + '”. Add the job\'s wording.'));
+        });
+        fixes.appendChild(ul);
+      }
+    } else {
+      var box = el('div', 'ats-locked',
+        (d.locked_alias_fixes ? d.locked_alias_fixes + ' wording fix(es) found. ' : '') +
+        'Create a free account to see wording fixes and get rewrite tips. ');
+      var a = el('a', '', 'Sign up free →'); a.href = signupUrl; box.appendChild(a);
+      fixes.appendChild(box);
+    }
+
+    document.getElementById('ats-metrics').textContent = d.total_lines
+      ? d.quantified_lines + ' of your ' + d.total_lines + ' resume lines include a number. MarTech hiring managers look for sourced pipeline, conversion rates, deliverability and database size.'
+      : '';
+
+    var tipsSec = document.getElementById('ats-tips-sec');
+    var tips = document.getElementById('ats-tips');
+    tips.textContent = '';
+    if (d.signed_in && d.tips && d.tips.length) {
+      var tl = el('ul', 'ats-list');
+      d.tips.forEach(function (t) { tl.appendChild(el('li', '', t)); });
+      tips.appendChild(tl); tipsSec.style.display = 'block';
+    } else {
+      tipsSec.style.display = 'none';
+    }
+
+    var r = document.getElementById('ats-results');
+    r.style.display = 'block';
+    r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+})();
 </script>
 {% endblock %}

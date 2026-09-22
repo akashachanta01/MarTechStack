@@ -34,6 +34,14 @@ Always think: "What's the simplest solution with the most leverage?"
 - Page speed matters: no blocking scripts on job listing pages
 - When adding new page types, always ask: "What's the SEO implication?"
 
+## Testing Rule (mandatory — before EVERY push or deploy)
+- Never push or deploy without end-to-end testing first. No exceptions.
+- Run the full suite: `python manage.py test` — every test must pass.
+- Smoke-test the pages and flows the change touches (real requests, not just `manage.py check`).
+- Fix every error that shows up in testing before asking to push.
+- New features must add tests to the suite so they stay covered.
+- Report the test results to the founder when asking for push approval.
+
 ## Job Ingestion Rules
 - Source jobs from ATS public endpoints (Greenhouse, Lever, Ashby, Workable) 
 - Every job must have: title, company, location, date posted, apply URL
