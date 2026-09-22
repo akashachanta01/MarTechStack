@@ -138,6 +138,15 @@ DATABASES = {
     )
 }
 
+# TEST RUNS ONLY: build the test database straight from the current models
+# instead of replaying migrations. Production's schema is ahead of the
+# migration history (see BACKLOG.md "Migration history baseline reset"), so
+# replaying migrations can't reproduce it; the models are the source of truth.
+# Never affects production — only `manage.py test`.
+import sys as _sys
+if len(_sys.argv) > 1 and _sys.argv[1] == 'test':
+    MIGRATION_MODULES = {'jobs': None, 'accounts': None, 'tools': None}
+
 # ==============================================
 # PASSWORDS
 # ==============================================
