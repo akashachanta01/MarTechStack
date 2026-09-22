@@ -5,6 +5,17 @@
 {% block meta_description %}Post your Marketing Operations, RevOps, or MarTech role on the niche job board for marketing technology. Free 30-day listing, on Google for Jobs, reaching specialists in HubSpot, Salesforce, Marketo and more.{% endblock %}
 
 {% block content %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var f = document.getElementById('job-form'); if (!f) return;
+    var started = false;
+    f.addEventListener('focusin', function () { if (!started) { started = true; window.mtjTrack && window.mtjTrack('post_job_start', {}); } });
+    f.addEventListener('submit', function () {
+      var plan = (f.querySelector('[name=plan]') || {}).value || '';
+      window.mtjTrack && window.mtjTrack('post_job_submit', { plan: plan });
+    });
+  });
+</script>
 <style>
   .pj-hero { padding: 64px 0 40px; border-bottom: 1px solid var(--rule); text-align: center; }
   .pj-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px,5vw,56px); font-weight: 800; color: var(--ink); margin: 14px 0 16px; }

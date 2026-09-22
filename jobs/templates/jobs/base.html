@@ -8,8 +8,21 @@
       // GTM). Never put names/emails in params: GA4 forbids PII.
       window.dataLayer = window.dataLayer || [];
       window.mtjPageType = "{{ request.resolver_match.url_name|default:'other'|escapejs }}";
+      // Where the visitor came from, as a page TYPE (never a URL path): the previous
+      // page type on this site, or the external source (google, linkedin...) or 'direct'.
+      window.mtjCameFrom = (function () {
+        var prev = '';
+        try { prev = sessionStorage.getItem('mtj_pt') || ''; sessionStorage.setItem('mtj_pt', window.mtjPageType); } catch (e) {}
+        var r = document.referrer;
+        if (!r) return prev || 'direct';
+        try {
+          var h = new URL(r).hostname.replace(/^www\./, '');
+          if (h === location.hostname.replace(/^www\./, '')) return prev || 'internal';
+          return h.split('.').slice(-2, -1)[0] || h;   // google.com -> google, linkedin.com -> linkedin
+        } catch (e) { return 'unknown'; }
+      })();
       window.mtjTrack = function (eventName, params) {
-        params = Object.assign({ page_type: window.mtjPageType }, params || {});
+        params = Object.assign({ page_type: window.mtjPageType, came_from: window.mtjCameFrom }, params || {});
         try { window.dataLayer.push(Object.assign({ event: eventName }, params || {})); } catch (e) {}
         try { window.posthog && window.posthog.capture(eventName, params || {}); } catch (e) {}
       };
@@ -961,10 +974,35 @@
       });
       {% endif %}
       {% if just_signed_up %}window.mtjTrack('signup_completed', { method: "{{ just_signed_up|escapejs }}" });{% endif %}
-      document.addEventListener('click', function (e) {
-        var a = e.target.closest && e.target.closest('a[href*="/accounts/signup"], a[href*="/accounts/google/login"]');
-        if (a) window.mtjTrack('signup_click', { method: a.href.indexOf('google') > -1 ? 'google' : 'email', link_text: (a.textContent || '').trim().slice(0, 40) });
-      });
+      (function () {
+        var pt = window.mtjPageType;
+        // Content pages (blog, salary, interview, certification guides) -> do readers click through to jobs?
+        var isContent = /^(post_detail|blog_|tool_interview|tool_certification|role_salary|salary_guide|market_stats)/.test(pt);
+        var isTool = location.pathname.indexOf('/tools/') === 0 && pt !== 'tools_hub';
+        var toolUsed = false;
+        document.addEventListener('click', function (e) {
+          if (!e.target.closest) return;
+          var a = e.target.closest('a[href]');
+          if (a) {
+            var href = a.getAttribute('href') || '';
+            var text = (a.textContent || '').trim().slice(0, 40);
+            if (/\/accounts\/(signup|google\/login)/.test(href)) {
+              window.mtjTrack('signup_click', { method: href.indexOf('google') > -1 ? 'google' : 'email', link_text: text });
+            } else if (href.indexOf('/post-job') > -1 || href.indexOf('/for-employers') > -1) {
+              window.mtjTrack('employer_cta_click', { target: href.indexOf('/post-job') > -1 ? 'post_job' : 'for_employers', link_text: text });
+            } else if (isContent && !a.closest('nav, header, footer') && /(\/job\/|\/jobs\/|-jobs\/)/.test(href)) {
+              window.mtjTrack('content_to_jobs_click', { link_text: text });
+            }
+          }
+          if (isTool && !toolUsed) {
+            var b = e.target.closest('button, input[type=submit], input[type=button]');
+            if (b && !b.closest('nav, header, footer, .mtj-modal, #mtj-nudge')) {
+              toolUsed = true;
+              window.mtjTrack('tool_used', { tool: pt });
+            }
+          }
+        });
+      })();
     </script>
     {% block extra_js %}{% endblock %}
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

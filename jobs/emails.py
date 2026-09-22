@@ -59,6 +59,30 @@ def get_digest_recipients():
     return sorted(emails)
 
 
+_UTM_SKIP = ("/unsubscribe", "/u/", "/newsletter/confirm")
+
+
+def _add_utm(html, campaign):
+    """Tag links back to the site so email traffic shows up in analytics as
+    'email' instead of 'direct'. Canonical tags use the path only, so the
+    query string never creates duplicate-content URLs for SEO."""
+    import re
+    base = re.escape(DOMAIN.rstrip("/"))
+
+    def tag(m):
+        url = m.group(2)
+        if any(k in url for k in _UTM_SKIP) or "utm_" in url:
+            return m.group(0)
+        frag = ""
+        if "#" in url:
+            url, frag = url.split("#", 1)
+            frag = "#" + frag
+        sep = "&amp;" if "?" in url else "?"
+        return f'{m.group(1)}{url}{sep}utm_source=email&amp;utm_medium=email&amp;utm_campaign={campaign}{frag}"'
+
+    return re.sub(r'(href=")(' + base + r'[^"]*)"', tag, html)
+
+
 def send_html_email(subject, template_name, context, to_email=None, bcc_list=None,
                     unsubscribe_email=None):
     """
@@ -84,6 +108,7 @@ def send_html_email(subject, template_name, context, to_email=None, bcc_list=Non
 
     # 1. Render HTML
     html_content = render_to_string(template_name, context)
+    html_content = _add_utm(html_content, template_name.rsplit("/", 1)[-1].rsplit(".", 1)[0])
     # 2. Create Plain Text version (for spam filters)
     text_content = strip_tags(html_content)
 

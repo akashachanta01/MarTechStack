@@ -2,6 +2,7 @@
 {% block title %}Submission Received — MarTechJobs{% endblock %}
 
 {% block content %}
+<script>window.mtjTrack && window.mtjTrack('post_job_completed', { plan: "{{ request.GET.plan|default:'paid'|escapejs }}" });</script>
 <style>
   .success-wrap { min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 60px 20px; }
   .success-card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 48px 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); }

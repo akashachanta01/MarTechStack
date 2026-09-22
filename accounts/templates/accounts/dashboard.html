@@ -327,6 +327,7 @@ function joinProWaitlist(e) {
     headers: {'X-CSRFToken': '{{ csrf_token }}'},
   }).then(r => r.json()).then(d => {
     if (d.ok) {
+      window.mtjTrack && window.mtjTrack('pro_waitlist_join', {});
       var card = document.getElementById('gopro-card');
       card.innerHTML = '<span class="label">You\'re on the list</span>'
         + '<span class="title">Go Pro &#11088;</span>'
