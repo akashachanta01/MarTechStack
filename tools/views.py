@@ -287,6 +287,17 @@ def api_ats_match(request):
     if result["required_count"] == 0:
         return JsonResponse({"error": "We couldn't find MarTech platforms or skills in that job description. Is it a MarTech / Marketing Ops role?"}, status=422)
 
+    # Founder HQ "who is interested" log — never the resume text, never IP.
+    try:
+        from jobs.models import AtsCheck
+        AtsCheck.objects.create(
+            user=user if signed_in else None, job=job,
+            source="job" if job else "pasted",
+            matched=result["matched_count"], required=result["required_count"],
+        )
+    except Exception as e:  # logging must never break the tool
+        logger.error("AtsCheck log failed: %s", e)
+
     payload = {
         "required_count": result["required_count"],
         "matched_count": result["matched_count"],

@@ -3,6 +3,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+      // Analytics events -> Google Tag Manager dataLayer (GA4 reads them via
+      // GTM). Never put names/emails in params: GA4 forbids PII.
+      window.dataLayer = window.dataLayer || [];
+      window.mtjTrack = function (eventName, params) {
+        try { window.dataLayer.push(Object.assign({ event: eventName }, params || {})); } catch (e) {}
+        try { window.posthog && window.posthog.capture(eventName, params || {}); } catch (e) {}
+      };
+    </script>
+    {% if posthog_key and not user.is_staff %}
+    <script>
+      // PostHog (async, non-blocking). Staff visits are excluded so the
+      // founder's own clicks don't skew the numbers.
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias reset people.set people.set_once opt_out_capturing opt_in_capturing has_opted_out_capturing get_distinct_id get_property".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init("{{ posthog_key|escapejs }}", {api_host: "{{ posthog_host|escapejs }}", person_profiles: "identified_only"});
+      {% if user.is_authenticated %}posthog.identify("{{ user.id }}", {email: "{{ user.email|escapejs }}", name: "{{ user.get_full_name|escapejs }}"});{% endif %}
+    </script>
+    {% endif %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}</title>

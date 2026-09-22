@@ -161,6 +161,68 @@ class ATSMatchAPITests(TestCase):
         self.assertContains(r, "Check my resume")
         self.assertContains(r, f'?job={self.job.id}" rel="nofollow"')
 
+    # --- Tracking: GA4 events (via GTM dataLayer) + Founder HQ "who" log ---
+    def test_job_page_tracks_check_resume_clicks(self):
+        r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+        self.assertContains(r, "window.mtjTrack")          # helper in base.html
+        self.assertContains(r, "check_resume_click")
+        self.assertContains(r, 'data-placement="top"')
+        self.assertContains(r, 'data-placement="bottom"')  # top + bottom CTAs
+
+    def test_posthog_off_without_key(self):
+        with self.settings(POSTHOG_KEY=""):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+        self.assertNotContains(r, "posthog.init")
+
+    def test_posthog_loads_and_identifies_signed_in_user(self):
+        from django.contrib.auth.models import User
+        u = User.objects.create_user("ph", "ph@example.com", "pw12345!x")
+        with self.settings(POSTHOG_KEY="phc_test123"):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertContains(r, 'posthog.init("phc_test123"')
+            self.assertNotContains(r, "posthog.identify")   # anonymous
+            self.client.force_login(u)
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertContains(r, "ph@example.com")
+            self.assertContains(r, "posthog.identify")
+            u.is_staff = True; u.save()
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertNotContains(r, "posthog.init")       # founder excluded
+
+    def test_tool_page_tracks_funnel_events(self):
+        r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
+        for event in ["ats_check_submit", "ats_check_result", "ats_gate_shown", "ats_signup_click"]:
+            self.assertContains(r, event)
+
+    def test_checks_are_logged_without_resume_text(self):
+        from jobs.models import AtsCheck
+        self.post(self.client, {"resume_text": RESUME, "job_id": self.job.id})
+        anon = AtsCheck.objects.get()
+        self.assertIsNone(anon.user)
+        self.assertEqual((anon.job_id, anon.matched, anon.required, anon.source), (self.job.id, 4, 8, "job"))
+        # No field anywhere on the log can hold resume text.
+        self.assertFalse(any(f.name in ("resume", "resume_text", "text", "ip") for f in AtsCheck._meta.fields))
+
+        user = get_user_model().objects.create_user("w", "w@x.test", "pw12345!")
+        c = self.client_class(); c.force_login(user)
+        with mock.patch.dict("os.environ", {"OPENAI_API_KEY": ""}):
+            self.post(c, {"resume_text": RESUME, "jd_text": JD_HTML})
+        logged = AtsCheck.objects.filter(user=user).get()
+        self.assertEqual((logged.job_id, logged.source), (None, "pasted"))
+
+    def test_founder_hq_shows_resume_checker_activity(self):
+        from jobs.models import AtsCheck
+        checker = get_user_model().objects.create_user("c", "checker@x.test", "pw12345!")
+        AtsCheck.objects.create(user=checker, job=self.job, matched=3, required=8)
+        AtsCheck.objects.create(user=None, job=self.job, matched=5, required=8)
+        admin = get_user_model().objects.create_user("a", "a@x.test", "pw12345!", is_staff=True)
+        self.client.force_login(admin)
+        r = self.client.get("/staff/")
+        self.assertContains(r, "Resume checker activity")
+        self.assertContains(r, "checker@x.test")
+        self.assertContains(r, "3 / 8")
+        self.assertContains(r, "anonymous")
+
 
 # ---------------------------------------------------------------------------
 # Page smoke tests — every major page must render
