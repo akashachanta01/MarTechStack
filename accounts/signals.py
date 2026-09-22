@@ -11,5 +11,7 @@ def on_user_signed_up(request, user, **kwargs):
     """Fires once per new account (email OR Google). Sends the user a welcome
     email and notifies the founder. Both calls are internally non-fatal so a
     mail hiccup never breaks the signup."""
+    if request is not None and hasattr(request, 'session'):
+        request.session['mtj_signed_up'] = 'google' if kwargs.get('sociallogin') else 'email'
     send_account_welcome_email(user)
     send_admin_new_user_alert(user)

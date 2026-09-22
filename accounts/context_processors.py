@@ -7,6 +7,8 @@ def feature_flags(request):
         'google_oauth_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False),
         'posthog_key': getattr(settings, 'POSTHOG_KEY', ''),
         'posthog_host': getattr(settings, 'POSTHOG_HOST', ''),
+        # One-shot: set by the user_signed_up signal, fired once as signup_completed.
+        'just_signed_up': request.session.pop('mtj_signed_up', '') if hasattr(request, 'session') else '',
     }
 
 

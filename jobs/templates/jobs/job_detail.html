@@ -139,7 +139,7 @@
         {% for tool in job.tools.all|slice:":3" %}<span class="pill pill-stack">{{ tool.name }}</span>{% endfor %}
       </div>
       <div class="jd-apply-row">
-        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg">Apply for this Position →</a>
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg js-apply" data-placement="top">Apply for this Position →</a>
         {% if user.is_authenticated %}
         <button id="save-btn" onclick="toggleSave({{ job.id }})" class="btn btn-ghost btn-lg" data-saved="{% if job.id in saved_job_ids %}true{% else %}false{% endif %}" style="{% if job.id in saved_job_ids %}border-color:var(--amber);background:var(--amber-light);color:var(--amber);{% endif %}">
           <svg id="save-icon" width="16" height="16" viewBox="0 0 24 24" fill="{% if job.id in saved_job_ids %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
@@ -168,7 +168,7 @@
       <div class="jd-apply-cta">
         <h3>Ready to make an impact?</h3>
         <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>
-        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg">Apply Now →</a>
+        <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg js-apply" data-placement="bottom">Apply Now →</a>
         {% if job.description %}
         <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="js-check-resume" data-placement="bottom" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
         {% endif %}
@@ -241,6 +241,22 @@
 
 {% block extra_js %}
 <script>
+// Job facts attached to every job-page event (no PII).
+var MTJ_JOB = {
+  job_id: {{ job.id }}, job_title: "{{ job.title|escapejs }}", job_company: "{{ job.company|escapejs }}",
+  job_function: "{{ job.function|escapejs }}", job_arrangement: "{{ job.work_arrangement|escapejs }}",
+  job_tools: "{% for t in job.tools.all %}{{ t.name|escapejs }}{% if not forloop.last %},{% endif %}{% endfor %}"
+};
+function trackEntry() {
+  var r = document.referrer || '';
+  if (!r) return 'direct';
+  try { var u = new URL(r); return u.host === location.host ? u.pathname : u.host; } catch (e) { return 'unknown'; }
+}
+document.querySelectorAll('.js-apply').forEach(function (a) {
+  a.addEventListener('click', function () {
+    window.mtjTrack && window.mtjTrack('apply_click', Object.assign({ placement: a.dataset.placement, came_from: trackEntry() }, MTJ_JOB));
+  });
+});
 function toggleSave(jobId) {
   const btn = document.getElementById('save-btn');
   const icon = document.getElementById('save-icon');
@@ -255,6 +271,7 @@ function toggleSave(jobId) {
     btn.style.color = d.saved ? '#bf5420' : '#666';
     icon.setAttribute('fill', d.saved ? '#bf5420' : 'none');
     label.textContent = d.saved ? 'Saved' : 'Save Job';
+    if (d.saved) window.mtjTrack && window.mtjTrack('job_saved', MTJ_JOB);
   }).catch(() => {});
 }
 
