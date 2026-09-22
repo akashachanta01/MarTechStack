@@ -153,7 +153,7 @@
         {% endif %}
         {% if job.description %}
         {# nofollow: one ?job= variant per listing would waste crawl budget; the tool page canonicalizes to its clean URL #}
-        <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="btn btn-ghost btn-lg">Check my resume</a>
+        <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="btn btn-ghost btn-lg js-check-resume" data-placement="top">Check my resume</a>
         {% endif %}
         <span class="jd-posted">Posted {{ job.created_at|timesince }} ago</span>
       </div>
@@ -170,7 +170,7 @@
         <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>
         <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg">Apply Now →</a>
         {% if job.description %}
-        <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
+        <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="js-check-resume" data-placement="bottom" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
         {% endif %}
       </div>
     </div>
@@ -257,5 +257,19 @@ function toggleSave(jobId) {
     label.textContent = d.saved ? 'Saved' : 'Save Job';
   }).catch(() => {});
 }
+
+// Analytics: "Check my resume" clicks (GA4 via GTM). No PII — job facts only.
+document.querySelectorAll('.js-check-resume').forEach(function (a) {
+  a.addEventListener('click', function () {
+    window.mtjTrack && window.mtjTrack('check_resume_click', {
+      placement: a.dataset.placement,
+      job_id: {{ job.id }},
+      job_title: "{{ job.title|escapejs }}",
+      job_company: "{{ job.company|escapejs }}",
+      job_function: "{{ job.function|escapejs }}",
+      logged_in: {% if user.is_authenticated %}true{% else %}false{% endif %}
+    });
+  });
+});
 </script>
 {% endblock %}

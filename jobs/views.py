@@ -1693,11 +1693,20 @@ def founder_hq(request):
         'posts_month': BlogPost.objects.filter(is_published=True, published_at__gte=month_ago.date()).count(),
     }
 
+    # --- Resume-checker interest (who is using the ATS tool, on which jobs) ---
+    from jobs.models import AtsCheck
+    checks_week = AtsCheck.objects.filter(created_at__gte=week_ago)
+    kpis['ats_checks_week'] = checks_week.count()
+    kpis['ats_people_week'] = checks_week.exclude(user=None).values('user').distinct().count()
+    kpis['ats_anon_week'] = checks_week.filter(user=None).count()
+    ats_checks = AtsCheck.objects.select_related('user', 'job')[:30]
+
     return render(request, 'jobs/founder_hq.html', {
         'kpis': kpis,
         'people': people,
         'newsletter_only': newsletter_only,
         'active_searches': active_searches,
+        'ats_checks': ats_checks,
         'page_noindex': True,
     })
 

@@ -3,6 +3,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+      // Analytics events -> Google Tag Manager dataLayer (GA4 reads them via
+      // GTM). Never put names/emails in params: GA4 forbids PII.
+      window.dataLayer = window.dataLayer || [];
+      window.mtjTrack = function (eventName, params) {
+        try { window.dataLayer.push(Object.assign({ event: eventName }, params || {})); } catch (e) {}
+      };
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}MarTechJobs — The #1 Marketing Technology Job Board{% endblock %}</title>

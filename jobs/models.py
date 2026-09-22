@@ -485,6 +485,25 @@ class PendingSubscriber(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"pending: {self.email}"
 
+class AtsCheck(models.Model):
+    """One run of the MarTech ATS resume checker — the founder's "who is
+    interested" signal (shown in Founder HQ). Deliberately stores NO resume
+    text and no IP: just who (if signed in), which job, and the score."""
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="ats_checks")
+    job = models.ForeignKey("Job", null=True, blank=True, on_delete=models.SET_NULL, related_name="ats_checks")
+    source = models.CharField(max_length=10, default="job")  # job | pasted
+    matched = models.PositiveSmallIntegerField(default=0)
+    required = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        who = self.user.email if self.user else "anonymous"
+        return f"{who}: {self.matched}/{self.required}"
+
+
 class SavedSearch(models.Model):
     """A targeted job alert: an email + the filters it should match on.
 

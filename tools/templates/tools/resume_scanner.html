@@ -115,6 +115,17 @@
   var signupUrl = "{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}";
   var btn = document.getElementById('ats-btn');
   var errBox = document.getElementById('ats-err');
+  var loggedIn = {% if user.is_authenticated %}true{% else %}false{% endif %};
+  function track(name, params) {
+    // GA4 via GTM. No PII: never send resume text, names or emails.
+    if (window.mtjTrack) window.mtjTrack(name, Object.assign({ logged_in: loggedIn, job_id: jobId }, params || {}));
+  }
+  function signupLink(text, from) {
+    var a = el('a', '', text);
+    a.href = signupUrl;
+    a.addEventListener('click', function () { track('ats_signup_click', { from: from }); });
+    return a;
+  }
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -124,11 +135,8 @@
   }
   function showError(msg, gate) {
     errBox.textContent = msg + ' ';
-    if (gate === 'signup') {
-      var a = el('a', '', 'Create free account →');
-      a.href = signupUrl;
-      errBox.appendChild(a);
-    }
+    if (gate === 'signup') errBox.appendChild(signupLink('Create free account →', 'signup_gate'));
+    if (gate) track('ats_gate_shown', { gate: gate });
     errBox.style.display = 'block';
   }
 
@@ -139,6 +147,7 @@
     var body = { resume_text: resume };
     if (jobId) { body.job_id = jobId; } else { body.jd_text = jdBox ? jdBox.value : ''; }
 
+    track('ats_check_submit', { source: jobId ? 'job' : 'pasted_jd' });
     btn.disabled = true; btn.textContent = 'Checking…';
     try {
       var res = await fetch("{% url 'api_ats_match' %}", {
@@ -157,6 +166,11 @@
   });
 
   function render(d) {
+    track('ats_check_result', {
+      matched: d.matched_count, required: d.required_count,
+      score_pct: d.required_count ? Math.round(100 * d.matched_count / d.required_count) : 0,
+      missing_count: d.missing.length
+    });
     document.getElementById('ats-score').textContent = d.matched_count + ' / ' + d.required_count;
     document.getElementById('ats-score-label').textContent =
       'platforms, skills & certs from this job found in your resume' +
@@ -186,7 +200,7 @@
       var box = el('div', 'ats-locked',
         (d.locked_alias_fixes ? d.locked_alias_fixes + ' wording fix(es) found. ' : '') +
         'Create a free account to see wording fixes and get rewrite tips. ');
-      var a = el('a', '', 'Sign up free →'); a.href = signupUrl; box.appendChild(a);
+      box.appendChild(signupLink('Sign up free →', 'locked_fixes'));
       fixes.appendChild(box);
     }
 
