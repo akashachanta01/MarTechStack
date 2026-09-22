@@ -220,6 +220,30 @@ class ATSMatchAPITests(TestCase):
         self.assertContains(r, "window.mtjTrack('newsletter_subscribe'")
         self.assertContains(r, "window.mtjTrack('signup_click'")
 
+    def test_email_links_get_utm_tags_but_unsubscribe_does_not(self):
+        from jobs.emails import _add_utm
+        html = ('<a href="https://martechjobs.io/job/1/x/">a</a>'
+                '<a href="https://martechjobs.io/jobs/?q=Marketo#top">b</a>'
+                '<a href="https://martechjobs.io/u/abc/">c</a>'
+                '<a href="https://other.com/">d</a>')
+        out = _add_utm(html, "daily_digest")
+        self.assertIn('/job/1/x/?utm_source=email&amp;utm_medium=email&amp;utm_campaign=daily_digest"', out)
+        self.assertIn('?q=Marketo&amp;utm_source=email&amp;utm_medium=email&amp;utm_campaign=daily_digest#top"', out)
+        self.assertIn('href="https://martechjobs.io/u/abc/"', out)
+        self.assertIn('href="https://other.com/"', out)
+
+    def test_recruiter_funnel_is_tracked(self):
+        r = self.client.get("/post-job/")
+        self.assertContains(r, "post_job_start")
+        self.assertContains(r, "post_job_submit")
+        r = self.client.get("/post-job/success/?plan=free")
+        self.assertContains(r, "window.mtjTrack('post_job_completed', { plan: \"free\" })")
+
+    def test_sitewide_click_tracking_present(self):
+        r = self.client.get("/")
+        for ev in ["employer_cta_click", "content_to_jobs_click", "tool_used"]:
+            self.assertContains(r, ev)
+
     def test_tool_page_tracks_funnel_events(self):
         r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
         for event in ["ats_check_submit", "ats_check_result", "ats_gate_shown", "ats_signup_click"]:

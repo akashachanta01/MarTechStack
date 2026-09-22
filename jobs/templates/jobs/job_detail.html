@@ -247,14 +247,9 @@ var MTJ_JOB = {
   job_function: "{{ job.function|escapejs }}", job_arrangement: "{{ job.work_arrangement|escapejs }}",
   job_tools: "{% for t in job.tools.all %}{{ t.name|escapejs }}{% if not forloop.last %},{% endif %}{% endfor %}"
 };
-function trackEntry() {
-  var r = document.referrer || '';
-  if (!r) return 'direct';
-  try { var u = new URL(r); return u.host === location.host ? u.pathname : u.host; } catch (e) { return 'unknown'; }
-}
 document.querySelectorAll('.js-apply').forEach(function (a) {
   a.addEventListener('click', function () {
-    window.mtjTrack && window.mtjTrack('apply_click', Object.assign({ placement: a.dataset.placement, came_from: trackEntry() }, MTJ_JOB));
+    window.mtjTrack && window.mtjTrack('apply_click', Object.assign({ placement: a.dataset.placement }, MTJ_JOB));
   });
 });
 function toggleSave(jobId) {
