@@ -198,7 +198,46 @@ def resume_scanner(request):
         ),
         'job': job,
         'monthly_runs': ATS_ACCOUNT_MONTHLY_RUNS,
+        'saved_resume': _saved_resume(request.user),
     })
+
+
+def _saved_resume(user):
+    if not user.is_authenticated:
+        return None
+    from accounts.models import UserResume
+    return UserResume.objects.filter(user=user).only('filename', 'updated_at', 'text').first()
+
+
+@require_POST
+def api_resume_upload(request):
+    """Parse an uploaded PDF/DOCX in memory. Signed-in: save the TEXT to the
+    account (file never kept). Anonymous: return the text for this one check."""
+    from jobs.resume_match import extract_resume_text, ResumeParseError
+    f = request.FILES.get('resume')
+    if not f:
+        return JsonResponse({"error": "Choose a PDF or Word file to upload."}, status=400)
+    if _bump_daily(f"resume_up:ip:{_tools_client_ip(request)}:{time.strftime('%Y%m%d')}", 40):
+        return JsonResponse({"error": "Too many uploads today — please try again tomorrow."}, status=429)
+    try:
+        text = extract_resume_text(f)
+    except ResumeParseError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+    filename = (f.name or "resume")[:200]
+    if request.user.is_authenticated:
+        from accounts.models import UserResume
+        UserResume.objects.update_or_create(user=request.user, defaults={"text": text, "filename": filename})
+        return JsonResponse({"saved": True, "filename": filename})
+    return JsonResponse({"saved": False, "filename": filename, "text": text})
+
+
+@require_POST
+def api_resume_delete(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Sign in first."}, status=401)
+    from accounts.models import UserResume
+    UserResume.objects.filter(user=request.user).delete()
+    return JsonResponse({"deleted": True})
 
 
 def _ats_tips(resume_text, result):
@@ -247,6 +286,12 @@ def api_ats_match(request):
         return JsonResponse({"error": "Invalid request."}, status=400)
 
     resume_text = (data.get("resume_text") or "").strip()[:15000]
+    saved = _saved_resume(request.user)
+    if not resume_text and saved:
+        resume_text = saved.text
+    elif resume_text and request.user.is_authenticated and data.get("save"):
+        from accounts.models import UserResume
+        UserResume.objects.update_or_create(user=request.user, defaults={"text": resume_text, "filename": "Pasted resume"})
     if len(resume_text) < 200:
         return JsonResponse({"error": "Please paste your full resume (at least a few lines)."}, status=400)
 
@@ -282,7 +327,7 @@ def api_ats_match(request):
             }, status=403)
         request.session["ats_anon_runs"] = request.session.get("ats_anon_runs", 0) + 1
 
-    # Resume text is used only in-memory for this request — never stored.
+    # Resume text is stored only if the member chose to save it (above).
     result = match(resume_text, jd_text)
     if result["required_count"] == 0:
         return JsonResponse({"error": "We couldn't find MarTech platforms or skills in that job description. Is it a MarTech / Marketing Ops role?"}, status=422)
@@ -298,10 +343,13 @@ def api_ats_match(request):
     except Exception as e:  # logging must never break the tool
         logger.error("AtsCheck log failed: %s", e)
 
+    from jobs.resume_match import rank_missing, match_label, best_matches
     payload = {
         "required_count": result["required_count"],
         "matched_count": result["matched_count"],
-        "missing": result["missing"],
+        "label": match_label(result["matched_count"], result["required_count"]),
+        "matched": result["matched"],
+        "missing": rank_missing(result["missing"]),
         "quantified_lines": result["quantified_lines"],
         "total_lines": result["total_lines"],
         "signed_in": signed_in,
@@ -309,6 +357,13 @@ def api_ats_match(request):
     }
     if signed_in:
         payload["alias_fixes"] = result["alias_fixes"]
+        payload["resume_saved"] = bool(_saved_resume(user))
+        if payload["resume_saved"]:
+            try:
+                payload["more_matches"] = best_matches(resume_text, exclude_id=job.id if job else None)
+            except Exception as e:
+                logger.error("best_matches failed: %s", e)
+                payload["more_matches"] = []
         # Tips cost real money — reuse the shared wallet guard for this part.
         ok, _ = check_rate_limit(request)
         payload["tips"] = _ats_tips(resume_text, result) if ok else []

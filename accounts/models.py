@@ -53,6 +53,19 @@ class ProWaitlistEntry(UserProfile):
         verbose_name_plural = "Pro Waitlist"
 
 
+class UserResume(models.Model):
+    """A member's saved resume, as extracted TEXT only (the uploaded file is
+    parsed in memory and never kept). Opt-in: created only when a signed-in
+    user uploads or chooses to save; deletable anytime from Settings."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='resume')
+    text = models.TextField()
+    filename = models.CharField(max_length=200, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Resume of {self.user_id}"
+
+
 @receiver(post_save, sender=User)
 def ensure_user_profile(sender, instance, created, **kwargs):
     # Guarantee every User has a profile. get_or_create covers both new
