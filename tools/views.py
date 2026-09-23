@@ -247,6 +247,25 @@ def api_resume_upload(request):
     return JsonResponse({"saved": False, "filename": filename, "text": text})
 
 
+def api_my_matches(request):
+    """Signed-in members with a saved resume: {job_id: [matched, required, label]}
+    so any page can show fit badges. Everyone else gets an empty result."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"jobs": {}, "has_resume": False})
+    from jobs.resume_match import user_job_scores
+    try:
+        scores, complete = user_job_scores(request.user)
+    except Exception as e:
+        logger.error("my_matches failed: %s", e)
+        return JsonResponse({"jobs": {}, "has_resume": True, "ready": False})
+    if scores is None:
+        return JsonResponse({"jobs": {}, "has_resume": False})
+    return JsonResponse({
+        "has_resume": True, "ready": complete,
+        "jobs": {str(j): [v["matched"], v["required"], v["label"]] for j, v in scores.items()},
+    })
+
+
 @require_POST
 def api_resume_delete(request):
     if not request.user.is_authenticated:

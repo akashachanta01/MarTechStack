@@ -78,6 +78,24 @@ def join_pro_waitlist(request):
 
 
 @login_required
+def my_matches(request):
+    """Every live job ranked by fit with the member's saved resume."""
+    from jobs.resume_match import user_job_scores
+    scores, complete = user_job_scores(request.user)
+    rows = []
+    if scores:
+        rows = sorted(
+            ({"id": j, **v} for j, v in scores.items() if v["required"]),
+            key=lambda r: (-(r["matched"] / r["required"]), -r["required"]))
+    show = request.GET.get("show", "good")
+    if show != "all":
+        rows = [r for r in rows if r["label"] in ("strong", "good")] or rows[:20]
+    return render(request, 'accounts/my_matches.html', {
+        'has_resume': scores is not None, 'rows': rows[:100], 'complete': complete, 'show': show,
+    })
+
+
+@login_required
 def saved_jobs(request):
     profile = request.user.userprofile
     jobs = profile.saved_jobs.filter(is_active=True).order_by('-created_at')

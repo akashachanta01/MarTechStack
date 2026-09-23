@@ -220,3 +220,37 @@ def lines_needing_numbers(resume_text, limit=3):
         if len(picks) >= limit:
             break
     return picks
+
+
+def score_all_jobs(resume_text, budget_s=2.0):
+    """({job_id: {"matched","required","label","missing"}}, complete) for every
+    analysed live job. Pure set maths on the cached job requirements."""
+    reqs, complete = job_requirements(budget_s)
+    have = set(extract_terms(resume_text).keys())
+    out = {}
+    for jid, r in reqs.items():
+        need = r["terms"]
+        hit = [t for t in need if t in have]
+        out[jid] = {
+            "matched": len(hit), "required": len(need),
+            "label": match_label(len(hit), len(need)),
+            "missing": sorted(t for t in need if t not in have),
+            "title": r["title"], "company": r["company"], "slug": r["slug"], "where": r["where"],
+        }
+    return out, complete
+
+
+def user_job_scores(user):
+    """Cached per member + resume version (30 min). None if no saved resume."""
+    from accounts.models import UserResume
+    res = UserResume.objects.filter(user=user).only("text", "updated_at").first()
+    if not res:
+        return None, False
+    key = f"resume_match:user:{user.id}:{int(res.updated_at.timestamp())}"
+    hit = cache.get(key)
+    if hit:
+        return hit, True
+    scores, complete = score_all_jobs(res.text)
+    if complete:
+        cache.set(key, scores, 1800)
+    return scores, complete

@@ -592,3 +592,54 @@ class TaxonomyFalsePositiveTests(TestCase):
     def test_customer_journeys_phrase_is_not_a_skill(self):
         self.assertNotIn("Journey Orchestration", extract_terms("Senior Technical Consultant, Customer Journeys", for_jd=True))
         self.assertIn("Journey Orchestration", extract_terms("Build flows in Journey Builder.", for_jd=True))
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase2MatchBadgeTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        self.fit = make_job(title="Marketo & SFMC Specialist", company="Umbrella",
+                            description="<p>Run Marketo and Salesforce Marketing Cloud. Build lead scoring and nurture programs.</p>")
+        self.user = get_user_model().objects.create_user("p2", "p2@x.test", "pw12345!")
+
+    def test_api_is_empty_for_anonymous_and_members_without_resume(self):
+        self.assertEqual(self.client.get("/tools/api/my-matches/").json()["jobs"], {})
+        self.client.force_login(self.user)
+        d = self.client.get("/tools/api/my-matches/").json()
+        self.assertEqual((d["jobs"], d["has_resume"]), ({}, False))
+
+    def test_api_scores_every_job_for_a_saved_resume(self):
+        from accounts.models import UserResume
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        self.client.force_login(self.user)
+        d = self.client.get("/tools/api/my-matches/").json()
+        self.assertTrue(d["ready"])
+        m, n, label = d["jobs"][str(self.job.id)]
+        self.assertEqual((m, n), (4, 8))
+        self.assertEqual(d["jobs"][str(self.fit.id)][2], "strong")
+
+    def test_badge_script_only_for_resume_holders_and_seo_unchanged(self):
+        from accounts.models import UserResume
+        url = f"/job/{self.job.id}/{self.job.slug}/"
+        r = self.client.get(url)
+        self.assertNotContains(r, "/tools/api/my-matches/")        # anonymous: no script
+        self.client.force_login(self.user)
+        self.assertNotContains(self.client.get(url), "/tools/api/my-matches/")  # no resume yet
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        r = self.client.get(url)
+        self.assertContains(r, "/tools/api/my-matches/")
+        self.assertContains(r, f'id="mtj-fit" class="mtj-fit" data-job-id="{self.job.id}"')
+
+    def test_my_matches_page_ranks_best_first(self):
+        from accounts.models import UserResume
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get("/accounts/matches/"), "Upload your resume to see your matches")
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        r = self.client.get("/accounts/matches/?show=all")
+        body = r.content.decode()
+        self.assertLess(body.index("Marketo &amp; SFMC Specialist"), body.index("Marketing Operations Manager"))
+        self.assertContains(r, "noindex")
+        self.assertEqual(self.client.get("/accounts/matches/").status_code, 200)
+        self.client.logout()
+        self.assertEqual(self.client.get("/accounts/matches/").status_code, 302)
