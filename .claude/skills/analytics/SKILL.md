@@ -23,7 +23,9 @@ tailor_error, tailor_download, pro_gate_shown, pro_preorder_click (the Pro decis
 >=5% of resume users click). $pageview carries page_type + came_from (registered super properties).
 Emails: links auto-tagged utm_source=email&utm_campaign=<template name> (jobs/emails.py::_add_utm).
 
-## Reports: founder wants human-readable names, never "/" paths
+## Reports: numbers tables only (NO graphs) + human-readable names, never "/" paths
+Every insight: display ActionsTable. Funnels: Step | People | Continued from previous step (pct) | Of everyone who started (pct)
+(lagInFrame/first_value window over the step order). Time series: one row per week, newest first, with change vs previous week.
 Map page_type → label in SQL, e.g. job_list→Homepage, job_detail→Job page, tool_detail→Tool jobs page,
 title_jobs→Job-title page, seo_tool_loc→Location + tool page, seo_loc_only→Location page, post_detail→Blog post,
 blog_list→Blog home, blog_*→Blog section, salary_guide/role_salary→Salary page, for_employers→For employers,
