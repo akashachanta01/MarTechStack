@@ -84,6 +84,7 @@ Never gate job seekers — keep browsing free always.
 - Bing Webmaster verification is parked — don't bring it up.
 - Founder is non-technical: explain in plain English, give click-by-click steps for any dashboard work.
 - Dashboards/reports: show human-readable names, never URL paths ("/job/...").
+- Dashboards/reports: NUMBERS, NOT GRAPHS. Founder prefers tables with clearly labelled columns (e.g. 'Continued from previous step (pct)', 'Change vs previous week (pct)', a plain 'Verdict' column). Never build line/bar charts.
 - Real numbers only on the site and in reports (no fake stats/testimonials) — see Content Rules.
 
 ## Infrastructure (IDs)
