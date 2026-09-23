@@ -94,6 +94,28 @@
     </div>
   </div>
 
+  <!-- Resume -->
+  <div class="st-card" id="resume">
+    <div class="st-card-h"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Your Resume</div>
+    <div class="st-card-sub">Used only to show your match score on jobs. Stored as text, never shared with employers.</div>
+    <div class="st-action" id="st-resume-row">
+      <div class="st-row-info">
+        {% if saved_resume %}
+        <div class="st-row-t">{{ saved_resume.filename|default:"Saved resume" }}</div>
+        <div class="st-row-m">Updated {{ saved_resume.updated_at|date:"M j, Y" }}</div>
+        {% else %}
+        <div class="st-row-t">No resume saved</div>
+        <div class="st-row-m">Upload one to see your fit on every MarTech job.</div>
+        {% endif %}
+      </div>
+      {% if saved_resume %}
+      <button type="button" class="btn btn-ghost" id="st-resume-del">Delete resume</button>
+      {% else %}
+      <a href="{% url 'resume_scanner' %}" class="btn btn-ghost">Upload resume</a>
+      {% endif %}
+    </div>
+  </div>
+
   <!-- Account -->
   <div class="st-card">
     <div class="st-card-h"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Account</div>
@@ -126,6 +148,12 @@ function postNotif(data) {
 function setNotif(field, value) {
   postNotif({field: field, value: value ? 'true':'false'}).catch(function(){});
 }
+var rdel = document.getElementById('st-resume-del');
+if (rdel) rdel.addEventListener('click', function () {
+  if (!confirm('Delete your saved resume from MarTechJobs?')) return;
+  fetch('{% url "api_resume_delete" %}', { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+    .then(function (r) { if (r.ok) { document.getElementById('st-resume-row').innerHTML = '<div class="st-row-info"><div class="st-row-t">Resume deleted</div><div class="st-row-m">We no longer have it.</div></div>'; if (window.mtjTrack) window.mtjTrack('resume_deleted', {from: 'settings'}); } });
+});
 function quickAction(action) {
   postNotif({action: action}).then(function(d){
     document.getElementById('tg-newsletter').checked = d.newsletter;
