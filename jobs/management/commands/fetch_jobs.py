@@ -23,6 +23,8 @@ from django.db.models import Q
 from jobs.models import Job, Tool, Category, CompanySource, clean_html_description, normalize_location
 from jobs.screener import MarTechScreener
 from jobs.tool_catalog import resolve_tool_name
+from jobs.ingest_quality import clean_title, display_company, extract_salary
+import zlib
 
 logger = logging.getLogger("jobs.fetch")
 
@@ -343,10 +345,11 @@ class Command(BaseCommand):
             # Normalize the incoming location the same way Job.save() does so the
             # comparison matches what's stored.
             norm_loc = normalize_location(location) if location else ""
+            title, company = clean_title(title), display_company(company)
             if Job.objects.filter(
+                Q(created_at__gte=timezone.now() - timedelta(days=30)) | Q(is_active=True),
                 title__iexact=title, company__iexact=company,
                 location__iexact=norm_loc,
-                created_at__gte=timezone.now() - timedelta(days=30),
             ).exists():
                 return True
         return False
@@ -383,6 +386,12 @@ class Command(BaseCommand):
             if any(k in clean_url for k in ['/job/', '/jobs/', '/detail/', '/req/', '/position/', '/career/']):
                  self.fetch_generic_ai(clean_url)
                  
+    def _feed_seen(self, external_id):
+        """Record that the board being polled still lists this posting (every
+        item, before freshness filters), so vanished postings can be closed."""
+        if getattr(self, "_polling_registry", False) and external_id:
+            self._feed_ids.add(external_id)
+
     def get_headers(self):
         return {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 
@@ -434,6 +443,71 @@ class Command(BaseCommand):
         except Exception as e:
             logger.warning("record_source failed (%s:%s): %s", ats_type, token, e)
 
+    def _company_name(self, ats, token, fallback=None):
+        """Readable company name for a board: an admin-edited CompanySource name
+        wins, then the reviewed override map, then Greenhouse's own board name."""
+        raw = fallback or (token or "").capitalize()
+        src = CompanySource.objects.filter(ats_type=ats, token=token).first()
+        if src and src.name and src.name != raw and src.name != (token or "").capitalize():
+            return src.name
+        name = display_company(raw)
+        if name == raw and ats == "greenhouse" and src:
+            try:
+                r = requests.get(f"https://boards-api.greenhouse.io/v1/boards/{token}", headers=self.get_headers(), timeout=5)
+                gh = (r.json().get("name") or "").strip() if r.status_code == 200 else ""
+                if gh and gh.lower().replace(" ", "") != raw.lower():
+                    src.name = gh
+                    src.save(update_fields=["name"])
+                    return gh
+            except Exception:
+                pass
+        return name
+
+    def _count_known(self, source):
+        self.stats[f"{source}:dupe"] += 1
+        if getattr(self, "_polling_registry", False):
+            self._poll_seen += 1
+
+    def _sr_complete(self, payload):
+        """SmartRecruiters pages at 100; only a fully-listed board can close jobs."""
+        try:
+            return int(payload.get("totalFound", 0)) <= len(payload.get("content", []))
+        except (TypeError, ValueError):
+            return False
+
+    # Closing guard: an API hiccup that returns a near-empty board must not wipe it.
+    MAX_CLOSE_SHARE = 0.5
+
+    def _close_vanished(self, s, legacy_names):
+        """After a complete poll of board `s`, stamp every job it still lists and
+        close live jobs from this board that it no longer lists (filled/removed)."""
+        now = timezone.now()
+        key = self._source_key
+        Job.objects.filter(external_id__in=self._feed_ids).update(last_seen_at=now, source_key=key)
+        prefix = f"{s.ats_type}:"
+        live = Job.objects.filter(is_active=True, screening_status="approved").filter(
+            Q(source_key=key) | Q(source_key="", company__in=legacy_names, external_id__startswith=prefix))
+        live_ids = list(live.values_list("id", "external_id"))
+        gone = [pk for pk, ext in live_ids if ext and ext not in self._feed_ids]
+        if not gone:
+            return 0
+        if len(gone) > 3 and len(gone) > self.MAX_CLOSE_SHARE * len(live_ids):
+            self.stats["close:skipped_guard"] += 1
+            logger.warning("Not closing %s jobs from %s: over the safety share", len(gone), key)
+            return 0
+        Job.objects.filter(id__in=gone).update(
+            is_active=False, screening_reason="Closed: no longer listed on the company's job board")
+        self.stats["close:vanished"] += len(gone)
+        return len(gone)
+
+    def _poll_today(self, s, live_companies):
+        """Boards that have never produced a live role are polled once a week (on
+        a stable weekday per board) instead of daily, to keep the cron fast."""
+        names = {(s.name or "").lower(), (s.token or "").lower(), display_company((s.token or "").capitalize()).lower()}
+        if s.last_polled_at is None or s.last_added_count or (names & live_companies):
+            return True
+        return zlib.crc32((s.token or s.board_url or s.name).encode()) % 7 == timezone.now().weekday()
+
     def poll_company_sources(self):
         """Phase 1: poll every enabled board in the registry directly."""
         from django.db.models import F
@@ -455,17 +529,34 @@ class Command(BaseCommand):
             "workday": lambda s: self.fetch_workday_api(s.board_url or s.token),
         }
         self._polling_registry = True
+        live_companies = {c.lower() for c in Job.objects.filter(is_active=True, screening_status="approved")
+                          .values_list("company", flat=True).distinct() if c}
         total = len(sources)
         for idx, s in enumerate(sources, 1):
             fn = dispatch.get(s.ats_type)
             if not fn:
                 continue
+            if not self._poll_today(s, live_companies):
+                self.stats["source:weekly_skip"] += 1
+                continue
             self._poll_seen = 0
+            self._feed_ids, self._feed_complete = set(), False
+            self._source_key = f"{s.ats_type}:{s.token or s.board_url}"[:250]
             before = self.total_added
             try:
                 fn(s)
             except Exception as e:
+                self._feed_complete = False
                 logger.warning("Direct poll failed for %s: %s", s, e)
+            if self._feed_complete and self._feed_ids:
+                raw = (s.token.split("/")[0] if s.ats_type == "workday" else s.token or "").capitalize()
+                legacy = {raw, display_company(raw), s.name}
+                try:
+                    closed = self._close_vanished(s, legacy)
+                    if closed:
+                        self.stdout.write(f"   🗂 Closed {closed} job(s) no longer on {s.name}'s board")
+                except Exception as e:
+                    logger.warning("Closing vanished jobs failed for %s: %s", s, e)
             added = self.total_added - before
             # Progress line so a long --sources-only run is visibly alive.
             self.stdout.write(f"   [{idx}/{total}] {s.ats_type}:{s.token or s.name} → +{added}")
@@ -494,14 +585,17 @@ class Command(BaseCommand):
             resp = requests.get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("greenhouse", token, token.capitalize())
+                self._feed_complete = True
+                company = self._company_name("greenhouse", token)
                 for item in resp.json().get('jobs', []):
+                    self._feed_seen(f"greenhouse:{item.get('id')}")
                     if self.is_fresh(item.get('updated_at')):
                         # (item.get('location') or {}) — the API can return an
                         # explicit null, which a plain .get default won't cover.
                         raw_loc = (item.get('location') or {}).get('name')
                         clean_loc, arr = self._clean_location(raw_loc, "remote" in (raw_loc or "").lower())
                         self.screen_and_upsert({
-                            "title": item.get('title'), "company": token.capitalize(), "location": clean_loc,
+                            "title": item.get('title'), "company": company, "location": clean_loc,
                             "description": item.get('content'), "apply_url": item.get('absolute_url'),
                             "work_arrangement": arr, "source": "Greenhouse",
                             "external_id": f"greenhouse:{item.get('id')}",
@@ -517,7 +611,10 @@ class Command(BaseCommand):
             resp = requests.get(f"https://api.lever.co/v0/postings/{token}?mode=json", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("lever", token, token.capitalize())
+                self._feed_complete = True
+                company = self._company_name("lever", token)
                 for item in resp.json():
+                    self._feed_seen(f"lever:{item.get('id')}")
                     # Fail OPEN on a missing/unparseable createdAt (consistent with
                     # is_fresh() elsewhere) — a Lever posting without a timestamp
                     # was silently dropped before, losing real jobs.
@@ -535,7 +632,7 @@ class Command(BaseCommand):
                         salary = (f"{int(sr['min']):,} - {int(sr['max']):,} {sr.get('currency','')}".strip()
                                   if sr.get('min') and sr.get('max') else None)
                         self.screen_and_upsert({
-                            "title": item.get('text'), "company": token.capitalize(), "location": clean_loc,
+                            "title": item.get('text'), "company": company, "location": clean_loc,
                             "description": item.get('description'), "apply_url": item.get('hostedUrl'),
                             "work_arrangement": arr, "source": "Lever", "salary": salary,
                             "external_id": f"lever:{item.get('id')}",
@@ -551,8 +648,11 @@ class Command(BaseCommand):
             resp = requests.post("https://api.ashbyhq.com/posting-api/job-board/" + company, headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("ashby", company, company.capitalize())
+                self._feed_complete = True
+                name = self._company_name("ashby", company)
                 cutoff = timezone.now() - timedelta(days=14)
                 for item in resp.json().get('jobs', []):
+                    self._feed_seen(f"ashby:{item.get('id')}")
                     published = item.get('publishedAt') or item.get('updatedAt') or ''
                     if published:
                         try:
@@ -570,7 +670,7 @@ class Command(BaseCommand):
                     raw_desc = item.get('descriptionHtml') or item.get('descriptionPlain') or ''
                     description = clean_html_description(raw_desc) if raw_desc else f"Full details at {item.get('jobUrl')}"
                     self.screen_and_upsert({
-                        "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
+                        "title": item.get('title'), "company": name, "location": clean_loc,
                         "description": description, "apply_url": item.get('jobUrl'),
                         "work_arrangement": arr, "source": "Ashby", "salary": item.get('compensationTierSummary'),
                         "external_id": f"ashby:{item.get('id')}",
@@ -586,13 +686,16 @@ class Command(BaseCommand):
             resp = requests.get(f"https://apply.workable.com/api/v1/widget/accounts/{sub}", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("workable", sub, sub.capitalize())
+                self._feed_complete = True
+                company = self._company_name("workable", sub)
                 for item in resp.json().get('jobs', []):
+                    self._feed_seen(f"workable:{item.get('id') or item.get('shortcode')}")
                     if self.is_fresh(item.get('published_on')):
                         parts = [item.get('city'), item.get('state'), item.get('country')]
                         raw_loc = ", ".join([p for p in parts if p])
                         clean_loc, arr = self._clean_location(raw_loc, item.get('telecommuting', False))
                         self.screen_and_upsert({
-                            "title": item.get('title'), "company": sub.capitalize(), "location": clean_loc,
+                            "title": item.get('title'), "company": company, "location": clean_loc,
                             "description": item.get('description'), "apply_url": item.get('url'),
                             "work_arrangement": arr, "source": "Workable",
                             "external_id": f"workable:{item.get('id') or item.get('shortcode')}",
@@ -608,8 +711,16 @@ class Command(BaseCommand):
             resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("smartrecruiters", company, company.capitalize())
+                self._feed_complete = self._sr_complete(resp.json())
+                name = self._company_name("smartrecruiters", company)
                 for item in resp.json().get('content', []):
+                    ext_id = f"smartrecruiters:{item.get('id')}"
+                    self._feed_seen(ext_id)
                     if self.is_fresh(item.get('releasedDate')):
+                        # Known posting: skip the per-job detail request entirely.
+                        if self._is_duplicate("", "", "", ext_id):
+                            self._count_known("SmartRecruiters")
+                            continue
                         desc = ""
                         try:
                             dr = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", headers=self.get_headers(), timeout=5)
@@ -627,7 +738,7 @@ class Command(BaseCommand):
                         raw_loc = ", ".join([p for p in parts if p])
                         clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
                         self.screen_and_upsert({
-                            "title": item.get('name'), "company": company.capitalize(), "location": clean_loc,
+                            "title": item.get('name'), "company": name, "location": clean_loc,
                             "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
                             "work_arrangement": arr, "source": "SmartRecruiters",
                             "external_id": f"smartrecruiters:{item.get('id')}",
@@ -643,14 +754,17 @@ class Command(BaseCommand):
             resp = requests.get(f"https://{company}.recruitee.com/api/offers/", headers=self.get_headers(), timeout=5)
             if resp.status_code == 200:
                 self.record_source("recruitee", company, company.capitalize())
+                self._feed_complete = True
+                name = self._company_name("recruitee", company)
                 for item in resp.json().get('offers', []):
+                    self._feed_seen(f"recruitee:{item.get('id')}")
                     if self.is_fresh(item.get('published_at') or item.get('created_at')):
                         parts = [item.get('city'), item.get('state_name') or item.get('state_code'), item.get('country')]
                         raw_loc = ", ".join([p for p in parts if p]) or item.get('location')
                         is_remote = bool(item.get('remote')) or "remote" in (raw_loc or "").lower()
                         clean_loc, arr = self._clean_location(raw_loc, is_remote)
                         self.screen_and_upsert({
-                            "title": item.get('title'), "company": company.capitalize(), "location": clean_loc,
+                            "title": item.get('title'), "company": name, "location": clean_loc,
                             "description": item.get('description'), "apply_url": item.get('careers_url') or item.get('url'),
                             "work_arrangement": arr, "source": "Recruitee",
                             "external_id": f"recruitee:{item.get('id')}",
@@ -692,8 +806,10 @@ class Command(BaseCommand):
         base = f"https://{tenant}.{host}.myworkdayjobs.com/{('%s/' % _lang) if _lang else ''}{site}"
         PAGE = 20
         MAX_PAGES = 10  # cap coverage at 200 postings/board to bound cost
+        company = self._company_name("workday", f"{tenant}/{site}", fallback=tenant.capitalize())
         try:
             recorded = False
+            walked_all = False
             for page in range(MAX_PAGES):
                 offset = page * PAGE
                 resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": ""},
@@ -704,15 +820,21 @@ class Command(BaseCommand):
                 payload = resp.json()
                 postings = payload.get('jobPostings', [])
                 if not postings:
+                    walked_all = True
                     break
                 if not recorded:
                     self.record_source("workday", f"{tenant}/{site}", tenant.capitalize(), board_url=board_url)
                     recorded = True
                 for item in postings:
+                    ext_path = item.get('externalPath') or ""
+                    self._feed_seen(f"workday:{ext_path}")
                     if not self._workday_fresh(item.get('postedOn')):
                         self.stats["Workday:stale"] += 1
                         continue
-                    ext_path = item.get('externalPath') or ""
+                    # Known posting: skip the slow per-job detail request.
+                    if self._is_duplicate("", "", "", f"workday:{ext_path}"):
+                        self._count_known("Workday")
+                        continue
                     _bullet0 = ((item.get('bulletFields') or []) + [None])[0]
                     raw_loc = str(item.get('locationsText') or _bullet0 or "")
                     is_remote = "remote" in raw_loc.lower()
@@ -729,22 +851,29 @@ class Command(BaseCommand):
                             headers=self.get_headers(), timeout=8,
                         )
                         if dr.status_code == 200:
-                            desc = ((dr.json().get('jobPostingInfo') or {}).get('jobDescription') or "")
+                            info = dr.json().get('jobPostingInfo') or {}
+                            desc = info.get('jobDescription') or ""
+                            # "6 Locations" in the list view: use the primary location instead.
+                            if re.match(r'^\s*\d+\s+locations?\s*$', raw_loc, re.I) and info.get('location'):
+                                clean_loc, arr = self._clean_location(str(info['location']), is_remote)
                     except Exception:
                         desc = ""
                     if not desc:
                         self.stats["Workday:no_description"] += 1
                         continue
                     self.screen_and_upsert({
-                        "title": item.get('title'), "company": tenant.capitalize(), "location": clean_loc,
+                        "title": item.get('title'), "company": company, "location": clean_loc,
                         "description": desc, "apply_url": f"{base}{ext_path}",
                         "work_arrangement": arr, "source": "Workday",
                         "external_id": f"workday:{ext_path}",
                     })
                 # Stop once we've walked the whole board.
                 if offset + PAGE >= payload.get('total', 0):
+                    walked_all = True
                     break
                 time.sleep(0.3)
+            # Boards larger than MAX_PAGES are only partly read: never close from those.
+            self._feed_complete = walked_all
         except Exception as e:
             self.stats["Workday:error"] += 1
             logger.warning("Workday board '%s' failed: %s", board_url, e)
@@ -828,7 +957,7 @@ class Command(BaseCommand):
         raw_role = (signals.get("role_type") or "").strip().lower().replace("-", "_").replace(" ", "_")
         role_type = raw_role if raw_role in valid_role_types else "full_time"
         # Real salary from the ATS payload when available (never fabricated).
-        salary = (job_data.get("salary") or "").strip() or None
+        salary = (job_data.get("salary") or "").strip() or extract_salary(job_data.get("description")) or None
         # Structured location captured at ingest (Sprint 3b).
         country, region, remote_scope = self._geo_fields(job_data.get("location"), job_data.get("work_arrangement"))
         try:
@@ -843,6 +972,8 @@ class Command(BaseCommand):
                 screening_details=analysis.get("details", {}),
                 external_id=external_id,
                 country=country, region=region, remote_scope=remote_scope,
+                source_key=getattr(self, "_source_key", "") if getattr(self, "_polling_registry", False) else "",
+                last_seen_at=timezone.now(),
             )
         except IntegrityError:
             self.stats[f"{source}:dupe"] += 1

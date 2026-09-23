@@ -7,22 +7,18 @@ ships. Newest decisions at the top of each section.
 
 ## SITE AUDIT — SEPT 23 2026 (batch 1 shipped in PR #143; rest queued)
 
-### Batch 2 — job data quality (next; fits "quality before scale")
-- [ ] **Stale-job detection** — 357/494 live jobs not updated in 14+ days; no
-  "last seen in ATS" field. Add `last_seen_at` on ingest, auto-deactivate jobs
-  missing from their feed for 2+ runs. Homepage says "every link verified daily"
-  — must stay true.
-- [ ] **Clean company names** — 31 squashed ATS board names ("Doordashusa",
-  "Synchronyfinancial", "Cvshealth", "Wppmedia"). Add display name per source.
-- [ ] **Dedupe** — 6 live duplicate groups (company+title+location).
-- [ ] **Strip requisition codes from titles** — "(PR0056)", "(1507)", "(L09)".
-- [ ] **Location junk** — 10–12-city semicolon lists, "6 Locations" placeholders
-  → "Multiple locations" + primary city.
-- [ ] **Salary capture** — only 6/494 (1.2%) have pay; pull ranges ATS feeds
-  expose (Greenhouse pay transparency, Ashby compensation, Lever salaryRange).
-- [ ] **Dead sources** — 90/206 enabled ATS sources have 0 live jobs; prune/fix.
-- [ ] **Cron time budget** — `fetch_jobs` hit its 1500s cap on Sept 21 (~42 min
-  run); find slow Workday boards.
+### Batch 2 — job data quality: BUILT (awaiting push approval)
+- [x] Jobs removed from a company's board are closed on the next daily poll
+  (`source_key`/`last_seen_at`, safety guard vs. API glitches); dead-link check
+  and 60-day demotion skip jobs the board still lists.
+- [x] Readable company names (reviewed map + Greenhouse board name + admin-edited
+  CompanySource.name); old run-together company URLs 301 to the new ones.
+  Left as-is (unknown real name): Globalhr, Hcmportal, Sggovterp, Newengeninc.
+- [x] Requisition codes stripped from titles; "6 Locations" / 10-city lists tidied.
+- [x] Salary read from the posting text when the ATS gives none (strict parser).
+- [x] Live duplicates removed daily (`clean_job_data`, newest wins).
+- [x] Cron speed: known Workday/SmartRecruiters postings skip the detail request;
+  boards that never produced a live role are polled weekly, not daily.
 
 ### Batch 3 — security hardening
 - [ ] **Staff approve/reject via GET** (`review_action`) — CSRF-able; make POST

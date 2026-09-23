@@ -79,6 +79,8 @@ class Command(BaseCommand):
             self._run("\n[2/7] 🏹 Hunting via API (FULL discovery — paid)...", 'fetch_jobs', '--countries', 'all')
         else:
             self._run("\n[2/7] 🏹 Polling known boards (cheap, all countries)...", 'fetch_jobs', '--sources-only')
+        # Data quality on everything live (names, titles, locations, pay, duplicates).
+        self._run("      🧽 Cleaning job data...", 'clean_job_data')
 
         # 3. POLISH (Images)
         self._run("\n[3/7] 🎨 Backfilling Logos...", 'update_logos')

@@ -210,6 +210,10 @@ class Job(models.Model):
     # Deliberately NOT a `function` value — an "AI Campaign Engineer" is still
     # engineering; this powers the cross-cutting /category/ai-automation/ page.
     requires_ai = models.BooleanField(default=False, db_index=True)
+    # Which registry board this posting came from ("greenhouse:<token>") and when
+    # that board last listed it. A job that disappears from its board is closed.
+    source_key = models.CharField(max_length=250, blank=True, default="", db_index=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -356,7 +360,10 @@ class Job(models.Model):
         return (anchor + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S')
 
     def save(self, *args, **kwargs):
-        if self.location: self.location = normalize_location(self.location)
+        from jobs.ingest_quality import clean_title, display_company, tidy_location
+        self.title = clean_title(self.title)
+        self.company = display_company(self.company)
+        if self.location: self.location = normalize_location(tidy_location(self.location))
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
         # AI overlay is recomputed deterministically on every save (cheap regex).

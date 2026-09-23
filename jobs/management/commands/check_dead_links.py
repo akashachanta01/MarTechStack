@@ -14,7 +14,12 @@ class Command(BaseCommand):
         # Only scan jobs older than 14 days (fresh jobs are almost never dead)
         # and cap at 100 per run — at 10s timeout each that's still ~17 minutes max.
         cutoff = timezone.now() - timedelta(days=14)
-        active_jobs = Job.objects.filter(is_active=True, created_at__lte=cutoff).order_by('created_at')[:100]
+        # Skip jobs their company's board listed in the last 2 days (fetch_jobs
+        # already confirmed them) and sample the rest so every job gets checked
+        # over time, not the same oldest 100 every day.
+        active_jobs = (Job.objects.filter(is_active=True, created_at__lte=cutoff)
+                       .exclude(last_seen_at__gte=timezone.now() - timedelta(days=2))
+                       .order_by('?')[:100])
         total = len(list(active_jobs))
         dead_count = 0
         
