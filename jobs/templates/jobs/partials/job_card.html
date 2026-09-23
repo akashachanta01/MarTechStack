@@ -1,0 +1,20 @@
+<a class="jrow {% if job.is_featured %}feat{% endif %}" href="{% url 'job_detail' job.id job.slug %}" aria-label="{{ job.title }} at {{ job.company }}">
+  <div class="jrow-logo">{% if job.company_logo %}<img src="{{ job.company_logo }}" alt="{{ job.company }} logo" loading="lazy">{% else %}{{ job.company|slice:":1" }}{% endif %}</div>
+  <div class="jrow-main">
+    <div class="jrow-title">{{ job.title }}</div>
+    <div class="jrow-meta">
+      <span class="co">{{ job.company }}</span><span>·</span>
+      <span>{{ job.location|default:"Not specified" }}</span><span>·</span>
+      <span>{{ job.created_at|timesince }} ago</span>
+    </div>
+    <div class="jrow-badges">
+      {% if job.is_featured %}<span class="pill pill-feat">★ Featured</span>{% endif %}
+      {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote</span>{% endif %}
+      <span class="pill pill-type">{{ job.get_role_type_display }}</span>
+      {% for t in job.tools.all|slice:":2" %}<span class="pill pill-stack">{{ t.name }}</span>{% endfor %}
+    </div>
+  </div>
+  <div class="jrow-right">
+    {% if job.salary_range %}<div class="jrow-salary">{{ job.salary_range }}</div>{% else %}<div class="jrow-salary na">Salary not listed</div>{% endif %}
+  </div>
+</a>

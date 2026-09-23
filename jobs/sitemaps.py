@@ -122,7 +122,18 @@ class SEOLandingSitemap(Sitemap):
             if live.filter(location__icontains=name).exists():
                 seo_pages.add((page_slug, ''))
 
-        return sorted(list(seo_pages))
+        # Final gate: the exact rule the page's robots meta uses.
+        from .views import seo_landing_jobs, seo_landing_indexable
+        tools_by_slug = {t.slug: t for t in canonical_tools}
+        keep = []
+        for loc, tslug in seo_pages:
+            tool = tools_by_slug.get(tslug) if tslug else None
+            if tslug and tool is None:
+                continue
+            jobs, _ = seo_landing_jobs(loc, tool)
+            if seo_landing_indexable(loc, tool, jobs.count()):
+                keep.append((loc, tslug))
+        return sorted(keep)
 
     def location(self, obj):
         loc_slug, tool_slug = obj
@@ -172,8 +183,9 @@ class RoleSalarySitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        from jobs.views import TITLE_JOBS
-        return list(TITLE_JOBS.keys())
+        # Only salary pages that are indexable (same rule as the page itself).
+        from jobs.views import TITLE_JOBS, title_jobs_qs, role_salary_indexable, _salary_stats
+        return [s for s in TITLE_JOBS if role_salary_indexable(_salary_stats(title_jobs_qs(s)))]
 
     def location(self, slug):
         return f"/{slug}-salary/"
@@ -233,7 +245,6 @@ class StaticViewSitemap(Sitemap):
         return [
             'about',
             'for_employers',
-            'post_job',
             'job_list',
             'blog_list',
             'salary_guide',
@@ -256,8 +267,9 @@ class TitleJobsSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        from jobs.views import TITLE_JOBS
-        return list(TITLE_JOBS.keys())
+        # Empty title pages are noindex, so leave them out.
+        from jobs.views import TITLE_JOBS, title_jobs_qs
+        return [s for s in TITLE_JOBS if title_jobs_qs(s).exists()]
 
     def location(self, slug):
         return f'/{slug}-jobs/'
@@ -274,16 +286,9 @@ class CategorySitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        from jobs.views import CATEGORY_CONFIG
-        from .models import Job
-        slugs = []
-        for slug, cfg in CATEGORY_CONFIG.items():
-            if cfg.get('ai_overlay'):
-                if not Job.objects.filter(
-                    is_active=True, screening_status='approved', requires_ai=True
-                ).exists():
-                    continue
-            slugs.append(slug)
+        # Same rule as category_detail: empty categories are noindex.
+        from jobs.views import CATEGORY_CONFIG, category_jobs_qs
+        slugs = [s for s in CATEGORY_CONFIG if category_jobs_qs(s).exists()]
         return slugs
 
     def location(self, slug):
@@ -307,3 +312,19 @@ class CertificationGuideSitemap(Sitemap):
 
     def location(self, obj):
         return reverse('tool_certification', args=[obj.tool.slug])
+
+
+class CompanySitemap(Sitemap):
+    """Company careers pages with at least one live job."""
+    changefreq = "daily"
+    priority = 0.6
+    protocol = 'https'
+
+    def items(self):
+        from .models import Job
+        names = (Job.objects.filter(is_active=True, screening_status='approved')
+                 .values_list('company', flat=True).distinct())
+        return sorted({n for n in names if n and slugify(n)})
+
+    def location(self, name):
+        return reverse('company_detail', args=[slugify(name)])

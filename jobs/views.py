@@ -13,6 +13,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.core.cache import cache
 from django.utils.text import slugify
 from django.http import HttpResponse, JsonResponse, Http404
+import re
+from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages 
 from django.core.validators import validate_email
@@ -526,17 +528,10 @@ CATEGORY_CONFIG = {
     },
 }
 
-def category_detail(request, slug):
-    config = CATEGORY_CONFIG.get(slug)
-    if not config:
-        raise Http404("Unknown category")
-
-    query = request.GET.get("q", "").strip()
-    location_query = request.GET.get("l", "").strip()
-    tool_filter = request.GET.get("tool", "").strip()
-    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
-
-    jobs = Job.objects.filter(is_active=True, screening_status="approved").prefetch_related("tools")
+def category_jobs_qs(slug):
+    """Live jobs in a category (no user filters). Shared with the sitemap."""
+    config = CATEGORY_CONFIG[slug]
+    jobs = Job.objects.filter(is_active=True, screening_status="approved")
 
     if config.get("ai_overlay"):
         # AI & Automation is a cross-cutting overlay (a job keeps its function
@@ -553,6 +548,20 @@ def category_detail(request, slug):
         cat_q |= Q(tools__slug__in=config["tool_slugs"])
         unclassified = unclassified.filter(cat_q)
         jobs = (classified | unclassified)
+    return jobs
+
+
+def category_detail(request, slug):
+    config = CATEGORY_CONFIG.get(slug)
+    if not config:
+        raise Http404("Unknown category")
+
+    query = request.GET.get("q", "").strip()
+    location_query = request.GET.get("l", "").strip()
+    tool_filter = request.GET.get("tool", "").strip()
+    work_arrangement_filter = request.GET.get("arrangement", "").strip().lower()
+
+    jobs = category_jobs_qs(slug).prefetch_related("tools")
 
     # Optional user refinements within the category.
     if query:
@@ -666,20 +675,26 @@ def all_jobs(request):
         "popular_titles": [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items()],
     })
 
+def title_jobs_qs(slug):
+    """Live jobs for a /<title>-jobs/ or /<title>-salary/ page. Shared with the sitemap."""
+    q = Q()
+    for kw in TITLE_JOBS[slug]["kw"]:
+        q |= Q(title__icontains=kw)
+    return Job.objects.filter(is_active=True, screening_status="approved").filter(q).distinct()
+
+
+def role_salary_indexable(stats):
+    """Salary pages need 3+ disclosed salaries to be indexed (sitemap uses this too)."""
+    return bool(stats) and stats['count'] >= 3
+
+
 def title_jobs(request, title_slug):
     """Programmatic job-title landing page (e.g. /marketing-operations-manager-jobs/)."""
     cfg = TITLE_JOBS.get(title_slug)
     if not cfg:
         raise Http404("Unknown role")
 
-    q = Q()
-    for kw in cfg["kw"]:
-        q |= Q(title__icontains=kw)
-    jobs = (
-        Job.objects.filter(is_active=True, screening_status="approved")
-        .filter(q).prefetch_related("tools").distinct()
-        .order_by("-is_pinned", "-created_at")
-    )
+    jobs = title_jobs_qs(title_slug).prefetch_related("tools").order_by("-is_pinned", "-created_at")
     total_count = jobs.count()
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get("page"))
@@ -858,41 +873,19 @@ def post_detail(request, slug):
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---
-def seo_landing_page(request, location_slug=None, tool_slug=None):
-    # Canonicalize casing: the URL converter accepts uppercase, so Google found
-    # mixed-case variants like /charlotte/Salesforce-jobs/ that are duplicates
-    # of the lowercase page and get flagged Soft 404. 301 them to lowercase.
-    if (location_slug and location_slug != location_slug.lower()) or \
-       (tool_slug and tool_slug != tool_slug.lower()):
-        if tool_slug:
-            return redirect('seo_tool_loc',
-                            location_slug=(location_slug or '').lower(),
-                            tool_slug=tool_slug.lower(), permanent=True)
-        return redirect('seo_loc_only', location_slug=location_slug.lower(), permanent=True)
-
-    # 301 abbreviated/old location slugs to the canonical one (no duplicates).
-    if location_slug and location_slug.lower() in LOCATION_ALIASES:
-        canonical = LOCATION_ALIASES[location_slug.lower()]
-        if tool_slug:
-            return redirect('seo_tool_loc', location_slug=canonical, tool_slug=tool_slug, permanent=True)
-        return redirect('seo_loc_only', location_slug=canonical, permanent=True)
-
-    tool = None
-    if tool_slug:
-        clean_tool_slug = tool_slug.replace("-jobs", "")
-        tool = get_object_or_404(Tool, slug=clean_tool_slug)
-
+def seo_landing_jobs(location_slug, tool):
+    """(live jobs, display name) for a location/tool landing page. Shared with the sitemap."""
     SEO_LOCATIONS = {
         "united-states": "United States",
     }
 
+    _loc_slug = (location_slug or "").lower()
     location_name = "Remote"
     if location_slug:
         location_name = SEO_LOCATIONS.get(location_slug.lower(), location_slug.replace("-", " ").title())
 
     jobs = Job.objects.filter(is_active=True, screening_status='approved')
     if tool: jobs = jobs.filter(tools=tool)
-    _loc_slug = (location_slug or "").lower()
     if location_name == "Remote":
         jobs = jobs.filter(work_arrangement="remote")
     elif _loc_slug in SEO_COUNTRY_MATCH:
@@ -917,6 +910,49 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         else:
             jobs = jobs.filter(location__icontains=location_name)
 
+    return jobs, location_name
+
+
+def seo_landing_indexable(location_slug, tool, total_count):
+    """Single indexability rule for landing pages — the view's robots meta and the
+    sitemap both use it, so we never submit a URL that says noindex."""
+    COMBO_MIN, SINGLE_MIN = 3, 2
+    is_combo = bool(tool and location_slug)
+    thin = total_count < (COMBO_MIN if is_combo else SINGLE_MIN)
+    loc_indexable = (not location_slug) or (location_slug.lower() in INDEXABLE_LOCATION_SLUGS)
+    tool_indexable = (tool is None) or (tool.name.lower() in _CANONICAL_TOOL_NAMES)
+    return not thin and loc_indexable and tool_indexable
+
+
+def seo_landing_page(request, location_slug=None, tool_slug=None):
+    # Location slugs are free text in the URL: only letters, digits and hyphens
+    # are real locations. Anything else (e.g. injected HTML) is a 404.
+    if location_slug and not re.fullmatch(r"[A-Za-z0-9-]+", location_slug):
+        raise Http404("Unknown location")
+    # Canonicalize casing: the URL converter accepts uppercase, so Google found
+    # mixed-case variants like /charlotte/Salesforce-jobs/ that are duplicates
+    # of the lowercase page and get flagged Soft 404. 301 them to lowercase.
+    if (location_slug and location_slug != location_slug.lower()) or \
+       (tool_slug and tool_slug != tool_slug.lower()):
+        if tool_slug:
+            return redirect('seo_tool_loc',
+                            location_slug=(location_slug or '').lower(),
+                            tool_slug=tool_slug.lower(), permanent=True)
+        return redirect('seo_loc_only', location_slug=location_slug.lower(), permanent=True)
+
+    # 301 abbreviated/old location slugs to the canonical one (no duplicates).
+    if location_slug and location_slug.lower() in LOCATION_ALIASES:
+        canonical = LOCATION_ALIASES[location_slug.lower()]
+        if tool_slug:
+            return redirect('seo_tool_loc', location_slug=canonical, tool_slug=tool_slug, permanent=True)
+        return redirect('seo_loc_only', location_slug=canonical, permanent=True)
+
+    tool = None
+    if tool_slug:
+        clean_tool_slug = tool_slug.replace("-jobs", "")
+        tool = get_object_or_404(Tool, slug=clean_tool_slug)
+
+    jobs, location_name = seo_landing_jobs(location_slug, tool)
     jobs = jobs.order_by('-is_pinned', '-created_at')
     total_count = jobs.count()
 
@@ -926,15 +962,15 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     if tool and location_name:
         page_title = f"{location_name} {tool.name} Jobs"
         meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
-        header_text = f"{location_name} <span class='text-martech-green'>{tool.name}</span> Jobs"
+        header_text = f"{escape(location_name)} <span class='text-martech-green'>{escape(tool.name)}</span> Jobs"
     elif tool:
         page_title = f"{tool.name} Jobs"
         meta_desc = f"Find top {tool.name} roles. Marketing Automation & Ops jobs."
-        header_text = f"Top <span class='text-martech-green'>{tool.name}</span> Jobs"
+        header_text = f"Top <span class='text-martech-green'>{escape(tool.name)}</span> Jobs"
     else:
         page_title = f"{total_count} {location_name} MarTech Jobs {_year}"
         meta_desc = f"Browse {total_count} MarTech and Marketing Operations jobs in {location_name}. Updated daily."
-        header_text = f"MarTech Jobs in <span class='text-martech-green'>{location_name}</span>"
+        header_text = f"MarTech Jobs in <span class='text-martech-green'>{escape(location_name)}</span>"
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
 
@@ -946,12 +982,8 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     # thin for Google): a location×tool COMBO needs >= 3 live jobs to be indexed;
     # a single-facet page (location-only or tool-only) needs >= 2. Below that we
     # noindex — the page still serves visitors, it just won't waste crawl budget.
-    COMBO_MIN, SINGLE_MIN = 3, 2
-    is_combo = bool(tool and location_slug)
-    thin = total_count < (COMBO_MIN if is_combo else SINGLE_MIN)
-    loc_indexable = (not location_slug) or (location_slug.lower() in INDEXABLE_LOCATION_SLUGS)
-    tool_indexable = (tool is None) or (tool.name.lower() in _CANONICAL_TOOL_NAMES)
-    page_noindex = thin or (not loc_indexable) or (not tool_indexable)
+    page_noindex = not seo_landing_indexable(location_slug, tool, total_count)
+    _loc_slug = (location_slug or "").lower()
 
     # Unique intro + remote cross-link for international country pages (only on
     # the location-only page, not tool combos, to keep tool pages focused).
@@ -1148,11 +1180,7 @@ def role_salary(request, role_slug):
     if not cfg:
         raise Http404("Unknown role")
 
-    q = Q()
-    for kw in cfg["kw"]:
-        q |= Q(title__icontains=kw)
-    jobs = (Job.objects.filter(is_active=True, screening_status="approved")
-            .filter(q).prefetch_related("tools").distinct())
+    jobs = title_jobs_qs(role_slug).prefetch_related("tools")
 
     stats = _salary_stats(jobs)
     remote_stats = _salary_stats(jobs.filter(work_arrangement='remote'))
@@ -1179,7 +1207,7 @@ def role_salary(request, role_slug):
         'examples': examples,
         'total_open': jobs.count(),
         # Thin data => keep it out of the index until it's substantive.
-        'page_noindex': (not stats) or stats['count'] < 3,
+        'page_noindex': not role_salary_indexable(stats),
     })
 
 
@@ -1203,7 +1231,7 @@ def unsubscribe(request):
             updated = _unsubscribe_everywhere(email)
             if updated > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
             else: messages.warning(request, "⚠️ That email was not found on our active list.")
-    return render(request, "jobs/unsubscribe.html")
+    return render(request, "jobs/unsubscribe.html", {"page_noindex": True})
 
 @csrf_exempt
 def unsubscribe_oneclick(request, token):
@@ -1217,7 +1245,7 @@ def unsubscribe_oneclick(request, token):
     try:
         email = signing.loads(token, salt="unsubscribe", max_age=60 * 60 * 24 * 365)
     except signing.BadSignature:
-        return render(request, "jobs/unsubscribe.html", {"oneclick_error": True})
+        return render(request, "jobs/unsubscribe.html", {"oneclick_error": True, "page_noindex": True})
 
     # Suppress the newsletter AND deactivate saved-search alerts — one click
     # must stop every recurring send (see _unsubscribe_everywhere).
@@ -1226,7 +1254,7 @@ def unsubscribe_oneclick(request, token):
     if request.method == "POST":
         return HttpResponse("Unsubscribed", status=200)
     messages.success(request, f"✅ {email} has been unsubscribed. Sorry to see you go!")
-    return render(request, "jobs/unsubscribe.html", {"oneclick_done": True})
+    return render(request, "jobs/unsubscribe.html", {"oneclick_done": True, "page_noindex": True})
 
 TOOL_TAGLINES = {
     "salesforce": "Salesforce Marketing Cloud, CRM administration, and platform roles — the backbone of enterprise marketing and revenue operations.",
@@ -1489,8 +1517,8 @@ def post_job(request):
                         job.tools.add(tool)
 
             cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2')
-            if plan == 'featured':
-                if not settings.STRIPE_SECRET_KEY: return HttpResponse("Error: STRIPE_SECRET_KEY missing", status=500)
+            # Paid 'featured' posts aren't offered yet: without Stripe configured every post is free.
+            if plan == 'featured' and settings.STRIPE_SECRET_KEY:
                 checkout_session = stripe.checkout.Session.create(
                     payment_method_types=['card'],
                     line_items=[{'price_data': {'currency': 'usd', 'unit_amount': 9900, 'product_data': {'name': 'Featured Job Post', 'description': f'Premium listing for {job.title}'}}, 'quantity': 1}],
@@ -1499,7 +1527,7 @@ def post_job(request):
                 return redirect(checkout_session.url)
             return redirect('/post-job/success/?plan=free')
     else: form = JobPostForm()
-    return render(request, 'jobs/post_job.html', {'form': form})
+    return render(request, 'jobs/post_job.html', {'form': form, 'page_noindex': True})
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -1523,7 +1551,7 @@ def stripe_webhook(request):
             except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
-def post_job_success(request): return render(request, 'jobs/post_job_success.html')
+def post_job_success(request): return render(request, 'jobs/post_job_success.html', {'page_noindex': True})
 
 def subscribe(request):
     if request.method == "POST":
@@ -1780,23 +1808,26 @@ def company_list(request):
 
 def company_detail(request, company_slug):
     company_name = company_slug.replace('-', ' ')
-    
-    jobs = Job.objects.filter(
-        company__iexact=company_name, 
-        is_active=True, 
-        screening_status='approved'
-    ).order_by('-created_at')
+    live = Job.objects.filter(is_active=True, screening_status='approved')
+    # Links are built with |slugify, so match the same way ("Acme, Inc." -> acme-inc).
+    names = [n for n in live.values_list('company', flat=True).distinct()
+             if n and slugify(n) == company_slug.lower()]
+    jobs = live.filter(company__in=names).order_by('-created_at')
 
+    jobs = list(jobs.prefetch_related('tools'))
     if not jobs:
-        return redirect('job_list')
+        # No live roles: say so (noindex, 404) instead of silently bouncing to the homepage.
+        return render(request, 'jobs/company_detail.html', {
+            'company_name': company_name.title(), 'company_logo': '', 'jobs': [],
+            'job_count': 0, 'page_noindex': True,
+        }, status=404)
 
-    canonical_job = jobs.first()
-    
+    canonical_job = jobs[0]
     return render(request, 'jobs/company_detail.html', {
         'company_name': canonical_job.company,
         'company_logo': canonical_job.company_logo,
         'jobs': jobs,
-        'tech_stack': Tool.objects.filter(jobs__in=jobs).distinct()[:5]
+        'job_count': len(jobs),
     })
 
 def directory(request):
