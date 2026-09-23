@@ -291,6 +291,16 @@ def _ats_tips(resume_text, result):
         return []
 
 
+def _safe_rank(missing):
+    """Demand ranking is a bonus: on any failure, return the plain list."""
+    from jobs.resume_match import rank_missing
+    try:
+        return rank_missing(missing)
+    except Exception as e:
+        logger.error("rank_missing failed: %s", e)
+        return [dict(m, demand_pct=None) for m in missing]
+
+
 @require_POST
 def api_ats_match(request):
     from django.utils.html import strip_tags
@@ -359,13 +369,13 @@ def api_ats_match(request):
     except Exception as e:  # logging must never break the tool
         logger.error("AtsCheck log failed: %s", e)
 
-    from jobs.resume_match import rank_missing, match_label, best_matches
+    from jobs.resume_match import match_label, best_matches
     payload = {
         "required_count": result["required_count"],
         "matched_count": result["matched_count"],
         "label": match_label(result["matched_count"], result["required_count"]),
         "matched": result["matched"],
-        "missing": rank_missing(result["missing"]),
+        "missing": _safe_rank(result["missing"]),
         "quantified_lines": result["quantified_lines"],
         "total_lines": result["total_lines"],
         "signed_in": signed_in,
