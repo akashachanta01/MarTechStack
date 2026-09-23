@@ -174,9 +174,11 @@ def settings_view(request):
     if profile.email_newsletter != on_list:
         profile.email_newsletter = on_list
         profile.save(update_fields=['email_newsletter', 'updated_at'])
+    from accounts.models import UserResume
     return render(request, 'accounts/settings.html', {
         'profile': profile,
         'has_google': has_google,
+        'saved_resume': UserResume.objects.filter(user=request.user).only('filename', 'updated_at').first(),
     })
 
 

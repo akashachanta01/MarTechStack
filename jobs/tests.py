@@ -379,3 +379,109 @@ class SecurityRegressionTests(TestCase):
     def test_email_defaults_never_fall_back_to_gmail(self):
         from django.conf import settings
         self.assertNotIn("gmail", settings.EMAIL_HOST)
+
+
+# ---------------------------------------------------------------------------
+# Resume Match phase 1: saved resume, upload, ranking, more matches
+# ---------------------------------------------------------------------------
+def _docx_upload(lines, name="resume.docx"):
+    import io
+    import docx
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    d = docx.Document()
+    for l in lines:
+        d.add_paragraph(l)
+    buf = io.BytesIO(); d.save(buf)
+    return SimpleUploadedFile(name, buf.getvalue(),
+                              content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+
+@override_settings(**TEST_SETTINGS)
+class ResumeMatchTests(TestCase):
+    UPLOAD = "/tools/api/resume/upload/"
+    API = "/tools/api/ats-match/"
+
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        make_job(title="Marketo Administrator", company="Globex")
+        make_job(title="Lifecycle Manager", company="Initech",
+                 description="<p>Own Braze and Iterable programs. SQL and Looker reporting required.</p>")
+        self.user = get_user_model().objects.create_user("rm", "rm@x.test", "pw12345!")
+
+    def test_parse_docx_and_reject_bad_files(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from jobs.resume_match import extract_resume_text, ResumeParseError
+        text = extract_resume_text(_docx_upload(RESUME.splitlines()))
+        self.assertIn("Marketo", text)
+        with self.assertRaises(ResumeParseError):
+            extract_resume_text(SimpleUploadedFile("cv.txt", b"hello" * 100))
+        with self.assertRaises(ResumeParseError):
+            extract_resume_text(_docx_upload(["Too short"]))
+
+    def test_anonymous_upload_returns_text_and_saves_nothing(self):
+        from accounts.models import UserResume
+        r = self.client.post(self.UPLOAD, {"resume": _docx_upload(RESUME.splitlines())})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(r.json()["saved"])
+        self.assertIn("Marketo", r.json()["text"])
+        self.assertEqual(UserResume.objects.count(), 0)
+
+    def test_member_upload_saves_text_then_checks_use_it(self):
+        from accounts.models import UserResume
+        self.client.force_login(self.user)
+        r = self.client.post(self.UPLOAD, {"resume": _docx_upload(RESUME.splitlines())})
+        self.assertTrue(r.json()["saved"])
+        saved = UserResume.objects.get(user=self.user)
+        self.assertIn("Marketo", saved.text)
+        self.assertEqual(saved.filename, "resume.docx")
+        # No resume in the request: the saved one is used.
+        r = self.client.post(self.API, data=json.dumps({"job_id": self.job.id}), content_type="application/json")
+        d = r.json()
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual((d["matched_count"], d["required_count"]), (4, 8))
+        self.assertTrue(d["resume_saved"])
+        self.assertIn(d["label"], ("strong", "good", "stretch"))
+        # Missing skills carry real demand % and are sorted most-requested first.
+        pcts = [m["demand_pct"] for m in d["missing"]]
+        self.assertEqual(pcts, sorted(pcts, reverse=True))
+        self.assertTrue(all(0 <= p <= 100 for p in pcts))
+        # More matches exclude the current job and include the others.
+        ids = [j["id"] for j in d["more_matches"]]
+        self.assertNotIn(self.job.id, ids)
+        self.assertTrue(ids)
+
+    def test_pasted_resume_saved_only_when_asked(self):
+        from accounts.models import UserResume
+        self.client.force_login(self.user)
+        self.client.post(self.API, data=json.dumps({"resume_text": RESUME, "job_id": self.job.id}), content_type="application/json")
+        self.assertFalse(UserResume.objects.filter(user=self.user).exists())
+        self.client.post(self.API, data=json.dumps({"resume_text": RESUME, "job_id": self.job.id, "save": True}), content_type="application/json")
+        self.assertTrue(UserResume.objects.filter(user=self.user).exists())
+
+    def test_delete_resume(self):
+        from accounts.models import UserResume
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        self.assertEqual(self.client.post("/tools/api/resume/delete/").status_code, 401)
+        self.client.force_login(self.user)
+        r = self.client.get("/accounts/settings/")
+        self.assertContains(r, "cv.pdf")
+        self.assertContains(r, "Delete resume")
+        self.assertEqual(self.client.post("/tools/api/resume/delete/").status_code, 200)
+        self.assertFalse(UserResume.objects.filter(user=self.user).exists())
+
+    def test_page_shows_real_stats_and_saved_state(self):
+        from accounts.models import UserResume
+        r = self.client.get("/tools/resume-keyword-scanner/")
+        self.assertContains(r, "3</b> live MarTech jobs")
+        self.assertContains(r, "3</b> companies hiring")
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        self.client.force_login(self.user)
+        r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
+        self.assertContains(r, "Using your saved resume")
+        self.assertContains(r, "cv.pdf")
+
+    def test_nav_links_resume_scanner_and_privacy_mentions_resume(self):
+        r = self.client.get("/")
+        self.assertContains(r, 'href="/tools/resume-keyword-scanner/" class="tools-link"')
+        self.assertContains(self.client.get("/privacy/"), "never the file")
