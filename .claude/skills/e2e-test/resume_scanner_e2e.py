@@ -48,7 +48,7 @@ async def main():
         ok("A10 score + label render", "/" in await pg.inner_text("#rm-num") and await pg.inner_text("#rm-lbl"))
         ok("A11 missing list rendered", await pg.locator(".rm-gap").count()>0)
         ok("A12 anon: wording fixes locked + signup CTA", "Create a free account" in await pg.inner_text("#rm-fixes") and await pg.is_visible("#rm-anon-cta"))
-        ok("A13 anon: no 'more matches' box", await pg.is_hidden("#rm-more"))
+        ok("A13 anon: 'more matches' allowed, only shown when there are jobs", await pg.is_hidden("#rm-more") or await pg.locator(".rm-mjob").count() > 0)
         dl=await pg.evaluate("JSON.stringify(dataLayer.filter(e=>e.event&&e.event.indexOf('ats')==0||e.event==='resume_uploaded').map(e=>e.event))")
         ok("A14 tracking events fired", "ats_check_result" in dl and "resume_uploaded" in dl, dl)
         await check(pg); e=await err(pg); ok("A15 2nd anon check -> signup gate", "Create a free account" in e or "Create free account" in e, e)

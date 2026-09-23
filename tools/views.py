@@ -51,12 +51,14 @@ def _bump_daily(key, limit, window=86400):
     return current > limit
 
 
-def check_rate_limit(request):
+def check_rate_limit(request, cooldown=True):
     current_time = time.time()
 
     # 1. Session cooldown (5s between clicks) — UX nicety, not a real guard.
+    #    Skipped for flows with their own quota (resume tailoring), so a check
+    #    immediately followed by "Tailor" isn't blocked.
     last_call = request.session.get('last_ai_call', 0)
-    if current_time - last_call < 5:
+    if cooldown and current_time - last_call < 5:
         return False, "Please wait a few seconds before generating again."
 
     # 2. Global daily ceiling — the real wallet protection. Checked first so a
@@ -280,7 +282,7 @@ def api_tailor(request):
         return JsonResponse({"error": "Please paste the full job description."}, status=400)
     if not request.user.is_staff and _tailor_runs_used(request.user) >= TAILOR_FREE_RUNS:
         return JsonResponse({"gate": "pro", "error": "You've used your free tailor."}, status=402)
-    ok, err = check_rate_limit(request)
+    ok, err = check_rate_limit(request, cooldown=False)
     if not ok:
         return JsonResponse({"error": err}, status=429)
 

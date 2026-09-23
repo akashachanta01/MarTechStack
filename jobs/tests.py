@@ -800,8 +800,13 @@ class Phase4TailorTests(TestCase):
         self.user.is_staff = True; self.user.save()
         self.client.force_login(self.user)
         for _ in range(3):
-            sess = self.client.session; sess["last_ai_call"] = 0; sess.save()   # skip the 5s click cooldown
             self.assertEqual(self._tailor().status_code, 200)
+
+    def test_tailor_right_after_a_check_is_not_blocked_by_click_cooldown(self):
+        import time as _t
+        self.client.force_login(self.user)
+        sess = self.client.session; sess["last_ai_call"] = _t.time(); sess.save()   # a check just used AI tips
+        self.assertEqual(self._tailor().status_code, 200)
 
     def test_docx_download_is_a_real_word_file(self):
         import io
