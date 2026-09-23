@@ -39,3 +39,9 @@ Sources from sessions.`$entry_referring_domain`/`$entry_utm_source` → Google, 
 - sessions table uses `$start_timestamp` (not min_timestamp), `$is_bounce`, `$session_duration`, `$pageview_count`.
 - Verify each saved insight with `insight-query` after creating it.
 - Founder HQ (/staff/) answers "who" (names/emails) — PostHog/GA answer "how many".
+
+## Excluding the founder's traffic
+- Signed-in staff: PostHog not loaded at all (server-side).
+- Any device: open martechjobs.io/?internal=1 once → localStorage `mtj_internal=1` → every event gets `is_internal=true`. `?internal=0` undoes it.
+- Dashboard: SQL variable "Exclude my visits" (`exclude_my_visits`, id 01a0cc01-4d0b-0000-dfcc-d2b28d180e39, default ON) is wired into all 18 tables. New tables must add the same WHERE clause + `variables` map.
+- Project internal-users filter also excludes `is_internal = true` (default ON) for PostHog's built-in reports.

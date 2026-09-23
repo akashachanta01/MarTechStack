@@ -189,6 +189,13 @@ class ATSMatchAPITests(TestCase):
             r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
             self.assertNotContains(r, "posthog.init")       # founder excluded
 
+    def test_posthog_internal_device_tag(self):
+        with self.settings(POSTHOG_KEY="phc_test123"):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/?internal=1")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'localStorage.setItem("mtj_internal", "1")')
+        self.assertContains(r, "posthog.register({ is_internal: true })")
+
     def test_job_page_tracks_apply_and_save(self):
         r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
         self.assertContains(r, "apply_click")
