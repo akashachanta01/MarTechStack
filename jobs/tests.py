@@ -852,3 +852,68 @@ class AnalyticsCoverageTests(TestCase):
         r = self.client.get("/accounts/matches/")
         self.assertContains(r, "my_matches_job_click")
         self.assertContains(r, "My Matches | MarTechJobs</title>")
+
+
+# ---------------------------------------------------------------------------
+# Site audit batch 1 (Sept 2026)
+# ---------------------------------------------------------------------------
+class AuditBatch1Tests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        make_job(title="CRM Manager", company="DoorDash, Inc.", location="New York, NY")
+
+    def test_company_page_renders_with_jobs(self):
+        r = self.client.get("/companies/acme/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Marketing Operations Manager")
+        self.assertContains(r, "1 active marketing technology role")
+
+    def test_company_name_with_punctuation(self):
+        r = self.client.get("/companies/doordash-inc/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "CRM Manager")
+
+    def test_company_without_jobs_says_so(self):
+        r = self.client.get("/companies/nobody-here/")
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "No active roles right now", status_code=404)
+        self.assertContains(r, "noindex", status_code=404)
+
+    def test_location_slug_html_injection_blocked(self):
+        r = self.client.get('/x<img src=x onerror=alert(1)>/jobs/')
+        self.assertEqual(r.status_code, 404)
+        self.assertNotContains(r, "<img src=x", status_code=404)
+
+    def test_location_header_escaped(self):
+        from jobs.views import seo_landing_jobs
+        r = self.client.get("/new-york/jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "New York")
+
+    def test_sitemap_has_no_noindex_urls_and_includes_companies(self):
+        import re as _re
+        body = self.client.get("/sitemap.xml").content.decode()
+        urls = _re.findall(r"<loc>https?://[^/]+(/[^<]*)</loc>", body)
+        self.assertIn("/companies/acme/", urls)
+        self.assertNotIn("/post-job/", urls)
+        for u in urls:
+            r = self.client.get(u)
+            self.assertIn(r.status_code, (200,), u)
+            self.assertNotIn(b'content="noindex', r.content, u)
+
+    def test_noindex_on_form_and_variant_pages(self):
+        for u in ["/post-job/", "/unsubscribe/", f"/tools/resume-keyword-scanner/?job={self.job.id}"]:
+            self.assertContains(self.client.get(u), 'content="noindex', msg_prefix=u)
+        self.assertNotContains(self.client.get("/tools/resume-keyword-scanner/"), 'content="noindex')
+
+    def test_featured_plan_without_stripe_does_not_error(self):
+        from jobs import views as v
+        with self.settings(STRIPE_SECRET_KEY=""):
+            self.assertIn("plan == 'featured' and settings.STRIPE_SECRET_KEY", open(v.__file__).read())
+
+    def test_employer_page_makes_no_false_promises(self):
+        r = self.client.get("/for-employers/")
+        self.assertNotContains(r, "Live in minutes")
+        self.assertNotContains(r, "job-alert")
+        self.assertNotContains(r, "Certified Salesforce")

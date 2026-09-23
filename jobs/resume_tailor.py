@@ -81,7 +81,7 @@ def tailor(resume_text, jd_text, missing_terms):
         "--- BEGIN JOB ---\n" + jd_text[:4000] + "\n--- END JOB ---"
     )
     try:
-        client = OpenAI(api_key=api_key, timeout=25, max_retries=1)
+        client = OpenAI(api_key=api_key, timeout=22, max_retries=0)
         completion = client.chat.completions.create(
             model="gpt-4o-mini", max_tokens=1400, temperature=0.2,
             messages=[{"role": "user", "content": prompt}],

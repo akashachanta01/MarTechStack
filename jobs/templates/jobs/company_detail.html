@@ -1,7 +1,7 @@
 {% extends "jobs/base.html" %}
 
 {% block title %}{{ company_name }} Marketing Jobs & Careers | MarTechJobs{% endblock %}
-{% block meta_description %}Browse {{ jobs.count }} open Marketing Operations and Technology roles at {{ company_name }}. See salaries, tech stack requirements, and apply directly.{% endblock %}
+{% block meta_description %}Browse {{ job_count }} open Marketing Operations and Technology roles at {{ company_name }}. See salaries, tech stack requirements, and apply directly.{% endblock %}
 {% block meta_keywords %}{{ company_name }} jobs, {{ company_name }} marketing operations, {{ company_name }} careers{% endblock %}
 {% block og_title %}{{ company_name }} Marketing Jobs & Careers{% endblock %}
 {% block og_desc %}Browse open Marketing Operations and Technology roles at {{ company_name }}. See tech stack requirements and apply directly.{% endblock %}
@@ -30,6 +30,21 @@
   .co-hero p { font-size: 15px; color: var(--ink3); }
 
   .co-jobs { padding: 40px 0 80px; }
+  .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; }
+  .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
+  .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
+  .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+  .jrow-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .jrow-main { flex: 1; min-width: 0; }
+  .jrow-title { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+  .jrow:hover .jrow-title { color: var(--navy); }
+  .jrow-meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink3); margin-top: 4px; flex-wrap: wrap; }
+  .jrow-meta .co { color: var(--ink2); font-weight: 600; }
+  .jrow-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .jrow-right { text-align: right; flex-shrink: 0; }
+  .jrow-salary { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); }
+  .jrow-salary.na { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); font-style: italic; }
+  @media (max-width: 640px) { .jrow-right { display: none; } }
   .co-jobs-inner { max-width: 780px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; gap: 14px; }
 </style>
 
@@ -40,7 +55,7 @@
       {% else %}<span class="co-logo-mono">{{ company_name|slice:":1" }}</span>{% endif %}
     </div>
     <h1>{{ company_name }} Careers</h1>
-    <p>{{ jobs.count }} active marketing technology role{{ jobs.count|pluralize }}</p>
+    <p>{{ job_count }} active marketing technology role{{ job_count|pluralize }}</p>
   </div>
 </section>
 
