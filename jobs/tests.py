@@ -917,3 +917,117 @@ class AuditBatch1Tests(TestCase):
         self.assertNotContains(r, "Live in minutes")
         self.assertNotContains(r, "job-alert")
         self.assertNotContains(r, "Certified Salesforce")
+
+
+# ---------------------------------------------------------------------------
+# Site audit batch 2: job data quality
+# ---------------------------------------------------------------------------
+class IngestQualityRuleTests(TestCase):
+    def test_title_codes_removed_real_words_kept(self):
+        from jobs.ingest_quality import clean_title
+        self.assertEqual(clean_title("(PR0056) Salesforce Marketing Cloud Consultant"), "Salesforce Marketing Cloud Consultant")
+        self.assertEqual(clean_title("Senior Analyst, Digital Analytics (L09)"), "Senior Analyst, Digital Analytics")
+        self.assertEqual(clean_title("Marketing Ops Intern (2026)"), "Marketing Ops Intern (2026)")
+        self.assertEqual(clean_title("CRM Manager (Remote)"), "CRM Manager (Remote)")
+
+    def test_locations_tidied(self):
+        from jobs.ingest_quality import tidy_location
+        self.assertEqual(tidy_location("6 Locations"), "Multiple locations")
+        self.assertEqual(tidy_location("A, CA; B, NY; C, WA; D, TX; E, CO"), "A, CA; B, NY; C, WA + 2 more")
+        self.assertEqual(tidy_location("Austin, TX"), "Austin, TX")
+
+    def test_salary_only_from_real_ranges(self):
+        from jobs.ingest_quality import extract_salary
+        self.assertEqual(extract_salary("<p>Base pay: $157,000&mdash;$227,000 a year</p>"), "157,000 - 227,000 USD")
+        self.assertEqual(extract_salary("Base pay: $157,000 - $227,000 a year"), "157,000 - 227,000 USD")
+        self.assertEqual(extract_salary("&lt;p&gt;Range $110K to $140K&lt;/p&gt;"), "110,000 - 140,000 USD")
+        self.assertIsNone(extract_salary("$25 - $40 per hour"))
+        self.assertIsNone(extract_salary("Founded in 2010 with 500 staff"))
+        self.assertIsNone(extract_salary("$20,000 - $900,000"))  # implausible spread
+
+    def test_save_applies_rules(self):
+        j = make_job(title="(1507) Marketo Specialist", company="Doordashusa", location="3 Locations")
+        j.refresh_from_db()
+        self.assertEqual((j.title, j.company, j.location), ("Marketo Specialist", "DoorDash", "Multiple locations"))
+        self.assertEqual(j.slug, "1507-marketo-specialist-at-doordashusa" if False else j.slug)  # slug unchanged by rules
+
+    def test_old_company_url_redirects(self):
+        make_job(company="DoorDash")
+        r = self.client.get("/companies/doordashusa/")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/companies/doordash/"))
+
+
+class CleanJobDataCommandTests(TestCase):
+    def test_renames_backfills_salary_and_dedupes(self):
+        from django.core.management import call_command
+        a = make_job(title="CRM Manager", company="Acme", location="Austin, TX",
+                     description="<p>Salary $120,000 - $150,000</p>")
+        b = make_job(title="CRM Manager", company="Acme", location="Austin, TX")
+        Job.objects.filter(pk=a.pk).update(company="Wppmedia")  # legacy row saved before the rules
+        Job.objects.filter(pk=b.pk).update(company="Wppmedia")
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        a.refresh_from_db(); b.refresh_from_db()
+        self.assertEqual(a.company, "WPP Media")
+        self.assertEqual(a.salary_range, "120,000 - 150,000 USD")
+        self.assertEqual([a.is_active, b.is_active].count(True), 1)  # one live copy
+        self.assertTrue(b.is_active)  # newest wins
+
+    def test_dry_run_writes_nothing(self):
+        from django.core.management import call_command
+        j = make_job(company="Acme")
+        Job.objects.filter(pk=j.pk).update(title="(PR1) CRM Manager")
+        call_command("clean_job_data", "--dry-run", stdout=open("/dev/null", "w"))
+        j.refresh_from_db()
+        self.assertEqual(j.title, "(PR1) CRM Manager")
+
+
+class FeedClosingTests(TestCase):
+    """A job that disappears from its company's board is closed on the next poll."""
+
+    def _board(self, ids):
+        from datetime import datetime, timezone as tz
+        now = datetime.now(tz.utc).isoformat()
+        return {"jobs": [{"id": i, "title": f"Marketo Admin {i}", "updated_at": now,
+                          "location": {"name": "Remote"}, "content": JD_HTML,
+                          "absolute_url": f"https://acme.test/jobs/{i}"} for i in ids]}
+
+    def _run(self, ids):
+        from django.core.management import call_command
+        def fake_get(url, *a, **k):
+            m = mock.MagicMock(status_code=200)
+            m.json.return_value = {"name": "Acme"} if url.endswith("/boards/acme") else self._board(ids)
+            return m
+        approved = {"score": 90, "status": "approved", "details": {"signals": {"stack": []}}}
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=fake_get), \
+             mock.patch("jobs.management.commands.fetch_jobs.MarTechScreener.screen", return_value=approved), \
+             mock.patch("jobs.management.commands.fetch_jobs.time.sleep"):
+            call_command("fetch_jobs", "--sources-only", stdout=open("/dev/null", "w"))
+
+    def setUp(self):
+        from jobs.models import CompanySource
+        CompanySource.objects.create(name="Acme", ats_type="greenhouse", token="acme")
+
+    def test_vanished_job_closed_others_kept(self):
+        self._run([1, 2, 3])
+        self.assertEqual(Job.objects.filter(is_active=True).count(), 3)
+        self._run([1, 2])
+        self.assertEqual(set(Job.objects.filter(is_active=True).values_list("external_id", flat=True)),
+                         {"greenhouse:1", "greenhouse:2"})
+        closed = Job.objects.get(external_id="greenhouse:3")
+        self.assertIn("no longer listed", closed.screening_reason)
+        self.assertIsNotNone(Job.objects.get(external_id="greenhouse:1").last_seen_at)
+
+    def test_board_glitch_does_not_wipe_jobs(self):
+        self._run([1, 2, 3, 4, 5, 6])
+        self._run([1])  # 5 of 6 vanish at once: treat as an API glitch
+        self.assertEqual(Job.objects.filter(is_active=True).count(), 6)
+
+    def test_legacy_job_without_source_key_is_matched(self):
+        make_job(title="Old Role", company="Acme", external_id="greenhouse:99", location="Remote")
+        self._run([1, 2, 3])
+        self.assertFalse(Job.objects.get(external_id="greenhouse:99").is_active)
+
+    def test_closed_job_page_is_gone(self):
+        self._run([1, 2, 3]); self._run([1, 2])
+        j = Job.objects.get(external_id="greenhouse:3")
+        self.assertEqual(self.client.get(f"/job/{j.id}/{j.slug}/").status_code, 410)

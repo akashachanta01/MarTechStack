@@ -1816,6 +1816,11 @@ def company_detail(request, company_slug):
 
     jobs = list(jobs.prefetch_related('tools'))
     if not jobs:
+        # Old run-together ATS names ("/companies/doordashusa/") moved to readable ones.
+        from jobs.ingest_quality import COMPANY_NAME_OVERRIDES
+        renamed = COMPANY_NAME_OVERRIDES.get(company_slug.lower().replace('-', ''))
+        if renamed and slugify(renamed) != company_slug.lower():
+            return redirect('company_detail', company_slug=slugify(renamed), permanent=True)
         # No live roles: say so (noindex, 404) instead of silently bouncing to the homepage.
         return render(request, 'jobs/company_detail.html', {
             'company_name': company_name.title(), 'company_logo': '', 'jobs': [],

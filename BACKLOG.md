@@ -5,6 +5,57 @@ ships. Newest decisions at the top of each section.
 
 ---
 
+## SITE AUDIT — SEPT 23 2026 (batch 1 shipped in PR #143; rest queued)
+
+### Batch 2 — job data quality: BUILT (awaiting push approval)
+- [x] Jobs removed from a company's board are closed on the next daily poll
+  (`source_key`/`last_seen_at`, safety guard vs. API glitches); dead-link check
+  and 60-day demotion skip jobs the board still lists.
+- [x] Readable company names (reviewed map + Greenhouse board name + admin-edited
+  CompanySource.name); old run-together company URLs 301 to the new ones.
+  Left as-is (unknown real name): Globalhr, Hcmportal, Sggovterp, Newengeninc.
+- [x] Requisition codes stripped from titles; "6 Locations" / 10-city lists tidied.
+- [x] Salary read from the posting text when the ATS gives none (strict parser).
+- [x] Live duplicates removed daily (`clean_job_data`, newest wins).
+- [x] Cron speed: known Workday/SmartRecruiters postings skip the detail request;
+  boards that never produced a live role are polled weekly, not daily.
+
+### Batch 3 — security hardening
+- [ ] **Staff approve/reject via GET** (`review_action`) — CSRF-able; make POST
+  forms with csrf_token.
+- [ ] **Resume upload zip-bomb** — check uncompressed .docx size/ratio before
+  parsing; upgrade pypdf to >=6.1.3.
+- [ ] **Unsubscribe form** — anyone can unsubscribe any email; send signed
+  confirm link, same message whether or not the email exists.
+- [ ] **One-click unsubscribe on GET** — email scanners can trigger it; GET shows
+  a button, POST unsubscribes.
+- [ ] **Dependencies** — Pillow 10.2.0 → >=10.4; pin stripe/geopy/google-auth.
+- [ ] **JD generator** — cap input fields (~200 chars), sanitize returned HTML.
+
+### Batch 4 — UX / conversion / SEO polish
+- [ ] **Empty search** shows "0 open positions" + dead end — always show total
+  live count; add clear-filters / popular tools / alert signup empty state.
+- [ ] **30 unconfirmed subscribers vs 28 confirmed** — check confirmation email
+  deliverability (spam?).
+- [ ] **Pagination titles** — add "– Page N" to title/meta on page 2+.
+- [ ] **JobPosting schema** — timezone on validThrough; hiringOrganization
+  logo/sameAs; baseSalary only when it parses cleanly.
+- [ ] **404 page** sideways scroll at 390px; favicon.ico 404 → redirect.
+- [ ] **Two H1s** on /tools/job-description-generator/; unsubscribe page has none;
+  alt text on post-job preview logo.
+- [ ] **Downgrade** the "no such table: django_site" boot note from error level.
+- [ ] **Old URLs** /remote/advanced-excel-jobs/, /jobs/adobe-experience-cloud/
+  404 — redirect if GSC shows backlinks/impressions.
+- [ ] **Search Console export** — founder to send Performance CSV (Ahrefs API not
+  on plan) for CTR/quick-win analysis.
+
+### Recruiter outreach helpers (founder asked, not yet approved)
+- [ ] Weekly list: companies with most live roles + real per-role views/apply
+  clicks from PostHog + ready-to-paste links for LinkedIn outreach.
+- [ ] Free "Featured" placement toggle so the outreach offer is concrete.
+
+---
+
 ## FOUNDER OPS / DISTRIBUTION
 
 - [ ] **LinkedIn auto-posting for blog articles (Zapier)** — plumbing is live
