@@ -821,3 +821,27 @@ class Phase4TailorTests(TestCase):
         self.assertTrue(any("Marketo" in p.text for p in d.paragraphs))
         self.client.logout()
         self.assertEqual(self.client.post("/tools/api/tailor/docx/", data=json.dumps({"text": text}), content_type="application/json").status_code, 401)
+
+
+@override_settings(**TEST_SETTINGS)
+class AnalyticsCoverageTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+
+    def test_errors_and_new_features_are_tracked(self):
+        from accounts.models import UserResume
+        r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}")
+        for ev in ["ats_error_shown", "tailor_error", "tailor_click", "tailor_success", "tailor_download",
+                   "pro_gate_shown", "pro_preorder_click", "resume_uploaded"]:
+            self.assertContains(r, ev)
+        u = get_user_model().objects.create_user("an", "an@x.test", "pw12345!")
+        UserResume.objects.create(user=u, text=RESUME)
+        self.client.force_login(u)
+        with self.settings(POSTHOG_KEY="phc_test"):
+            r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+            self.assertContains(r, "fit_badge_job_click")
+            self.assertContains(r, "came_from: window.mtjCameFrom")   # pageviews carry the previous page type
+        r = self.client.get("/accounts/matches/")
+        self.assertContains(r, "my_matches_job_click")
+        self.assertContains(r, "My Matches | MarTechJobs</title>")

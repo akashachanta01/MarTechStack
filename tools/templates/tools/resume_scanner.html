@@ -395,6 +395,7 @@
     errBox.textContent = msg + ' ';
     if (gate === 'signup') errBox.appendChild(signupLink('Create free account →', 'signup_gate'));
     if (gate) track('ats_gate_shown', { gate: gate });
+    else track('ats_error_shown', { message: String(msg).slice(0, 80) });
     errBox.style.display = 'block';
   }
   function showOk(msg) { okBox.textContent = msg; okBox.style.display = msg ? 'block' : 'none'; }
@@ -605,7 +606,10 @@
   // ---- Phase 4: AI tailoring ----
   var tailored = null;
   var tBtn = $('rm-tailor-btn');
-  function tailorErr(msg) { var e = $('rm-tailor-err'); e.textContent = msg; e.style.display = msg ? 'block' : 'none'; }
+  function tailorErr(msg) {
+    var e = $('rm-tailor-err'); e.textContent = msg; e.style.display = msg ? 'block' : 'none';
+    if (msg) track('tailor_error', { message: String(msg).slice(0, 80) });
+  }
   function showPro() { $('rm-pro').hidden = false; if (tBtn) tBtn.hidden = true; track('pro_gate_shown', { from: 'tailor' }); }
   if (tBtn) tBtn.addEventListener('click', async function () {
     tailorErr('');
