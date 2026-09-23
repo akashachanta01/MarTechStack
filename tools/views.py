@@ -199,7 +199,23 @@ def resume_scanner(request):
         'job': job,
         'monthly_runs': ATS_ACCOUNT_MONTHLY_RUNS,
         'saved_resume': _saved_resume(request.user),
+        'stats': _scanner_stats(),
     })
+
+
+def _scanner_stats():
+    """Real numbers only for the hero strip (CLAUDE.md: no aspirational stats)."""
+    stats = cache.get('rm:hero_stats')
+    if stats is None:
+        from jobs.ats_match import _COMPILED
+        live = Job.objects.filter(is_active=True, screening_status='approved')
+        stats = {
+            'live_jobs': live.count(),
+            'companies': live.values('company').distinct().count(),
+            'terms': len(_COMPILED),
+        }
+        cache.set('rm:hero_stats', stats, 3600)
+    return stats
 
 
 def _saved_resume(user):

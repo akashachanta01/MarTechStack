@@ -22,12 +22,42 @@
 
 {% block content %}
 <style>
-  .rm { max-width: 1180px; margin: 0 auto; padding: 44px 20px 80px; }
+  .rm [hidden] { display: none !important; }
+  .rm-page { background: radial-gradient(900px 480px at 85% 0%, #fde3cf 0%, rgba(253,227,207,0) 60%), radial-gradient(700px 420px at 10% 30%, #fff1e6 0%, rgba(255,241,230,0) 60%), linear-gradient(#fffaf5, #fff 700px); }
+  .rm { max-width: 1180px; margin: 0 auto; padding: 56px 20px 80px; }
+  .rm-hero { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .rm-pillbadge { display: inline-flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 999px; background: #fff; border: 1px solid #f3e1d2; box-shadow: 0 4px 18px rgba(191,84,32,.08); font-size: 14px; color: var(--ink2); }
+  .rm-pillbadge i { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
+  .rm-h1 { font-family: 'Hanken Grotesk', sans-serif; font-weight: 800; font-size: clamp(38px, 6vw, 72px); line-height: 1.04; letter-spacing: -0.035em; color: var(--ink); margin: 26px 0 0; max-width: 960px; }
+  .rm-hl { position: relative; display: inline-block; background: linear-gradient(90deg, #bf5420, #e8792f 60%, #d9480f); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 6px; }
+  .rm-hl svg { position: absolute; left: 0; bottom: -4px; width: 100%; height: 12px; }
+  .rm-sub { font-size: clamp(17px, 2vw, 21px); line-height: 1.55; color: var(--ink2); max-width: 760px; margin: 22px 0 0; }
+  .rm-sub b { color: var(--ink); }
+  .rm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 1080px; margin-top: 34px; padding: 18px 22px; box-sizing: border-box; background: rgba(255,255,255,.85); border: 1px solid #f1e6db; border-radius: 18px; box-shadow: 0 10px 30px rgba(28,25,23,.05); }
+  .rm-stat { display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 15px; color: var(--ink2); }
+  .rm-stat b { font-size: 18px; color: var(--ink); }
+  .rm-ico { width: 38px; height: 38px; border-radius: 11px; background: #fdeee4; color: #bf5420; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rm-ico svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .rm-sec-t { font-family: 'Hanken Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.025em; text-align: center; margin: 86px 0 10px; color: var(--ink); }
+  .rm-sec-s { text-align: center; font-size: 17px; color: var(--ink2); margin: 0 auto 38px; max-width: 640px; }
+  .rm-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; position: relative; }
+  .rm-steps::before { content: ''; position: absolute; top: 44px; left: 17%; right: 17%; height: 2px; background: #f7cdb3; }
+  .rm-step { text-align: center; position: relative; }
+  .rm-step-ico { position: relative; width: 88px; height: 88px; margin: 0 auto 20px; border-radius: 22px; background: #fff; border: 1px solid #f1e6db; box-shadow: 0 10px 26px rgba(191,84,32,.10); display: flex; align-items: center; justify-content: center; color: #bf5420; }
+  .rm-step-ico svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .rm-step-n { position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; border-radius: 50%; background: #bf5420; color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(191,84,32,.35); }
+  .rm-step h3 { font-size: 21px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .rm-step p { font-size: 15.5px; line-height: 1.6; color: var(--ink2); margin: 0 auto; max-width: 330px; }
+  .rm-feats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .rm-feat { background: #fff; border: 1px solid #efe6dc; border-radius: 18px; padding: 30px 24px; text-align: center; }
+  .rm-feat .rm-ico { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 18px; }
+  .rm-feat .rm-ico svg { width: 26px; height: 26px; }
+  .rm-feat h3 { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
+  .rm-feat p { font-size: 14.5px; line-height: 1.6; color: var(--ink2); margin: 0; }
   .rm-eyebrow { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
-  .rm h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4.5vw, 44px); font-weight: 800; line-height: 1.12; margin: 8px 0 10px; }
   .rm-lead { font-size: 16px; line-height: 1.65; color: var(--ink2); max-width: 720px; margin: 0; }
   .rm-card { background: var(--card, #fff); border: 1px solid var(--rule); border-radius: 16px; padding: 26px; }
-  .rm-input { max-width: 780px; margin-top: 26px; }
+  .rm-input { width: 100%; max-width: 780px; margin-top: 34px; text-align: left; box-shadow: 0 18px 50px rgba(28,25,23,.08); border-radius: 20px; padding: 28px; }
   .rm-label { display: block; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin: 0 0 8px; }
   .rm textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.55; font-family: inherit; resize: vertical; }
   .rm-job { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper2, #f7f4ef); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
@@ -42,7 +72,7 @@
   .rm-linkbtn { background: none; border: none; padding: 0; color: var(--amber, #9a3f12); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline; }
   .rm-or { font-size: 13px; color: var(--ink3); margin: 12px 0 0; text-align: center; }
   .rm-save { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink2); margin-top: 10px; }
-  .rm-btn { width: 100%; min-height: 50px; margin-top: 16px; background: var(--amber, #bf5420); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .rm-btn { width: 100%; min-height: 56px; margin-top: 18px; background: linear-gradient(90deg, #bf5420, #e0692a); color: #fff; border: none; border-radius: 14px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(191,84,32,.28); display: flex; align-items: center; justify-content: center; gap: 10px; }
   .rm-btn:disabled { opacity: .6; cursor: wait; }
   .rm-note { font-size: 12.5px; color: var(--ink3); margin-top: 10px; text-align: center; }
   .rm-err { display: none; margin-top: 14px; padding: 14px 16px; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: 14px; }
@@ -88,24 +118,35 @@
   .rm-cta { display: flex; align-items: center; justify-content: center; min-height: 50px; border-radius: 12px; background: var(--amber, #bf5420); color: #fff !important; font-weight: 700; text-decoration: none; }
   .rm-dark { background: #1c1917; color: #fafaf9; border-color: #1c1917; }
   .rm-dark h2 { color: #fff; } .rm-dark p { color: #d6d3d1; }
-  .rm-faq { max-width: 780px; }
+  .rm-faq { max-width: 780px; margin: 0 auto; }
   .rm-faq h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin: 48px 0 8px; }
   .rm-faq h3 { font-size: 16px; margin: 20px 0 4px; }
   .rm-faq p { font-size: 15px; line-height: 1.7; color: var(--ink2); margin: 0; }
   .g-t { color: #15803d; } .a-t { color: #b45309; } .s-t { color: #78716c; }
+  @media (max-width: 960px) {
+    .rm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
+    .rm-feats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   @media (max-width: 860px) {
+    .rm-steps { grid-template-columns: minmax(0, 1fr); gap: 40px; } .rm-steps::before { display: none; }
     .rm-grid { grid-template-columns: minmax(0, 1fr); }
     .rm-score { flex-direction: column; align-items: flex-start; gap: 18px; }
     .rm-fixes { grid-template-columns: minmax(0, 1fr); }
   }
+  @media (max-width: 560px) {
+    .rm-stats { grid-template-columns: minmax(0, 1fr); } .rm-stat { justify-content: flex-start; }
+    .rm-feats { grid-template-columns: minmax(0, 1fr); }
+    .rm-input { padding: 20px; }
+  }
 </style>
 
+<div class="rm-page">
 <div class="rm">
-  <div class="rm-eyebrow">Free tool · Built for MarTech</div>
-  <h1>MarTech Resume ATS Checker</h1>
-  <p class="rm-lead">See how your resume scores against a real Marketing Ops job: which platforms, skills and certifications you're missing, which matter most across the market, and where your wording won't match (like <em>Pardot</em> vs <em>Account Engagement</em>).</p>
-
-  <div class="rm-card rm-input">
+  <section class="rm-hero">
+    <div class="rm-pillbadge"><i></i> Built only for Marketing Ops &amp; MarTech</div>
+    <h1 class="rm-h1">Get your resume past the ATS for <span class="rm-hl">MarTech jobs<svg viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 9 C 80 2, 220 2, 298 7" fill="none" stroke="#e0692a" stroke-width="3" stroke-linecap="round"/></svg></span></h1>
+    <p class="rm-sub">See exactly which <b>platforms, skills and certifications</b> a job wants that your resume is missing, ranked by what <b>{{ stats.live_jobs }} live MarTech jobs</b> actually ask for.</p>
+<div class="rm-card rm-input">
     {% if job %}
       <div class="rm-job">
         <span>Checking against: <strong>{{ job.title }}</strong> at {{ job.company }}</span>
@@ -147,10 +188,18 @@
     </div>
     <div class="rm-ok" id="rm-ok"></div>
 
-    <button class="rm-btn" id="rm-btn" type="button">Check my resume</button>
+    <button class="rm-btn" id="rm-btn" type="button">Check my resume <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
     <div class="rm-note">{% if user.is_authenticated %}Saved resumes are private, never shared with employers, and deletable anytime.{% else %}Not saved without an account. First check free, no signup needed.{% endif %}</div>
     <div class="rm-err" id="rm-err" role="alert"></div>
   </div>
+
+    <div class="rm-stats">
+      <div class="rm-stat"><span class="rm-ico"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><span><b>{{ stats.live_jobs }}</b> live MarTech jobs</span></div>
+      <div class="rm-stat"><span class="rm-ico"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></span><span><b>{{ stats.companies }}</b> companies hiring</span></div>
+      <div class="rm-stat"><span class="rm-ico"><svg viewBox="0 0 24 24"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg></span><span><b>{{ stats.terms }}</b> MarTech skills tracked</span></div>
+      <div class="rm-stat"><span class="rm-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span><span><b>Free</b> first check, no signup</span></div>
+    </div>
+  </section>
 
   <div id="rm-results">
     <div class="rm-grid">
@@ -213,6 +262,35 @@
     </div>
   </div>
 
+  <h2 class="rm-sec-t">How it works</h2>
+  <p class="rm-sec-s">Three steps. Your resume only has to be uploaded once.</p>
+  <div class="rm-steps">
+    <div class="rm-step">
+      <div class="rm-step-ico"><span class="rm-step-n">1</span><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
+      <h3>Upload your resume</h3>
+      <p>PDF or Word. Save it to a free account so you never have to upload it again.</p>
+    </div>
+    <div class="rm-step">
+      <div class="rm-step-ico"><span class="rm-step-n">2</span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg></div>
+      <h3>Pick a MarTech job</h3>
+      <p>Click “Check my resume” on any job here, or paste a job description from anywhere.</p>
+    </div>
+    <div class="rm-step">
+      <div class="rm-step-ico"><span class="rm-step-n">3</span><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <h3>Fix the gaps that matter</h3>
+      <p>Get your score, missing skills ranked by market demand, and exact wording fixes.</p>
+    </div>
+  </div>
+
+  <h2 class="rm-sec-t">Why it beats a generic resume checker</h2>
+  <p class="rm-sec-s">Generic tools treat “Marketo” as just another word. This one knows the MarTech stack.</p>
+  <div class="rm-feats">
+    <div class="rm-feat"><div class="rm-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div><h3>Knows your stack</h3><p>{{ stats.terms }} MarTech platforms, skills and certs, from Marketo and SFMC to Segment and lead routing.</p></div>
+    <div class="rm-feat"><div class="rm-ico"><svg viewBox="0 0 24 24"><path d="M4 7h11"/><path d="M4 12h7"/><path d="M4 17h11"/><path d="M17 10l3 3-3 3"/></svg></div><h3>Catches rebrands</h3><p>Pardot vs Account Engagement, Marketo vs Marketo Engage. Wording a literal ATS would miss.</p></div>
+    <div class="rm-feat"><div class="rm-ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div><h3>Ranked by real demand</h3><p>Gaps are ordered by how many of our {{ stats.live_jobs }} live MarTech jobs ask for them.</p></div>
+    <div class="rm-feat"><div class="rm-ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Private by default</h3><p>We keep text, never the file. Never shared with employers. Delete it anytime.</p></div>
+  </div>
+
   <div class="rm-faq">
     <h2>Why a MarTech-specific ATS checker?</h2>
     <h3>Platform names are the filter</h3>
@@ -225,6 +303,7 @@
     <p>Only if you save it to your free account, so every job can show your fit. We keep the text, never the file; it's never shared with employers, and you can delete it anytime in Settings.</p>
     <p style="margin-top:20px"><a href="{% url 'all_jobs' %}">Browse live MarTech jobs →</a></p>
   </div>
+</div>
 </div>
 
 <script>
