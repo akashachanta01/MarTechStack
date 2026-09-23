@@ -49,6 +49,15 @@ ships. Newest decisions at the top of each section.
 - [ ] **Search Console export** — founder to send Performance CSV (Ahrefs API not
   on plan) for CTR/quick-win analysis.
 
+### Pro features (build only when Pro interest >= 5% of resume users)
+- [ ] **"Practise for this job" (MarTech mock interview)** — first Pro feature.
+  Next to Tailor on the Resume Scanner results: 5 questions drawn from THIS job's
+  requirements + the skills the resume is missing + our per-tool interview
+  guides; user answers, gets feedback per answer (what was strong, what's
+  missing, which real resume line to cite). 1 free run, then $12/mo Pro.
+  Decided Sept 23 2026: NO standalone cover-letter builder or generic "AI career
+  advisor" (commodity, no MarTech edge, AI-cost per chat).
+
 ### Recruiter outreach helpers (founder asked, not yet approved)
 - [ ] Weekly list: companies with most live roles + real per-role views/apply
   clicks from PostHog + ready-to-paste links for LinkedIn outreach.
