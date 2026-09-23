@@ -5,6 +5,61 @@ ships. Newest decisions at the top of each section.
 
 ---
 
+## SITE AUDIT — SEPT 23 2026 (batch 1 shipped in PR #143; rest queued)
+
+### Batch 2 — job data quality (next; fits "quality before scale")
+- [ ] **Stale-job detection** — 357/494 live jobs not updated in 14+ days; no
+  "last seen in ATS" field. Add `last_seen_at` on ingest, auto-deactivate jobs
+  missing from their feed for 2+ runs. Homepage says "every link verified daily"
+  — must stay true.
+- [ ] **Clean company names** — 31 squashed ATS board names ("Doordashusa",
+  "Synchronyfinancial", "Cvshealth", "Wppmedia"). Add display name per source.
+- [ ] **Dedupe** — 6 live duplicate groups (company+title+location).
+- [ ] **Strip requisition codes from titles** — "(PR0056)", "(1507)", "(L09)".
+- [ ] **Location junk** — 10–12-city semicolon lists, "6 Locations" placeholders
+  → "Multiple locations" + primary city.
+- [ ] **Salary capture** — only 6/494 (1.2%) have pay; pull ranges ATS feeds
+  expose (Greenhouse pay transparency, Ashby compensation, Lever salaryRange).
+- [ ] **Dead sources** — 90/206 enabled ATS sources have 0 live jobs; prune/fix.
+- [ ] **Cron time budget** — `fetch_jobs` hit its 1500s cap on Sept 21 (~42 min
+  run); find slow Workday boards.
+
+### Batch 3 — security hardening
+- [ ] **Staff approve/reject via GET** (`review_action`) — CSRF-able; make POST
+  forms with csrf_token.
+- [ ] **Resume upload zip-bomb** — check uncompressed .docx size/ratio before
+  parsing; upgrade pypdf to >=6.1.3.
+- [ ] **Unsubscribe form** — anyone can unsubscribe any email; send signed
+  confirm link, same message whether or not the email exists.
+- [ ] **One-click unsubscribe on GET** — email scanners can trigger it; GET shows
+  a button, POST unsubscribes.
+- [ ] **Dependencies** — Pillow 10.2.0 → >=10.4; pin stripe/geopy/google-auth.
+- [ ] **JD generator** — cap input fields (~200 chars), sanitize returned HTML.
+
+### Batch 4 — UX / conversion / SEO polish
+- [ ] **Empty search** shows "0 open positions" + dead end — always show total
+  live count; add clear-filters / popular tools / alert signup empty state.
+- [ ] **30 unconfirmed subscribers vs 28 confirmed** — check confirmation email
+  deliverability (spam?).
+- [ ] **Pagination titles** — add "– Page N" to title/meta on page 2+.
+- [ ] **JobPosting schema** — timezone on validThrough; hiringOrganization
+  logo/sameAs; baseSalary only when it parses cleanly.
+- [ ] **404 page** sideways scroll at 390px; favicon.ico 404 → redirect.
+- [ ] **Two H1s** on /tools/job-description-generator/; unsubscribe page has none;
+  alt text on post-job preview logo.
+- [ ] **Downgrade** the "no such table: django_site" boot note from error level.
+- [ ] **Old URLs** /remote/advanced-excel-jobs/, /jobs/adobe-experience-cloud/
+  404 — redirect if GSC shows backlinks/impressions.
+- [ ] **Search Console export** — founder to send Performance CSV (Ahrefs API not
+  on plan) for CTR/quick-win analysis.
+
+### Recruiter outreach helpers (founder asked, not yet approved)
+- [ ] Weekly list: companies with most live roles + real per-role views/apply
+  clicks from PostHog + ready-to-paste links for LinkedIn outreach.
+- [ ] Free "Featured" placement toggle so the outreach offer is concrete.
+
+---
+
 ## FOUNDER OPS / DISTRIBUTION
 
 - [ ] **LinkedIn auto-posting for blog articles (Zapier)** — plumbing is live
