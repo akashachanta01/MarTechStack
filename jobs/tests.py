@@ -643,3 +643,74 @@ class Phase2MatchBadgeTests(TestCase):
         self.assertEqual(self.client.get("/accounts/matches/").status_code, 200)
         self.client.logout()
         self.assertEqual(self.client.get("/accounts/matches/").status_code, 302)
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase3WeeklyEmailTests(TestCase):
+    def setUp(self):
+        from django.utils import timezone
+        from accounts.models import UserResume
+        cache.clear()
+        now = timezone.now()
+        self.fit = make_job(title="Marketo & SFMC Specialist", company="Umbrella", went_live_at=now,
+                            description="<p>Run Marketo and Salesforce Marketing Cloud. Build lead scoring and nurture programs.</p>")
+        self.weak = make_job(title="Adobe consultant", company="Adobe", went_live_at=now,
+                             description="<p>Adobe Journey Optimizer, Adobe Experience Platform, Braze and SQL.</p>")
+        U = get_user_model()
+        self.a = U.objects.create_user("a", "a@x.test", "pw12345!", first_name="Asha")
+        self.b = U.objects.create_user("b", "b@x.test", "pw12345!")   # resume, but unsubscribed
+        self.c = U.objects.create_user("c", "c@x.test", "pw12345!")   # resume, no strong match
+        UserResume.objects.create(user=self.a, text=RESUME)
+        UserResume.objects.create(user=self.b, text=RESUME)
+        UserResume.objects.create(user=self.c, text="Office administrator managing calendars, travel and vendor invoices for a busy team." * 3)
+        Subscriber.objects.create(email="b@x.test", is_active=False)
+        Subscriber.objects.create(email="list@x.test", is_active=True)
+
+    def _run(self, *cmd):
+        from django.core.management import call_command
+        import jobs.management.commands.send_daily_digest as digest_mod
+        m = mock.MagicMock(return_value=True)
+        with mock.patch("jobs.emails.send_html_email", m), mock.patch.object(digest_mod, "send_html_email", m):
+            call_command(*cmd)
+        return m
+
+    def test_personal_email_only_to_opted_in_members_with_strong_new_matches(self):
+        m = self._run("send_weekly_matches")
+        sent = {c.kwargs["to_email"][0]: c.kwargs for c in m.call_args_list}
+        self.assertEqual(set(sent), {"a@x.test"})
+        kw = sent["a@x.test"]
+        self.assertIn("80%+", kw["subject"]); self.assertIn("Asha", kw["subject"])
+        self.assertEqual([j["id"] for j in kw["context"]["jobs"]], [self.fit.id])
+
+    def test_weekly_digest_skips_people_who_got_personal_email(self):
+        self._run("send_weekly_matches")
+        m = self._run("send_daily_digest", "--weekly")
+        to = {c.kwargs["to_email"][0] for c in m.call_args_list}
+        self.assertNotIn("a@x.test", to)        # got the personal one
+        self.assertNotIn("b@x.test", to)        # unsubscribed
+        self.assertTrue({"c@x.test", "list@x.test"} <= to)
+        self.assertIn("This week in MarTech", m.call_args_list[0].kwargs["subject"])
+
+    def test_personal_email_renders(self):
+        from django.template.loader import render_to_string
+        html = render_to_string("emails/weekly_matches.html", {
+            "jobs": [{"id": 1, "slug": "x", "title": "Ops", "company": "Co", "where": "Remote",
+                      "matched": 5, "required": 5, "missing": []}],
+            "count": 1, "first_name": "Asha", "top_gap": "Lead Routing", "top_gap_n": 2})
+        self.assertIn("Asha, 1 new role fits your resume", html)
+        self.assertIn("Lead Routing", html)
+
+    def test_cron_sends_digest_only_on_mondays(self):
+        import datetime as dt
+        from django.core.management import call_command
+        from django.utils import timezone
+        calls = []
+        with mock.patch("jobs.management.commands.run_daily_tasks.call_command", side_effect=lambda *a, **k: calls.append(a[0])), \
+             mock.patch.object(timezone, "now", return_value=timezone.make_aware(dt.datetime(2026, 9, 22, 9))):  # Tuesday
+            call_command("run_daily_tasks")
+        self.assertNotIn("send_daily_digest", calls)
+        calls.clear()
+        with mock.patch("jobs.management.commands.run_daily_tasks.call_command", side_effect=lambda *a, **k: calls.append(a[0])), \
+             mock.patch.object(timezone, "now", return_value=timezone.make_aware(dt.datetime(2026, 9, 21, 9))):  # Monday
+            call_command("run_daily_tasks")
+        self.assertLess(calls.index("send_weekly_matches"), calls.index("send_daily_digest"))
