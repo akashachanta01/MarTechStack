@@ -526,3 +526,69 @@ class ResumeMatchColdStartTests(TestCase):
         demand, n = term_demand(budget_s=-1)  # must be served from the warm cache
         self.assertEqual(n, 6)
         self.assertEqual(demand.get("Marketo"), 100)
+
+
+@override_settings(**TEST_SETTINGS)
+class ResultsPageImprovementTests(TestCase):
+    JD = ("About the role. You will own Adobe Journey Optimizer programs end to end.\n"
+          "• Hands-on experience with Adobe Experience Platform and a customer data platform.\n"
+          "• Marketo Certified Expert is a plus.")
+
+    def setUp(self):
+        cache.clear()
+
+    def test_missing_items_quote_the_job_and_split_required_vs_nice_to_have(self):
+        from jobs.resume_match import annotate_missing
+        r = match("Administered office schedules and vendor contracts for a 40-person team.", self.JD)
+        by = {m["term"]: m for m in annotate_missing(r["missing"], self.JD)}
+        self.assertFalse(by["Marketo Certified Expert"]["required"])
+        self.assertTrue(by["Adobe Journey Optimizer"]["required"])
+        self.assertIn("Adobe Journey Optimizer", by["Adobe Journey Optimizer"]["quote"])
+        self.assertEqual(by["Customer Data Platform"]["quote_term"].lower(), "customer data platform")
+
+    def test_lines_needing_numbers_picks_real_unquantified_achievements(self):
+        from jobs.resume_match import lines_needing_numbers
+        picks = lines_needing_numbers("Managed email campaigns for the global team\n"
+                                      "Built lead scoring in Marketo lifting conversion 22%\n"
+                                      "Partnered with sales on routing rules and reporting\nhello")
+        self.assertEqual(picks, ["Managed email campaigns for the global team",
+                                 "Partnered with sales on routing rules and reporting"])
+
+    def test_stretch_result_suggests_only_better_fitting_jobs_even_for_anonymous(self):
+        hard = make_job(title="Adobe consultant", company="Adobe", description="<p>" + self.JD + "</p>")
+        make_job(title="Marketing Operations Manager", company="Acme")      # ~4/8 for RESUME
+        make_job(title="Pure Marketo admin", company="Globex",
+                 description="<p>Own our Marketo instance, lead scoring and nurture programs.</p>")
+        r = self.client.post("/tools/api/ats-match/", data=json.dumps({"resume_text": RESUME, "job_id": hard.id}),
+                             content_type="application/json")
+        d = r.json()
+        self.assertEqual(d["label"], "stretch")
+        self.assertTrue(d["more_matches"])
+        cur = d["matched_count"] / d["required_count"]
+        self.assertTrue(all(j["matched"] / j["required"] > cur for j in d["more_matches"]))
+        self.assertNotIn(hard.id, [j["id"] for j in d["more_matches"]])
+        self.assertIn("lines_to_quantify", d)
+        self.assertTrue(all("quote" in m for m in d["missing"]))
+
+
+@override_settings(**TEST_SETTINGS)
+class JobHtmlBulletsTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_bullets_from_job_html_are_not_merged_into_one_sentence(self):
+        job = make_job(description="<p>We are hiring a senior consultant to lead customer journey programs for enterprise clients.</p>"
+                                   "<ul><li>Hands-on Adobe Experience Platform experience.</li>"
+                                   "<li>Adobe Journey Optimizer ownership.</li><li>Marketo Certified Expert is a plus.</li></ul>")
+        d = self.client.post("/tools/api/ats-match/", data=json.dumps({"resume_text": RESUME, "job_id": job.id}),
+                             content_type="application/json").json()
+        by = {m["term"]: m for m in d["missing"]}
+        self.assertTrue(by["Adobe Experience Platform"]["required"])
+        self.assertTrue(by["Adobe Journey Optimizer"]["required"])
+        self.assertFalse(by["Marketo Certified Expert"]["required"])
+
+
+class TaxonomyFalsePositiveTests(TestCase):
+    def test_customer_journeys_phrase_is_not_a_skill(self):
+        self.assertNotIn("Journey Orchestration", extract_terms("Senior Technical Consultant, Customer Journeys", for_jd=True))
+        self.assertIn("Journey Orchestration", extract_terms("Build flows in Journey Builder.", for_jd=True))

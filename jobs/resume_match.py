@@ -8,6 +8,7 @@ every live job. Built on the deterministic ats_match engine (no AI, no cost).
 """
 import io
 import logging
+import re
 
 from django.core.cache import cache
 from django.utils.html import strip_tags
@@ -148,8 +149,10 @@ def match_label(matched, required):
     return "stretch"
 
 
-def best_matches(resume_text, exclude_id=None, limit=3):
-    """Top live jobs for this resume by share of required terms covered."""
+def best_matches(resume_text, exclude_id=None, limit=3, better_than=None):
+    """Top live jobs for this resume by share of required terms covered.
+    better_than: only jobs whose coverage ratio is strictly higher (for a
+    'stretch' result, 'fits you better' must actually be better)."""
     reqs, complete = job_requirements(budget_s=2.0)
     if not complete:
         return []
@@ -160,6 +163,8 @@ def best_matches(resume_text, exclude_id=None, limit=3):
             continue
         need = set(r["terms"])
         hit = len(need & have)
+        if better_than is not None and hit / len(need) <= better_than:
+            continue
         scored.append((hit / len(need), hit, len(need), r))
     scored.sort(key=lambda s: (-s[0], -s[2]))
     return [
@@ -167,3 +172,51 @@ def best_matches(resume_text, exclude_id=None, limit=3):
          "where": r["where"], "matched": hit, "required": n, "label": match_label(hit, n)}
         for _, hit, n, r in scored[:limit]
     ]
+
+
+_PREFERRED_RX = re.compile(r"\b(preferred|nice[- ]to[- ]have|a plus|bonus|ideally|desirable|familiarity)\b", re.I)
+_SENT_SPLIT_RX = re.compile(r"(?<=[.!?;])\s+|\n+|\s+[•·▪◦-]\s+")
+
+
+def _sentences(jd_text):
+    return [s.strip(" •·-\t") for s in _SENT_SPLIT_RX.split(jd_text or "") if s and s.strip()]
+
+
+def annotate_missing(missing, jd_text):
+    """Add where the job asks for each missing term (a short quote) and
+    whether it reads as required or nice-to-have. Deterministic, no AI."""
+    sents = _sentences(jd_text)
+    out = []
+    for m in missing:
+        quote, preferred = "", False
+        words = [w.lower() for w in m.get("jd_wording") or [m["term"]]]
+        for sent in sents:
+            low = sent.lower()
+            hit = next((w for w in words if w in low), None)
+            if hit:
+                i = low.index(hit)
+                start = max(0, i - 70)
+                end = min(len(sent), i + len(hit) + 90)
+                quote = ("…" if start else "") + sent[start:end].strip() + ("…" if end < len(sent) else "")
+                preferred = bool(_PREFERRED_RX.search(sent))
+                m = dict(m, quote=quote, quote_term=sent[i:i + len(hit)])
+                break
+        out.append(dict(m, required=not preferred))
+    return out
+
+
+_ACTION_LINE_RX = re.compile(r"^[\s•·▪◦*-]*[A-Z][a-z]+ed\b|^[\s•·▪◦*-]*(Led|Built|Ran|Own|Owned|Managed|Drove|Grew|Launched|Created|Designed|Implemented|Supported|Partnered|Developed)\b")
+
+
+def lines_needing_numbers(resume_text, limit=3):
+    """Up to `limit` achievement-style resume lines that have no number yet
+    (the member's own lines, shown back only to them)."""
+    from jobs.ats_match import _METRIC_RX
+    picks = []
+    for line in (resume_text or "").splitlines():
+        l = line.strip()
+        if 30 <= len(l) <= 220 and not _METRIC_RX.search(l) and _ACTION_LINE_RX.search(l):
+            picks.append(l.lstrip("•·▪◦*- ").strip())
+        if len(picks) >= limit:
+            break
+    return picks
