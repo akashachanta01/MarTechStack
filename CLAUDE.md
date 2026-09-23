@@ -58,8 +58,6 @@ Always think: "What's the simplest solution with the most leverage?"
 - Job counts displayed on site must match actual live listings
 - Featured companies/testimonials must be real — remove fakes immediately
 - Tone: direct, no recruiter fluff, technically credible
-- ANTI AI-SLOP (founder rule, Sept 2026): nothing on the site may read like generic AI filler. No auto-published AI articles, no mass-generated thin pages, no invented facts/quotes/stats. Every page must carry real, specific value (real listings, real numbers from our DB, real expertise). AI may assist (e.g. resume tailoring with code-enforced guards) but never publishes unreviewed prose to the site.
-- Banned phrasing in any copy we write: "In today's fast-paced world", "delve", "unlock/unleash", "elevate", "game-changer", "seamless", "robust", "leverage" (as a verb), "navigate the landscape", "It's important to note", "In conclusion", stacked em-dashes, rule-of-three filler. Short, concrete, specific.
 
 ## Current Phase
 Pre-job ingestion quality fixes. We are identifying and fixing data/quality issues
