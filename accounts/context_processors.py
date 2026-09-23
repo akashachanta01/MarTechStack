@@ -1,6 +1,14 @@
 from django.conf import settings
 
 
+def _has_resume(request):
+    user = getattr(request, 'user', None)
+    if not (user and user.is_authenticated):
+        return False
+    from accounts.models import UserResume
+    return UserResume.objects.filter(user=user).exists()
+
+
 def feature_flags(request):
     """Expose toggles templates need (e.g. whether to show the Google button)."""
     return {
@@ -8,6 +16,7 @@ def feature_flags(request):
         'posthog_key': getattr(settings, 'POSTHOG_KEY', ''),
         'posthog_host': getattr(settings, 'POSTHOG_HOST', ''),
         # One-shot: set by the user_signed_up signal, fired once as signup_completed.
+        'has_saved_resume': _has_resume(request),
         'just_signed_up': request.session.pop('mtj_signed_up', '') if hasattr(request, 'session') else '',
     }
 

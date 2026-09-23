@@ -1,0 +1,68 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}My Matches | MarTechJobs{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<style>
+  .mm-hero { padding:40px 0 24px; border-bottom:1px solid var(--rule); }
+  .mm-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(24px,4vw,36px); font-weight:800; color:var(--navy); margin-bottom:6px; }
+  .mm-hero p { font-size:14px; color:var(--ink3); }
+  .mm-inner { max-width:820px; margin:0 auto; padding:28px 24px 80px; display:flex; flex-direction:column; gap:12px; }
+  .mm-tabs { display:flex; gap:8px; }
+  .mm-tabs a { min-height:40px; display:inline-flex; align-items:center; padding:0 16px; border-radius:999px; border:1px solid var(--rule); font-size:14px; font-weight:700; text-decoration:none; color:var(--ink2); background:var(--card); }
+  .mm-tabs a.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .mm-row { background:var(--card); border:1px solid var(--rule); border-radius:14px; padding:16px 18px; display:flex; gap:16px; align-items:center; }
+  .mm-score { width:64px; flex-shrink:0; text-align:center; }
+  .mm-score b { display:block; font-size:22px; font-weight:800; }
+  .mm-score span { font-size:10px; font-family:'Courier Prime',monospace; text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+  .mm-info { flex:1; min-width:0; }
+  .mm-info a.t { font-size:16px; font-weight:700; color:var(--ink); text-decoration:none; }
+  .mm-co { font-size:13px; color:var(--ink3); margin-top:2px; }
+  .mm-miss { font-size:12.5px; color:var(--ink2); margin-top:6px; }
+  .mm-check { font-size:13px; font-weight:700; white-space:nowrap; }
+  .g-t { color:#15803d; } .a-t { color:#b45309; } .s-t { color:#78716c; }
+  .mm-empty { background:var(--card); border:1px dashed var(--rule); border-radius:14px; padding:28px; text-align:center; }
+  @media (max-width:560px) { .mm-row { flex-wrap:wrap; } .mm-check { width:100%; } }
+</style>
+
+<section class="mm-hero">
+  <div class="wrap">
+    <a href="{% url 'accounts_dashboard' %}" style="font-size:13px;color:var(--ink3);font-weight:600;display:inline-flex;gap:5px;margin-bottom:16px;">← Dashboard</a>
+    <h1>My Matches</h1>
+    <p>Live MarTech jobs ranked by how well your saved resume fits them.</p>
+  </div>
+</section>
+
+<div class="mm-inner">
+  {% if not has_resume %}
+    <div class="mm-empty">
+      <p style="font-size:17px;font-weight:700;margin:0 0 8px;">Upload your resume to see your matches</p>
+      <p style="color:var(--ink3);margin:0 0 16px;">We'll rank every live MarTech job by how well you fit, and show your score on every job.</p>
+      <a class="btn btn-amber" href="{% url 'resume_scanner' %}">Upload resume</a>
+    </div>
+  {% else %}
+    <div class="mm-tabs">
+      <a href="?show=good" class="{% if show != 'all' %}on{% endif %}">Best matches for me</a>
+      <a href="?show=all" class="{% if show == 'all' %}on{% endif %}">All jobs by fit</a>
+    </div>
+    {% if not complete %}<p style="font-size:13px;color:var(--ink3);margin:0;">Still analysing some new jobs. Refresh in a minute for the full list.</p>{% endif %}
+    {% for r in rows %}
+    <div class="mm-row">
+      <div class="mm-score {% if r.label == 'strong' %}g-t{% elif r.label == 'good' %}a-t{% else %}s-t{% endif %}">
+        <b>{{ r.matched }}/{{ r.required }}</b>
+        <span>{% if r.label == 'strong' %}Strong{% elif r.label == 'good' %}Good{% else %}Stretch{% endif %}</span>
+      </div>
+      <div class="mm-info">
+        <a class="t" href="{% url 'job_detail' r.id r.slug %}">{{ r.title }}</a>
+        <div class="mm-co">{{ r.company }}{% if r.where %} · {{ r.where }}{% endif %}</div>
+        {% if r.missing %}<div class="mm-miss">Missing: {{ r.missing|slice:":4"|join:", " }}{% if r.missing|length > 4 %} +{{ r.missing|length|add:"-4" }} more{% endif %}</div>{% endif %}
+      </div>
+      <a class="mm-check" href="{% url 'resume_scanner' %}?job={{ r.id }}" rel="nofollow">See full check →</a>
+    </div>
+    {% empty %}
+    <div class="mm-empty">No matches yet. Try "All jobs by fit", or add more of your MarTech skills to your resume.</div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

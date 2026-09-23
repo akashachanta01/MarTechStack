@@ -31,6 +31,11 @@ Gotchas (learned the hard way):
 - Chromium: `glob('/opt/pw-browsers/chromium-*/chrome-linux/chrome')`; never `playwright install`.
 - Production is Python 3.9: grep new code for 3.10+ syntax (match/case, `X | None`, removeprefix).
 
+Suites (each needs a FRESH seed + server restart — they share users/limits):
+- `resume_scanner_e2e.py` — Resume Scanner core (49 scenarios).
+- `phases_e2e.py` — fit badges, My Matches, AI tailor/docx/Pro gate. Start the server with
+  `MTJ_FAKE_AI=1` (test_settings swaps OpenAI for a deterministic fake: no network, no cost).
+
 ## 3. Browser scenario checklist (write/extend a Playwright script; resume_scanner_e2e.py is the model)
 For every changed page/flow cover:
 - Happy path, anonymous AND signed-in.
@@ -42,6 +47,8 @@ For every changed page/flow cover:
 - Mobile 390px: `document.documentElement.scrollWidth <= 390`.
 - Tracking: expected `window.dataLayer` events fire.
 - Zero `pageerror` JS errors. Screenshot key screens and LOOK at them.
+- Any element toggled with the `hidden` attribute must not have a CSS `display` that overrides it
+  (add `[hidden]{display:none!important}`) — this bug shipped twice in Sept 2026.
 
 ## 4. Report
 Give the founder: tests N/N, scenario list with PASS/FAIL, anything skipped and why. Then ask

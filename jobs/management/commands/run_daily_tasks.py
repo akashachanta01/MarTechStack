@@ -87,7 +87,14 @@ class Command(BaseCommand):
         self._run("      🧮 Warming Resume Match...", 'warm_resume_match')
 
         # 4. ALERTS (Email subscribers today's new roles — skips if none)
-        self._run("\n[4/7] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
+        # Weekly (Mondays): personal "jobs you match" first, then the generic digest
+        # for everyone else. Daily sends caused spam complaints (Sept 2026).
+        from django.utils import timezone as _tz
+        if _tz.now().weekday() == 0:
+            self._run("\n[4/7] 🎯 Sending weekly personal matches...", 'send_weekly_matches')
+            self._run("      📧 Sending Weekly Digest to Subscribers...", 'send_daily_digest', '--weekly', '--hours', '192', '--limit', '25')
+        else:
+            self.stdout.write("\n[4/7] 📧 Digest is weekly (Mondays) — skipping today.")
         self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
 
         # 5. CONTENT ENGINE (Automated Blog)

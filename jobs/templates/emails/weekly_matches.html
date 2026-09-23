@@ -1,0 +1,45 @@
+{% extends "emails/base_email.html" %}
+
+{% block preheader %}New roles this week that fit your resume 80%+.{% endblock %}
+
+{% block content %}
+<h1 style="margin:0 0 6px 0; font-family:Georgia,'Times New Roman',serif; font-size:26px; line-height:1.25; color:#0e1c30; font-weight:700; text-align:center;">
+  {% if first_name %}{{ first_name }}, {% endif %}{{ count }} new role{{ count|pluralize }} fit{{ count|pluralize:"s," }} your resume
+</h1>
+<p style="margin:0 0 26px 0; text-align:center; font-size:15px; color:#7a7165;">Matched against the resume you saved on MarTechJobs.</p>
+
+{% for job in jobs %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px 0;">
+  <tr>
+    <td style="padding:18px 20px; background:#faf6f0; border-radius:12px; border:1px solid #ece3d6;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="vertical-align:top;">
+          <a href="{{ domain|default:'https://martechjobs.io' }}/job/{{ job.id }}/{{ job.slug }}/" style="text-decoration:none;">
+            <span style="display:block; font-size:16px; font-weight:700; color:#0e1c30; margin-bottom:4px;">{{ job.title }}</span>
+            <span style="display:block; font-size:14px; color:#7a7165;">{{ job.company }}{% if job.where %} · {{ job.where }}{% endif %}</span>
+          </a>
+        </td>
+        <td style="vertical-align:top; text-align:right; white-space:nowrap; font-size:15px; font-weight:700; color:#15803d;">{{ job.matched }}/{{ job.required }}</td>
+      </tr></table>
+      <span style="display:block; margin-top:8px; font-size:13px; color:#7a7165;">{% if job.missing %}Only missing: {{ job.missing|join:", " }}{% else %}You cover every skill this job lists{% endif %}</span>
+      <a href="{{ domain|default:'https://martechjobs.io' }}/tools/resume-keyword-scanner/?job={{ job.id }}" style="display:inline-block; margin-top:10px; font-size:14px; font-weight:700; color:#bf5420; text-decoration:none;">See my match →</a>
+    </td>
+  </tr>
+</table>
+{% endfor %}
+
+{% if top_gap %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 18px 0;">
+  <tr><td style="padding:14px 18px; background:#fff7ed; border-radius:12px; border:1px solid #fed7aa; font-size:14px; color:#7c2d12; line-height:1.5;">
+    <strong>Your most-asked-for gap this week: {{ top_gap }}.</strong> It appeared in {{ top_gap_n }} of the new jobs you're a good fit for. If you've done it, one bullet saying so could lift your score on all of them.
+  </td></tr>
+</table>
+{% endif %}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 0 0;">
+  <tr><td align="center">
+    <a href="{{ domain|default:'https://martechjobs.io' }}/accounts/matches/" style="display:inline-block; background:#bf5420; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:15px 36px; border-radius:10px;">See all my matches →</a>
+  </td></tr>
+</table>
+<p style="margin:18px 0 0 0; text-align:center; font-size:12px; color:#9a9085;">You get this because you saved a resume on MarTechJobs. Delete it anytime in Settings.</p>
+{% endblock %}

@@ -58,6 +58,8 @@ Always think: "What's the simplest solution with the most leverage?"
 - Job counts displayed on site must match actual live listings
 - Featured companies/testimonials must be real — remove fakes immediately
 - Tone: direct, no recruiter fluff, technically credible
+- ANTI AI-SLOP (founder rule, Sept 2026): nothing on the site may read like generic AI filler. No auto-published AI articles, no mass-generated thin pages, no invented facts/quotes/stats. Every page must carry real, specific value (real listings, real numbers from our DB, real expertise). AI may assist (e.g. resume tailoring with code-enforced guards) but never publishes unreviewed prose to the site.
+- Banned phrasing in any copy we write: "In today's fast-paced world", "delve", "unlock/unleash", "elevate", "game-changer", "seamless", "robust", "leverage" (as a verb), "navigate the landscape", "It's important to note", "In conclusion", stacked em-dashes, rule-of-three filler. Short, concrete, specific.
 
 ## Current Phase
 Pre-job ingestion quality fixes. We are identifying and fixing data/quality issues
@@ -91,10 +93,10 @@ Never gate job seekers — keep browsing free always.
 - Analytics: PostHog project 623314 (US cloud, key in Render env `POSTHOG_KEY`), dashboard "MarTechJobs — Where to focus" id 2124800. GA4 via GTM-P5B8FN4C. Founder HQ at /staff/ shows real people (resume checks, users). See `analytics` skill.
 
 ## Product State (Sept 2026)
-- Resume Match (the monetization bet), 4 phases:
-  1. DONE — Resume Scanner redesign (/tools/resume-keyword-scanner/, header nav "Resume Scanner"), PDF/DOCX upload, saved resume as TEXT only (`accounts.UserResume`), gaps ranked by real demand, more matches. Demand precomputed by `warm_resume_match` in the daily cron.
-  2. NEXT — match badges on every job + "Best matches for me" sort (signed-in only; no SEO change).
-  3. Weekly personal "jobs you match 80%+" email; switch ALL accounts from daily to weekly digest (founder approved).
-  4. Pro test: "Tailor my resume for this job", 1 free tailor/account, then $12/month pre-order/waitlist; build Stripe only if ≥5% of resume users click.
+- Resume Match (the monetization bet) — ALL 4 phases built Sept 2026:
+  1. Resume Scanner (/tools/resume-keyword-scanner/): PDF/DOCX upload, saved resume as TEXT only (`accounts.UserResume`), gaps quote the job + Required/Nice-to-have, better-fit jobs, real lines to quantify. Demand precomputed by `warm_resume_match` (daily cron).
+  2. Fit badges on every job link + job-page banner (JS via /tools/api/my-matches/, signed-in + saved resume only; no SEO change) and /accounts/matches/ ("Best matches for me").
+  3. Weekly (Mondays) personal "new jobs you match 80%+" email (`send_weekly_matches`), then generic weekly digest for everyone else. Daily digest retired.
+  4. AI "Tailor my resume for this job" (`jobs/resume_tailor.py`): code-enforced no-fabrication guard, review + .docx, 1 free per account (`accounts.TailorUse`), then $12/mo Pro reserve-a-spot (pro_waitlist). Build Stripe only if >=5% of resume users click Pro.
 - Known facts: ~77 accounts, ~9 ever returned, 0 job alerts, 2 on Pro waitlist (Sept 2026). Daily digest had 3 spam complaints/month → reason for weekly switch.
 - Ruled out: auto-apply, standalone cover-letter builder, marketplace.

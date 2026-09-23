@@ -29,6 +29,8 @@ class Command(BaseCommand):
         parser.add_argument("--hours", type=int, default=48, help="Look-back window in hours (default 48 — safety buffer for slow-approval days)")
         parser.add_argument("--limit", type=int, default=20, help="Max jobs to include (default 20)")
         parser.add_argument("--dry-run", action="store_true", help="Report without sending")
+        parser.add_argument("--weekly", action="store_true",
+                            help="Weekly digest wording; skip people who got their personal matches email this week")
 
     def handle(self, *args, **options):
         since = timezone.now() - timedelta(hours=options["hours"])
@@ -49,6 +51,10 @@ class Command(BaseCommand):
         # Recipients = active newsletter subscribers + opted-in account holders
         # (accounts were silently excluded before), minus explicit unsubscribes.
         subscribers = get_digest_recipients()
+        if options["weekly"]:
+            from jobs.management.commands.send_weekly_matches import already_sent_this_week
+            got_personal = already_sent_this_week()
+            subscribers = [e for e in subscribers if e.lower() not in got_personal]
         if not subscribers:
             self.stdout.write(self.style.WARNING("No subscribers — skipping digest."))
             return
@@ -62,13 +68,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Dry run — nothing sent."))
             return
 
-        subject = f"New MarTech roles — {count} added today" if count > 1 else "A new MarTech role was just posted"
+        if options["weekly"]:
+            subject = f"This week in MarTech: {count} new roles" if count > 1 else "This week in MarTech: 1 new role"
+        else:
+            subject = f"New MarTech roles — {count} added today" if count > 1 else "A new MarTech role was just posted"
         sent = 0
         for email in subscribers:
             ok = send_html_email(
                 subject=subject,
                 template_name="emails/digest.html",
-                context={"jobs": jobs, "count": count},
+                context={"jobs": jobs, "count": count, "weekly": options["weekly"]},
                 to_email=[email],
                 unsubscribe_email=email,
             )

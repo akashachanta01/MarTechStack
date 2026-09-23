@@ -592,3 +592,232 @@ class TaxonomyFalsePositiveTests(TestCase):
     def test_customer_journeys_phrase_is_not_a_skill(self):
         self.assertNotIn("Journey Orchestration", extract_terms("Senior Technical Consultant, Customer Journeys", for_jd=True))
         self.assertIn("Journey Orchestration", extract_terms("Build flows in Journey Builder.", for_jd=True))
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase2MatchBadgeTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        self.fit = make_job(title="Marketo & SFMC Specialist", company="Umbrella",
+                            description="<p>Run Marketo and Salesforce Marketing Cloud. Build lead scoring and nurture programs.</p>")
+        self.user = get_user_model().objects.create_user("p2", "p2@x.test", "pw12345!")
+
+    def test_api_is_empty_for_anonymous_and_members_without_resume(self):
+        self.assertEqual(self.client.get("/tools/api/my-matches/").json()["jobs"], {})
+        self.client.force_login(self.user)
+        d = self.client.get("/tools/api/my-matches/").json()
+        self.assertEqual((d["jobs"], d["has_resume"]), ({}, False))
+
+    def test_api_scores_every_job_for_a_saved_resume(self):
+        from accounts.models import UserResume
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        self.client.force_login(self.user)
+        d = self.client.get("/tools/api/my-matches/").json()
+        self.assertTrue(d["ready"])
+        m, n, label = d["jobs"][str(self.job.id)]
+        self.assertEqual((m, n), (4, 8))
+        self.assertEqual(d["jobs"][str(self.fit.id)][2], "strong")
+
+    def test_badge_script_only_for_resume_holders_and_seo_unchanged(self):
+        from accounts.models import UserResume
+        url = f"/job/{self.job.id}/{self.job.slug}/"
+        r = self.client.get(url)
+        self.assertNotContains(r, "/tools/api/my-matches/")        # anonymous: no script
+        self.client.force_login(self.user)
+        self.assertNotContains(self.client.get(url), "/tools/api/my-matches/")  # no resume yet
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        r = self.client.get(url)
+        self.assertContains(r, "/tools/api/my-matches/")
+        self.assertContains(r, f'id="mtj-fit" class="mtj-fit" data-job-id="{self.job.id}"')
+
+    def test_my_matches_page_ranks_best_first(self):
+        from accounts.models import UserResume
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get("/accounts/matches/"), "Upload your resume to see your matches")
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        r = self.client.get("/accounts/matches/?show=all")
+        body = r.content.decode()
+        self.assertLess(body.index("Marketo &amp; SFMC Specialist"), body.index("Marketing Operations Manager"))
+        self.assertContains(r, "noindex")
+        self.assertEqual(self.client.get("/accounts/matches/").status_code, 200)
+        self.client.logout()
+        self.assertEqual(self.client.get("/accounts/matches/").status_code, 302)
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase3WeeklyEmailTests(TestCase):
+    def setUp(self):
+        from django.utils import timezone
+        from accounts.models import UserResume
+        cache.clear()
+        now = timezone.now()
+        self.fit = make_job(title="Marketo & SFMC Specialist", company="Umbrella", went_live_at=now,
+                            description="<p>Run Marketo and Salesforce Marketing Cloud. Build lead scoring and nurture programs.</p>")
+        self.weak = make_job(title="Adobe consultant", company="Adobe", went_live_at=now,
+                             description="<p>Adobe Journey Optimizer, Adobe Experience Platform, Braze and SQL.</p>")
+        U = get_user_model()
+        self.a = U.objects.create_user("a", "a@x.test", "pw12345!", first_name="Asha")
+        self.b = U.objects.create_user("b", "b@x.test", "pw12345!")   # resume, but unsubscribed
+        self.c = U.objects.create_user("c", "c@x.test", "pw12345!")   # resume, no strong match
+        UserResume.objects.create(user=self.a, text=RESUME)
+        UserResume.objects.create(user=self.b, text=RESUME)
+        UserResume.objects.create(user=self.c, text="Office administrator managing calendars, travel and vendor invoices for a busy team." * 3)
+        Subscriber.objects.create(email="b@x.test", is_active=False)
+        Subscriber.objects.create(email="list@x.test", is_active=True)
+
+    def _run(self, *cmd):
+        from django.core.management import call_command
+        import jobs.management.commands.send_daily_digest as digest_mod
+        m = mock.MagicMock(return_value=True)
+        with mock.patch("jobs.emails.send_html_email", m), mock.patch.object(digest_mod, "send_html_email", m):
+            call_command(*cmd)
+        return m
+
+    def test_personal_email_only_to_opted_in_members_with_strong_new_matches(self):
+        m = self._run("send_weekly_matches")
+        sent = {c.kwargs["to_email"][0]: c.kwargs for c in m.call_args_list}
+        self.assertEqual(set(sent), {"a@x.test"})
+        kw = sent["a@x.test"]
+        self.assertIn("80%+", kw["subject"]); self.assertIn("Asha", kw["subject"])
+        self.assertEqual([j["id"] for j in kw["context"]["jobs"]], [self.fit.id])
+
+    def test_weekly_digest_skips_people_who_got_personal_email(self):
+        self._run("send_weekly_matches")
+        m = self._run("send_daily_digest", "--weekly")
+        to = {c.kwargs["to_email"][0] for c in m.call_args_list}
+        self.assertNotIn("a@x.test", to)        # got the personal one
+        self.assertNotIn("b@x.test", to)        # unsubscribed
+        self.assertTrue({"c@x.test", "list@x.test"} <= to)
+        self.assertIn("This week in MarTech", m.call_args_list[0].kwargs["subject"])
+
+    def test_personal_email_renders(self):
+        from django.template.loader import render_to_string
+        html = render_to_string("emails/weekly_matches.html", {
+            "jobs": [{"id": 1, "slug": "x", "title": "Ops", "company": "Co", "where": "Remote",
+                      "matched": 5, "required": 5, "missing": []}],
+            "count": 1, "first_name": "Asha", "top_gap": "Lead Routing", "top_gap_n": 2})
+        self.assertIn("Asha, 1 new role fits your resume", html)
+        self.assertIn("Lead Routing", html)
+
+    def test_cron_sends_digest_only_on_mondays(self):
+        import datetime as dt
+        from django.core.management import call_command
+        from django.utils import timezone
+        calls = []
+        with mock.patch("jobs.management.commands.run_daily_tasks.call_command", side_effect=lambda *a, **k: calls.append(a[0])), \
+             mock.patch.object(timezone, "now", return_value=timezone.make_aware(dt.datetime(2026, 9, 22, 9))):  # Tuesday
+            call_command("run_daily_tasks")
+        self.assertNotIn("send_daily_digest", calls)
+        calls.clear()
+        with mock.patch("jobs.management.commands.run_daily_tasks.call_command", side_effect=lambda *a, **k: calls.append(a[0])), \
+             mock.patch.object(timezone, "now", return_value=timezone.make_aware(dt.datetime(2026, 9, 21, 9))):  # Monday
+            call_command("run_daily_tasks")
+        self.assertLess(calls.index("send_weekly_matches"), calls.index("send_daily_digest"))
+
+
+def _fake_openai(payload):
+    fake = mock.MagicMock()
+    fake.chat.completions.create.return_value.choices = [mock.MagicMock(message=mock.MagicMock(content=json.dumps(payload)))]
+    return fake
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase4TailorTests(TestCase):
+    AI = {
+        "summary": "Marketing Ops specialist who administers Marketo and SFMC and builds lead scoring.",
+        "changes": [
+            {"before": "- Partnered with sales on routing rules and pipeline reporting",
+             "after": "Partnered with sales to own routing rules and pipeline reporting across regions", "why": "Stronger verb"},
+            {"before": "- Managed SFMC email sends and journeys for the global team",
+             "after": "Managed Braze and SFMC journeys for the global team", "why": "adds a tool"},          # fabricated tool
+            {"before": "- Ran Pardot nurture campaigns for 40k contacts across three regions",
+             "after": "Ran Pardot nurture campaigns for 90k contacts, lifting pipeline 30%", "why": "numbers"},  # fabricated numbers
+            {"before": "Invented line that is not in the resume", "after": "Something", "why": "x"},        # not a real line
+        ],
+    }
+
+    def setUp(self):
+        cache.clear()
+        from accounts.models import UserResume
+        self.job = make_job()
+        self.user = get_user_model().objects.create_user("t4", "t4@x.test", "pw12345!")
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+
+    def _tailor(self, payload=None, openai_side_effect=None):
+        fake = _fake_openai(payload or self.AI)
+        patch = mock.patch("openai.OpenAI", side_effect=openai_side_effect) if openai_side_effect else mock.patch("openai.OpenAI", return_value=fake)
+        with mock.patch.dict("os.environ", {"OPENAI_API_KEY": "test"}), patch:
+            return self.client.post("/tools/api/tailor/", data=json.dumps({"job_id": self.job.id}), content_type="application/json")
+
+    def test_guard_keeps_only_honest_rewrites(self):
+        from jobs.resume_tailor import validate_changes, validate_summary
+        kept, dropped = validate_changes(RESUME, self.AI["changes"])
+        self.assertEqual([k["after"] for k in kept], ["Partnered with sales to own routing rules and pipeline reporting across regions"])
+        # Claiming a skill the resume doesn't show ("lead routing") is also refused:
+        k2, _ = validate_changes(RESUME, [{"before": "- Partnered with sales on routing rules and pipeline reporting",
+                                           "after": "Built lead routing with sales"}])
+        self.assertEqual(k2, [])
+        self.assertEqual(dropped, 3)
+        self.assertEqual(validate_summary(RESUME, "Expert in Braze and Iterable."), "")      # tools not in resume
+        self.assertEqual(validate_summary(RESUME, "Drove 300% growth."), "")                 # invented number
+        self.assertTrue(validate_summary(RESUME, self.AI["summary"]))
+
+    def test_gates_anonymous_and_no_resume(self):
+        self.client.logout()
+        self.assertEqual(self._tailor().status_code, 401)
+        u2 = get_user_model().objects.create_user("t5", "t5@x.test", "pw12345!")
+        self.client.force_login(u2)
+        self.assertEqual(self._tailor().status_code, 400)
+
+    def test_one_free_tailor_then_pro_gate_and_nothing_stored(self):
+        from accounts.models import TailorUse
+        self.client.force_login(self.user)
+        r = self._tailor()
+        self.assertEqual(r.status_code, 200)
+        d = r.json()
+        self.assertEqual(len(d["changes"]), 1)
+        self.assertEqual(d["dropped"], 3)
+        self.assertEqual(d["free_left"], 0)
+        self.assertIn("Segment", d["not_added"])
+        self.assertEqual(TailorUse.objects.filter(user=self.user).count(), 1)
+        self.assertFalse(hasattr(TailorUse, "text"))
+        r2 = self._tailor()
+        self.assertEqual((r2.status_code, r2.json()["gate"]), (402, "pro"))
+        self.assertContains(self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}"), "Free tailor used")
+
+    def test_ai_failure_is_friendly_and_not_counted(self):
+        from accounts.models import TailorUse
+        self.client.force_login(self.user)
+        r = self._tailor(openai_side_effect=RuntimeError("down"))
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(TailorUse.objects.count(), 0)
+        r = self._tailor(payload={"summary": "Expert in Braze.", "changes": [self.AI["changes"][1]]})  # all unsafe
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(TailorUse.objects.count(), 0)
+
+    def test_staff_unlimited(self):
+        self.user.is_staff = True; self.user.save()
+        self.client.force_login(self.user)
+        for _ in range(3):
+            self.assertEqual(self._tailor().status_code, 200)
+
+    def test_tailor_right_after_a_check_is_not_blocked_by_click_cooldown(self):
+        import time as _t
+        self.client.force_login(self.user)
+        sess = self.client.session; sess["last_ai_call"] = _t.time(); sess.save()   # a check just used AI tips
+        self.assertEqual(self._tailor().status_code, 200)
+
+    def test_docx_download_is_a_real_word_file(self):
+        import io
+        import docx
+        self.client.force_login(self.user)
+        text = "Jane Doe\n\nSUMMARY\nMarketing Ops specialist.\n\nEXPERIENCE\n" + RESUME
+        r = self.client.post("/tools/api/tailor/docx/", data=json.dumps({"text": text}), content_type="application/json")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("attachment", r["Content-Disposition"])
+        d = docx.Document(io.BytesIO(r.content))
+        self.assertEqual(d.paragraphs[0].text, "Jane Doe")
+        self.assertTrue(any("Marketo" in p.text for p in d.paragraphs))
+        self.client.logout()
+        self.assertEqual(self.client.post("/tools/api/tailor/docx/", data=json.dumps({"text": text}), content_type="application/json").status_code, 401)

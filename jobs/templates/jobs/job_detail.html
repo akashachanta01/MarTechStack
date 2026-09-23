@@ -138,6 +138,7 @@
         {% if job.work_arrangement == 'remote' %}<span class="pill pill-remote">Remote OK</span>{% endif %}
         {% for tool in job.tools.all|slice:":3" %}<span class="pill pill-stack">{{ tool.name }}</span>{% endfor %}
       </div>
+      <a id="mtj-fit" class="mtj-fit" data-job-id="{{ job.id }}" href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" hidden></a>
       <div class="jd-apply-row">
         <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg js-apply" data-placement="top">Apply for this Position →</a>
         {% if user.is_authenticated %}
