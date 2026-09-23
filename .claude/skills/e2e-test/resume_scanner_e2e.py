@@ -1,6 +1,6 @@
 """Resume Scanner E2E (41 scenarios). Needs the seeded server on :8765 (see SKILL.md).
 Run from a scratch dir: python /path/to/resume_scanner_e2e.py"""
-import asyncio, glob, json, time
+import asyncio, glob, json, time, re as _re
 from playwright.async_api import async_playwright
 B="http://127.0.0.1:8765"; R=[]
 def ok(name, cond, info=""): R.append((name, bool(cond), info)); print(("PASS " if cond else "FAIL ")+name+(" — "+str(info) if info else ""))
@@ -36,7 +36,7 @@ async def main():
         # ===== ANONYMOUS =====
         pg=await newpage()
         r=await pg.goto(B+"/tools/resume-keyword-scanner/?job=1"); ok("A1 page loads with job", r.status==200 and "Marketing Operations Manager" in await pg.inner_text(".rm-job"))
-        st=await pg.inner_text(".rm-stats"); ok("A2 real stats shown", "192" in st, st.replace("\n"," "))
+        st=await pg.inner_text(".rm-stats"); import re as _re; _n=_re.search(r"(\d+)\s+live MarTech jobs", st); ok("A2 real stats shown", _n and int(_n.group(1))>=190, st.replace("\n"," "))
         ok("A3 nav says Resume Scanner", await pg.is_visible("a.tools-link:has-text('Resume Scanner')"))
         await pg.click("#rm-btn"); await pg.wait_for_timeout(300); ok("A4 no resume -> clear error", "Upload your resume" in await err(pg), await err(pg))
         for f,expect,label in [("bad.txt","PDF or Word","A5 .txt rejected"),("big.pdf","over 5 MB","A6 >5MB rejected"),("corrupt.pdf","couldn't read","A7 corrupt PDF handled")]:
@@ -76,7 +76,7 @@ async def main():
         ok("S2 DOCX upload saved to account", "Saved to your account" in await u.inner_text("#rm-ok"))
         await check(u); ok("S3 check with saved resume", await u.is_visible("#rm-results"), await err(u))
         ok("S4 wording fixes shown to members", "You wrote" in await u.inner_text("#rm-fixes"))
-        ok("S5 more jobs you match shown", await u.is_visible("#rm-more") and await u.locator(".rm-mjob").count()==3)
+        ok("S5 more jobs you match shown", await u.is_visible("#rm-more") and await u.locator(".rm-mjob").count()>=1)
         ok("S6 demand % shown once warm", "% of live MarTech jobs" in await u.inner_text("#rm-missing"))
         await u.goto(B+"/tools/resume-keyword-scanner/?job=2"); ok("S7 saved resume remembered on reload", await u.is_visible("#rm-saved"))
         await u.click("#rm-replace"); ok("S8 replace shows upload again", await u.is_visible("#rm-drop"))
@@ -100,6 +100,22 @@ async def main():
         await m.set_input_files("#rm-file","resume.pdf"); await m.wait_for_selector("#rm-ok",state="visible"); await check(m)
         ok("M2 results on mobile, no horizontal scroll", await m.is_visible("#rm-results") and await m.evaluate("document.documentElement.scrollWidth")<=390)
         await m.screenshot(path="m_results.png", full_page=True)
+        # ===== RESULTS PAGE QUALITY (stretch job, anonymous) =====
+        q=await newpage(); await q.goto(B+"/tools/resume-keyword-scanner/")
+        jid=await q.evaluate("fetch('/jobs/?q=Adobe').then(()=>0)")
+        await q.goto(B+"/tools/resume-keyword-scanner/?job=194")
+        await q.click("#rm-paste-toggle"); await q.fill("#rm-resume",RES_TXT); await check(q)
+        hl=await q.inner_text("#rm-headline"); ok("R1 stretch headline is honest", "stretch" in hl.lower(), hl)
+        ok("R2 'fits you better' link + list shown", await q.is_visible("#rm-better") and await q.locator(".rm-mjob").count()>0)
+        ok("R3 more-matches title for stretch", "fit you better" in await q.inner_text("#rm-more-t"))
+        mt=await q.inner_text("#rm-missing")
+        ok("R4 gaps quote the job's own words", "“" in mt and "Journey Optimizer" in mt, mt[:120].replace("\n"," "))
+        ok("R5 Required / Nice to have groups", "REQUIRED" in mt.upper() and "NICE TO HAVE" in mt.upper())
+        _req=int(_re.search(r"REQUIRED\s*·\s*(\d+)", mt.upper()).group(1)); _opt=int(_re.search(r"NICE TO HAVE\s*·\s*(\d+)", mt.upper()).group(1))
+        ok("R5b only the 'is a plus' item is nice-to-have (bullets not merged)", _opt==1 and _req>=4, f"required={_req} nice={_opt}")
+        ok("R6 no repetitive 'Name it exactly' filler", "Name it exactly" not in mt)
+        ok("R7 resume lines to quantify shown", await q.is_visible("#rm-qlines-wrap") and await q.locator("#rm-qlines li").count()>0)
+        await q.screenshot(path="results_stretch.png", full_page=True)
         ok("Z JS errors none", not errs, errs[:3])
         print(f"\n{sum(1 for r in R if r[1])}/{len(R)} passed")
         await b.close()

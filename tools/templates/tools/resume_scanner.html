@@ -101,6 +101,18 @@
   .rm-gap-t { font-weight: 700; } .rm-gap-t small { font-weight: 500; color: var(--ink3); margin-left: 6px; }
   .rm-gap-d { font-size: 13px; color: var(--ink2); margin-top: 3px; }
   .rm-gap-h { font-size: 13px; color: var(--ink2); margin-top: 6px; }
+  .rm-better { display: inline-flex; margin-top: 14px; font-size: 14px; font-weight: 700; color: #9a3f12; text-decoration: none; }
+  .rm-better:hover { text-decoration: underline; }
+  .rm-miss-sub { margin: -4px 0 6px; font-size: 14px; color: var(--ink3); }
+  .rm-grp { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 18px 0 2px; }
+  .rm-kind { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--paper2, #f5f1ea); border: 1px solid var(--rule); font-size: 11px; font-weight: 600; color: var(--ink3); vertical-align: 2px; }
+  .rm-quote { margin-top: 8px; padding: 9px 12px; border-radius: 10px; background: #faf7f2; font-size: 13.5px; line-height: 1.55; color: var(--ink2); }
+  .rm-quote b { color: var(--ink); background: #fde8d7; border-radius: 3px; padding: 0 2px; }
+  .rm-gap.opt .rm-gap-n { background: #f5f5f4; color: #57534e; }
+  .rm-qhead { font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+  .rm-qlines { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rm-qlines li { font-size: 13px; line-height: 1.5; padding: 9px 11px; border-radius: 10px; background: #fef9ee; border: 1px solid #f3e3bf; }
+  .rm-qlines li small { display: block; color: #92400e; font-weight: 600; margin-top: 3px; }
   .rm-fixes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .rm-fix { padding: 14px; border-radius: 12px; background: #fef9ee; border: 1px solid #f3e3bf; font-size: 14px; }
   .rm-fix .l { font-size: 12px; color: var(--ink3); } .rm-fix .old { font-weight: 700; text-decoration: line-through; color: var(--ink3); } .rm-fix .new { font-weight: 700; color: #14532d; }
@@ -212,11 +224,13 @@
             <h2 id="rm-headline"></h2>
             <p id="rm-sub"></p>
             <div class="rm-pills" id="rm-pills"></div>
+            <a class="rm-better" id="rm-better" href="#rm-more" hidden>See live jobs that fit your resume better ↓</a>
           </div>
         </section>
 
         <section class="rm-card">
-          <div class="rm-h"><h2>Missing skills, most important first</h2><span id="rm-demand-note"></span></div>
+          <div class="rm-h"><h2>What this job asks for that your resume doesn't show</h2><span id="rm-demand-note"></span></div>
+          <p class="rm-miss-sub" id="rm-miss-sub">Add the ones you genuinely have, in the job's own words. Never claim what you haven't done.</p>
           <div id="rm-missing"></div>
         </section>
 
@@ -241,10 +255,14 @@
           <h2>Resume health</h2>
           <div style="display:flex; justify-content:space-between; font-size:14px;"><span>Lines with a number</span><b id="rm-q"></b></div>
           <div class="rm-bar"><div id="rm-qbar" style="width:0%"></div></div>
-          <p>Recruiters skim for results. Add numbers (%, $, volume) such as sourced pipeline, conversion rates, deliverability or database size.</p>
+          <p id="rm-q-tip">Recruiters skim for results. Add numbers (%, $, volume) such as sourced pipeline, conversion rates, deliverability or database size.</p>
+          <div id="rm-qlines-wrap" hidden>
+            <div class="rm-qhead">Add a number to lines like these:</div>
+            <ul class="rm-qlines" id="rm-qlines"></ul>
+          </div>
         </section>
         <section class="rm-card" id="rm-more" hidden>
-          <h2>More jobs you match</h2>
+          <h2 id="rm-more-t">More jobs you match</h2>
           <div id="rm-more-list"></div>
           <p style="margin-top:10px;"><a href="{% url 'all_jobs' %}">Browse all live jobs</a></p>
         </section>
@@ -424,7 +442,7 @@
       return c;
     }
     svg.appendChild(circ('#ece6da'));
-    svg.appendChild(circ(color, required ? C * matched / required : 0));
+    if (required && matched) svg.appendChild(circ(color, C * matched / required));
     return svg;
   }
 
@@ -440,10 +458,24 @@
     $('rm-lbl').textContent = L[0]; $('rm-lbl').style.color = L[1];
 
     var nMiss = d.missing.length, nFix = d.signed_in ? d.alias_fixes.length : (d.locked_alias_fixes || 0);
-    $('rm-headline').textContent = 'You cover ' + d.matched_count + ' of the ' + d.required_count + ' skills this job asks for.';
-    $('rm-sub').textContent = nMiss
-      ? 'Add the missing ones you genuinely have, starting from the top of the list, using the job\'s exact wording.'
-      : 'Nothing missing. Your resume covers every MarTech skill this job lists.';
+    var more = d.more_matches || [];
+    var cover = d.matched_count + ' of the ' + d.required_count + ' skills this job asks for';
+    if (!nMiss) {
+      $('rm-headline').textContent = 'Excellent fit: you cover all ' + d.required_count + ' skills this job asks for.';
+      $('rm-sub').textContent = 'Apply with confidence. Check the wording fixes below so an ATS reads it the same way.';
+    } else if (d.label === 'strong') {
+      $('rm-headline').textContent = 'Strong match: you cover ' + cover + '.';
+      $('rm-sub').textContent = 'Close the last gaps below, if you genuinely have them, and you look like a full match.';
+    } else if (d.label === 'good') {
+      $('rm-headline').textContent = 'Good match: you cover ' + cover + '.';
+      $('rm-sub').textContent = 'Worth applying. Add the required items below that you have real experience with.';
+    } else {
+      $('rm-headline').textContent = 'This one is a stretch: you cover ' + cover + '.';
+      $('rm-sub').textContent = more.length
+        ? 'This role leans on skills your resume doesn\'t show. You may be a stronger fit for other live jobs.'
+        : 'This role leans on skills your resume doesn\'t show. If you have them, add them in the job\'s own words.';
+    }
+    $('rm-better').hidden = !(d.label === 'stretch' && more.length);
     var pills = $('rm-pills'); pills.textContent = '';
     pills.appendChild(el('span', 'rm-pill g', d.matched_count + ' matched'));
     if (nMiss) pills.appendChild(el('span', 'rm-pill r', nMiss + ' missing'));
@@ -451,21 +483,33 @@
 
     var miss = $('rm-missing'); miss.textContent = '';
     var ranked = d.missing.some(function (m) { return m.demand_pct !== null && m.demand_pct !== undefined; });
-    $('rm-demand-note').textContent = nMiss && ranked ? 'Ranked by share of live MarTech jobs asking for it' : '';
-    if (!nMiss) miss.appendChild(el('p', '', 'Great match. Nothing missing.'));
-    d.missing.forEach(function (m, i) {
-      var row = el('div', 'rm-gap');
-      row.appendChild(el('div', 'rm-gap-n', String(i + 1)));
-      var body = el('div');
-      var t = el('div', 'rm-gap-t', m.term); t.appendChild(el('small', '', m.kind)); body.appendChild(t);
-      if (m.demand_pct !== null && m.demand_pct !== undefined)
-        body.appendChild(el('div', 'rm-gap-d', m.demand_pct ? 'Asked for in ' + m.demand_pct + '% of live MarTech jobs' : 'Rarely asked for elsewhere, specific to this job'));
-      var hint = m.kind === 'cert' ? 'Only add it if you hold it.'
-        : m.kind === 'platform' ? 'Used ' + m.term + '? Name it exactly like this in a bullet.'
-        : 'Done this? Add one bullet that says "' + m.term + '" and the result.';
-      body.appendChild(el('div', 'rm-gap-h', hint));
-      row.appendChild(body); miss.appendChild(row);
-    });
+    $('rm-demand-note').textContent = nMiss && ranked ? 'Ordered by how many live MarTech jobs ask for it' : '';
+    $('rm-miss-sub').hidden = !nMiss;
+    if (!nMiss) miss.appendChild(el('p', '', 'Nothing missing. Your resume shows every MarTech skill this job lists.'));
+    function quoteEl(m) {
+      var q = el('div', 'rm-quote');
+      var t = m.quote || '', k = m.quote_term || '', i = k ? t.indexOf(k) : -1;
+      if (i < 0) { q.textContent = '“' + t + '”'; return q; }
+      q.appendChild(document.createTextNode('“' + t.slice(0, i)));
+      q.appendChild(el('b', '', k));
+      q.appendChild(document.createTextNode(t.slice(i + k.length) + '”'));
+      return q;
+    }
+    function gapRow(m, n, optional) {
+      var row = el('div', 'rm-gap' + (optional ? ' opt' : ''));
+      row.appendChild(el('div', 'rm-gap-n', String(n)));
+      var body = el('div'); body.style.minWidth = '0';
+      var t = el('div', 'rm-gap-t', m.term); t.appendChild(el('span', 'rm-kind', m.kind === 'cert' ? 'certification' : m.kind)); body.appendChild(t);
+      if (m.demand_pct !== null && m.demand_pct !== undefined && m.demand_pct >= 5)
+        body.appendChild(el('div', 'rm-gap-d', 'Asked for in ' + m.demand_pct + '% of live MarTech jobs'));
+      if (m.quote) body.appendChild(quoteEl(m));
+      if (m.kind === 'cert') body.appendChild(el('div', 'rm-gap-h', 'Only list it if you hold it.'));
+      row.appendChild(body); return row;
+    }
+    var req = d.missing.filter(function (m) { return m.required !== false; });
+    var opt = d.missing.filter(function (m) { return m.required === false; });
+    if (req.length) { if (opt.length) miss.appendChild(el('div', 'rm-grp', 'Required · ' + req.length)); req.forEach(function (m, i) { miss.appendChild(gapRow(m, i + 1, false)); }); }
+    if (opt.length) { miss.appendChild(el('div', 'rm-grp', 'Nice to have · ' + opt.length)); opt.forEach(function (m, i) { miss.appendChild(gapRow(m, i + 1, true)); }); }
 
     var fixes = $('rm-fixes'); fixes.textContent = '';
     if (d.signed_in) {
@@ -496,8 +540,13 @@
 
     $('rm-q').textContent = d.total_lines ? d.quantified_lines + ' of ' + d.total_lines : '—';
     $('rm-qbar').style.width = (d.total_lines ? Math.round(100 * d.quantified_lines / d.total_lines) : 0) + '%';
+    var ql = $('rm-qlines'); ql.textContent = '';
+    (d.lines_to_quantify || []).forEach(function (line) {
+      var li = el('li', '', line); li.appendChild(el('small', '', '→ add a volume, % or $ result')); ql.appendChild(li);
+    });
+    $('rm-qlines-wrap').hidden = !(d.lines_to_quantify || []).length;
 
-    var more = d.more_matches || [];
+    $('rm-more-t').textContent = d.label === 'stretch' ? 'Live jobs that fit you better' : 'More jobs you match';
     $('rm-more').hidden = !more.length;
     var ml = $('rm-more-list'); ml.textContent = '';
     more.forEach(function (j) {

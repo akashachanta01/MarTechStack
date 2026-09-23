@@ -18,6 +18,16 @@ Job.objects.create(title="Closed role", company="Initech", location="Remote", de
 Job.objects.bulk_create([Job(title=f"Role {i}", company=f"Co{i % 60}", location="Remote", description=JD,
                              apply_url="https://x.test", screening_status="approved", is_active=True,
                              work_arrangement="remote", slug=f"role-{i}") for i in range(190)])
+ADOBE = ("<p>Senior Technical Consultant, Customer Journeys. You will own Adobe Journey Optimizer programs end to end.</p>"
+         "<ul><li>Hands-on experience with Adobe Experience Platform and a customer data platform.</li>"
+         "<li>Adobe Experience Manager knowledge.</li><li>Marketo Certified Expert is a plus.</li></ul>")
+Job.objects.create(title="Senior Technical Consultant - Customer Journeys", company="Adobe", location="Remote",
+                   description=ADOBE, apply_url="https://x.test", screening_status="approved", is_active=True,
+                   work_arrangement="remote", slug="adobe-consultant")
+Job.objects.create(title="Marketo & SFMC Specialist", company="Umbrella", location="Remote",
+                   description="<p>Run our Marketo instance and Salesforce Marketing Cloud. Build lead scoring and nurture programs; Pardot migration experience.</p>",
+                   apply_url="https://x.test", screening_status="approved", is_active=True, work_arrangement="remote",
+                   slug="best-fit-specialist")
 for u in ("jane", "limit"):
     User.objects.filter(username=u).delete()
     User.objects.create_user(u, f"{u}@example.com", "pw12345!x")

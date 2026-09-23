@@ -301,6 +301,24 @@ def _safe_rank(missing):
         return [dict(m, demand_pct=None) for m in missing]
 
 
+def _safe_annotate(missing, jd_text):
+    from jobs.resume_match import annotate_missing
+    try:
+        return annotate_missing(missing, jd_text)
+    except Exception as e:
+        logger.error("annotate_missing failed: %s", e)
+        return missing
+
+
+def _safe_lines(resume_text):
+    from jobs.resume_match import lines_needing_numbers
+    try:
+        return lines_needing_numbers(resume_text)
+    except Exception as e:
+        logger.error("lines_needing_numbers failed: %s", e)
+        return []
+
+
 @require_POST
 def api_ats_match(request):
     from django.utils.html import strip_tags
@@ -323,7 +341,10 @@ def api_ats_match(request):
 
     job = _live_job_or_none(data.get("job_id")) if data.get("job_id") else None
     if job:
-        jd_text = strip_tags(job.description or "")
+        # Keep block boundaries as line breaks so bullets stay separate sentences
+        # (strip_tags alone glues "<li>A</li><li>B</li>" into "AB").
+        import re as _re
+        jd_text = strip_tags(_re.sub(r"(?i)<br\s*/?>|</(li|p|div|h[1-6]|tr)>", "\n", job.description or ""))
     else:
         jd_text = (data.get("jd_text") or "").strip()[:15000]
     if len(jd_text) < 150:
@@ -375,21 +396,24 @@ def api_ats_match(request):
         "matched_count": result["matched_count"],
         "label": match_label(result["matched_count"], result["required_count"]),
         "matched": result["matched"],
-        "missing": _safe_rank(result["missing"]),
+        "missing": _safe_annotate(_safe_rank(result["missing"]), jd_text),
+        "lines_to_quantify": _safe_lines(resume_text),
         "quantified_lines": result["quantified_lines"],
         "total_lines": result["total_lines"],
         "signed_in": signed_in,
         "runs_left": runs_left,
     }
+    try:  # a next step for every result (anonymous too): better-fitting live jobs
+        ratio = result["matched_count"] / result["required_count"]
+        payload["more_matches"] = best_matches(
+            resume_text, exclude_id=job.id if job else None,
+            better_than=ratio if payload["label"] == "stretch" else None)
+    except Exception as e:
+        logger.error("best_matches failed: %s", e)
+        payload["more_matches"] = []
     if signed_in:
         payload["alias_fixes"] = result["alias_fixes"]
         payload["resume_saved"] = bool(_saved_resume(user))
-        if payload["resume_saved"]:
-            try:
-                payload["more_matches"] = best_matches(resume_text, exclude_id=job.id if job else None)
-            except Exception as e:
-                logger.error("best_matches failed: %s", e)
-                payload["more_matches"] = []
         # Tips cost real money — reuse the shared wallet guard for this part.
         ok, _ = check_rate_limit(request)
         payload["tips"] = _ats_tips(resume_text, result) if ok else []

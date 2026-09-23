@@ -41,7 +41,7 @@ _SKILLS = {
     "Revenue Operations": ["revops", "rev ops"],
     "Salesforce Administration": ["sfdc administration"],
     "Email Marketing": ["email campaigns", "email programs"],
-    "Journey Orchestration": ["customer journeys", "journey builder", "journey orchestration"],
+    "Journey Orchestration": ["journey builder", "journey orchestration"],
 }
 
 # --- Certifications: canonical -> aliases -----------------------------------
@@ -161,7 +161,7 @@ def match(resume_text, jd_text):
                     "jd_says": sorted(info["found_as"])[0],
                 })
         else:
-            missing.append({"term": canon, "kind": info["kind"]})
+            missing.append({"term": canon, "kind": info["kind"], "jd_wording": sorted(info["found_as"])})
 
     quantified, total_lines = count_quantified_lines(resume_text)
     return {
