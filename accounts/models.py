@@ -66,6 +66,14 @@ class UserResume(models.Model):
         return f"Resume of {self.user_id}"
 
 
+class TailorUse(models.Model):
+    """One AI 'tailor my resume' run. Only the fact of use is stored (for the
+    free-tier limit and Founder HQ) — never the resume or the tailored text."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tailor_uses')
+    job = models.ForeignKey('jobs.Job', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
 @receiver(post_save, sender=User)
 def ensure_user_profile(sender, instance, created, **kwargs):
     # Guarantee every User has a profile. get_or_create covers both new

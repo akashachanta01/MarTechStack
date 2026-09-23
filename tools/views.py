@@ -200,6 +200,8 @@ def resume_scanner(request):
         'monthly_runs': ATS_ACCOUNT_MONTHLY_RUNS,
         'saved_resume': _saved_resume(request.user),
         'stats': _scanner_stats(),
+        'tailor_free_left': (None if request.user.is_staff else max(0, TAILOR_FREE_RUNS - _tailor_runs_used(request.user)))
+                            if request.user.is_authenticated else None,
     })
 
 
@@ -245,6 +247,78 @@ def api_resume_upload(request):
         UserResume.objects.update_or_create(user=request.user, defaults={"text": text, "filename": filename})
         return JsonResponse({"saved": True, "filename": filename})
     return JsonResponse({"saved": False, "filename": filename, "text": text})
+
+
+TAILOR_FREE_RUNS = 1  # free AI tailors per account; then the $12/mo Pro pre-order test
+
+
+def _tailor_runs_used(user):
+    from accounts.models import TailorUse
+    return TailorUse.objects.filter(user=user).count()
+
+
+@require_POST
+def api_tailor(request):
+    """AI-tailor the member's saved resume to one job. Output is returned, never stored."""
+    from django.utils.html import strip_tags
+    import re as _re
+    if not request.user.is_authenticated:
+        return JsonResponse({"gate": "signup", "error": "Create a free account to tailor your resume."}, status=401)
+    saved = _saved_resume(request.user)
+    if not saved:
+        return JsonResponse({"error": "Save your resume first (upload it above), then tailor it."}, status=400)
+    try:
+        data = json.loads(request.body)
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+    job = _live_job_or_none(data.get("job_id")) if data.get("job_id") else None
+    if job:
+        jd_text = strip_tags(_re.sub(r"(?i)<br\s*/?>|</(li|p|div|h[1-6]|tr)>", "\n", job.description or ""))
+    else:
+        jd_text = (data.get("jd_text") or "").strip()[:15000]
+    if len(jd_text) < 150:
+        return JsonResponse({"error": "Please paste the full job description."}, status=400)
+    if not request.user.is_staff and _tailor_runs_used(request.user) >= TAILOR_FREE_RUNS:
+        return JsonResponse({"gate": "pro", "error": "You've used your free tailor."}, status=402)
+    ok, err = check_rate_limit(request)
+    if not ok:
+        return JsonResponse({"error": err}, status=429)
+
+    from jobs.ats_match import match
+    from jobs.resume_tailor import tailor, TailorError
+    result = match(saved.text, jd_text)
+    try:
+        out = tailor(saved.text, jd_text, [m["term"] for m in result["missing"]])
+    except TailorError as e:
+        return JsonResponse({"error": str(e)}, status=503)
+    from accounts.models import TailorUse
+    TailorUse.objects.create(user=request.user, job=job)
+    used = _tailor_runs_used(request.user)
+    return JsonResponse({
+        **out,
+        "resume_text": saved.text,
+        "not_added": [m["term"] for m in result["missing"]],
+        "free_left": None if request.user.is_staff else max(0, TAILOR_FREE_RUNS - used),
+    })
+
+
+@require_POST
+def api_tailor_docx(request):
+    """Build a .docx from the member's final (reviewed) text. Nothing is stored."""
+    from django.http import HttpResponse
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Sign in first."}, status=401)
+    try:
+        text = (json.loads(request.body).get("text") or "")[:20000]
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid request."}, status=400)
+    if len(text.strip()) < 100:
+        return JsonResponse({"error": "Nothing to download yet."}, status=400)
+    from jobs.resume_tailor import build_docx
+    resp = HttpResponse(build_docx(text),
+                        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    resp["Content-Disposition"] = 'attachment; filename="tailored-resume.docx"'
+    return resp
 
 
 def api_my_matches(request):

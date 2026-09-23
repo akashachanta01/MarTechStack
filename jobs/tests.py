@@ -714,3 +714,105 @@ class Phase3WeeklyEmailTests(TestCase):
              mock.patch.object(timezone, "now", return_value=timezone.make_aware(dt.datetime(2026, 9, 21, 9))):  # Monday
             call_command("run_daily_tasks")
         self.assertLess(calls.index("send_weekly_matches"), calls.index("send_daily_digest"))
+
+
+def _fake_openai(payload):
+    fake = mock.MagicMock()
+    fake.chat.completions.create.return_value.choices = [mock.MagicMock(message=mock.MagicMock(content=json.dumps(payload)))]
+    return fake
+
+
+@override_settings(**TEST_SETTINGS)
+class Phase4TailorTests(TestCase):
+    AI = {
+        "summary": "Marketing Ops specialist who administers Marketo and SFMC and builds lead scoring.",
+        "changes": [
+            {"before": "- Partnered with sales on routing rules and pipeline reporting",
+             "after": "Partnered with sales to own routing rules and pipeline reporting across regions", "why": "Stronger verb"},
+            {"before": "- Managed SFMC email sends and journeys for the global team",
+             "after": "Managed Braze and SFMC journeys for the global team", "why": "adds a tool"},          # fabricated tool
+            {"before": "- Ran Pardot nurture campaigns for 40k contacts across three regions",
+             "after": "Ran Pardot nurture campaigns for 90k contacts, lifting pipeline 30%", "why": "numbers"},  # fabricated numbers
+            {"before": "Invented line that is not in the resume", "after": "Something", "why": "x"},        # not a real line
+        ],
+    }
+
+    def setUp(self):
+        cache.clear()
+        from accounts.models import UserResume
+        self.job = make_job()
+        self.user = get_user_model().objects.create_user("t4", "t4@x.test", "pw12345!")
+        UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+
+    def _tailor(self, payload=None, openai_side_effect=None):
+        fake = _fake_openai(payload or self.AI)
+        patch = mock.patch("openai.OpenAI", side_effect=openai_side_effect) if openai_side_effect else mock.patch("openai.OpenAI", return_value=fake)
+        with mock.patch.dict("os.environ", {"OPENAI_API_KEY": "test"}), patch:
+            return self.client.post("/tools/api/tailor/", data=json.dumps({"job_id": self.job.id}), content_type="application/json")
+
+    def test_guard_keeps_only_honest_rewrites(self):
+        from jobs.resume_tailor import validate_changes, validate_summary
+        kept, dropped = validate_changes(RESUME, self.AI["changes"])
+        self.assertEqual([k["after"] for k in kept], ["Partnered with sales to own routing rules and pipeline reporting across regions"])
+        # Claiming a skill the resume doesn't show ("lead routing") is also refused:
+        k2, _ = validate_changes(RESUME, [{"before": "- Partnered with sales on routing rules and pipeline reporting",
+                                           "after": "Built lead routing with sales"}])
+        self.assertEqual(k2, [])
+        self.assertEqual(dropped, 3)
+        self.assertEqual(validate_summary(RESUME, "Expert in Braze and Iterable."), "")      # tools not in resume
+        self.assertEqual(validate_summary(RESUME, "Drove 300% growth."), "")                 # invented number
+        self.assertTrue(validate_summary(RESUME, self.AI["summary"]))
+
+    def test_gates_anonymous_and_no_resume(self):
+        self.client.logout()
+        self.assertEqual(self._tailor().status_code, 401)
+        u2 = get_user_model().objects.create_user("t5", "t5@x.test", "pw12345!")
+        self.client.force_login(u2)
+        self.assertEqual(self._tailor().status_code, 400)
+
+    def test_one_free_tailor_then_pro_gate_and_nothing_stored(self):
+        from accounts.models import TailorUse
+        self.client.force_login(self.user)
+        r = self._tailor()
+        self.assertEqual(r.status_code, 200)
+        d = r.json()
+        self.assertEqual(len(d["changes"]), 1)
+        self.assertEqual(d["dropped"], 3)
+        self.assertEqual(d["free_left"], 0)
+        self.assertIn("Segment", d["not_added"])
+        self.assertEqual(TailorUse.objects.filter(user=self.user).count(), 1)
+        self.assertFalse(hasattr(TailorUse, "text"))
+        r2 = self._tailor()
+        self.assertEqual((r2.status_code, r2.json()["gate"]), (402, "pro"))
+        self.assertContains(self.client.get(f"/tools/resume-keyword-scanner/?job={self.job.id}"), "Free tailor used")
+
+    def test_ai_failure_is_friendly_and_not_counted(self):
+        from accounts.models import TailorUse
+        self.client.force_login(self.user)
+        r = self._tailor(openai_side_effect=RuntimeError("down"))
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(TailorUse.objects.count(), 0)
+        r = self._tailor(payload={"summary": "Expert in Braze.", "changes": [self.AI["changes"][1]]})  # all unsafe
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(TailorUse.objects.count(), 0)
+
+    def test_staff_unlimited(self):
+        self.user.is_staff = True; self.user.save()
+        self.client.force_login(self.user)
+        for _ in range(3):
+            sess = self.client.session; sess["last_ai_call"] = 0; sess.save()   # skip the 5s click cooldown
+            self.assertEqual(self._tailor().status_code, 200)
+
+    def test_docx_download_is_a_real_word_file(self):
+        import io
+        import docx
+        self.client.force_login(self.user)
+        text = "Jane Doe\n\nSUMMARY\nMarketing Ops specialist.\n\nEXPERIENCE\n" + RESUME
+        r = self.client.post("/tools/api/tailor/docx/", data=json.dumps({"text": text}), content_type="application/json")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("attachment", r["Content-Disposition"])
+        d = docx.Document(io.BytesIO(r.content))
+        self.assertEqual(d.paragraphs[0].text, "Jane Doe")
+        self.assertTrue(any("Marketo" in p.text for p in d.paragraphs))
+        self.client.logout()
+        self.assertEqual(self.client.post("/tools/api/tailor/docx/", data=json.dumps({"text": text}), content_type="application/json").status_code, 401)

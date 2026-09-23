@@ -101,6 +101,12 @@
   .rm-gap-t { font-weight: 700; } .rm-gap-t small { font-weight: 500; color: var(--ink3); margin-left: 6px; }
   .rm-gap-d { font-size: 13px; color: var(--ink2); margin-top: 3px; }
   .rm-gap-h { font-size: 13px; color: var(--ink2); margin-top: 6px; }
+  .rm-pro-tag { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #fbbf8a; }
+  .rm-chg { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 12px; margin-top: 10px; }
+  .rm-chg input { width: 20px; height: 20px; margin-top: 2px; accent-color: #bf5420; }
+  .rm-chg .b { font-size: 13.5px; color: var(--ink3); text-decoration: line-through; }
+  .rm-chg .a { font-size: 14.5px; color: var(--ink); font-weight: 600; margin-top: 6px; }
+  .rm-chg .w { font-size: 12.5px; color: #92400e; margin-top: 6px; }
   .rm-better { display: inline-flex; margin-top: 14px; font-size: 14px; font-weight: 700; color: #9a3f12; text-decoration: none; }
   .rm-better:hover { text-decoration: underline; }
   .rm-miss-sub { margin: -4px 0 6px; font-size: 14px; color: var(--ink3); }
@@ -232,6 +238,41 @@
           <div class="rm-h"><h2>What this job asks for that your resume doesn't show</h2><span id="rm-demand-note"></span></div>
           <p class="rm-miss-sub" id="rm-miss-sub">Add the ones you genuinely have, in the job's own words. Never claim what you haven't done.</p>
           <div id="rm-missing"></div>
+        </section>
+
+        <section class="rm-card rm-dark" id="rm-tailor">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span class="rm-pro-tag">AI · Pro</span>
+            <span style="font-size:13px; color:#d6d3d1;" id="rm-tailor-quota">{% if user.is_authenticated %}{% if tailor_free_left is None %}Unlimited (staff){% elif tailor_free_left %}{{ tailor_free_left }} free tailor included{% else %}Free tailor used{% endif %}{% else %}1 free tailor with a free account{% endif %}</span>
+          </div>
+          <h2 style="font-family:'Hanken Grotesk',sans-serif; font-weight:800; font-size:26px; margin:10px 0 8px;">Tailor my resume for this job</h2>
+          <p>We rewrite your summary and bullets in this job's language, using <b style="color:#fff;">only what's already true in your resume</b>. You approve every change, then download a Word file.</p>
+          {% if user.is_authenticated %}
+          <button type="button" class="rm-btn" id="rm-tailor-btn" style="margin-top:14px;">Tailor my resume</button>
+          <p id="rm-tailor-need" style="margin-top:10px; font-size:13px;" hidden>Save your resume above first (upload it while signed in), then tailor it.</p>
+          {% else %}
+          <p style="margin-top:14px;"><a class="rm-cta" id="rm-tailor-signup" href="{% url 'account_signup' %}?next={{ request.get_full_path|urlencode }}">Create free account to tailor</a></p>
+          {% endif %}
+          <div class="rm-err" id="rm-tailor-err" role="alert"></div>
+          <div id="rm-pro" hidden style="margin-top:16px; padding:18px; border-radius:14px; background:#292524;">
+            <b style="display:block; font-size:18px; color:#fff;">MarTechJobs Pro · $12/month</b>
+            <p style="margin:6px 0 12px;">Unlimited tailoring for every job, plus priority matches. Launching soon. Reserve your spot now, no payment taken.</p>
+            <button type="button" class="rm-btn" id="rm-pro-btn" style="margin-top:0;">Reserve my Pro spot</button>
+          </div>
+        </section>
+
+        <section class="rm-card" id="rm-review" hidden>
+          <div class="rm-h"><h2>Review your tailored resume</h2><span id="rm-review-note"></span></div>
+          <p style="margin:0 0 12px; font-size:14px; color:var(--ink3);">Untick anything you don't want. Nothing is saved on our side.</p>
+          <label class="rm-label" for="rm-summary">Summary (edit freely)</label>
+          <textarea id="rm-summary" rows="4"></textarea>
+          <div id="rm-changes" style="margin-top:14px;"></div>
+          <div id="rm-notadded" class="rm-locked" style="margin-top:14px;" hidden></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+            <button type="button" class="rm-btn" id="rm-docx" style="margin-top:0; flex:1; min-width:200px;">Download Word (.docx)</button>
+            <button type="button" class="rm-btn" id="rm-copy" style="margin-top:0; flex:1; min-width:160px; background:#1c1917; box-shadow:none;">Copy text</button>
+          </div>
+          <div class="rm-ok" id="rm-review-ok"></div>
         </section>
 
         <section class="rm-card">
@@ -561,6 +602,96 @@
     var r = $('rm-results'); r.style.display = 'block';
     r.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+  // ---- Phase 4: AI tailoring ----
+  var tailored = null;
+  var tBtn = $('rm-tailor-btn');
+  function tailorErr(msg) { var e = $('rm-tailor-err'); e.textContent = msg; e.style.display = msg ? 'block' : 'none'; }
+  function showPro() { $('rm-pro').hidden = false; if (tBtn) tBtn.hidden = true; track('pro_gate_shown', { from: 'tailor' }); }
+  if (tBtn) tBtn.addEventListener('click', async function () {
+    tailorErr('');
+    if (!hasSaved) { $('rm-tailor-need').hidden = false; return; }
+    var body = {}; if (jobId) body.job_id = jobId; else body.jd_text = $('rm-jd') ? $('rm-jd').value : '';
+    track('tailor_click', {});
+    tBtn.disabled = true; tBtn.textContent = 'Tailoring… (about 15 seconds)';
+    try {
+      var res = await fetch("{% url 'api_tailor' %}", { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify(body) });
+      var d = await res.json();
+      if (res.status === 402 || d.gate === 'pro') { showPro(); return; }
+      if (!res.ok) { tailorErr(d.error || 'Something went wrong.'); return; }
+      tailored = d; renderReview(d);
+      track('tailor_success', { changes: d.changes.length, dropped: d.dropped });
+      if (d.free_left === 0) $('rm-tailor-quota').textContent = 'Free tailor used';
+    } catch (e) { tailorErr('Something went wrong. Please try again.'); }
+    finally { tBtn.disabled = false; tBtn.textContent = 'Tailor my resume'; }
+  });
+  var proBtn = $('rm-pro-btn');
+  if (proBtn) proBtn.addEventListener('click', async function () {
+    track('pro_preorder_click', { from: 'tailor', price: 12 });
+    proBtn.disabled = true;
+    try {
+      var r = await fetch("{% url 'join_pro_waitlist' %}", { method: 'POST', headers: { 'X-CSRFToken': csrf } });
+      proBtn.textContent = r.ok ? "You're on the list. We'll email you at launch." : 'Please try again';
+    } catch (e) { proBtn.disabled = false; }
+  });
+  function renderReview(d) {
+    $('rm-summary').value = d.summary || '';
+    var box = $('rm-changes'); box.textContent = '';
+    d.changes.forEach(function (c, i) {
+      var row = el('label', 'rm-chg');
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.dataset.i = i;
+      var t = el('div'); t.appendChild(el('div', 'b', c.before)); t.appendChild(el('div', 'a', c.after));
+      if (c.why) t.appendChild(el('div', 'w', c.why));
+      row.appendChild(cb); row.appendChild(t); box.appendChild(row);
+    });
+    $('rm-review-note').textContent = d.changes.length + ' suggested change' + (d.changes.length === 1 ? '' : 's');
+    var na = $('rm-notadded');
+    if (d.not_added && d.not_added.length) {
+      na.textContent = 'We did not add: ' + d.not_added.join(', ') + '. Your resume doesn\'t show them. Add any yourself only if they\'re true.';
+      na.hidden = false;
+    } else na.hidden = true;
+    var rv = $('rm-review'); rv.hidden = false; rv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function finalText() {
+    var lines = (tailored.resume_text || '').split(/\r?\n/);
+    document.querySelectorAll('#rm-changes input').forEach(function (cb) {
+      if (!cb.checked) return;
+      var c = tailored.changes[+cb.dataset.i];
+      for (var k = 0; k < lines.length; k++) {
+        if (lines[k].trim() === c.before.trim()) {
+          var lead = (lines[k].match(/^\s*[•·▪◦*-]\s*/) || [''])[0];
+          lines[k] = lead + c.after.replace(/^[•·▪◦*-]\s*/, ''); break;
+        }
+      }
+    });
+    var summary = ($('rm-summary').value || '').trim();
+    if (summary) {
+      var first = lines.findIndex(function (l) { return l.trim(); });
+      lines.splice(first + 1, 0, '', 'SUMMARY', summary, '');
+    }
+    return lines.join('\n');
+  }
+  var docxBtn = $('rm-docx');
+  if (docxBtn) docxBtn.addEventListener('click', async function () {
+    var res = await fetch("{% url 'api_tailor_docx' %}", { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }, body: JSON.stringify({ text: finalText() }) });
+    if (!res.ok) { $('rm-review-ok').textContent = 'Download failed, please try again.'; $('rm-review-ok').style.display = 'block'; return; }
+    var blob = await res.blob(), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'tailored-resume.docx'; document.body.appendChild(a); a.click(); a.remove();
+    track('tailor_download', { format: 'docx' });
+    $('rm-review-ok').textContent = 'Downloaded. Now open the job and apply.'; $('rm-review-ok').style.display = 'block';
+  });
+  var copyBtn = $('rm-copy');
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var t = finalText();
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      $('rm-review-ok').textContent = 'Copied to clipboard.'; $('rm-review-ok').style.display = 'block';
+    }).catch(function () {
+      $('rm-summary').value = t; $('rm-review-ok').textContent = 'Copy the text from the Summary box.'; $('rm-review-ok').style.display = 'block';
+    });
+    track('tailor_download', { format: 'copy' });
+  });
+  var tSign = document.getElementById('rm-tailor-signup');
+  if (tSign) tSign.addEventListener('click', function () { track('ats_signup_click', { from: 'tailor_cta' }); });
+
   var anonCta = document.getElementById('rm-anon-signup');
   if (anonCta) anonCta.addEventListener('click', function () { track('ats_signup_click', { from: 'save_resume_cta' }); });
 })();
