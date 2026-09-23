@@ -33,7 +33,7 @@
       // founder's own clicks don't skew the numbers.
       !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias reset people.set people.set_once opt_out_capturing opt_in_capturing has_opted_out_capturing get_distinct_id get_property".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
       posthog.init("{{ posthog_key|escapejs }}", {api_host: "{{ posthog_host|escapejs }}", person_profiles: "identified_only"});
-      posthog.register({ page_type: window.mtjPageType });
+      posthog.register({ page_type: window.mtjPageType, came_from: window.mtjCameFrom });
       {% if user.is_authenticated %}posthog.identify("{{ user.id }}", {email: "{{ user.email|escapejs }}", name: "{{ user.get_full_name|escapejs }}"});{% endif %}
     </script>
     {% endif %}
@@ -1028,6 +1028,9 @@
             var m = /^\/job\/(\d+)\//.exec(a.getAttribute('href') || ''); if (!m) return;
             var s = jobs[m[1]]; if (!s || !s[1]) return;
             a.dataset.mtjFit = '1';
+            a.addEventListener('click', function () {
+              window.mtjTrack && window.mtjTrack('fit_badge_job_click', { job_id: +m[1], matched: s[0], required: s[1], label: s[2] });
+            });
             var pill = document.createElement('span');
             pill.className = 'mtj-fit-pill ' + s[2];
             pill.textContent = s[0] + '/' + s[1] + ' match';
@@ -1043,6 +1046,7 @@
               fit.className = 'mtj-fit ' + f[2];
               fit.textContent = 'Your fit: ' + f[0] + '/' + f[1] + ' skills · ' + LBL[f[2]] + '  ·  See what\'s missing →';
               fit.hidden = false;
+              if (!fit.dataset.trk) { fit.dataset.trk = '1'; fit.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('fit_banner_click', { job_id: +fit.dataset.jobId, label: f[2] }); }); }
             }
           }
         }

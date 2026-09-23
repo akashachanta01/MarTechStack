@@ -65,4 +65,17 @@
     {% endfor %}
   {% endif %}
 </div>
+<script>
+  // My Matches engagement (no PII: job ids and fit labels only)
+  document.querySelectorAll('.mm-row').forEach(function (row, i) {
+    var label = (row.querySelector('.mm-score span') || {}).textContent || '';
+    row.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var m = /\/job\/(\d+)\//.exec(a.getAttribute('href')) || /job=(\d+)/.exec(a.getAttribute('href')) || [];
+        window.mtjTrack && window.mtjTrack(a.classList.contains('mm-check') ? 'my_matches_check_click' : 'my_matches_job_click',
+          { job_id: +(m[1] || 0), rank: i + 1, label: label.toLowerCase() });
+      });
+    });
+  });
+</script>
 {% endblock %}

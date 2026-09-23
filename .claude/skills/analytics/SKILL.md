@@ -16,7 +16,11 @@ description: martechjobs.io analytics — PostHog event taxonomy, dashboard 2124
 apply_click, job_search, newsletter_subscribe, signup_click, signup_completed (one-shot via session flag set in
 accounts/signals.py), job_saved, pro_waitlist_join, check_resume_click, ats_check_submit, ats_check_result,
 ats_gate_shown, ats_signup_click, ats_more_match_click, resume_uploaded, resume_deleted, employer_cta_click,
-post_job_start, post_job_submit, post_job_completed, content_to_jobs_click, tool_used.
+post_job_start, post_job_submit, post_job_completed, content_to_jobs_click, tool_used,
+Resume Match: resume_uploaded, resume_deleted, ats_error_shown (every error a visitor sees: outage early-warning),
+fit_badge_job_click, fit_banner_click, my_matches_job_click, my_matches_check_click, tailor_click, tailor_success,
+tailor_error, tailor_download, pro_gate_shown, pro_preorder_click (the Pro decision metric: build Stripe only if
+>=5% of resume users click). $pageview carries page_type + came_from (registered super properties).
 Emails: links auto-tagged utm_source=email&utm_campaign=<template name> (jobs/emails.py::_add_utm).
 
 ## Reports: founder wants human-readable names, never "/" paths
