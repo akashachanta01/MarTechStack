@@ -450,14 +450,16 @@
     if (nFix) pills.appendChild(el('span', 'rm-pill a', nFix + ' wording fix' + (nFix > 1 ? 'es' : '')));
 
     var miss = $('rm-missing'); miss.textContent = '';
-    $('rm-demand-note').textContent = nMiss ? 'Ranked by share of live MarTech jobs asking for it' : '';
+    var ranked = d.missing.some(function (m) { return m.demand_pct !== null && m.demand_pct !== undefined; });
+    $('rm-demand-note').textContent = nMiss && ranked ? 'Ranked by share of live MarTech jobs asking for it' : '';
     if (!nMiss) miss.appendChild(el('p', '', 'Great match. Nothing missing.'));
     d.missing.forEach(function (m, i) {
       var row = el('div', 'rm-gap');
       row.appendChild(el('div', 'rm-gap-n', String(i + 1)));
       var body = el('div');
       var t = el('div', 'rm-gap-t', m.term); t.appendChild(el('small', '', m.kind)); body.appendChild(t);
-      body.appendChild(el('div', 'rm-gap-d', m.demand_pct ? 'Asked for in ' + m.demand_pct + '% of live MarTech jobs' : 'Rarely asked for elsewhere, specific to this job'));
+      if (m.demand_pct !== null && m.demand_pct !== undefined)
+        body.appendChild(el('div', 'rm-gap-d', m.demand_pct ? 'Asked for in ' + m.demand_pct + '% of live MarTech jobs' : 'Rarely asked for elsewhere, specific to this job'));
       var hint = m.kind === 'cert' ? 'Only add it if you hold it.'
         : m.kind === 'platform' ? 'Used ' + m.term + '? Name it exactly like this in a bullet.'
         : 'Done this? Add one bullet that says "' + m.term + '" and the result.';

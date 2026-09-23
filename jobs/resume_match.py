@@ -61,42 +61,76 @@ def extract_resume_text(uploaded):
     return text[:15000]
 
 
-def job_requirements():
-    """{job_id: {"id","title","company","slug","terms": {canon: kind}}} for
-    every live job that asks for at least one MarTech term. Cached 6h."""
+_JOB_KEY = "resume_match:job:v1:{id}:{stamp}"
+_JOB_TTL = 7 * 86400
+
+
+def _job_entry(job):
+    """One job's required terms, cached per job so work is never lost."""
+    stamp = int(job.updated_at.timestamp()) if getattr(job, "updated_at", None) else 0
+    key = _JOB_KEY.format(id=job.id, stamp=stamp)
+    entry = cache.get(key)
+    if entry is None:
+        terms = extract_terms(strip_tags(job.description or ""), for_jd=True)
+        entry = {
+            "id": job.id, "title": job.title, "company": job.company, "slug": job.slug,
+            "where": (job.get_work_arrangement_display() if hasattr(job, "get_work_arrangement_display") else "") or (job.location or ""),
+            "terms": {c: i["kind"] for c, i in terms.items()},
+        }
+        cache.set(key, entry, _JOB_TTL)
+    return entry, key
+
+
+def job_requirements(budget_s=None):
+    """({job_id: entry}, complete). Every live job's required MarTech terms.
+
+    With budget_s, spends at most that many seconds computing uncached jobs
+    (a visitor must never wait on this; per-job results persist, so each call
+    makes progress). Without it (daily cron), computes everything."""
     reqs = cache.get(_REQS_CACHE_KEY)
     if reqs is not None:
-        return reqs
+        return reqs, True
+    import time
     from jobs.models import Job
-    reqs = {}
+    started = time.monotonic()
+    reqs, complete = {}, True
     qs = Job.objects.filter(is_active=True, screening_status="approved").only(
-        "id", "title", "company", "slug", "description", "work_arrangement", "location")
+        "id", "title", "company", "slug", "description", "work_arrangement", "location", "updated_at")
     for job in qs.iterator():
-        terms = extract_terms(strip_tags(job.description or ""), for_jd=True)
-        if terms:
-            reqs[job.id] = {
-                "id": job.id, "title": job.title, "company": job.company, "slug": job.slug,
-                "where": (job.get_work_arrangement_display() if hasattr(job, "get_work_arrangement_display") else "") or (job.location or ""),
-                "terms": {c: i["kind"] for c, i in terms.items()},
-            }
-    cache.set(_REQS_CACHE_KEY, reqs, _REQS_TTL)
-    return reqs
+        stamp = int(job.updated_at.timestamp()) if job.updated_at else 0
+        cached = cache.get(_JOB_KEY.format(id=job.id, stamp=stamp))
+        if cached is None:
+            if budget_s is not None and time.monotonic() - started > budget_s:
+                complete = False
+                continue
+            cached, _ = _job_entry(job)
+        if cached["terms"]:
+            reqs[job.id] = cached
+    reqs_clean = reqs
+    if complete:
+        cache.set(_REQS_CACHE_KEY, reqs_clean, _REQS_TTL)
+    return reqs_clean, complete
 
 
-def term_demand():
-    """({canon: pct_of_live_jobs_asking}, n_jobs). Real numbers, never estimated."""
-    reqs = job_requirements()
+def term_demand(budget_s=2.0):
+    """({canon: pct_of_live_jobs_asking}, n_jobs). Real numbers only: returns
+    ({}, 0) until every live job has been analysed (never partial percentages)."""
+    reqs, complete = job_requirements(budget_s)
+    if not complete or not reqs:
+        return {}, 0
     n = len(reqs)
     counts = {}
     for r in reqs.values():
         for canon in r["terms"]:
             counts[canon] = counts.get(canon, 0) + 1
-    return ({c: round(100 * k / n) for c, k in counts.items()} if n else {}), n
+    return {c: round(100 * k / n) for c, k in counts.items()}, n
 
 
 def rank_missing(missing):
     """Attach demand_pct to each missing term and sort most-requested first."""
-    demand, _ = term_demand()
+    demand, n = term_demand()
+    if not n:  # demand not ready yet: keep the engine's order, no numbers shown
+        return [dict(m, demand_pct=None) for m in missing]
     ranked = [dict(m, demand_pct=demand.get(m["term"], 0)) for m in missing]
     kind_order = {"platform": 0, "skill": 1, "cert": 2}
     ranked.sort(key=lambda m: (-m["demand_pct"], kind_order.get(m["kind"], 3), m["term"]))
@@ -116,9 +150,12 @@ def match_label(matched, required):
 
 def best_matches(resume_text, exclude_id=None, limit=3):
     """Top live jobs for this resume by share of required terms covered."""
+    reqs, complete = job_requirements(budget_s=2.0)
+    if not complete:
+        return []
     have = set(extract_terms(resume_text).keys())
     scored = []
-    for jid, r in job_requirements().items():
+    for jid, r in reqs.items():
         if jid == exclude_id:
             continue
         need = set(r["terms"])

@@ -485,3 +485,44 @@ class ResumeMatchTests(TestCase):
         r = self.client.get("/")
         self.assertContains(r, 'href="/tools/resume-keyword-scanner/" class="tools-link"')
         self.assertContains(self.client.get("/privacy/"), "never the file")
+
+
+@override_settings(**TEST_SETTINGS)
+class ResumeMatchColdStartTests(TestCase):
+    """Regression: on prod the first check analysed every live job inside the
+    request and hit the 30s worker timeout -> 'Something went wrong' forever."""
+
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        for i in range(5):
+            make_job(title=f"Ops role {i}", company=f"Co{i}")
+
+    def test_check_succeeds_without_waiting_when_demand_not_ready(self):
+        with mock.patch("jobs.resume_match.term_demand", return_value=({}, 0)):
+            r = self.client.post("/tools/api/ats-match/", data=json.dumps({"resume_text": RESUME, "job_id": self.job.id}),
+                                 content_type="application/json")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(all(m["demand_pct"] is None for m in r.json()["missing"]))
+
+    def test_budget_limits_work_and_progress_persists(self):
+        from jobs.resume_match import job_requirements
+        reqs, complete = job_requirements(budget_s=-1)   # no time: nothing computed
+        self.assertFalse(complete)
+        reqs, complete = job_requirements(budget_s=None)  # cron path: everything
+        self.assertTrue(complete)
+        self.assertEqual(len(reqs), 6)
+
+    def test_ranking_failure_never_breaks_a_check(self):
+        with mock.patch("jobs.resume_match.rank_missing", side_effect=RuntimeError("boom")):
+            r = self.client.post("/tools/api/ats-match/", data=json.dumps({"resume_text": RESUME, "job_id": self.job.id}),
+                                 content_type="application/json")
+        self.assertEqual(r.status_code, 200)
+
+    def test_warm_command_fills_demand(self):
+        from django.core.management import call_command
+        from jobs.resume_match import term_demand
+        call_command("warm_resume_match")
+        demand, n = term_demand(budget_s=-1)  # must be served from the warm cache
+        self.assertEqual(n, 6)
+        self.assertEqual(demand.get("Marketo"), 100)

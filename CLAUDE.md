@@ -40,6 +40,9 @@ Always think: "What's the simplest solution with the most leverage?"
 - Smoke-test the pages and flows the change touches (real requests, not just `manage.py check`).
 - Fix every error that shows up in testing before asking to push.
 - New features must add tests to the suite so they stay covered.
+- Test with PRODUCTION-SIZED data (e.g. ~200 live jobs with full-length descriptions), not a handful of samples. A Sept 2026 Resume Scanner outage passed tests on 3 jobs but timed out in production.
+- Run a written scenario checklist in a real browser before every deploy: happy paths, every error/edge case (bad input, empty, oversized, wrong type), anonymous vs signed-in, limits/gates, mobile width, cold cache/first request, JS console errors.
+- Never do heavy work inside a web request (30s worker timeout on Render); precompute in the daily cron or cap it with a time budget.
 - Report the test results to the founder when asking for push approval.
 
 ## Job Ingestion Rules
@@ -70,3 +73,28 @@ Never gate job seekers — keep browsing free always.
 - Marketplace / two-sided talent platform (evaluated and deferred — too early)
 - Features that require significant manual curation (founder doesn't scale on manual work)
 - Generic SEO advice (keyword research, "add schema") — already done
+
+## Working Agreements (founder's standing rules — always follow)
+- NEVER push to GitHub or deploy without explicit approval ("push and deploy" / "push and merge"). Discuss and agree on the approach first. Commit locally is fine.
+- "Just plan / don't implement" means plan only — no code changes.
+- Always full E2E testing before asking to push (see Testing Rule + the `e2e-test` skill). Report results with the approval request.
+- Email: use martechjobs@gmail.com everywhere. NEVER use achantaa9@gmail.com.
+- Bing Webmaster verification is parked — don't bring it up.
+- Founder is non-technical: explain in plain English, give click-by-click steps for any dashboard work.
+- Dashboards/reports: show human-readable names, never URL paths ("/job/...").
+- Real numbers only on the site and in reports (no fake stats/testimonials) — see Content Rules.
+
+## Infrastructure (IDs)
+- Render workspace `tea-d4qusbbuibrs739obvl0`. Web service `srv-d4t3hkeuk2gs73ehrpl0` (autoDeploy OFF → trigger_deploy after merge). Cron `crn-d55jjn75r7bs73f34og0` runs `run_daily_tasks` 09:00 UTC (auto-deploys). Postgres `dpg-d4t3idchg0os73cklvo0-a`. Redis cache `red-d8ms8m3tqb8s73cgjgag`. Production Python 3.9 (avoid 3.10+ syntax).
+- GitHub `akashachanta01/martechstack`, dev branch `claude/vibrant-bell-g4cbjo`, squash-merge PRs; on merge conflicts keep branch version (`git merge -X ours origin/main`).
+- Email: Resend SMTP from alerts@martechjobs.io (SPF/DKIM/DMARC set on Namecheap). Resend open/click tracking OFF by design — email clicks are measured via UTM tags added in `jobs/emails.py::_add_utm`.
+- Analytics: PostHog project 623314 (US cloud, key in Render env `POSTHOG_KEY`), dashboard "MarTechJobs — Where to focus" id 2124800. GA4 via GTM-P5B8FN4C. Founder HQ at /staff/ shows real people (resume checks, users). See `analytics` skill.
+
+## Product State (Sept 2026)
+- Resume Match (the monetization bet), 4 phases:
+  1. DONE — Resume Scanner redesign (/tools/resume-keyword-scanner/, header nav "Resume Scanner"), PDF/DOCX upload, saved resume as TEXT only (`accounts.UserResume`), gaps ranked by real demand, more matches. Demand precomputed by `warm_resume_match` in the daily cron.
+  2. NEXT — match badges on every job + "Best matches for me" sort (signed-in only; no SEO change).
+  3. Weekly personal "jobs you match 80%+" email; switch ALL accounts from daily to weekly digest (founder approved).
+  4. Pro test: "Tailor my resume for this job", 1 free tailor/account, then $12/month pre-order/waitlist; build Stripe only if ≥5% of resume users click.
+- Known facts: ~77 accounts, ~9 ever returned, 0 job alerts, 2 on Pro waitlist (Sept 2026). Daily digest had 3 spam complaints/month → reason for weekly switch.
+- Ruled out: auto-apply, standalone cover-letter builder, marketplace.

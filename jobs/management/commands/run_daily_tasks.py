@@ -83,6 +83,9 @@ class Command(BaseCommand):
         # 3. POLISH (Images)
         self._run("\n[3/7] 🎨 Backfilling Logos...", 'update_logos')
 
+        # 3b. RESUME MATCH (precompute job skill requirements for today's jobs)
+        self._run("      🧮 Warming Resume Match...", 'warm_resume_match')
+
         # 4. ALERTS (Email subscribers today's new roles — skips if none)
         self._run("\n[4/7] 📧 Sending Daily Digest to Subscribers...", 'send_daily_digest')
         self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
