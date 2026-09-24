@@ -88,53 +88,83 @@ Sitemap: https://martechjobs.io/sitemap.xml
 
 # --- 2b. LLMS.TXT VIEW (AEO) ---
 def llms_txt(request):
-    """llms.txt (llmstxt.org): a concise, markdown site guide for AI answer
-    engines. Live counts are pulled from the DB (cached 1h) so the numbers an
-    AI quotes about us are always real — per the site rule that every number
-    shown must be true."""
+    """llms.txt (llmstxt.org): a concise markdown guide for AI answer engines.
+    Built from live data (cached 1h): every number is real and every link is a
+    page that exists and is indexable, so what an AI quotes about us is true."""
     from django.core.cache import cache
-    content = cache.get("llms_txt_v3")
+    content = cache.get("llms_txt_v4")
     if content is None:
-        try:
-            from jobs.models import Job, Tool
-            live = Job.objects.filter(is_active=True, screening_status="approved")
-            n_jobs = live.count()
-            n_remote = live.filter(work_arrangement="remote").count()
-            n_tools = Tool.objects.filter(
-                jobs__is_active=True, jobs__screening_status="approved"
-            ).distinct().count()
-            stats_line = (
-                f"Currently listing {n_jobs} live roles ({n_remote} remote) "
-                f"across {n_tools}+ MarTech platforms, refreshed daily."
-            )
-        except Exception:
-            stats_line = "Job listings are refreshed daily from company hiring systems."
-        content = f"""# MarTechJobs.io
-
-> The niche job board for Marketing Technology professionals: Marketing Operations, Marketing Automation, MarTech Engineering, and Marketing Analytics roles only. Every listing is pulled directly from the employer's own hiring system (Greenhouse, Lever, Ashby, Workday, SmartRecruiters), so apply links go straight to the company — no recruiters or reposts. {stats_line} Free for job seekers.
-
-## Jobs
-- [All live MarTech jobs](https://martechjobs.io/jobs/): every open role, filterable by tool, location, and work arrangement
-- [Remote MarTech jobs](https://martechjobs.io/remote/jobs/): remote-only roles
-- [Marketing Operations jobs](https://martechjobs.io/marketing-operations-jobs/): the core MOps discipline
-- [Salesforce jobs](https://martechjobs.io/jobs/salesforce/) and [Marketo jobs](https://martechjobs.io/jobs/marketo/): roles by platform
-
-## Jobs by market
-- [United States](https://martechjobs.io/jobs/), [India](https://martechjobs.io/india/jobs/), [United Kingdom](https://martechjobs.io/united-kingdom/jobs/), [Singapore](https://martechjobs.io/singapore/jobs/), [Germany](https://martechjobs.io/germany/jobs/), [Canada](https://martechjobs.io/canada/jobs/)
-
-## Guides & data
-- [MarTech job market statistics](https://martechjobs.io/martech-job-market-statistics/): live counts by platform, function, country, remote share, and salary transparency — refreshed daily, citable
-- [AI in MarTech](https://martechjobs.io/blog/ai-in-martech/): practitioner-grade guides on how AI is changing Marketing Operations work, skills, and careers
-- [Blog](https://martechjobs.io/blog/): salary guides, role guides, and market analyses for MarTech careers
-- [Salary guide](https://martechjobs.io/salary-guide/): compensation data for Marketing Ops and MarTech roles
-- [Free tools](https://martechjobs.io/tools/): salary calculator, JD generator, interview-question generator, and other MarTech utilities
-
-## About
-- [About MarTechJobs](https://martechjobs.io/about/): who runs the site and how jobs are sourced and screened
-- [For employers](https://martechjobs.io/for-employers/): how to list roles
-"""
-        cache.set("llms_txt_v3", content, 3600)
+        content = _build_llms_txt()
+        cache.set("llms_txt_v4", content, 3600)
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
+
+
+def _build_llms_txt():
+    from datetime import date
+    from django.db.models import Count, Q
+    from jobs.models import Job, Tool
+    from jobs.tool_catalog import all_canonical_names
+    from jobs.views import TITLE_JOBS, title_jobs_qs, role_keyword_stats, role_keywords_indexable
+    from jobs.role_pages import auto_roles, tool_roles
+    base = "https://martechjobs.io"
+    roles_n = lambda n: f"{n} open role{'s' if n != 1 else ''}"
+    live = Job.objects.filter(is_active=True, screening_status="approved")
+    n_jobs = live.count()
+    n_remote = live.filter(work_arrangement="remote").count()
+    n_companies = live.values("company").distinct().count()
+    canonical = {n.lower() for n in all_canonical_names()}
+    tools = [t for t in Tool.objects.annotate(n=Count("jobs", filter=Q(jobs__is_active=True, jobs__screening_status="approved")))
+             .filter(n__gt=0).order_by("-n") if t.name.lower() in canonical][:12]
+    today = date.today().strftime("%B %-d, %Y")
+    pct = round(100 * n_remote / n_jobs) if n_jobs else 0
+
+    lines = [
+        "# MarTechJobs.io", "",
+        "> The niche job board for Marketing Technology professionals: Marketing Operations, Marketing Automation, "
+        "MarTech Engineering and Marketing Analytics roles only. Every listing comes directly from the employer's own "
+        "hiring system (Greenhouse, Lever, Ashby, Workday, SmartRecruiters), apply links go straight to the company, "
+        "and jobs removed from an employer's board are closed daily. Free for job seekers.", "",
+        f"## Key facts (live data, {today})",
+        f"- {n_jobs} open MarTech roles at {n_companies} companies; {pct}% are remote.",
+    ]
+    if tools:
+        lines.append("- Most requested platforms in open roles: " +
+                     ", ".join(f"{t.name} ({roles_n(t.n).replace('open ', '')})" for t in tools[:6]) + ".")
+    lines += ["- Source: https://martechjobs.io/martech-job-market-statistics/ (refreshed daily).", "",
+              "## Jobs",
+              f"- [All MarTech jobs]({base}/jobs/): every open role, filterable by platform, location and remote",
+              f"- [Remote MarTech jobs]({base}/remote/jobs/)",
+              f"- [Marketing Operations jobs]({base}/category/operations/)",
+              f"- [MarTech Engineering jobs]({base}/category/engineering/)",
+              f"- [Marketing Data & Analytics jobs]({base}/category/data/)", "",
+              "## Jobs by platform"]
+    lines += [f"- [{t.name} jobs]({base}/jobs/{t.slug}/): {roles_n(t.n)}" for t in tools]
+    combos = sorted(((k, r) for k, r in tool_roles().items() if r["indexable"]), key=lambda x: -len(x[1]["ids"]))[:12]
+    if combos:
+        lines += ["", "## Jobs by platform and role"]
+        lines += [f"- [{r['name']} jobs]({base}/jobs/{k[0]}/{k[1]}/): {roles_n(len(r['ids']))}" for k, r in combos]
+    lines += ["", "## Jobs by role"]
+    for slug, cfg in TITLE_JOBS.items():
+        n = title_jobs_qs(slug).count()
+        if n:
+            lines.append(f"- [{cfg['name']} jobs]({base}/{slug}-jobs/): {roles_n(n)}")
+    roles = sorted(((s, r) for s, r in auto_roles().items() if r["indexable"]), key=lambda x: -len(x[1]["ids"]))[:12]
+    lines += [f"- [{r['name']} jobs]({base}/{s}-jobs/): {roles_n(len(r['ids']))}" for s, r in roles]
+    kw = [s for s in TITLE_JOBS if role_keywords_indexable(role_keyword_stats(s))]
+    lines += ["", "## Career tools and data",
+              f"- [MarTech Resume Scanner]({base}/tools/resume-keyword-scanner/): free check of a resume against a real "
+              "MarTech job; lists the platforms, skills and certifications the job asks for that the resume is missing",
+              f"- [MarTech job market statistics]({base}/martech-job-market-statistics/): live counts by platform, "
+              "function, country, remote share and salary transparency",
+              f"- [Salary guide]({base}/salary-guide/): pay ranges from salaries disclosed in live postings"]
+    lines += [f"- [{TITLE_JOBS[s]['name']} resume keywords]({base}/{s}-resume-keywords/): platforms and skills "
+              "employers ask for in this role, counted from live postings" for s in kw]
+    lines += [f"- [Free MarTech tools]({base}/tools/): UTM builder, Salesforce ID converter, salary calculator and more",
+              f"- [Blog]({base}/blog/): role guides, salary guides and market analyses", "",
+              "## About",
+              f"- [About MarTechJobs]({base}/about/): how jobs are sourced and screened",
+              f"- [For employers]({base}/for-employers/): how to list a role", ""]
+    return "\n".join(lines)
 
 
 # --- 2c. INDEXNOW KEY FILE ---

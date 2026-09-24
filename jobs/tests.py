@@ -1313,3 +1313,22 @@ class GeneratedRolePageTests(TestCase):
         w.refresh_from_db(); k.refresh_from_db()
         self.assertFalse(w.is_active)
         self.assertTrue(k.is_active)
+
+
+class LlmsTxtTests(TestCase):
+    """llms.txt: real live numbers and only working links (AI assistants quote it)."""
+
+    def test_links_all_work_and_facts_are_live(self):
+        import re as _re
+        cache.clear()
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        mk = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        for i in range(3):
+            make_job(title=f"Marketo Specialist {i}", company=f"C{i}").tools.add(mk)
+        body = self.client.get("/llms.txt").content.decode()
+        self.assertIn("3 open MarTech roles at 3 companies", body)
+        self.assertIn("Resume Scanner", body)
+        self.assertIn("Marketo (3 roles)", body)
+        self.assertNotIn("/marketing-operations-jobs/", body)     # was a broken link
+        for u in set(_re.findall(r"https://martechjobs.io(/[^)\s]*)", body)):
+            self.assertEqual(self.client.get(u).status_code, 200, u)
