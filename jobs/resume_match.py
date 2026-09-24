@@ -26,6 +26,25 @@ class ResumeParseError(ValueError):
     """User-facing reason a file could not be read."""
 
 
+MAX_UNZIPPED_BYTES = 20 * 1024 * 1024   # a real .docx resume unzips to well under 1 MB
+MAX_ZIP_RATIO = 100
+MAX_EXTRACTED_CHARS = 200_000
+
+
+def _check_docx_size(data):
+    """Refuse "zip bomb" .docx files (tiny download, gigabytes when unpacked)
+    BEFORE python-docx unpacks them into memory."""
+    import zipfile
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile:
+        raise ResumeParseError("We couldn't read that file. Try saving it as a PDF again, or paste the text instead.")
+    unpacked = sum(i.file_size for i in zf.infolist())
+    packed = max(1, sum(i.compress_size for i in zf.infolist()))
+    if unpacked > MAX_UNZIPPED_BYTES or unpacked / packed > MAX_ZIP_RATIO:
+        raise ResumeParseError("That Word file is unusually large inside. Please save it as a PDF or paste the text.")
+
+
 def extract_resume_text(uploaded):
     """Return plain text from an uploaded PDF or DOCX. Raises ResumeParseError."""
     name = (getattr(uploaded, "name", "") or "").lower()
@@ -36,9 +55,17 @@ def extract_resume_text(uploaded):
         if name.endswith(".pdf") or data[:5] == b"%PDF-":
             from pypdf import PdfReader
             reader = PdfReader(io.BytesIO(data))
-            text = "\n".join((page.extract_text() or "") for page in reader.pages[:10])
+            text, total = [], 0
+            for page in reader.pages[:10]:
+                t = page.extract_text() or ""
+                total += len(t)
+                if total > MAX_EXTRACTED_CHARS:      # a real resume is a few pages
+                    raise ResumeParseError("That PDF is far too long to be a resume. Paste your resume text instead.")
+                text.append(t)
+            text = "\n".join(text)
         elif name.endswith(".docx"):
             import docx
+            _check_docx_size(data)
             doc = docx.Document(io.BytesIO(data))
             parts = [p.text for p in doc.paragraphs]
             for table in doc.tables:

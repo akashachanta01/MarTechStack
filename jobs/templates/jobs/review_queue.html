@@ -121,9 +121,9 @@
       </div>
 
       <div class="rq-actions">
-        <a href="{% url 'review_action' job.id 'approve' %}" class="btn btn-amber" style="font-size:12px;padding:8px 16px;">✓ Approve</a>
-        <a href="{% url 'review_action' job.id 'reject' %}" style="background:#c0392b;color:#fff;font-size:12px;padding:8px 16px;" class="btn">✗ Reject</a>
-        <a href="{% url 'review_action' job.id 'pending' %}" style="background:var(--navy);color:#fff;font-size:12px;padding:8px 16px;" class="btn">⟳ Pending</a>
+        <form method="post" action="{% url 'review_action' job.id 'approve' %}" style="display:inline">{% csrf_token %}<button type="submit" class="btn btn-amber" style="font-size:12px;padding:8px 16px;">✓ Approve</button></form>
+        <form method="post" action="{% url 'review_action' job.id 'reject' %}" style="display:inline">{% csrf_token %}<button type="submit" style="background:#c0392b;color:#fff;font-size:12px;padding:8px 16px;" class="btn">✗ Reject</button></form>
+        <form method="post" action="{% url 'review_action' job.id 'pending' %}" style="display:inline">{% csrf_token %}<button type="submit" style="background:var(--navy);color:#fff;font-size:12px;padding:8px 16px;" class="btn">⟳ Pending</button></form>
       </div>
     </div>
     {% empty %}

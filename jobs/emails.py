@@ -243,3 +243,15 @@ def send_digest_alert(jobs):
             )
             
     threading.Thread(target=_send).start()
+
+
+def send_unsubscribe_confirmation(to_email):
+    """The unsubscribe FORM only emails a signed link, so nobody can remove
+    someone else's address just by typing it in."""
+    return send_html_email(
+        subject="Confirm unsubscribe from MarTechJobs",
+        template_name="emails/unsubscribe_confirm.html",
+        context={},
+        to_email=[to_email],
+        unsubscribe_email=to_email,
+    )
