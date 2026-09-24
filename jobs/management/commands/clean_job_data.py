@@ -52,6 +52,17 @@ class Command(BaseCommand):
         # jobs, so tool pages (e.g. "SFMC jobs") showed a fraction of the roles.
         counts["tools_added"] = self._tag_tools(live, dry)
 
+        # Clearly non-MarTech roles the AI screener let through (e.g. factory
+        # welders, German medical-device "AEMP" jobs matched as AEM).
+        import re as _re
+        offtopic_rx = _re.compile(r"\b(welder|brazer|brazing|forklift|warehouse associate|truck driver|"
+                                  r"registered nurse|medizinprodukt\w*|aufbereitung\w*)\b", _re.I)
+        offtopic = [pk for pk, t in live.values_list("id", "title") if offtopic_rx.search(t or "")]
+        counts["offtopic_removed"] = len(offtopic)
+        if offtopic and not dry:
+            Job.objects.filter(id__in=offtopic).update(
+                is_active=False, screening_reason="Off-topic role (not MarTech)")
+
         groups = defaultdict(list)
         for pk, t, c, l, created in live.values_list("id", "title", "company", "location", "created_at"):
             groups[((c or "").lower(), (t or "").lower(), (l or "").lower())].append((created, pk))
@@ -61,6 +72,10 @@ class Command(BaseCommand):
             Job.objects.filter(id__in=dupes).update(
                 is_active=False, screening_reason="Duplicate of a newer live listing")
 
+        if not dry:
+            # Role pages are built from titles + tool tags: rebuild them now.
+            from django.core.cache import cache
+            cache.delete_many(["auto_roles:v1", "tool_roles:v2"])
         verb = "Would change" if dry else "Changed"
         self.stdout.write(self.style.SUCCESS(
             f"🧽 {verb}: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())) if counts else "🧽 Nothing to clean."))

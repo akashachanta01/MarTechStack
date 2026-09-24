@@ -18,8 +18,9 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
-    {"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
-    {"@type":"ListItem","position":3,"name":"{{ title_name }} Jobs","item":"https://martechjobs.io/{{ title_slug }}-jobs/"}
+    {% if tool %}{"@type":"ListItem","position":2,"name":"{{ tool.name|escapejs }} Jobs","item":"https://martechjobs.io{% url 'tool_detail' tool.slug %}"},
+    {"@type":"ListItem","position":3,"name":"{{ title_name|escapejs }} Jobs","item":"https://martechjobs.io{% url 'tool_role_jobs' tool.slug tool_func %}"}{% else %}{"@type":"ListItem","position":2,"name":"Jobs","item":"https://martechjobs.io/jobs/"},
+    {"@type":"ListItem","position":3,"name":"{{ title_name|escapejs }} Jobs","item":"https://martechjobs.io/{{ title_slug }}-jobs/"}{% endif %}
   ]
 }
 </script>
@@ -34,7 +35,7 @@
 }
 </script>
 {% endif %}
-<script type="application/ld+json">
+{% if curated %}<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -44,7 +45,7 @@
     {"@type":"Question","name":"Are there remote {{ title_name }} jobs?","acceptedAnswer":{"@type":"Answer","text":"Yes. Many {{ title_name }} roles on MarTechJobs are remote or hybrid. Use the remote filter on the jobs board to see only remote openings."}}
   ]
 }
-</script>
+</script>{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -100,10 +101,12 @@
     <span class="tj-badge"><b>{{ total_count }}</b> open {{ title_name }} role{{ total_count|pluralize }} · Updated {% now "F j, Y" %}</span>
     <h1 class="tj-h1">{{ title_name }} <span class="em">Jobs</span></h1>
     <p class="tj-intro">{{ intro }}</p>
-    {% if skills %}<p class="tj-skills"><b>Common skills:</b> {{ skills }}</p>{% endif %}
-    <a href="{% url 'role_salary' title_slug %}" style="display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
+    {% if skills %}<p class="tj-skills"><b>{% if curated %}Common skills{% else %}Platforms these jobs ask for{% endif %}:</b> {{ skills }}</p>{% endif %}
+    {% if tool %}<p style="margin-top:14px;font-size:14px;"><a href="{% url 'tool_detail' tool.slug %}" style="font-weight:700;color:var(--amber);">All {{ tool.name }} jobs →</a></p>{% endif %}
+    {% if tool_siblings %}<div class="tj-cross-row" style="margin:14px 0 0">{% for r in tool_siblings %}<a href="{% url 'tool_role_jobs' tool.slug r.func %}">{{ r.name }} ({{ r.count }})</a>{% endfor %}</div>{% endif %}
+    {% if curated %}<a href="{% url 'role_salary' title_slug %}" style="display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
       💰 What does a {{ title_name }} earn? See the salary data →
-    </a>
+    </a>{% endif %}
   </div>
 </section>
 
@@ -154,7 +157,7 @@
     </nav>
     {% endif %}
 
-    <p class="tj-rk" style="margin:22px 0 0;font-size:15px;">What to put on your resume: <a href="{% url 'role_resume_keywords' title_slug %}" style="font-weight:700;color:var(--amber);">{{ title_name }} resume keywords, counted from live job posts →</a></p>
+    {% if curated %}<p class="tj-rk" style="margin:22px 0 0;font-size:15px;">What to put on your resume: <a href="{% url 'role_resume_keywords' title_slug %}" style="font-weight:700;color:var(--amber);">{{ title_name }} resume keywords, counted from live job posts →</a></p>{% endif %}
 
     <!-- Internal linking: other MarTech roles -->
     <div class="tj-cross">

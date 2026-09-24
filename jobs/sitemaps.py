@@ -342,3 +342,31 @@ class RoleResumeKeywordsSitemap(Sitemap):
 
     def location(self, slug):
         return f"/{slug}-resume-keywords/"
+
+
+class AutoRoleSitemap(Sitemap):
+    """Role pages generated from shared live job titles (indexable ones only)."""
+    changefreq = "daily"
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from jobs.role_pages import auto_roles
+        return sorted(s for s, r in auto_roles().items() if r["indexable"])
+
+    def location(self, slug):
+        return f'/{slug}-jobs/'
+
+
+class ToolRoleSitemap(Sitemap):
+    """Tool x function pages, e.g. /jobs/salesforce-marketing-cloud/developer/."""
+    changefreq = "daily"
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from jobs.role_pages import tool_roles
+        return sorted(k for k, r in tool_roles().items() if r["indexable"])
+
+    def location(self, key):
+        return reverse('tool_role_jobs', args=[key[0], key[1]])

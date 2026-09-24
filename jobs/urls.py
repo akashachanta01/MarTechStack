@@ -35,6 +35,7 @@ urlpatterns = [
     # Old /stack/<slug>/ URLs (indexed by Google) -> canonical /jobs/<slug>/
     path('stack/<slug:slug>/', RedirectView.as_view(pattern_name='tool_detail', permanent=True)),
     path('jobs/<slug:slug>/', views.tool_detail, name='tool_detail'),
+    path('jobs/<slug:slug>/<slug:func>/', views.tool_role_jobs, name='tool_role_jobs'),
     path('job/<int:id>/<slug:slug>/', views.job_detail, name='job_detail'),
 
     path('post-job/', views.post_job, name='post_job'),
