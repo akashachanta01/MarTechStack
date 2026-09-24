@@ -1,7 +1,7 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}MarTech Jobs by Tool — Browse by Marketing Technology Stack | MarTechJobs{% endblock %}
-{% block meta_description %}Browse MarTech jobs by tool — Salesforce, HubSpot, Marketo, Braze, Segment and more. Find Marketing Ops, RevOps & MarTech engineering roles by the stack you specialize in.{% endblock %}
+{% block title %}MarTech Jobs by Platform: {% for t in tools|slice:":3" %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %} & more ({{ total_live }} live roles) | MarTechJobs{% endblock %}
+{% block meta_description %}{{ total_live }} live MarTech jobs grouped by the platform they ask for: {% for t in tools|slice:":5" %}{{ t.name }} ({{ t.job_count }}){% if not forloop.last %}, {% endif %}{% endfor %}. Pick your stack and see every open role.{% endblock %}
 {% block meta_keywords %}martech jobs by tool, marketing technology stack jobs, HubSpot jobs, Salesforce marketing jobs, Marketo jobs, Braze jobs, marketing ops jobs by tool{% endblock %}
 
 {% block extra_schema %}

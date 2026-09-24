@@ -145,6 +145,39 @@
   </table>
   </div>
 
+  <!-- ── GOOGLE SEARCH (Search Console, synced daily) ── -->
+  <h2>Google search</h2>
+  {% if gsc %}
+  <div class="hq-secsub">Last 28 days up to {{ gsc.through|date:"M j" }} (Search Console data lags about 2 days).</div>
+  <div class="hq-scroll">
+  <table class="hq-table">
+    <tr><th>Metric</th><th>Last 28 days</th><th>28 days before</th><th>Change (pct)</th></tr>
+    <tr><td>Clicks from Google</td><td>{{ gsc.last.clicks }}</td><td>{{ gsc.prev.clicks }}</td><td>{% if gsc.clicks_change is not None %}{{ gsc.clicks_change }}%{% else %}—{% endif %}</td></tr>
+    <tr><td>Times shown in Google</td><td>{{ gsc.last.impressions }}</td><td>{{ gsc.prev.impressions }}</td><td>{% if gsc.impr_change is not None %}{{ gsc.impr_change }}%{% else %}—{% endif %}</td></tr>
+    <tr><td>Click rate (pct)</td><td>{{ gsc.last.ctr }}%</td><td>{{ gsc.prev.ctr }}%</td><td></td></tr>
+    <tr><td>Average position</td><td>{{ gsc.last.position }}</td><td>{{ gsc.prev.position }}</td><td>lower is better</td></tr>
+  </table>
+  </div>
+  <div class="hq-secsub" style="margin-top:14px"><strong>Almost on page 1:</strong> searches where you rank 8–20. Small improvements here bring the most new clicks.</div>
+  <div class="hq-scroll">
+  <table class="hq-table">
+    <tr><th>Search</th><th>Your page</th><th>Times shown</th><th>Position</th></tr>
+    {% for r in gsc.near %}<tr><td>{{ r.query }}</td><td>{{ r.page }}</td><td>{{ r.impressions }}</td><td>{{ r.position }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="hq-muted">None right now.</td></tr>{% endfor %}
+  </table>
+  </div>
+  <div class="hq-secsub" style="margin-top:14px"><strong>Shown a lot, rarely clicked:</strong> pages on page 1–2 with a click rate under 1%. Their title/description needs work.</div>
+  <div class="hq-scroll">
+  <table class="hq-table">
+    <tr><th>Page</th><th>Times shown</th><th>Clicks</th><th>Click rate (pct)</th></tr>
+    {% for p in gsc.low_ctr %}<tr><td>{{ p.page }}</td><td>{{ p.impressions }}</td><td>{{ p.clicks }}</td><td>{{ p.ctr }}%</td></tr>
+    {% empty %}<tr><td colspan="4" class="hq-muted">None right now.</td></tr>{% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="hq-secsub">No Search Console data yet — it syncs in the daily run at 09:00 UTC.</div>
+  {% endif %}
+
   <!-- ── INTEREST: RESUME CHECKER ──────────────── -->
   <h2>Resume checker activity</h2>
   <div class="hq-secsub">Everyone who ran the ATS resume check — {{ kpis.ats_checks_week }} checks this week ({{ kpis.ats_people_week }} signed-in people, {{ kpis.ats_anon_week }} anonymous). Signed-in checkers with a low score on a job are warm leads: they want that role. Resume text is never stored.</div>

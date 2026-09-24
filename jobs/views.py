@@ -320,6 +320,16 @@ TITLE_JOBS = {
         "intro": "Campaign Operations Managers run the campaign engine — builds, QA, scheduling, and the cross-team process that gets marketing live on time.",
         "skills": "Marketo, HubSpot, QA, project management, workflows",
     },
+    # Search Console (Sep 2026): "marketing technology analyst jobs" had 2,774
+    # impressions at position 9 with no dedicated page.
+    "marketing-technology-analyst": {
+        "name": "Marketing Technology Analyst",
+        "kw": ["marketing technology analyst", "martech analyst", "marketing systems analyst",
+               "marketing operations analyst", "marketing analyst", "marketing analytics",
+               "digital analytics", "web analytics", "crm analyst", "campaign operations analyst"],
+        "intro": "Marketing Technology Analysts work with the data and systems behind marketing: tracking and tagging, reporting and attribution, CRM and automation data, and the analysis that tells the team what is working.",
+        "skills": "Google Analytics, Adobe Analytics, SQL, Salesforce, tracking, dashboards",
+    },
 }
 
 def job_list(request):
@@ -1016,8 +1026,15 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
         meta_desc = f"Find top {tool.name} roles. Marketing Automation & Ops jobs."
         header_text = f"Top <span class='text-martech-green'>{escape(tool.name)}</span> Jobs"
     else:
-        page_title = f"{total_count} {location_name} MarTech Jobs {_year}"
-        meta_desc = f"Browse {total_count} MarTech and Marketing Operations jobs in {location_name}. Updated daily."
+        _month = _date.today().strftime("%B %Y")
+        if location_name == "Remote":
+            page_title = f"{total_count} Remote MarTech Jobs — Updated {_month}"
+            meta_desc = (f"{total_count} remote Marketing Ops, marketing automation and MarTech engineering jobs "
+                         f"(Salesforce, SFMC, Marketo, HubSpot, Braze). Apply direct on each company's site. Updated daily.")
+        else:
+            page_title = f"{total_count} MarTech Jobs in {location_name} — Updated {_month}"
+            meta_desc = (f"{total_count} Marketing Ops, marketing automation and MarTech engineering jobs in {location_name}. "
+                         f"Apply direct on each company's site. Updated daily.")
         header_text = f"MarTech Jobs in <span class='text-martech-green'>{escape(location_name)}</span>"
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get('page'))
@@ -1398,6 +1415,7 @@ def tool_detail(request, slug):
         'often_paired': often_paired,
         'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
         'tool_short': TOOL_SHORT_NAMES.get(slug, ""),
+        'title_month': timezone.now().strftime('%B %Y'),
         'tool_role_links': _tool_role_links(slug),
         'filter_qs': filter_qs,
         'location_name': 'Global/Remote',
@@ -1714,6 +1732,67 @@ def confirm_subscription(request, token):
     return render(request, 'jobs/subscription_confirmed.html', {'email': email})
 
 
+def readable_page(url):
+    """Human-readable name for one of our URLs (reports never show raw paths)."""
+    from urllib.parse import urlparse
+    from django.urls import resolve, Resolver404
+    path = urlparse(url).path or "/"
+    try:
+        m = resolve(path)
+    except Resolver404:
+        return "Page no longer exists"
+    kw, name = m.kwargs, m.url_name or ""
+    words = lambda x: x.replace("-", " ").title()
+    labels = {
+        "job_list": lambda: "Homepage", "all_jobs": lambda: "All jobs", "directory": lambda: "Jobs by platform",
+        "tool_detail": lambda: f"{words(kw['slug'])} jobs page",
+        "tool_role_jobs": lambda: f"{words(kw['slug'])} {kw['func']} jobs page",
+        "title_jobs": lambda: f"{words(kw['title_slug'])} jobs page",
+        "role_salary": lambda: f"{words(kw['role_slug'])} salary page",
+        "role_resume_keywords": lambda: f"{words(kw['role_slug'])} resume keywords",
+        "seo_loc_only": lambda: f"{words(kw['location_slug'])} jobs page",
+        "seo_tool_loc": lambda: f"{words(kw['location_slug'])} {words(kw['tool_slug'])} jobs page",
+        "job_detail": lambda: "A job listing",
+        "post_detail": lambda: "Blog: " + words(kw.get("slug", "")),
+        "category_detail": lambda: f"{words(kw['slug'])} category",
+        "company_detail": lambda: f"{words(kw['company_slug'])} company page",
+        "salary_guide": lambda: "Salary guide", "market_stats": lambda: "Job market statistics",
+        "resume_scanner": lambda: "Resume Scanner", "blog_list": lambda: "Blog home",
+    }
+    f = labels.get(name)
+    return f() if f else words(name or "page")
+
+
+def _gsc_summary():
+    """Google search numbers for Founder HQ, from the daily Search Console sync."""
+    from datetime import timedelta
+    from jobs.models import SearchConsoleDaily, SearchConsoleRow
+    days = list(SearchConsoleDaily.objects.order_by("-date")[:56])
+    if not days:
+        return None
+    def total(rows):
+        c, i = sum(d.clicks for d in rows), sum(d.impressions for d in rows)
+        pos = (sum(d.position * d.impressions for d in rows) / i) if i else 0
+        return {"clicks": c, "impressions": i, "ctr": round(100 * c / i, 1) if i else 0, "position": round(pos, 1)}
+    last, prev = total(days[:28]), total(days[28:56])
+    def change(a, b):
+        return round(100 * (a - b) / b) if b else None
+    near = [{"query": r.query, "page": readable_page(r.page), "impressions": r.impressions, "position": round(r.position, 1)}
+            for r in SearchConsoleRow.objects.filter(position__gte=8, position__lte=20, impressions__gte=20).order_by("-impressions")[:15]]
+    low_ctr = {}
+    for r in SearchConsoleRow.objects.filter(position__lte=15).order_by("-impressions")[:600]:
+        p = low_ctr.setdefault(r.page, {"page": readable_page(r.page), "impressions": 0, "clicks": 0})
+        p["impressions"] += r.impressions; p["clicks"] += r.clicks
+    low = sorted((p for p in low_ctr.values() if p["impressions"] >= 200 and p["clicks"] / p["impressions"] < 0.01),
+                 key=lambda p: -p["impressions"])[:10]
+    for p in low:
+        p["ctr"] = round(100 * p["clicks"] / p["impressions"], 1)
+    return {"last": last, "prev": prev, "through": days[0].date,
+            "clicks_change": change(last["clicks"], prev["clicks"]),
+            "impr_change": change(last["impressions"], prev["impressions"]),
+            "near": near, "low_ctr": low}
+
+
 @staff_member_required
 def founder_hq(request):
     """Founder HQ — the one page that answers 'who are my users and how is
@@ -1809,6 +1888,7 @@ def founder_hq(request):
     ats_checks = AtsCheck.objects.select_related('user', 'job')[:30]
 
     return render(request, 'jobs/founder_hq.html', {
+        'gsc': _gsc_summary(),
         'kpis': kpis,
         'people': people,
         'newsletter_only': newsletter_only,
@@ -1943,6 +2023,7 @@ def directory(request):
     ]
     
     return render(request, 'jobs/directory.html', {
+        'total_live': Job.objects.filter(is_active=True, screening_status='approved').count(),
         'tools': tools,
         'tool_count': tools.count(),
         'states': states,
