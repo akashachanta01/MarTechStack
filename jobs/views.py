@@ -689,27 +689,75 @@ def role_salary_indexable(stats):
 
 
 def title_jobs(request, title_slug):
-    """Programmatic job-title landing page (e.g. /marketing-operations-manager-jobs/)."""
+    """Job-title landing page: hand-written for core roles (TITLE_JOBS), or
+    generated from real live titles (jobs.role_pages.auto_roles)."""
+    from jobs.role_pages import auto_roles, facts_intro, top_platforms
     cfg = TITLE_JOBS.get(title_slug)
-    if not cfg:
+    auto = None if cfg else auto_roles().get(title_slug)
+    if not cfg and not auto:
         raise Http404("Unknown role")
 
-    jobs = title_jobs_qs(title_slug).prefetch_related("tools").order_by("-is_pinned", "-created_at")
+    if cfg:
+        jobs = title_jobs_qs(title_slug)
+    else:
+        jobs = Job.objects.filter(id__in=auto["ids"], is_active=True, screening_status="approved")
+    jobs = jobs.prefetch_related("tools").order_by("-is_pinned", "-created_at")
     total_count = jobs.count()
     paginator = Paginator(jobs, 20)
     jobs_page = paginator.get_page(request.GET.get("page"))
 
     related = [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items() if s != title_slug][:9]
+    related += [{"slug": s, "name": r["name"]} for s, r in sorted(auto_roles().items(), key=lambda x: -len(x[1]["ids"]))
+                if r["indexable"] and s != title_slug][:9]
 
+    if cfg:
+        name, intro, skills, noindex = cfg["name"], cfg["intro"], cfg.get("skills", ""), total_count == 0
+    else:
+        listed = list(jobs)
+        name = auto["name"]
+        intro, skills = facts_intro(name, listed), top_platforms(listed)
+        noindex = not auto["indexable"]
     return render(request, "jobs/title_jobs.html", {
         "jobs": jobs_page,
         "total_count": total_count,
-        "title_name": cfg["name"],
+        "title_name": name,
         "title_slug": title_slug,
-        "intro": cfg["intro"],
-        "skills": cfg.get("skills", ""),
+        "intro": intro,
+        "skills": skills,
         "related_titles": related,
-        "page_noindex": total_count == 0,
+        "curated": bool(cfg),
+        "page_noindex": noindex,
+    })
+
+
+def tool_role_jobs(request, slug, func):
+    """/jobs/<tool>/<function>/ e.g. SFMC Developer jobs: tagged jobs whose title names the function."""
+    from jobs.role_pages import tool_roles, facts_intro, top_platforms
+    if slug != slug.lower() or func != func.lower():
+        return redirect('tool_role_jobs', slug=slug.lower(), func=func.lower(), permanent=True)
+    tool = get_object_or_404(Tool, slug=slug)
+    combo = tool_roles().get((slug, func))
+    if not combo:
+        raise Http404("No such role for this tool")
+    jobs = (Job.objects.filter(id__in=combo["ids"], is_active=True, screening_status="approved")
+            .prefetch_related("tools").order_by("-is_pinned", "-created_at"))
+    listed = list(jobs)
+    siblings = [{"func": f, "name": r["name"], "count": len(r["ids"])}
+                for (t, f), r in tool_roles().items() if t == slug and f != func and r["indexable"]]
+    paginator = Paginator(listed, 20)
+    return render(request, "jobs/title_jobs.html", {
+        "jobs": paginator.get_page(request.GET.get("page")),
+        "total_count": len(listed),
+        "title_name": combo["name"],
+        "title_slug": "",
+        "tool": tool,
+        "tool_func": func,
+        "intro": facts_intro(combo["name"], listed),
+        "skills": top_platforms(listed, exclude={tool.name}),
+        "related_titles": [],
+        "tool_siblings": sorted(siblings, key=lambda x: -x["count"]),
+        "curated": False,
+        "page_noindex": not combo["indexable"],
     })
 
 
@@ -1275,6 +1323,13 @@ TOOL_SHORT_NAMES = {
 }
 
 
+def _tool_role_links(slug):
+    from jobs.role_pages import tool_roles
+    return sorted(({"func": f, "name": r["name"], "count": len(r["ids"])}
+                   for (t, f), r in tool_roles().items() if t == slug and r["indexable"]),
+                  key=lambda x: -x["count"])
+
+
 def tool_detail(request, slug):
     # 301 mixed-case slugs (e.g. /jobs/Salesforce/) to the canonical lowercase
     # so we don't split equity across two URLs.
@@ -1343,6 +1398,7 @@ def tool_detail(request, slug):
         'often_paired': often_paired,
         'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
         'tool_short': TOOL_SHORT_NAMES.get(slug, ""),
+        'tool_role_links': _tool_role_links(slug),
         'filter_qs': filter_qs,
         'location_name': 'Global/Remote',
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES,

@@ -39,6 +39,23 @@ for j in Job.objects.filter(slug__startswith="role-")[:120]:
 Job.objects.filter(title="Marketing Operations Manager").first().tools.add(marketo)
 for i, j in enumerate(Job.objects.filter(slug__startswith="role-").order_by("id")[:9]):
     Job.objects.filter(pk=j.pk).update(title=f"Marketing Operations Manager {i + 2}")
+# Titles that form generated role pages: 6 Salesforce Developers at 3 employers,
+# 3 SFMC Developers at 2 employers (tool x function page), 1 off-topic welder.
+SFDEV = "<p>Salesforce developer: Apex, Lightning, integrations with Salesforce Marketing Cloud.</p>"
+for i, co in enumerate(["Initech", "Hooli", "Vandelay", "Initech", "Hooli", "Vandelay"]):
+    Job.objects.create(title=f"Senior Salesforce Developer {'I' * (i % 2 + 1)}", company=co, location="Remote",
+                       description=SFDEV, apply_url="https://x.test", screening_status="approved", is_active=True,
+                       work_arrangement="remote", slug=f"sf-dev-{i}")
+for i, co in enumerate(["Initech", "Hooli", "Initech"]):
+    Job.objects.create(title=f"SFMC Developer {i + 1}", company=co, location="Remote",
+                       description="<p>Salesforce Marketing Cloud developer. AMPscript, Journey Builder.</p>",
+                       apply_url="https://x.test", screening_status="approved", is_active=True,
+                       work_arrangement="remote", slug=f"sfmc-dev-{i}")
+Job.objects.create(title="Welder/Brazer II - 2nd Shift (Onsite)", company="Globex", location="Ohio",
+                   description="<p>Welding.</p>", apply_url="https://x.test", screening_status="approved",
+                   is_active=True, work_arrangement="onsite", slug="welder")
+from django.core.management import call_command
+call_command("clean_job_data")
 for u in ("jane", "limit"):
     User.objects.filter(username=u).delete()
     User.objects.create_user(u, f"{u}@example.com", "pw12345!x")

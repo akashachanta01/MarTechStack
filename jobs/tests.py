@@ -1246,3 +1246,70 @@ class ToolTaggingTests(TestCase):
         j = make_job(description="<p>Braze expert.</p>")
         call_command("clean_job_data", "--dry-run", stdout=open("/dev/null", "w"))
         self.assertEqual(j.tools.count(), 0)
+
+
+class GeneratedRolePageTests(TestCase):
+    """Role pages from real titles + tool x function pages, with thin-page guards."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_title_normalisation(self):
+        from jobs.role_pages import normalize_title as n
+        self.assertEqual(n("Sr. Salesforce Developer - Tieto Tech Consulting (m/f/d)"), "salesforce developer")
+        self.assertEqual(n("Senior Developer - Salesforce Marketing Cloud"), "salesforce marketing cloud developer")
+        self.assertEqual(n("Marketing Operations Lead, Customer Loyalty | Irvine, CA"), "marketing operations lead")
+        self.assertEqual(n("Analytics Engineer II (Remote)"), "analytics engineer")
+        self.assertEqual(n("Salesforce 架構師 (Salesforce Solution Architect)"), "")
+
+    def _devs(self, n, companies):
+        for i in range(n):
+            make_job(title=f"Senior Salesforce Developer {'I' * (i % 3 + 1)}", company=companies[i % len(companies)],
+                     description="<p>Salesforce Apex and Lightning developer.</p>")
+
+    def test_auto_role_page_indexable_with_enough_jobs_and_employers(self):
+        self._devs(6, ["A", "B", "C"])
+        r = self.client.get("/salesforce-developer-jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Salesforce Developer")
+        self.assertContains(r, "6 open Salesforce Developer roles at 3 companies")
+        self.assertNotContains(r, 'content="noindex')
+        self.assertNotContains(r, "FAQPage")                 # no generic Q&A on generated pages
+        self.assertNotContains(r, "-salary/")               # salary pages exist only for core roles
+        self.assertIn("/salesforce-developer-jobs/", self.client.get("/sitemap.xml").content.decode())
+
+    def test_auto_role_single_employer_is_noindex(self):
+        self._devs(4, ["OnlyCo"])
+        r = self.client.get("/salesforce-developer-jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'content="noindex')
+        self.assertNotIn("/salesforce-developer-jobs/", self.client.get("/sitemap.xml").content.decode())
+
+    def test_unknown_role_404_and_core_role_unchanged(self):
+        self.assertEqual(self.client.get("/basket-weaver-jobs/").status_code, 404)
+        make_job()
+        r = self.client.get("/marketing-operations-manager-jobs/")
+        self.assertContains(r, "FAQPage")
+        self.assertContains(r, "/marketing-operations-manager-salary/")
+
+    def test_tool_function_page(self):
+        from django.core.management import call_command
+        for i, co in enumerate(["A", "B", "C"]):
+            make_job(title=f"SFMC Developer {i}", company=co, description="<p>Salesforce Marketing Cloud developer, AMPscript.</p>")
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        r = self.client.get("/jobs/salesforce-marketing-cloud/developer/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "SFMC Developer")
+        self.assertNotContains(r, 'content="noindex')
+        self.assertContains(self.client.get("/jobs/salesforce-marketing-cloud/"), "/jobs/salesforce-marketing-cloud/developer/")
+        self.assertIn("/jobs/salesforce-marketing-cloud/developer/", self.client.get("/sitemap.xml").content.decode())
+        self.assertEqual(self.client.get("/jobs/salesforce-marketing-cloud/astronaut/").status_code, 404)
+
+    def test_offtopic_roles_removed(self):
+        from django.core.management import call_command
+        w = make_job(title="Welder/Brazer II - 2nd Shift (Onsite)")
+        k = make_job(title="Marketing Operations Manager")
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        w.refresh_from_db(); k.refresh_from_db()
+        self.assertFalse(w.is_active)
+        self.assertTrue(k.is_active)
