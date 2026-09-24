@@ -16,6 +16,7 @@ from django.http import HttpResponse, JsonResponse, Http404
 import re
 from django.utils.html import escape
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib import messages 
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -1307,12 +1308,20 @@ def _unsubscribe_everywhere(email):
 
 
 def unsubscribe(request):
+    """Typing an address only EMAILS that address a signed unsubscribe link —
+    otherwise anyone could remove anyone. The reply is the same whether or not
+    the address is on a list, so the form can't be used to check who subscribes."""
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
+        if email and not _rate_limited(request, 'unsubscribe', limit=5, window_seconds=3600):
+            known = (Subscriber.objects.filter(email__iexact=email, is_active=True).exists()
+                     or SavedSearch.objects.filter(email__iexact=email, is_active=True).exists())
+            if known:
+                from jobs.emails import send_unsubscribe_confirmation
+                send_unsubscribe_confirmation(email)
         if email:
-            updated = _unsubscribe_everywhere(email)
-            if updated > 0: messages.success(request, f"✅ {email} has been unsubscribed.")
-            else: messages.warning(request, "⚠️ That email was not found on our active list.")
+            messages.info(request, "If that address is on our list, we've emailed it a link to confirm. "
+                                   "Click it and you're out.")
     return render(request, "jobs/unsubscribe.html", {"page_noindex": True})
 
 @csrf_exempt
@@ -1329,11 +1338,16 @@ def unsubscribe_oneclick(request, token):
     except signing.BadSignature:
         return render(request, "jobs/unsubscribe.html", {"oneclick_error": True, "page_noindex": True})
 
+    # GET only shows a confirm button: corporate link scanners (Outlook Safe
+    # Links etc.) open every URL and would otherwise unsubscribe real people.
+    if request.method != "POST":
+        return render(request, "jobs/unsubscribe.html",
+                      {"oneclick_confirm": True, "oneclick_email": email, "page_noindex": True})
     # Suppress the newsletter AND deactivate saved-search alerts — one click
     # must stop every recurring send (see _unsubscribe_everywhere).
     _unsubscribe_everywhere(email)
-    # POST (mail-client one-click) just needs a 200; GET shows confirmation.
-    if request.method == "POST":
+    # Mail-client one-click (RFC 8058) just needs a 200; a person gets the page.
+    if request.POST.get("List-Unsubscribe") == "One-Click" or "confirm" not in request.POST:
         return HttpResponse("Unsubscribed", status=200)
     messages.success(request, f"✅ {email} has been unsubscribed. Sorry to see you go!")
     return render(request, "jobs/unsubscribe.html", {"oneclick_done": True, "page_noindex": True})
@@ -1927,6 +1941,7 @@ def review_queue(request):
     return render(request, "jobs/review_queue.html", {"jobs": jobs_page, "status": status, "q": q})
 
 @staff_member_required
+@require_POST
 def review_action(request, job_id, action):
     job = get_object_or_404(Job, id=job_id)
     if action == "approve": 

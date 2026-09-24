@@ -1503,3 +1503,97 @@ class CountryCorrectionTests(TestCase):
         call_command("clean_job_data", stdout=open("/dev/null", "w"))
         j.refresh_from_db()
         self.assertEqual(j.country, "FR")
+
+
+@override_settings(**TEST_SETTINGS)
+class SecurityBatchTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    # 1. Staff actions can't be triggered by a link/image on another site
+    @mock.patch("jobs.views.send_job_alert")
+    def test_review_action_requires_post(self, _alert):
+        staff = get_user_model().objects.create_user("st", "st@x.test", "pw12345!x", is_staff=True)
+        self.client.force_login(staff)
+        job = make_job(screening_status="pending", is_active=False)
+        self.assertEqual(self.client.get(f"/staff/review/{job.id}/approve/").status_code, 405)
+        job.refresh_from_db(); self.assertEqual(job.screening_status, "pending")
+        self.client.post(f"/staff/review/{job.id}/approve/")
+        job.refresh_from_db(); self.assertEqual(job.screening_status, "approved")
+
+    def test_review_queue_uses_post_forms(self):
+        staff = get_user_model().objects.create_user("st2", "st2@x.test", "pw12345!x", is_staff=True)
+        self.client.force_login(staff)
+        make_job(screening_status="pending", is_active=False)
+        r = self.client.get("/staff/review/")
+        self.assertContains(r, 'method="post"')
+        self.assertContains(r, "csrfmiddlewaretoken")
+
+    # 2. Unsubscribe form only emails a signed link; same reply either way
+    @override_settings(EMAIL_HOST_PASSWORD="test", EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_unsubscribe_form_emails_link_instead_of_unsubscribing(self):
+        from django.core import mail
+        Subscriber.objects.create(email="real@x.test")
+        r1 = self.client.post("/unsubscribe/", {"email": "real@x.test"})
+        self.assertTrue(Subscriber.objects.get(email="real@x.test").is_active)   # not removed by a stranger
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("/u/", mail.outbox[0].alternatives[0][0] if mail.outbox[0].alternatives else mail.outbox[0].body)
+        r2 = self.client.post("/unsubscribe/", {"email": "nobody@x.test"})
+        self.assertEqual(len(mail.outbox), 1)                                   # nothing sent to unknowns
+        self.assertContains(r1, "If that address is on our list")
+        self.assertContains(r2, "If that address is on our list")
+
+    # 3. Opening the link (scanners) doesn't unsubscribe; the button / mail client does
+    def test_oneclick_get_only_confirms(self):
+        from django.core import signing
+        Subscriber.objects.create(email="b@x.test")
+        token = signing.dumps("b@x.test", salt="unsubscribe")
+        r = self.client.get(f"/u/{token}/")
+        self.assertContains(r, "Yes, unsubscribe me")
+        self.assertTrue(Subscriber.objects.get(email="b@x.test").is_active)
+        r = self.client.post(f"/u/{token}/", {"confirm": "1"})
+        self.assertContains(r, "unsubscribed")
+        self.assertFalse(Subscriber.objects.get(email="b@x.test").is_active)
+
+    def test_mail_client_one_click_post(self):
+        from django.core import signing
+        Subscriber.objects.create(email="c@x.test")
+        token = signing.dumps("c@x.test", salt="unsubscribe")
+        r = self.client.post(f"/u/{token}/", {"List-Unsubscribe": "One-Click"})
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(Subscriber.objects.get(email="c@x.test").is_active)
+
+    # 4. Zip-bomb .docx refused before it is unpacked
+    def test_docx_zip_bomb_rejected(self):
+        import io, zipfile
+        from jobs.resume_match import extract_resume_text, ResumeParseError
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("word/document.xml", b"0" * (30 * 1024 * 1024))
+        f = io.BytesIO(buf.getvalue()); f.name = "cv.docx"; f.size = len(buf.getvalue())
+        self.assertLess(f.size, 1024 * 1024)                    # tiny on the wire…
+        with self.assertRaises(ResumeParseError):
+            extract_resume_text(f)                              # …refused before unpacking 30 MB
+
+    def test_normal_docx_still_works(self):
+        import io, docx
+        from jobs.resume_match import extract_resume_text
+        d = docx.Document()
+        for line in RESUME.splitlines() * 3:
+            d.add_paragraph(line)
+        buf = io.BytesIO(); d.save(buf)
+        f = io.BytesIO(buf.getvalue()); f.name = "cv.docx"; f.size = len(buf.getvalue())
+        self.assertIn("Marketo", extract_resume_text(f))
+
+    # 5. JD generator: capped inputs, cleaned HTML
+    def test_jd_generator_output_is_sanitised(self):
+        fake = mock.MagicMock()
+        fake.chat.completions.create.return_value.choices = [mock.MagicMock(
+            message=mock.MagicMock(content='<h3>Role</h3><script>alert(1)</script><p onclick="x()">Hi</p>'))]
+        with mock.patch.dict("os.environ", {"OPENAI_API_KEY": "k"}), mock.patch("tools.views.OpenAI", return_value=fake):
+            r = self.client.post("/tools/api/generate-jd/", data=json.dumps({"role": "x" * 5000, "stack": "Marketo"}),
+                                 content_type="application/json")
+        html = r.json()["html"]
+        self.assertNotIn("<script", html); self.assertNotIn("onclick", html); self.assertIn("<h3>Role</h3>", html)
+        sent = fake.chat.completions.create.call_args.kwargs["messages"][1]["content"]
+        self.assertLess(len(sent), 600)
