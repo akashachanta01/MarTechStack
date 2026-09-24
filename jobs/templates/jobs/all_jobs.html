@@ -191,14 +191,7 @@
         <div class="s-select-wrap">
           <svg class="s-select-wrap-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           <select class="s-select" name="l" aria-label="Filter by location" onchange="this.form.submit()">
-            <option value="">All Locations</option>
-            <option {% if location_filter == 'Remote' %}selected{% endif %}>Remote</option>
-            <option {% if location_filter == 'United States' %}selected{% endif %}>United States</option>
-            <option {% if location_filter == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
-            <option {% if location_filter == 'Canada' %}selected{% endif %}>Canada</option>
-            <option {% if location_filter == 'Germany' %}selected{% endif %}>Germany</option>
-            <option {% if location_filter == 'India' %}selected{% endif %}>India</option>
-            <option {% if location_filter == 'Australia' %}selected{% endif %}>Australia</option>
+            {% include "jobs/partials/location_options.html" %}
           </select>
           <svg class="s-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </div>

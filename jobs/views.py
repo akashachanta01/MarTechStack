@@ -376,7 +376,7 @@ def job_list(request):
         jobs = jobs.order_by('-is_pinned', '-created_at')
 
     if location_query:
-        jobs = jobs.filter(location__icontains=location_query)
+        jobs = jobs.filter(location_q(location_query))
     
     if country_query:
         jobs = jobs.filter(location__icontains=country_query)
@@ -581,7 +581,7 @@ def category_detail(request, slug):
     if tool_filter:
         jobs = jobs.filter(tools__slug=tool_filter)
     if location_query:
-        jobs = jobs.filter(location__icontains=location_query)
+        jobs = jobs.filter(location_q(location_query))
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
 
@@ -652,7 +652,7 @@ def all_jobs(request):
     if tool_filter:
         jobs = jobs.filter(tools__slug=tool_filter)
     if location_query:
-        jobs = jobs.filter(location__icontains=location_query)
+        jobs = jobs.filter(location_q(location_query))
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
 
@@ -684,6 +684,15 @@ def all_jobs(request):
         "filter_qs": filter_qs,
         "popular_titles": [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items()],
     })
+
+def location_q(value):
+    """Location filter: a country name matches the structured country field
+    (so "Bengaluru, Karnataka" counts as India) or the location text."""
+    from jobs.geo import code_for_name
+    code = code_for_name(value)
+    q = Q(location__icontains=value)
+    return (q | Q(country=code)) if code else q
+
 
 def title_jobs_qs(slug):
     """Live jobs for a /<title>-jobs/ or /<title>-salary/ page. Shared with the sitemap."""
@@ -1374,7 +1383,7 @@ def tool_detail(request, slug):
     if query:
         jobs = jobs.filter(Q(title__icontains=query) | Q(company__icontains=query))
     if location_query:
-        jobs = jobs.filter(location__icontains=location_query)
+        jobs = jobs.filter(location_q(location_query))
     if work_arrangement_filter:
         jobs = jobs.filter(work_arrangement__iexact=work_arrangement_filter)
 
@@ -1621,7 +1630,7 @@ def post_job(request):
                     if tool:
                         job.tools.add(tool)
 
-            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2')
+            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4')
             # Paid 'featured' posts aren't offered yet: without Stripe configured every post is free.
             if plan == 'featured' and settings.STRIPE_SECRET_KEY:
                 checkout_session = stripe.checkout.Session.create(
@@ -1652,7 +1661,7 @@ def stripe_webhook(request):
         if job_id and session.get('payment_status') == 'paid':
             try: 
                 job = Job.objects.get(id=job_id); job.is_featured = True; job.is_pinned = True; job.screening_status = 'approved'; job.is_active = True; job.save()
-                cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2'); send_job_alert(job)
+                cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4'); send_job_alert(job)
             except Job.DoesNotExist: pass
     return HttpResponse(status=200)
 
@@ -1923,7 +1932,7 @@ def review_action(request, job_id, action):
     if action == "approve": 
         if job.screening_status != "approved":
             job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save()
-            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v2'); send_job_alert(job)
+            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4'); send_job_alert(job)
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     # Return to the review queue the staffer came from, but only if the Referer

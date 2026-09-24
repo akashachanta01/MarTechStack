@@ -1448,3 +1448,58 @@ class BlogCleanupTests(TestCase):
         called = [c.args[1] for c in run.call_args_list]
         self.assertNotIn("generate_blog", called)
         self.assertIn("fetch_jobs", called)
+
+
+class CountryDropdownTests(TestCase):
+    """Location dropdown lists countries only; picking one finds every job there."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_resolver(self):
+        from jobs.geo import country_code as c
+        cases = {"CAN, ON, Mississauga": "CA", "Santa Clara, CA, United States": "US", "New Mexico": "US",
+                 "Bengaluru, India": "IN", "Noida, Uttar Pradesh": "IN", "Omaha, NE 68122": "US",
+                 "Remote - USA": "US", "MEX Work-at-Home": "MX", "Copenhagen, Capital Region, Denmark": "DK",
+                 "Multiple locations": "", "Latin America": "", "A, CA; B, NY + 9 more": "",
+                 "Gran Buenos Aires, Argentina; Capital Federal, Argentina": "AR"}
+        for loc, want in cases.items():
+            self.assertEqual(c(loc), want, loc)
+
+    def test_dropdown_has_only_countries_with_counts(self):
+        make_job(title="A", location="Santa Clara, CA, United States", work_arrangement="onsite")
+        make_job(title="B", location="California, San Francisco", work_arrangement="onsite")
+        make_job(title="C", location="Bengaluru, Karnataka", work_arrangement="onsite")
+        import re as _re
+        html = self.client.get("/").content.decode()
+        select = _re.search(r'<select[^>]*name="l".*?</select>', html, _re.S).group(0)
+        self.assertIn(">United States (2)</option>", select)
+        self.assertIn(">India (1)</option>", select)
+        self.assertNotIn("California", select)
+        self.assertNotIn("Karnataka", select)
+
+    def test_country_filter_finds_jobs_without_country_in_text(self):
+        make_job(title="Bangalore Marketo Admin", location="Bengaluru, Karnataka", work_arrangement="onsite")
+        make_job(title="Austin Ops Role", location="Austin, TX", work_arrangement="onsite")
+        r = self.client.get("/jobs/?l=India")
+        self.assertContains(r, "Bangalore Marketo Admin")
+        self.assertNotContains(r, "Austin Ops Role")
+
+    def test_daily_cleanup_backfills_country(self):
+        from django.core.management import call_command
+        j = make_job(location="Rotterdam", work_arrangement="onsite")
+        Job.objects.filter(pk=j.pk).update(country="")
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        j.refresh_from_db()
+        self.assertEqual(j.country, "NL")
+
+
+class CountryCorrectionTests(TestCase):
+    def test_wrongly_stored_us_is_corrected(self):
+        from django.core.management import call_command
+        cache.clear()
+        j = make_job(location="Paris, IDF, fr", work_arrangement="onsite")
+        Job.objects.filter(pk=j.pk).update(country="US")          # the old ", xx" rule's mistake
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        j.refresh_from_db()
+        self.assertEqual(j.country, "FR")

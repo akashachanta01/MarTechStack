@@ -1,0 +1,5 @@
+{# Country-only location filter: countries that have live jobs, busiest first. #}
+<option value="">All Locations</option>
+<option {% if location_filter == 'Remote' %}selected{% endif %}>Remote</option>
+{% for c in available_countries %}<option value="{{ c.name }}" {% if location_filter == c.name %}selected{% endif %}>{{ c.name }} ({{ c.count }})</option>
+{% endfor %}
