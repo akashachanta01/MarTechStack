@@ -1332,3 +1332,91 @@ class LlmsTxtTests(TestCase):
         self.assertNotIn("/marketing-operations-jobs/", body)     # was a broken link
         for u in set(_re.findall(r"https://martechjobs.io(/[^)\s]*)", body)):
             self.assertEqual(self.client.get(u).status_code, 200, u)
+
+
+class SearchConsoleBatchTests(TestCase):
+    """GSC-driven batch: analyst page, click-worthy titles, Search Console sync + Founder HQ."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_marketing_technology_analyst_page(self):
+        make_job(title="Senior Analyst, Marketing Analytics", company="A")
+        make_job(title="Marketing Operations Analyst", company="B")
+        r = self.client.get("/marketing-technology-analyst-jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Marketing Technology Analyst")
+        self.assertContains(r, "Senior Analyst, Marketing Analytics")
+        self.assertEqual(self.client.get("/marketing-technology-analyst-salary/").status_code, 200)
+
+    def test_titles_carry_live_counts(self):
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        t = Tool.objects.create(name="Salesforce Marketing Cloud", slug="salesforce-marketing-cloud", category=cat,
+                                seo_title="Old hand title")
+        for i in range(3):
+            make_job(title=f"SFMC Dev {i}", company=f"C{i}").tools.add(t)
+        r = self.client.get("/jobs/salesforce-marketing-cloud/")
+        self.assertContains(r, "<title>3 Salesforce Marketing Cloud (SFMC) Jobs — Updated")
+        r = self.client.get("/remote/jobs/")
+        self.assertContains(r, "Remote MarTech Jobs — Updated")
+        r = self.client.get("/jobs-by-tool/")
+        self.assertContains(r, "MarTech Jobs by Platform: Salesforce Marketing Cloud")
+        self.assertContains(r, "(3 live roles)")
+
+    def test_blog_snippet_migration(self):
+        import importlib
+        from django.apps import apps as django_apps
+        mig = importlib.import_module("jobs.migrations.0019_blog_job_titles_meta")
+        BlogPost.objects.create(title="T", slug=mig.SLUG, excerpt="e", content="c")
+        mig.forwards(django_apps, None)
+        self.assertEqual(BlogPost.objects.get(slug=mig.SLUG).meta_title, mig.META_TITLE)
+
+    def _sync(self, status=200):
+        from django.core.management import call_command
+        import io
+        def fake_post(url, json=None, **k):
+            m = mock.MagicMock(status_code=status)
+            if json["dimensions"] == ["date"]:
+                m.json.return_value = {"rows": [{"keys": ["2026-09-20"], "clicks": 10, "impressions": 500, "ctr": .02, "position": 9.5},
+                                                {"keys": ["2026-08-20"], "clicks": 5, "impressions": 400, "ctr": .0125, "position": 14}]}
+            else:
+                m.json.return_value = {"rows": [
+                    {"keys": ["marketo jobs", "https://martechjobs.io/jobs/marketo/"], "clicks": 1, "impressions": 226, "ctr": .004, "position": 12.5},
+                    {"keys": ["martech jobs", "https://martechjobs.io/"], "clicks": 50, "impressions": 800, "ctr": .06, "position": 3}]}
+            return m
+        creds = mock.MagicMock(token="t")
+        out = io.StringIO()
+        with mock.patch.dict("os.environ", {"GOOGLE_JSON_KEY": '{"client_email":"bot@x.iam.gserviceaccount.com"}'}), \
+             mock.patch("google.oauth2.service_account.Credentials.from_service_account_info", return_value=creds), \
+             mock.patch("jobs.management.commands.gsc_sync.requests.post", side_effect=fake_post):
+            call_command("gsc_sync", stdout=out)
+        return out.getvalue()
+
+    def test_sync_stores_data_and_founder_hq_shows_readable_tables(self):
+        from jobs.models import SearchConsoleDaily, SearchConsoleRow
+        out = self._sync()
+        self.assertIn("✅", out)
+        self.assertEqual(SearchConsoleDaily.objects.count(), 2)
+        self.assertEqual(SearchConsoleRow.objects.count(), 2)
+        staff = get_user_model().objects.create_user("st", "st@x.test", "pw12345!x", is_staff=True)
+        self.client.force_login(staff)
+        r = self.client.get("/staff/")
+        self.assertContains(r, "Google search")
+        self.assertContains(r, "Marketo jobs page")          # readable name…
+        self.assertNotContains(r, "martechjobs.io/jobs/marketo/")  # …never a raw URL
+        self.assertContains(r, "marketo jobs")
+
+    def test_sync_explains_how_to_grant_access(self):
+        out = self._sync(status=403)
+        self.assertIn("bot@x.iam.gserviceaccount.com", out)
+        self.assertIn("Users and permissions", out)
+
+
+class FounderHqStillLockedTests(TestCase):
+    def test_founder_hq_requires_staff(self):
+        r = self.client.get("/staff/")
+        self.assertIn(r.status_code, (302, 403))
+        u = get_user_model().objects.create_user("nobody", "n@x.test", "pw12345!x")
+        self.client.force_login(u)
+        r = self.client.get("/staff/")
+        self.assertIn(r.status_code, (302, 403))

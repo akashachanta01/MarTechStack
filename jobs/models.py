@@ -596,3 +596,29 @@ class UserSubmission(Job):
 
 class ActiveJob(Job):
     class Meta: proxy = True; verbose_name = "Active Job"
+
+
+class SearchConsoleDaily(models.Model):
+    """Google Search Console totals per day (web search), synced by gsc_sync."""
+    date = models.DateField(unique=True)
+    clicks = models.IntegerField(default=0)
+    impressions = models.IntegerField(default=0)
+    ctr = models.FloatField(default=0)
+    position = models.FloatField(default=0)
+
+    class Meta:
+        ordering = ["-date"]
+
+
+class SearchConsoleRow(models.Model):
+    """Query x page totals for the latest 28-day window (replaced on every sync)."""
+    query = models.CharField(max_length=500)
+    page = models.URLField(max_length=500)
+    clicks = models.IntegerField(default=0)
+    impressions = models.IntegerField(default=0)
+    ctr = models.FloatField(default=0)
+    position = models.FloatField(default=0)
+    period_end = models.DateField()
+
+    class Meta:
+        indexes = [models.Index(fields=["-impressions"], name="jobs_gsc_impr_idx")]
