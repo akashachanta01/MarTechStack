@@ -485,8 +485,12 @@ class Command(BaseCommand):
         key = self._source_key
         Job.objects.filter(external_id__in=self._feed_ids).update(last_seen_at=now, source_key=key)
         prefix = f"{s.ats_type}:"
+        legacy = Q(source_key="", company__in=legacy_names, external_id__startswith=prefix)
+        if s.ats_type == "workday" and "/" in (s.token or ""):
+            # One company can run several Workday sites: only match this site's jobs.
+            legacy &= Q(apply_url__icontains=f"/{s.token.split('/', 1)[1]}/")
         live = Job.objects.filter(is_active=True, screening_status="approved").filter(
-            Q(source_key=key) | Q(source_key="", company__in=legacy_names, external_id__startswith=prefix))
+            Q(source_key=key) | legacy)
         live_ids = list(live.values_list("id", "external_id"))
         gone = [pk for pk, ext in live_ids if ext and ext not in self._feed_ids]
         if not gone:
