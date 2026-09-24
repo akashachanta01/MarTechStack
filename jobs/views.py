@@ -910,6 +910,13 @@ def _extract_post_faqs(html):
         return []
 
 
+# Blog posts kept for readers but hidden from Google (Sep 2026 review): their
+# URLs are job-search terms ("/blog/martech-jobs/") and they competed with the
+# real job pages for searches like "martech jobs".
+BLOG_NOINDEX_SLUGS = {"martech-jobs", "marketing-technology-jobs", "marketing-automation-jobs",
+                      "marketing-operations-jobs"}
+
+
 def post_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
     related_posts = BlogPost.objects.filter(is_published=True).exclude(id=post.id).order_by('-published_at')[:2]
@@ -928,6 +935,7 @@ def post_detail(request, slug):
         'related_posts': related_posts,
         'sidebar_jobs': sidebar_jobs,
         'faq_items': faq_items,
+        'page_noindex': post.slug in BLOG_NOINDEX_SLUGS,
     })
 
 # --- SEO: LANDING PAGE GENERATOR ---
