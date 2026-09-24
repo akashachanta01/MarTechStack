@@ -1031,3 +1031,27 @@ class FeedClosingTests(TestCase):
         self._run([1, 2, 3]); self._run([1, 2])
         j = Job.objects.get(external_id="greenhouse:3")
         self.assertEqual(self.client.get(f"/job/{j.id}/{j.slug}/").status_code, 410)
+
+
+class WorkdaySiteClosingTests(TestCase):
+    """A company with two Workday sites: polling one never closes the other's jobs."""
+
+    def test_other_site_jobs_untouched(self):
+        from jobs.management.commands.fetch_jobs import Command
+        from jobs.models import CompanySource
+        s = CompanySource.objects.create(name="Acme", ats_type="workday", token="acme/SiteA",
+                                         board_url="https://acme.wd1.myworkdayjobs.com/SiteA")
+        a = make_job(title="Ops A", company="Acme", external_id="workday:/job/a",
+                     apply_url="https://acme.wd1.myworkdayjobs.com/SiteA/job/a")
+        b = make_job(title="Ops B", company="Acme", external_id="workday:/job/b",
+                     apply_url="https://acme.wd1.myworkdayjobs.com/SiteB/job/b")
+        make_job(title="Ops C", company="Acme", external_id="workday:/job/c",
+                 apply_url="https://acme.wd1.myworkdayjobs.com/SiteA/job/c")
+        cmd = Command()
+        cmd.stats = __import__("collections").defaultdict(int)
+        cmd._source_key = "workday:acme/SiteA"
+        cmd._feed_ids = {"workday:/job/c"}
+        cmd._close_vanished(s, {"Acme"})
+        a.refresh_from_db(); b.refresh_from_db()
+        self.assertFalse(a.is_active)   # gone from Site A -> closed
+        self.assertTrue(b.is_active)    # belongs to Site B -> untouched
