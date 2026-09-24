@@ -1055,3 +1055,73 @@ class WorkdaySiteClosingTests(TestCase):
         a.refresh_from_db(); b.refresh_from_db()
         self.assertFalse(a.is_active)   # gone from Site A -> closed
         self.assertTrue(b.is_active)    # belongs to Site B -> untouched
+
+
+class ScannerVisibilityTests(TestCase):
+    """Resume Scanner visibility: skills card, apply nudge, homepage button."""
+
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+
+    def url(self):
+        return f"/job/{self.job.id}/{self.job.slug}/"
+
+    def test_job_page_lists_this_jobs_skills(self):
+        r = self.client.get(self.url())
+        self.assertContains(r, 'data-placement="skills_card"')
+        self.assertContains(r, "This role asks for")
+        self.assertContains(r, "Marketo Engage")          # a platform from JD_HTML
+        self.assertContains(r, "more</span>")             # 8 terms -> 3 shown + 5 more
+
+    def test_apply_nudge_present_and_tracked(self):
+        r = self.client.get(self.url())
+        self.assertContains(r, 'id="jd-nudge"')
+        self.assertContains(r, "apply_nudge_shown")
+        self.assertContains(r, 'data-placement="apply_nudge"')
+
+    def test_no_skills_card_when_member_has_saved_resume(self):
+        from accounts.models import UserResume
+        u = get_user_model().objects.create_user("sr", "sr@x.test", "pw12345!x")
+        UserResume.objects.create(user=u, text=RESUME)
+        self.client.force_login(u)
+        self.assertNotContains(self.client.get(self.url()), 'data-placement="skills_card"')
+
+    def test_job_without_skills_has_no_card(self):
+        j = make_job(title="Office Manager", description="<p>Keep the office running smoothly every day.</p>")
+        r = self.client.get(f"/job/{j.id}/{j.slug}/")
+        self.assertNotContains(r, 'data-placement="skills_card"')
+        self.assertNotContains(r, 'id="jd-nudge"')
+
+    def test_homepage_links_to_scanner(self):
+        r = self.client.get("/")
+        self.assertContains(r, "js-hero-scan")
+        self.assertContains(r, "/tools/resume-keyword-scanner/")
+
+
+class ShortResumeNotSavedTests(TestCase):
+    """A pasted resume too short to check must not be saved (it broke every later check)."""
+
+    def test_short_paste_rejected_and_not_saved(self):
+        from accounts.models import UserResume
+        cache.clear()
+        job = make_job()
+        u = get_user_model().objects.create_user("sh", "sh@x.test", "pw12345!x")
+        self.client.force_login(u)
+        r = self.client.post("/tools/api/ats-match/", data=json.dumps(
+            {"resume_text": "Jane Doe\nMarketing Ops", "job_id": job.id, "save": True}),
+            content_type="application/json")
+        self.assertEqual(r.status_code, 400)
+        self.assertFalse(UserResume.objects.filter(user=u).exists())
+
+    def test_existing_short_saved_resume_gets_clear_message(self):
+        from accounts.models import UserResume
+        cache.clear()
+        job = make_job()
+        u = get_user_model().objects.create_user("sh2", "sh2@x.test", "pw12345!x")
+        UserResume.objects.create(user=u, text="too short")
+        self.client.force_login(u)
+        r = self.client.post("/tools/api/ats-match/", data=json.dumps({"job_id": job.id}),
+                             content_type="application/json")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("Replace", r.json()["error"])

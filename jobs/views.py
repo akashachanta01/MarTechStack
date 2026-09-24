@@ -1478,7 +1478,21 @@ def job_detail(request, id, slug):
     # Similar jobs: same company / same tools / same function — keeps the
     # session alive instead of dead-ending after the apply CTA.
     related_jobs = _related_jobs_for(job, tool_ids)
-    return render(request, 'jobs/job_detail.html', {'job': job, 'related_jobs': related_jobs})
+    return render(request, 'jobs/job_detail.html', {'job': job, 'related_jobs': related_jobs,
+                                                    'key_skills': _job_key_skills(job)})
+
+
+def _job_key_skills(job, limit=3):
+    """The platforms/skills/certs this job asks for (same engine as the Resume
+    Scanner, cached per job). Platforms first. Never breaks the page."""
+    try:
+        from jobs.resume_match import _job_entry
+        terms = _job_entry(job)[0]["terms"]
+    except Exception:
+        return {"shown": [], "more": 0}
+    order = {"platform": 0, "cert": 1, "skill": 2}
+    names = sorted(terms, key=lambda t: (order.get(terms[t], 3), t))
+    return {"shown": names[:limit], "more": max(0, len(names) - limit)}
 
 def post_job(request):
     if request.method == 'POST':

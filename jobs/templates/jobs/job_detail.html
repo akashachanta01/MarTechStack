@@ -101,6 +101,20 @@
   .jd-rel-meta { font-size: 12.5px; color: var(--ink3); }
   .jd-rel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .jd-rel-chips span { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 5px; background: var(--amber-light); color: var(--amber); }
+
+.jd-skillcheck { display:block; margin-top:16px; padding:14px 16px; border:1px solid var(--rule); border-left:4px solid var(--amber); border-radius:12px; background:#fff; text-decoration:none; color:var(--ink); max-width:640px; }
+.jd-skillcheck:hover { border-color:var(--amber); box-shadow:var(--shadow-sm); }
+.jd-skillcheck-lbl { display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink3); margin-bottom:6px; }
+.jd-skillcheck-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.jd-skillcheck-tag { font-size:13px; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--amber-light); color:var(--amber); }
+.jd-skillcheck-more { font-size:13px; color:var(--ink3); padding:3px 4px; }
+.jd-skillcheck-cta { display:block; font-size:14px; font-weight:700; color:var(--navy); }
+.jd-nudge { position:fixed; right:20px; bottom:20px; z-index:60; width:min(340px, calc(100vw - 32px)); background:#fff; border:1px solid var(--rule); border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.18); padding:16px 40px 16px 16px; }
+.jd-nudge[hidden] { display:none !important; }
+.jd-nudge p { margin:0 0 8px; font-size:14px; line-height:1.45; color:var(--ink); }
+.jd-nudge a { font-size:14px; font-weight:700; color:var(--amber); }
+.jd-nudge-x { position:absolute; top:6px; right:8px; border:0; background:none; font-size:22px; line-height:1; color:var(--ink3); cursor:pointer; padding:4px 8px; }
+@media (max-width:640px) { .jd-nudge { right:16px; bottom:16px; } }
 </style>
 
 <div class="jd-wrap">
@@ -158,6 +172,13 @@
         {% endif %}
         <span class="jd-posted">Posted {{ job.created_at|timesince }} ago</span>
       </div>
+      {% if key_skills.shown and not has_saved_resume %}
+      <a class="jd-skillcheck js-check-resume" data-placement="skills_card" href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow">
+        <span class="jd-skillcheck-lbl">This role asks for</span>
+        <span class="jd-skillcheck-tags">{% for t in key_skills.shown %}<span class="jd-skillcheck-tag">{{ t }}</span>{% endfor %}{% if key_skills.more %}<span class="jd-skillcheck-more">+{{ key_skills.more }} more</span>{% endif %}</span>
+        <span class="jd-skillcheck-cta">See which ones your resume is missing — free, 20 seconds →</span>
+      </a>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -238,6 +259,13 @@
   </div>
 </section>
 {% endif %}
+{% if job.description and key_skills.shown %}
+<div id="jd-nudge" class="jd-nudge" role="status" hidden>
+  <button type="button" class="jd-nudge-x" aria-label="Dismiss">×</button>
+  <p><b>While you apply:</b> see which of this job's skills your resume is missing.</p>
+  <a class="js-check-resume" data-placement="apply_nudge" href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow">Check my resume against this job →</a>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -251,8 +279,26 @@ var MTJ_JOB = {
 document.querySelectorAll('.js-apply').forEach(function (a) {
   a.addEventListener('click', function () {
     window.mtjTrack && window.mtjTrack('apply_click', Object.assign({ placement: a.dataset.placement }, MTJ_JOB));
+    showApplyNudge();
   });
 });
+// Never blocks applying: the job opens in a new tab, this card waits here.
+// Shown at most once a week per browser.
+function showApplyNudge() {
+  var n = document.getElementById('jd-nudge');
+  if (!n || !n.hidden) return;
+  try {
+    var last = +localStorage.getItem('mtj_nudge_at') || 0;
+    if (Date.now() - last < 7 * 864e5) return;
+    localStorage.setItem('mtj_nudge_at', String(Date.now()));
+  } catch (e) {}
+  n.hidden = false;
+  window.mtjTrack && window.mtjTrack('apply_nudge_shown', MTJ_JOB);
+  n.querySelector('.jd-nudge-x').addEventListener('click', function () {
+    n.hidden = true;
+    window.mtjTrack && window.mtjTrack('apply_nudge_dismiss', MTJ_JOB);
+  });
+}
 function toggleSave(jobId) {
   const btn = document.getElementById('save-btn');
   const icon = document.getElementById('save-icon');
