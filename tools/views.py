@@ -430,11 +430,14 @@ def api_ats_match(request):
     saved = _saved_resume(request.user)
     if not resume_text and saved:
         resume_text = saved.text
-    elif resume_text and request.user.is_authenticated and data.get("save"):
+    if len(resume_text) < 200:
+        if saved and resume_text == saved.text:
+            return JsonResponse({"error": "Your saved resume is too short to check. Click Replace and upload or paste your full resume."}, status=400)
+        return JsonResponse({"error": "Please paste your full resume (at least a few lines)."}, status=400)
+    # Save only a resume we can actually check (a too-short one would break every later check).
+    if data.get("resume_text") and request.user.is_authenticated and data.get("save"):
         from accounts.models import UserResume
         UserResume.objects.update_or_create(user=request.user, defaults={"text": resume_text, "filename": "Pasted resume"})
-    if len(resume_text) < 200:
-        return JsonResponse({"error": "Please paste your full resume (at least a few lines)."}, status=400)
 
     job = _live_job_or_none(data.get("job_id")) if data.get("job_id") else None
     if job:
