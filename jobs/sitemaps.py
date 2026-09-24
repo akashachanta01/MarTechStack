@@ -149,7 +149,8 @@ class BlogSitemap(Sitemap):
 
     def items(self):
         from .models import BlogPost
-        return BlogPost.objects.filter(is_published=True)
+        from .views import BLOG_NOINDEX_SLUGS
+        return BlogPost.objects.filter(is_published=True).exclude(slug__in=BLOG_NOINDEX_SLUGS)
 
     def lastmod(self, obj):
         return obj.updated_at

@@ -1420,3 +1420,31 @@ class FounderHqStillLockedTests(TestCase):
         self.client.force_login(u)
         r = self.client.get("/staff/")
         self.assertIn(r.status_code, (302, 403))
+
+
+class BlogCleanupTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_job_slug_posts_hidden_from_google_but_readable(self):
+        BlogPost.objects.create(title="Role Guide", slug="martech-jobs", excerpt="e", content="<p>c</p>")
+        BlogPost.objects.create(title="Keep me", slug="martech-job-titles-career-paths", excerpt="e", content="<p>c</p>")
+        r = self.client.get("/blog/martech-jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'content="noindex')
+        self.assertNotContains(self.client.get("/blog/martech-job-titles-career-paths/"), 'content="noindex')
+        sm = self.client.get("/sitemap.xml").content.decode()
+        self.assertNotIn("/blog/martech-jobs/", sm)
+        self.assertIn("/blog/martech-job-titles-career-paths/", sm)
+
+    def test_daily_run_skips_auto_blog_by_default(self):
+        from jobs.management.commands import run_daily_tasks
+        src = open(run_daily_tasks.__file__).read()
+        self.assertIn('os.environ.get("AUTO_BLOG") == "1"', src)
+        with mock.patch.object(run_daily_tasks.Command, "_run") as run, \
+             mock.patch.dict("os.environ", {}, clear=False):
+            import os; os.environ.pop("AUTO_BLOG", None)
+            run_daily_tasks.Command().handle()
+        called = [c.args[1] for c in run.call_args_list]
+        self.assertNotIn("generate_blog", called)
+        self.assertIn("fetch_jobs", called)

@@ -100,9 +100,14 @@ class Command(BaseCommand):
         self._run("      🎯 Sending targeted saved-search alerts...", 'send_saved_search_alerts')
 
         # 5. CONTENT ENGINE (Automated Blog)
-        self._run("\n[5/7] ✍️ Running AI Blog Engine...", 'generate_blog')
-        # Normalize the freshly-generated post (author/category/read_time/meta).
-        self._run("      🧽 Normalizing blog posts...", 'normalize_blog_posts')
+        # Automatic AI blog posts are OFF (Sep 2026 review: weekly auto-posts were
+        # shown ~0-25 times each in Google over 3 months). Set AUTO_BLOG=1 to re-enable.
+        import os
+        if os.environ.get("AUTO_BLOG") == "1":
+            self._run("\n[5/7] ✍️ Running AI Blog Engine...", 'generate_blog')
+            self._run("      🧽 Normalizing blog posts...", 'normalize_blog_posts')
+        else:
+            self.stdout.write("\n[5/7] ✍️ Automatic blog posts are off (AUTO_BLOG not set) — skipping.")
 
         # 6. INDEXING (Ping Google + Bing/IndexNow — Bing's index feeds ChatGPT search)
         self._run("\n[6/7] 📡 Pinging Google Indexing API...", 'index_jobs')
