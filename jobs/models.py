@@ -369,6 +369,9 @@ class Job(models.Model):
         self.title = clean_title(self.title)
         self.company = display_company(self.company)
         if self.location: self.location = normalize_location(tidy_location(self.location))
+        if self.location and not self.country:
+            from jobs.geo import country_code
+            self.country = country_code(self.location)
         if self.description: self.description = clean_html_description(self.description)
         if not self.slug: self.slug = slugify(f"{self.title} at {self.company}")
         # AI overlay is recomputed deterministically on every save (cheap regex).

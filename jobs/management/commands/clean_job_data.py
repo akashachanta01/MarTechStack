@@ -26,7 +26,7 @@ class Command(BaseCommand):
         live = Job.objects.filter(is_active=True, screening_status="approved")
         counts = defaultdict(int)
 
-        for job in live.only("id", "title", "company", "location", "salary_range", "description"):
+        for job in live.only("id", "title", "company", "location", "salary_range", "description", "country"):
             changes = {}
             title, company = clean_title(job.title), display_company(job.company)
             if title != job.title:
@@ -37,6 +37,10 @@ class Command(BaseCommand):
                 loc = normalize_location(tidy_location(job.location))
                 if loc != job.location:
                     changes["location"] = loc
+            from jobs.geo import country_code
+            code = country_code(job.location or "")
+            if code and code != job.country:
+                changes["country"] = code
             if not job.salary_range:
                 pay = extract_salary(job.description)
                 if pay:
@@ -75,7 +79,7 @@ class Command(BaseCommand):
         if not dry:
             # Role pages are built from titles + tool tags: rebuild them now.
             from django.core.cache import cache
-            cache.delete_many(["auto_roles:v1", "tool_roles:v2"])
+            cache.delete_many(["auto_roles:v1", "tool_roles:v2", "available_countries_v4"])
         verb = "Would change" if dry else "Changed"
         self.stdout.write(self.style.SUCCESS(
             f"🧽 {verb}: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())) if counts else "🧽 Nothing to clean."))

@@ -11,6 +11,9 @@ FILTER_PARAMS = {
 }
 
 
+COUNTRIES_CACHE_KEY = 'available_countries_v4'
+
+
 def seo_indexing(request):
     """
     Per-request canonical URL + robots directive for clean indexing:
@@ -67,28 +70,16 @@ def global_seo_data(request):
         popular_tech_stacks = deduped
         cache.set('popular_tech_stacks_v4', popular_tech_stacks, 3600)
 
-    # 2. POPULAR LOCATIONS
-    available_countries = cache.get('available_countries_v3')
+    # 2. LOCATION DROPDOWN: countries only (from the structured country field),
+    # with live job counts, busiest first.
+    available_countries = cache.get(COUNTRIES_CACHE_KEY)
     if available_countries is None:
-        raw_locs = Job.objects.filter(is_active=True, screening_status='approved').values_list('location', flat=True).distinct()
-        country_set = set()
-        blocklist = ["not specified", "on-site", "latin america", "va de los poblados"]
-        
-        for loc in raw_locs:
-            if not loc: continue
-            # Skip generic terms
-            if any(r in loc.lower() for r in ['remote', 'anywhere', 'wfh']): continue
-            if any(b in loc.lower() for b in blocklist): continue
-            
-            parts = loc.split(',')
-            if len(parts) >= 1:
-                country = parts[-1].strip()
-                # Basic validation to ensure it's a real country/state name
-                if len(country) > 3 and not any(char.isdigit() for char in country): 
-                    country_set.add(country)
-                    
-        available_countries = sorted(list(country_set))
-        cache.set('available_countries_v3', available_countries, 3600)
+        from jobs.geo import country_name
+        rows = (Job.objects.filter(is_active=True, screening_status='approved').exclude(country='')
+                .values('country').annotate(n=Count('id')).order_by('-n'))
+        available_countries = [{"name": country_name(r['country']), "count": r['n']}
+                               for r in rows if country_name(r['country'])]
+        cache.set(COUNTRIES_CACHE_KEY, available_countries, 3600)
 
     return {
         'popular_tech_stacks': popular_tech_stacks,
