@@ -52,33 +52,63 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"❌ Auth Error: {e}"))
             return
         
-        jobs = Job.objects.filter(is_active=True, screening_status='approved').order_by('-created_at')[:50]
-        
-        if not jobs:
-             self.stdout.write("   ⚠️ No active/approved jobs found to index.")
-             return
+        # Google's Indexing API allows ~200 notifications a day. Spend them on
+        # changes only, each job once: new live jobs (URL_UPDATED) and jobs that
+        # closed (URL_DELETED) so Google for Jobs stops showing dead roles.
+        # screening_details records what was sent, so nothing is re-sent daily.
+        from django.utils import timezone
+        from datetime import timedelta
+        DAILY_CAP = 180
+        new_jobs = list(Job.objects.filter(
+            is_active=True, screening_status='approved',
+            went_live_at__gte=timezone.now() - timedelta(days=14),
+        ).exclude(screening_details__has_key='index_updated').order_by('-went_live_at')[:DAILY_CAP])
+        gone_jobs = list(Job.objects.filter(is_active=False, went_live_at__isnull=False)
+                         .filter(screening_details__has_key='index_updated')
+                         .exclude(screening_details__has_key='index_deleted')
+                         .order_by('-updated_at')[:max(0, DAILY_CAP - len(new_jobs))])
+        # One-time catch-up: live jobs from before this tracking existed.
+        if len(new_jobs) + len(gone_jobs) < DAILY_CAP:
+            new_jobs += list(Job.objects.filter(is_active=True, screening_status='approved')
+                             .exclude(screening_details__has_key='index_updated')
+                             .exclude(id__in=[j.id for j in new_jobs])
+                             .order_by('-went_live_at')[:DAILY_CAP - len(new_jobs) - len(gone_jobs)])
+        # Closed jobs that were live before tracking began also need removing.
+        if len(new_jobs) + len(gone_jobs) < DAILY_CAP:
+            gone_jobs += list(Job.objects.filter(is_active=False, went_live_at__isnull=False,
+                                                 went_live_at__gte=timezone.now() - timedelta(days=120))
+                              .exclude(screening_details__has_key='index_deleted')
+                              .exclude(id__in=[j.id for j in gone_jobs])
+                              .order_by('-updated_at')[:DAILY_CAP - len(new_jobs) - len(gone_jobs)])
+
+        if not new_jobs and not gone_jobs:
+            self.stdout.write("   Nothing new or closed to send to Google today.")
+            return
 
         success_count = 0
-        
-        for job in jobs:
+        endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
+        headers = {"Authorization": f"Bearer {creds.token}"}
+        for job, kind, mark in [(j, "URL_UPDATED", "index_updated") for j in new_jobs] + \
+                               [(j, "URL_DELETED", "index_deleted") for j in gone_jobs]:
             url = f"{settings.DOMAIN_URL}/job/{job.id}/{job.slug}/"
-            endpoint = "https://indexing.googleapis.com/v3/urlNotifications:publish"
-            payload = { "url": url, "type": "URL_UPDATED" }
-            headers = {"Authorization": f"Bearer {creds.token}"}
-            
             try:
-                resp = requests.post(endpoint, json=payload, headers=headers, timeout=15)
-                
+                resp = requests.post(endpoint, json={"url": url, "type": kind}, headers=headers, timeout=15)
                 if resp.status_code == 200:
-                    self.stdout.write(self.style.SUCCESS(f"   ✅ Pinged: {job.title}"))
+                    details = dict(job.screening_details or {})
+                    details[mark] = timezone.now().isoformat()
+                    Job.objects.filter(pk=job.pk).update(screening_details=details)
+                    self.stdout.write(self.style.SUCCESS(f"   ✅ {kind}: {job.title}"))
                     success_count += 1
                 elif resp.status_code == 403:
                     self.stdout.write(self.style.ERROR(f"   ❌ 403 PERMISSION DENIED"))
                     self.stdout.write(self.style.WARNING(f"      ACTION REQUIRED: Go to Google Search Console -> Settings -> Users."))
                     self.stdout.write(self.style.WARNING(f"      Add this email as an 'Owner': {self.service_email}"))
-                    return # Stop trying, all will fail
+                    return
+                elif resp.status_code == 429:
+                    self.stdout.write(self.style.WARNING("   ⏸ Google daily quota reached — the rest go tomorrow."))
+                    break
                 else:
-                    self.stdout.write(self.style.ERROR(f"   ❌ Failed ({resp.status_code}): {resp.text}"))
+                    self.stdout.write(self.style.ERROR(f"   ❌ Failed ({resp.status_code}): {resp.text[:200]}"))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"   ❌ Request Error: {e}"))
 

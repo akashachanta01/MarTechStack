@@ -1883,3 +1883,57 @@ def directory(request):
         'states': states,
         'top_cities': top_cities,
     })
+
+
+# --- RESUME KEYWORDS PER ROLE (real demand from live jobs) -------------------
+RESUME_KW_MIN_JOBS = 8      # below this the numbers are too thin to publish/index
+
+
+def role_keyword_stats(slug):
+    """Which platforms/skills/certs live jobs for this role ask for, as counts and
+    % of jobs. Same engine as the Resume Scanner; cached 6h. None if unknown role."""
+    if slug not in TITLE_JOBS:
+        return None
+    key = f"role_kw:v1:{slug}"
+    data = cache.get(key)
+    if data is not None:
+        return data
+    from collections import Counter
+    from jobs.resume_match import _job_entry
+    jobs = list(title_jobs_qs(slug).order_by("-created_at")[:150])
+    counts, kinds, analysed = Counter(), {}, 0
+    for j in jobs:
+        try:
+            terms = _job_entry(j)[0]["terms"]
+        except Exception:
+            continue
+        analysed += 1
+        for t, kind in terms.items():
+            counts[t] += 1
+            kinds[t] = kind
+    rows = [{"term": t, "kind": kinds[t], "jobs": n, "pct": round(100 * n / analysed) if analysed else 0}
+            for t, n in counts.most_common(30) if n >= 2]
+    data = {"jobs": analysed, "rows": rows,
+            "platforms": [r for r in rows if r["kind"] == "platform"][:12],
+            "skills": [r for r in rows if r["kind"] != "platform"][:12]}
+    cache.set(key, data, 6 * 3600)
+    return data
+
+
+def role_keywords_indexable(stats):
+    return bool(stats) and stats["jobs"] >= RESUME_KW_MIN_JOBS and len(stats["rows"]) >= 5
+
+
+def role_resume_keywords(request, role_slug):
+    """/<role>-resume-keywords/ — the platforms and skills employers ask for in
+    this role, measured from live listings, with a path into the Resume Scanner."""
+    cfg = TITLE_JOBS.get(role_slug)
+    if not cfg:
+        raise Http404("Unknown role")
+    stats = role_keyword_stats(role_slug)
+    related = [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items() if s != role_slug][:8]
+    return render(request, "jobs/role_resume_keywords.html", {
+        "role_slug": role_slug, "role_name": cfg["name"], "stats": stats,
+        "top": (stats["rows"][:3] if stats else []), "related_roles": related,
+        "page_noindex": not role_keywords_indexable(stats),
+    })

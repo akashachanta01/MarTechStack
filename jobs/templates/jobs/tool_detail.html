@@ -294,6 +294,7 @@
 
 <section class="td-list-sec">
   <div class="wrap">
+    {% include "jobs/partials/tool_alert.html" with alert_tool=tool.slug alert_label=tool.name alert_id="td-alert-form" %}
     <div class="td-list-head">
       <h2>{{ tool.name }} Jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
       <div class="td-controls">
@@ -365,7 +366,7 @@
       <div class="td-empty">
         <h3>No {{ tool.name }} jobs match right now</h3>
         <p>Top {{ tool.name }} roles fill fast. Set a free alert and we'll email you the moment a new one is posted.</p>
-        <button onclick="document.getElementById('subscribe-modal').style.display='flex'" class="btn btn-amber">Set {{ tool.name }} Job Alert</button>
+        <a href="#td-alert-form" class="btn btn-amber">Set {{ tool.name }} Job Alert</a>
       </div>
     {% endfor %}
     </div>

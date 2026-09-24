@@ -171,6 +171,7 @@
     <h2>See live {{ role_name }} jobs</h2>
     <p>{% if total_open %}{{ total_open }} {{ role_name }} role{{ total_open|pluralize }} are open on MarTechJobs right now.{% else %}New {{ role_name }} roles are added regularly.{% endif %} Apply directly — no recruiter noise.</p>
     <a href="{% url 'title_jobs' role_slug %}" class="btn btn-amber btn-lg">Browse {{ role_name }} Jobs →</a>
+    <p style="margin-top:14px;font-size:15px;"><a href="{% url 'role_resume_keywords' role_slug %}" style="font-weight:700;color:var(--amber);">See which skills {{ role_name }} job posts ask for →</a></p>
   </div>
 </div>
 {% endblock %}

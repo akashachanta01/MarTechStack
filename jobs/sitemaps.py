@@ -328,3 +328,17 @@ class CompanySitemap(Sitemap):
 
     def location(self, name):
         return reverse('company_detail', args=[slugify(name)])
+
+
+class RoleResumeKeywordsSitemap(Sitemap):
+    """Resume-keyword pages with enough live jobs to publish real numbers."""
+    changefreq = "weekly"
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from jobs.views import TITLE_JOBS, role_keyword_stats, role_keywords_indexable
+        return [s for s in TITLE_JOBS if role_keywords_indexable(role_keyword_stats(s))]
+
+    def location(self, slug):
+        return f"/{slug}-resume-keywords/"

@@ -195,6 +195,9 @@
         <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="js-check-resume" data-placement="bottom" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
         {% endif %}
       </div>
+      {% with first_tool=job.tools.all|first %}{% if first_tool %}
+      {% include "jobs/partials/tool_alert.html" with alert_tool=first_tool.slug alert_label=first_tool.name alert_id="jd-alert-form" %}
+      {% endif %}{% endwith %}
     </div>
 
     <aside class="jd-sidebar">
