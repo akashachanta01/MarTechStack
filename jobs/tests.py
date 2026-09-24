@@ -1216,3 +1216,33 @@ class TrafficBatchTests(TestCase):
         make_job()
         self.assertContains(self.client.get("/marketing-operations-manager-jobs/"), "/marketing-operations-manager-resume-keywords/")
         self.assertContains(self.client.get("/marketing-operations-manager-salary/"), "/marketing-operations-manager-resume-keywords/")
+
+
+class ToolTaggingTests(TestCase):
+    """Jobs get tagged with every platform their description asks for."""
+
+    def test_clean_job_data_tags_tools_from_description(self):
+        from django.core.management import call_command
+        cache.clear()
+        j = make_job(title="Lifecycle Manager", description="<p>Own our Braze and Salesforce Marketing Cloud journeys. HubSpot a plus.</p>")
+        self.assertEqual(j.tools.count(), 0)
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        names = set(j.tools.values_list("name", flat=True))
+        self.assertTrue({"Braze", "Salesforce Marketing Cloud", "HubSpot"} <= names, names)
+        self.assertNotIn("Salesforce", names)   # SFMC is not plain Salesforce
+        r = self.client.get("/jobs/braze/")
+        self.assertContains(r, "Lifecycle Manager")
+
+    def test_tool_page_h1_includes_search_abbreviation(self):
+        from django.core.management import call_command
+        cache.clear()
+        make_job(description="<p>Salesforce Marketing Cloud admin needed.</p>")
+        call_command("clean_job_data", stdout=open("/dev/null", "w"))
+        self.assertContains(self.client.get("/jobs/salesforce-marketing-cloud/"), "Salesforce Marketing Cloud (SFMC)")
+
+    def test_dry_run_does_not_tag(self):
+        from django.core.management import call_command
+        cache.clear()
+        j = make_job(description="<p>Braze expert.</p>")
+        call_command("clean_job_data", "--dry-run", stdout=open("/dev/null", "w"))
+        self.assertEqual(j.tools.count(), 0)

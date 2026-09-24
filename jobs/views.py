@@ -1267,6 +1267,14 @@ TOOL_TAGLINES = {
     "snowflake": "Snowflake warehouse, modeling, and BI roles for analytics-engineering and data teams.",
 }
 
+# How people abbreviate these tools when they search ("SFMC jobs").
+TOOL_SHORT_NAMES = {
+    "salesforce-marketing-cloud": "SFMC", "adobe-experience-platform": "AEP",
+    "adobe-journey-optimizer": "AJO", "adobe-experience-manager": "AEM",
+    "google-analytics": "GA4", "google-tag-manager": "GTM", "pardot": "Account Engagement",
+}
+
+
 def tool_detail(request, slug):
     # 301 mixed-case slugs (e.g. /jobs/Salesforce/) to the canonical lowercase
     # so we don't split equity across two URLs.
@@ -1334,6 +1342,7 @@ def tool_detail(request, slug):
         'view_mode': request.GET.get("view", "list"),
         'often_paired': often_paired,
         'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
+        'tool_short': TOOL_SHORT_NAMES.get(slug, ""),
         'filter_qs': filter_qs,
         'location_name': 'Global/Remote',
         'cross_cities': SEO_CROSS_CITIES, 'cross_states': SEO_CROSS_STATES,

@@ -47,6 +47,11 @@ class Command(BaseCommand):
                 # .update(): no re-sanitising of descriptions or slug changes.
                 Job.objects.filter(pk=job.pk).update(**changes)
 
+        # Tag every live job with the platforms its description asks for (same
+        # engine as the Resume Scanner). The AI screener only tagged ~40% of
+        # jobs, so tool pages (e.g. "SFMC jobs") showed a fraction of the roles.
+        counts["tools_added"] = self._tag_tools(live, dry)
+
         groups = defaultdict(list)
         for pk, t, c, l, created in live.values_list("id", "title", "company", "location", "created_at"):
             groups[((c or "").lower(), (t or "").lower(), (l or "").lower())].append((created, pk))
@@ -59,3 +64,39 @@ class Command(BaseCommand):
         verb = "Would change" if dry else "Changed"
         self.stdout.write(self.style.SUCCESS(
             f"🧽 {verb}: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())) if counts else "🧽 Nothing to clean."))
+
+    def _tag_tools(self, live, dry):
+        from django.utils.text import slugify
+        from jobs.models import Category, Tool
+        from jobs.resume_match import _job_entry
+        from jobs.tool_catalog import resolve_tool_name
+        tools = {t.name.lower(): t for t in Tool.objects.all()}
+        category = None
+        added = 0
+        for job in live.prefetch_related("tools"):
+            try:
+                terms = _job_entry(job)[0]["terms"]
+            except Exception:
+                continue
+            have = {t.id for t in job.tools.all()}
+            for term, kind in terms.items():
+                if kind != "platform":
+                    continue
+                canon = resolve_tool_name(term)
+                if not canon:
+                    continue
+                tool = tools.get(canon.lower())
+                if tool is None:
+                    if dry:
+                        added += 1
+                        continue
+                    if category is None:
+                        category, _ = Category.objects.get_or_create(name="MarTech", defaults={"slug": "martech"})
+                    tool, _ = Tool.objects.get_or_create(name=canon, defaults={"slug": slugify(canon), "category": category})
+                    tools[canon.lower()] = tool
+                if tool.id not in have:
+                    added += 1
+                    have.add(tool.id)
+                    if not dry:
+                        job.tools.add(tool)
+        return added
