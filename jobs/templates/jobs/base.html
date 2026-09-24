@@ -441,7 +441,16 @@
       *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
       html { scroll-behavior: auto; }
     }
-    </style>
+    
+.tool-alert { display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; margin:24px 0; padding:16px 18px; border:1px solid rgba(191,84,32,.2); border-radius:12px; background:var(--amber-light); }
+.tool-alert-text { flex:1 1 240px; }
+.tool-alert-title { font-size:15px; font-weight:700; color:var(--ink); }
+.tool-alert-sub { font-size:13px; color:var(--ink2); margin-top:2px; }
+.tool-alert-form { display:flex; gap:8px; flex:1 1 280px; }
+.tool-alert-form input[type=email] { flex:1; min-width:0; padding:10px 12px; border:1px solid var(--rule); border-radius:8px; font-size:14px; background:#fff; }
+.tool-alert-form button { padding:10px 16px; border:0; border-radius:8px; background:var(--amber); color:#fff; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; }
+.tool-alert-msg { flex-basis:100%; margin:0; font-size:13px; min-height:1em; }
+</style>
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -894,13 +903,16 @@
         fetch("{% url 'subscribe' %}", {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': form.querySelector('input[name=csrfmiddlewaretoken]').value },
-          body: 'email=' + encodeURIComponent(email)
+          // Send every field: alert forms carry their filters (tool, q, l...) so the
+          // server creates a targeted job alert instead of a newsletter signup.
+          body: new URLSearchParams(new FormData(form)).toString()
         }).then(r => { if (r.status === 429) throw new Error('Too many requests'); return r.json(); })
           .then(d => {
             if (d.success) {
-              window.mtjTrack('newsletter_subscribe', { form: formId });
-              btn.textContent = 'Subscribed!';
-              if (msg) msg.innerHTML = '<span style="color:var(--green)">✓ Welcome to the club!</span>';
+              var isAlert = !!form.querySelector('input[name=tool],input[name=q],input[name=l],input[name=arrangement],input[name=function]');
+              window.mtjTrack(isAlert ? 'job_alert_created' : 'newsletter_subscribe', { form: formId, tool: (form.querySelector('input[name=tool]') || {}).value || '' });
+              btn.textContent = isAlert ? 'Alert set!' : 'Subscribed!';
+              if (msg) msg.innerHTML = '<span style="color:var(--green)">✓ ' + (d.message || (isAlert ? "Done — we'll email you new matching roles." : 'Welcome to the club!')) + '</span>';
               form.reset();
               setTimeout(() => { if (formId === 'modal-sub-form') { document.getElementById('subscribe-modal').classList.remove('open'); document.getElementById('subscribe-modal').style.display = 'none'; } btn.disabled = false; btn.textContent = orig; if (msg) msg.innerHTML = ''; }, 2500);
             } else {

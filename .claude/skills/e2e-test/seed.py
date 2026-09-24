@@ -28,6 +28,17 @@ Job.objects.create(title="Marketo & SFMC Specialist", company="Umbrella", locati
                    description="<p>Run our Marketo instance and Salesforce Marketing Cloud. Build lead scoring and nurture programs; Pardot migration experience.</p>",
                    apply_url="https://x.test", screening_status="approved", is_active=True, work_arrangement="remote",
                    slug="best-fit-specialist")
+# Tools (tool pages + tool job alerts) and enough same-title roles for a
+# publishable resume-keywords page.
+from jobs.models import Category, Tool
+cat, _ = Category.objects.get_or_create(name="MarTech", defaults={"slug": "martech"})
+marketo, _ = Tool.objects.get_or_create(name="Marketo", defaults={"slug": "marketo", "category": cat})
+hubspot, _ = Tool.objects.get_or_create(name="HubSpot", defaults={"slug": "hubspot", "category": cat})
+for j in Job.objects.filter(slug__startswith="role-")[:120]:
+    j.tools.add(marketo, hubspot)
+Job.objects.filter(title="Marketing Operations Manager").first().tools.add(marketo)
+for i, j in enumerate(Job.objects.filter(slug__startswith="role-").order_by("id")[:9]):
+    Job.objects.filter(pk=j.pk).update(title=f"Marketing Operations Manager {i + 2}")
 for u in ("jane", "limit"):
     User.objects.filter(username=u).delete()
     User.objects.create_user(u, f"{u}@example.com", "pw12345!x")

@@ -70,6 +70,7 @@ urlpatterns = [
 
     # --- PER-ROLE SALARY PAGES (-salary/ suffix disambiguates) ---
     path('<slug:role_slug>-salary/', views.role_salary, name='role_salary'),
+    path('<slug:role_slug>-resume-keywords/', views.role_resume_keywords, name='role_resume_keywords'),
 
     # --- JOB-TITLE PAGES (single-segment, curated titles only) ---
     # RevOps killed (screener excludes it) — 301 the old indexed URL to the

@@ -307,6 +307,11 @@ class Job(models.Model):
         loc = (self.location or "").strip()
         if not loc or any(k in loc.lower() for k in ("remote", "anywhere", "worldwide", "wfh")):
             return {"locality": "", "region": ""}
+        # Multi-city listings ("A, CA; B, NY + 7 more"): describe the first city.
+        # "Multiple locations" names no city at all, so send none.
+        loc = re.split(r";|\s\+\s\d+\s+more", loc)[0].strip()
+        if loc.lower() in ("multiple locations", "various locations", "multiple"):
+            return {"locality": "", "region": ""}
         parts = [p.strip() for p in loc.split(",") if p.strip()]
         if parts and parts[-1].lower() in self._COUNTRY_NAMES:
             parts = parts[:-1]
@@ -357,7 +362,7 @@ class Job(models.Model):
         # that then 404. ISO 8601 *datetime* (not date-only): Google for Jobs
         # requires the full timestamp or it can reject the rich result.
         anchor = self.went_live_at or self.created_at
-        return (anchor + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S')
+        return (anchor + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
     def save(self, *args, **kwargs):
         from jobs.ingest_quality import clean_title, display_company, tidy_location

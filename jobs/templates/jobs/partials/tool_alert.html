@@ -1,0 +1,15 @@
+{# Targeted job alert for one tool. Needs: alert_tool (slug), alert_label (display name), alert_id. #}
+<div class="tool-alert">
+  <div class="tool-alert-text">
+    <div class="tool-alert-title">Get new {{ alert_label }} jobs by email</div>
+    <div class="tool-alert-sub">Only {{ alert_label }} roles. Free, unsubscribe anytime.</div>
+  </div>
+  <form id="{{ alert_id }}" class="tool-alert-form">
+    {% csrf_token %}
+    <input type="hidden" name="tool" value="{{ alert_tool }}">
+    <input type="email" name="email" required placeholder="your@email.com" aria-label="Email for {{ alert_label }} job alerts">
+    <button type="submit">Get alerts</button>
+  </form>
+  <p id="{{ alert_id }}-msg" class="tool-alert-msg"></p>
+</div>
+<script>document.addEventListener('DOMContentLoaded',function(){ handleSubscribe('{{ alert_id }}', '{{ alert_id }}-msg'); });</script>

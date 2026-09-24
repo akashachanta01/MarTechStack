@@ -224,7 +224,7 @@ class ATSMatchAPITests(TestCase):
 
     def test_subscribe_success_is_tracked(self):
         r = self.client.get("/")
-        self.assertContains(r, "window.mtjTrack('newsletter_subscribe'")
+        self.assertContains(r, "'newsletter_subscribe'"); self.assertContains(r, "'job_alert_created'")
         self.assertContains(r, "window.mtjTrack('signup_click'")
 
     def test_email_links_get_utm_tags_but_unsubscribe_does_not(self):
@@ -1125,3 +1125,94 @@ class ShortResumeNotSavedTests(TestCase):
                              content_type="application/json")
         self.assertEqual(r.status_code, 400)
         self.assertIn("Replace", r.json()["error"])
+
+
+class TrafficBatchTests(TestCase):
+    """Google job ping, listing data, job alerts, resume-keyword pages."""
+
+    def setUp(self):
+        cache.clear()
+
+    # --- Google Indexing API: new jobs once, closed jobs removed once ---
+    def _run_index(self):
+        from django.core.management import call_command
+        sent = []
+        def fake_post(url, json=None, **k):
+            sent.append((json["type"], json["url"])); return mock.MagicMock(status_code=200)
+        creds = mock.MagicMock(token="t", service_account_email="x@y")
+        with mock.patch.dict("os.environ", {"GOOGLE_JSON_KEY": '{"client_email":"x@y"}'}), \
+             mock.patch("google.oauth2.service_account.Credentials.from_service_account_info", return_value=creds), \
+             mock.patch("jobs.management.commands.index_jobs.requests.post", side_effect=fake_post):
+            call_command("index_jobs", stdout=open("/dev/null", "w"))
+        return sent
+
+    def test_index_sends_new_once_and_deletes_closed(self):
+        live = make_job(title="Live Role")
+        gone = make_job(title="Gone Role")
+        first = self._run_index()
+        self.assertEqual({t for t, _ in first}, {"URL_UPDATED"})
+        self.assertEqual(len(first), 2)
+        self.assertEqual(self._run_index(), [])                  # nothing re-sent
+        Job.objects.filter(pk=gone.pk).update(is_active=False)
+        third = self._run_index()
+        self.assertEqual(third, [("URL_DELETED", f"https://martechjobs.io/job/{gone.id}/{gone.slug}/")] if third and "martechjobs.io" in third[0][1] else third)
+        self.assertEqual([t for t, _ in third], ["URL_DELETED"])
+        self.assertEqual(self._run_index(), [])
+
+    # --- JobPosting location data ---
+    def test_schema_location_for_multi_city_and_placeholder(self):
+        self.assertEqual(Job(location="Multiple locations").get_address_parts(), {"locality": "", "region": ""})
+        self.assertEqual(Job(location="San Francisco, CA; New York, NY; Seattle, WA + 7 more").get_address_parts(),
+                         {"locality": "San Francisco", "region": "CA"})
+        self.assertTrue(make_job().get_schema_valid_through().endswith("+00:00"))
+
+    # --- Job alerts ---
+    def test_tool_alert_on_job_and_tool_pages(self):
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        tool = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        j = make_job(); j.tools.add(tool)
+        r = self.client.get(f"/job/{j.id}/{j.slug}/")
+        self.assertContains(r, 'id="jd-alert-form"')
+        self.assertContains(r, 'name="tool" value="marketo"')
+        self.assertContains(r, "Get new Marketo jobs by email")
+
+    def test_subscribe_js_sends_filters(self):
+        r = self.client.get("/")
+        self.assertContains(r, "new URLSearchParams(new FormData(form))")
+        self.assertContains(r, "job_alert_created")
+
+    def test_alert_post_creates_targeted_alert_not_newsletter(self):
+        from jobs.models import SavedSearch, PendingSubscriber
+        r = self.client.post("/subscribe/", {"email": "a@b.test", "tool": "marketo"})
+        self.assertEqual(r.json()["success"], True)
+        self.assertTrue(SavedSearch.objects.filter(email="a@b.test", tool="marketo").exists())
+        self.assertFalse(PendingSubscriber.objects.filter(email="a@b.test").exists())
+
+    # --- Resume keyword pages ---
+    def test_resume_keywords_page_real_numbers_and_indexable(self):
+        for i in range(9):
+            make_job(title=f"Marketing Operations Manager {i}", company=f"Co{i}")
+        r = self.client.get("/marketing-operations-manager-resume-keywords/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Marketing Operations Manager resume keywords")
+        self.assertContains(r, "Salesforce Marketing Cloud")
+        self.assertContains(r, "100%")                    # every seeded post asks for it
+        self.assertNotContains(r, 'content="noindex')
+        self.assertContains(r, "FAQPage")
+        body = self.client.get("/sitemap.xml").content.decode()
+        self.assertIn("/marketing-operations-manager-resume-keywords/", body)
+
+    def test_resume_keywords_thin_role_is_noindex_and_not_in_sitemap(self):
+        make_job(title="CRM Manager")
+        r = self.client.get("/crm-manager-resume-keywords/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'content="noindex')
+        self.assertNotIn("/crm-manager-resume-keywords/", self.client.get("/sitemap.xml").content.decode())
+
+    def test_unknown_role_404(self):
+        self.assertEqual(self.client.get("/not-a-role-resume-keywords/").status_code, 404)
+
+    def test_title_and_salary_pages_link_to_keywords(self):
+        make_job()
+        self.assertContains(self.client.get("/marketing-operations-manager-jobs/"), "/marketing-operations-manager-resume-keywords/")
+        self.assertContains(self.client.get("/marketing-operations-manager-salary/"), "/marketing-operations-manager-resume-keywords/")

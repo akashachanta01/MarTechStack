@@ -1,0 +1,110 @@
+{% extends "jobs/base.html" %}
+
+{% block title %}{{ role_name }} Resume Keywords ({% now "Y" %}) — From {{ stats.jobs|default:"Live" }} Real Job Posts | MarTechJobs{% endblock %}
+{% block meta_description %}{% if top %}{{ top.0.pct }}% of {{ role_name }} job posts ask for {{ top.0.term }}{% if top.1 %}, {{ top.1.pct }}% for {{ top.1.term }}{% endif %}. The platforms and skills to put on your resume, counted from {{ stats.jobs }} live listings.{% else %}The platforms and skills {{ role_name }} job posts ask for, counted from live MarTech listings.{% endif %}{% endblock %}
+{% block og_title %}{{ role_name }} Resume Keywords ({% now "Y" %}){% endblock %}
+{% block og_desc %}{% if top %}{{ top.0.pct }}% ask for {{ top.0.term }}. Counted from {{ stats.jobs }} live {{ role_name }} job posts.{% endif %}{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"{{ role_name|escapejs }} Jobs","item":"https://martechjobs.io{% url 'title_jobs' role_slug %}"},
+    {"@type":"ListItem","position":3,"name":"{{ role_name|escapejs }} Resume Keywords","item":"https://martechjobs.io{% url 'role_resume_keywords' role_slug %}"}
+  ]
+}
+</script>
+{% if top and not page_noindex %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What keywords should a {{ role_name|escapejs }} resume include?","acceptedAnswer":{"@type":"Answer","text":"In {{ stats.jobs }} live {{ role_name|escapejs }} job posts on MarTechJobs, the most requested are {% for r in top %}{{ r.term|escapejs }} ({{ r.pct }}%){% if not forloop.last %}, {% endif %}{% endfor %}."}}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+  .rk-wrap { max-width: 880px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 560px) { .rk-wrap { padding: 0 20px; } }
+  .rk-hero { padding: 48px 0 12px; }
+  .rk-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 4.4vw, 42px); font-weight: 800; color: var(--ink); line-height: 1.15; margin-bottom: 12px; }
+  .rk-hero p { font-size: 16px; color: var(--ink2); line-height: 1.6; max-width: 680px; }
+  .rk-sec { margin-top: 32px; }
+  .rk-sec h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 12px; }
+  .rk-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; font-size: 15px; }
+  .rk-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 10px 14px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .rk-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); color: var(--ink); }
+  .rk-table tr:last-child td { border-bottom: 0; }
+  .rk-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rk-table th.num { text-align: right; }
+  .rk-cta { margin-top: 32px; padding: 22px; border-radius: 14px; background: var(--navy); color: #fff; }
+  .rk-cta h2 { color: #fff; font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 6px; }
+  .rk-cta p { color: rgba(255,255,255,.85); font-size: 15px; margin-bottom: 14px; }
+  .rk-cta a { display: inline-block; background: var(--amber); color: #fff; font-weight: 700; padding: 12px 18px; border-radius: 10px; text-decoration: none; }
+  .rk-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .rk-links a { font-size: 14px; font-weight: 600; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 999px; background: #fff; color: var(--navy); text-decoration: none; }
+  .rk-links a:hover { border-color: var(--amber); color: var(--amber); }
+  .rk-note { font-size: 13px; color: var(--ink3); margin-top: 10px; }
+</style>
+
+<div class="rk-wrap">
+  <section class="rk-hero">
+    <h1>{{ role_name }} resume keywords</h1>
+    {% if stats and stats.rows %}
+    <p>We counted what {{ stats.jobs }} live {{ role_name }} job post{{ stats.jobs|pluralize }} on MarTechJobs ask for. {% if top %}{{ top.0.pct }}% mention {{ top.0.term }}{% if top.1 %} and {{ top.1.pct }}% mention {{ top.1.term }}{% endif %}.{% endif %} If a platform below is on your resume, use the employer's exact name for it.</p>
+    {% else %}
+    <p>There aren't enough live {{ role_name }} job posts right now to publish reliable numbers. See the live roles below, or check your resume against any MarTech job.</p>
+    {% endif %}
+  </section>
+
+  {% if stats.platforms %}
+  <section class="rk-sec">
+    <h2>Platforms employers ask for</h2>
+    <table class="rk-table">
+      <thead><tr><th>Platform</th><th class="num">Job posts</th><th class="num">Share of posts (pct)</th></tr></thead>
+      <tbody>{% for r in stats.platforms %}<tr><td>{{ r.term }}</td><td class="num">{{ r.jobs }}</td><td class="num">{{ r.pct }}%</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if stats.skills %}
+  <section class="rk-sec">
+    <h2>Skills and certifications</h2>
+    <table class="rk-table">
+      <thead><tr><th>Skill or certification</th><th class="num">Job posts</th><th class="num">Share of posts (pct)</th></tr></thead>
+      <tbody>{% for r in stats.skills %}<tr><td>{{ r.term }}</td><td class="num">{{ r.jobs }}</td><td class="num">{{ r.pct }}%</td></tr>{% endfor %}</tbody>
+    </table>
+    <p class="rk-note">Counted from live listings, refreshed daily. A post can mention several items.</p>
+  </section>
+  {% endif %}
+
+  <section class="rk-cta">
+    <h2>Which of these is your resume missing?</h2>
+    <p>Check your resume against a real {{ role_name }} job. You'll see the exact platforms, skills and certs it asks for that you haven't listed.</p>
+    <a href="{% url 'resume_scanner' %}" class="js-rk-scan">Check my resume — free →</a>
+  </section>
+
+  <section class="rk-sec" style="margin-bottom:64px">
+    <h2>Keep going</h2>
+    <div class="rk-links">
+      <a href="{% url 'title_jobs' role_slug %}">Live {{ role_name }} jobs</a>
+      <a href="{% url 'role_salary' role_slug %}">{{ role_name }} salary</a>
+    </div>
+    <h2 style="font-size:18px;margin-top:22px">Resume keywords for other roles</h2>
+    <div class="rk-links">{% for r in related_roles %}<a href="{% url 'role_resume_keywords' r.slug %}">{{ r.name }}</a>{% endfor %}</div>
+  </section>
+</div>
+<script>
+document.querySelectorAll('.js-rk-scan').forEach(function (a) {
+  a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('rk_scan_click', { role: "{{ role_slug }}" }); });
+});
+</script>
+{% endblock %}
