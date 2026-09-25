@@ -129,6 +129,7 @@ CANDIDATES = [
     ("SOTI", "india", "workday", ["https://soti.wd3.myworkdayjobs.com/India-Delhi-Careers"]),
     ("ERM", "india", "workday", ["https://erm.wd3.myworkdayjobs.com/ERM_Careers"]),
     ("Ansira", "india", "workday", ["https://ansira.wd1.myworkdayjobs.com/Ansira_Careers"]),
+    ("MSD", "india", "workday", ["https://msd.wd5.myworkdayjobs.com/SearchJobs"]),
 
     # --- India: agencies / SIs with big SFMC & Adobe practices in India ---
     ("Merkle", "india", "smartrecruiters", ["MerkleInc"]),
