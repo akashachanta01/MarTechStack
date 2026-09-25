@@ -122,6 +122,25 @@ CANDIDATES = [
     ("Broadridge", "india", "workday", ["https://broadridge.wd5.myworkdayjobs.com/Careers"]),
     ("Workiva", "india", "workday", ["https://workiva.wd1.myworkdayjobs.com/careers"]),
     ("Fragomen", "india", "workday", ["https://fragomen.wd115.myworkdayjobs.com/FragomenCareers"]),
+    ("Fidelity International", "india", "workday", ["https://fil.wd3.myworkdayjobs.com/001"]),
+    ("Ryan", "india", "workday", ["https://ryan.wd1.myworkdayjobs.com/RyanCareers"]),
+    ("Red Hat", "india", "workday", ["https://redhat.wd5.myworkdayjobs.com/Jobs"]),
+    ("Thomson Reuters", "india", "workday", ["https://thomsonreuters.wd5.myworkdayjobs.com/External_Career_Site"]),
+    ("SOTI", "india", "workday", ["https://soti.wd3.myworkdayjobs.com/India-Delhi-Careers"]),
+    ("ERM", "india", "workday", ["https://erm.wd3.myworkdayjobs.com/ERM_Careers"]),
+    ("Ansira", "india", "workday", ["https://ansira.wd1.myworkdayjobs.com/Ansira_Careers"]),
+
+    # --- India: agencies / SIs with big SFMC & Adobe practices in India ---
+    ("Merkle", "india", "smartrecruiters", ["MerkleInc"]),
+    ("Publicis Groupe", "india", "smartrecruiters", ["PublicisGroupe"]),
+    ("Nagarro", "india", "smartrecruiters", ["Nagarro1"]),
+    ("Jellyfish", "india", "workable", ["jellyfish-group-ltd"]),
+    ("Vertex Sigma Software", "india", "workable", ["vertex-sigma-software"]),
+    ("Bloomreach", "india", "greenhouse", ["bloomreach"]),
+    ("Adswerve", "india", "greenhouse", ["adswerveinc"]),
+    ("LevelUp", "india", "lever", ["levelup"]),
+    ("Viseven", "india", "lever", ["viseven"]),
+    ("CI&T", "india", "lever", ["ciandt"]),
 ]
 
 _WD_RX = re.compile(r"https://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)")

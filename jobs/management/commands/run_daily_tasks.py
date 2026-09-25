@@ -21,7 +21,7 @@ class Command(BaseCommand):
         'expire_featured': 2 * 60,
         'clean_stale_jobs': 2 * 60,
         'recheck_pending': 8 * 60,
-        'fetch_jobs': 25 * 60,
+        'fetch_jobs': 40 * 60,
         'update_logos': 10 * 60,
         'send_daily_digest': 5 * 60,
         'send_saved_search_alerts': 5 * 60,

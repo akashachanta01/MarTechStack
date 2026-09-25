@@ -1746,3 +1746,57 @@ class WorkdaySearchTests(TestCase):
         self.assertEqual(rows.count(), 1)
         self.assertEqual((rows[0].token, rows[0].name, rows[0].board_url),
                          ("db/DBWebsite", "Deutsche Bank", "https://db.wd3.myworkdayjobs.com/DBWebsite"))
+
+
+@override_settings(**TEST_SETTINGS)
+class SmartRecruitersPagingTests(TestCase):
+    """SmartRecruiters returns 10 postings by default: read 100/page, search big boards."""
+
+    def _cmd(self):
+        c = WorkdaySearchTests._cmd(self)
+        c.is_fresh = lambda d: True
+        return c
+
+    def _get(self, calls, total):
+        def fake(url, params=None, **kw):
+            calls.append(dict(params or {}))
+            r = mock.Mock(status_code=200)
+            if url.endswith("/postings") and params and params.get("q") == "Marketo":
+                r.json.return_value = {"totalFound": 1, "content": [
+                    {"id": "sfmc1", "name": "Marketo Specialist", "releasedDate": "x", "location": {"city": "Pune"}}]}
+            elif url.endswith("/postings") and params and params.get("q"):
+                r.json.return_value = {"totalFound": 0, "content": []}
+            elif url.endswith("/postings"):
+                off = params["offset"]
+                r.json.return_value = {"totalFound": total, "content": [
+                    {"id": f"p{off + i}", "name": "Accountant", "releasedDate": "x", "location": {}} for i in range(min(100, total - off))]}
+            else:
+                r.json.return_value = {"jobAd": {"sections": {"jobDescription": {"text": "<p>JD</p>"}}}}
+            return r
+        return fake
+
+    def test_small_board_read_in_full_no_search(self):
+        c, calls = self._cmd(), []
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 30)):
+            c.fetch_smartrecruiters_api("Acme")
+        self.assertEqual(calls[0].get("limit"), 100)
+        self.assertFalse(any(p.get("q") for p in calls))
+        self.assertTrue(c._feed_complete)
+        self.assertEqual(len(c.screened), 30)
+
+    def test_big_board_searched_and_capped(self):
+        c, calls = self._cmd(), []
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 5000)):
+            c.fetch_smartrecruiters_api("PublicisGroupe")
+        self.assertTrue(any(p.get("q") == "Marketo" for p in calls))
+        self.assertFalse(c._feed_complete)
+        # per-board budget stops detail fetches at 40, so the search hit is budget-skipped
+        self.assertEqual(len(c.screened), c.WORKDAY_MAX_NEW_PER_BOARD)
+        self.assertGreater(c.stats["SmartRecruiters:budget_skip"], 0)
+
+    def test_run_wide_cap(self):
+        c, calls = self._cmd(), []
+        c.stats["new_detail_fetches"] = c.MAX_NEW_PER_RUN
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 30)):
+            c.fetch_smartrecruiters_api("Acme")
+        self.assertEqual(c.screened, [])
