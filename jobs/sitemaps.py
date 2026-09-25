@@ -372,3 +372,17 @@ class ToolRoleSitemap(Sitemap):
 
     def location(self, key):
         return reverse('tool_role_jobs', args=[key[0], key[1]])
+
+
+class CourseSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.6
+    protocol = 'https'
+
+    def items(self):
+        from .models import Course
+        courses = list(Course.objects.filter(is_active=True))
+        return (["__list__"] if courses else []) + courses
+
+    def location(self, obj):
+        return reverse('course_list') if obj == "__list__" else reverse('course_detail', args=[obj.slug])

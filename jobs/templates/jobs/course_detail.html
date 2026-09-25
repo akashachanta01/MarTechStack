@@ -1,0 +1,85 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ course.title }}{% if course.tool %} — {{ course.tool.name }} Course{% endif %} | MarTechJobs{% endblock %}
+{% block meta_description %}{% if demand %}{{ demand.jobs }} live jobs ask for {{ course.tool.name }}. {% endif %}{{ course.summary|truncatechars:120 }}{% if course.price_inr %} ₹{{ course.price_inr|intcomma }}.{% endif %}{% endblock %}
+{% block og_title %}{{ course.title }}{% endblock %}
+{% block og_desc %}{{ course.summary|truncatechars:150 }}{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "{{ course.title|escapejs }}",
+  "description": "{{ course.summary|escapejs }}",
+  "provider": {"@type": "Organization", "name": "{{ course.provider|escapejs }}"}{% if course.price_inr %},
+  "offers": {"@type": "Offer", "category": "Paid", "price": "{{ course.price_inr }}", "priceCurrency": "INR"}{% endif %},
+  "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "Online"{% if course.duration %}, "courseWorkload": "{{ course.duration|escapejs }}"{% endif %}}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Courses","item":"https://martechjobs.io{% url 'course_list' %}"},
+    {"@type":"ListItem","position":3,"name":"{{ course.title|escapejs }}","item":"https://martechjobs.io{% url 'course_detail' course.slug %}"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+{% include "jobs/partials/course_styles.html" %}
+<section class="cr-hero">
+  <div class="cr-wrap">
+    <p class="cr-crumb"><a href="{% url 'course_list' %}">Courses</a></p>
+    <h1>{{ course.title }}</h1>
+    {% if course.summary %}<p>{{ course.summary }}</p>{% endif %}
+    <div class="cr-facts">
+      {% if course.price_inr %}<span>₹{{ course.price_inr|intcomma }}</span>{% endif %}
+      {% if course.duration %}<span>{{ course.duration }}</span>{% endif %}
+      {% if course.format %}<span>{{ course.format }}</span>{% endif %}
+      <span>By {{ course.provider }}</span>
+    </div>
+    <a class="cr-cta js-course-click" data-course="{{ course.slug }}" data-where="course_page" href="{% url 'course_go' course.slug %}" rel="sponsored nofollow noopener" target="_blank">View course &amp; enrol →</a>
+    {% if course.coupon_code %}<p class="cr-coupon">Use code <b>{{ course.coupon_code }}</b>{% if course.coupon_note %} ({{ course.coupon_note }}){% endif %} at checkout.</p>{% endif %}
+    <p class="cr-note">Priced in Indian rupees. Payment and course access are on {{ course.provider }}'s site. MarTechJobs may earn a commission.</p>
+  </div>
+</section>
+
+<div class="cr-wrap" style="margin-bottom:64px">
+  {% if demand %}
+  <section class="cr-sec">
+    <h2>Why {{ course.tool.name }}: live demand</h2>
+    <table class="cr-table">
+      <tbody>
+        <tr><td>Live jobs asking for {{ course.tool.name }}</td><td class="num">{{ demand.jobs }}</td></tr>
+        {% if demand.india %}<tr><td>…of which in India</td><td class="num">{{ demand.india }}</td></tr>{% endif %}
+        <tr><td>Share of all MarTech jobs (pct)</td><td class="num">{{ demand.pct }}%</td></tr>
+        <tr><td>Companies hiring</td><td class="num">{{ demand.companies }}</td></tr>
+      </tbody>
+    </table>
+    {% if demand.top_companies %}<p class="cr-note" style="margin-top:10px">Hiring now includes {{ demand.top_companies|join:", " }}.</p>{% endif %}
+    <p style="margin-top:12px"><a href="{% url 'tool_detail' course.tool.slug %}">See all {{ demand.jobs }} {{ course.tool.name }} jobs →</a></p>
+  </section>
+  {% endif %}
+
+  {% if course.module_list %}
+  <section class="cr-sec">
+    <h2>What it covers</h2>
+    <ul class="cr-list">{% for m in course.module_list %}<li>{{ m }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+
+  {% if others %}
+  <section class="cr-sec">
+    <h2>Other courses</h2>
+    <div class="cr-links">{% for o in others %}<a href="{% url 'course_detail' o.slug %}">{{ o.title }}</a>{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% include "jobs/partials/india_only.html" %}
+{% endblock %}

@@ -1,4 +1,5 @@
 {% extends "jobs/base.html" %}
+{% load humanize %}
 
 {% block title %}{{ total_count }} {{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs — Updated {{ title_month }} | MarTechJobs{% endblock %}
 {% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}{{ total_count }} open {{ tool.name }} MarTech roles — admin, developer, architect & consultant jobs. Apply directly. Updated daily.{% endblock %}
@@ -212,6 +213,14 @@
     </div>
     {% endif %}
 
+    {% if tool_course %}
+    <div class="js-india-only" hidden><div style="display:flex;justify-content:center;margin:0 auto 22px;">
+      <a href="{% url 'course_detail' tool_course.slug %}" class="js-course-click" data-course="{{ tool_course.slug }}" data-where="tool_page" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--amber);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
+        <span aria-hidden="true">📚</span> Learn {{ tool_short|default:tool.name }}: {{ tool_course.title }}{% if tool_course.price_inr %} · ₹{{ tool_course.price_inr|intcomma }}{% endif %} →
+      </a>
+    </div></div>
+    {% endif %}
+
     <form method="get" action="{% url 'tool_detail' tool.slug %}" class="searchcard" role="search" aria-label="Search {{ tool.name }} jobs">
       <div class="search-row1">
         <div class="s-field">
@@ -408,4 +417,5 @@ document.addEventListener('click', function(e) {
 });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { const r = document.getElementById('s-remote'); if (r) r.classList.remove('open'); } });
 </script>
+{% if tool_course %}{% include 'jobs/partials/india_only.html' %}{% endif %}
 {% endblock %}

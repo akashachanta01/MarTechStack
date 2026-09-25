@@ -10,7 +10,7 @@ from jobs.sitemaps import (
     JobSitemap, ToolSitemap, SEOLandingSitemap,
     StaticViewSitemap, BlogSitemap, ToolsStaticSitemap, TitleJobsSitemap,
     InterviewGuideSitemap, RoleSalarySitemap, CertificationGuideSitemap,
-    CategorySitemap, BlogSectionSitemap, CompanySitemap, RoleResumeKeywordsSitemap, AutoRoleSitemap, ToolRoleSitemap
+    CategorySitemap, BlogSectionSitemap, CompanySitemap, RoleResumeKeywordsSitemap, AutoRoleSitemap, ToolRoleSitemap, CourseSitemap
 )
 
 # --- 1. DEFINE SITEMAPS ---
@@ -31,6 +31,7 @@ sitemaps = {
     'resume_keywords': RoleResumeKeywordsSitemap,
     'roles': AutoRoleSitemap,
     'tool_roles': ToolRoleSitemap,
+    'courses': CourseSitemap,
 }
 
 # --- 2. ROBOTS.TXT VIEW ---

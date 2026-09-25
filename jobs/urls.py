@@ -27,6 +27,9 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('for-employers/', views.for_employers, name='for_employers'),
     path('sponsor/', views.sponsor, name='sponsor'),
+    path('courses/', views.course_list, name='course_list'),
+    path('courses/<slug:slug>/', views.course_detail, name='course_detail'),
+    path('courses/<slug:slug>/go/', views.course_go, name='course_go'),
     path('contact/', views.contact, name='contact'),
 
     # --- BROWSE ALL JOBS (Jobs nav destination) ---

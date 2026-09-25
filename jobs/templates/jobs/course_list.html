@@ -1,0 +1,34 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}MarTech Courses for Adobe & Salesforce Skills Employers Ask For | MarTechJobs{% endblock %}
+{% block meta_description %}Courses for the MarTech platforms in demand in live job posts, with the number of open roles that ask for each skill. Priced in Indian rupees.{% endblock %}
+{% block og_title %}MarTech Courses | MarTechJobs{% endblock %}
+{% block og_desc %}Learn the platforms employers are hiring for, with real job demand for each.{% endblock %}
+
+{% block content %}
+{% include "jobs/partials/course_styles.html" %}
+<section class="cr-hero">
+  <div class="cr-wrap">
+    <h1>Learn the platforms employers are hiring for</h1>
+    <p>Hands-on courses from our training partner, {{ courses.0.provider|default:"Infinite360 Tech Academy" }}. Next to each course you'll see how many live jobs on MarTechJobs ask for that skill.</p>
+    <p class="cr-note">Prices are in Indian rupees. You pay and study on the partner's site.</p>
+  </div>
+</section>
+<div class="cr-wrap" style="margin-bottom:64px">
+  {% if courses %}
+  <div class="cr-grid">
+    {% for c in courses %}
+    <a class="cr-card" href="{% url 'course_detail' c.slug %}">
+      <h2>{{ c.title }}</h2>
+      {% if c.demand %}<div class="cr-demand"><b>{{ c.demand.jobs }}</b> live job{{ c.demand.jobs|pluralize }} ask for {{ c.tool.name }}{% if c.demand.india %} · {{ c.demand.india }} in India{% endif %}</div>{% endif %}
+      {% if c.summary %}<p>{{ c.summary|truncatewords:28 }}</p>{% endif %}
+      <div class="cr-meta">{% if c.price_inr %}₹{{ c.price_inr|intcomma }}{% endif %}{% if c.duration %} · {{ c.duration }}{% endif %}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="margin-top:32px;color:var(--ink2)">Courses are coming soon.</p>
+  {% endif %}
+</div>
+{% endblock %}

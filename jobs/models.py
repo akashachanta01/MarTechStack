@@ -650,3 +650,44 @@ class SponsorInquiry(models.Model):
 
     def __str__(self):
         return f"{self.company} ({self.get_option_display()})"
+
+
+class Course(models.Model):
+    """A partner course (Infinite360 Tech Academy) shown to learners in India.
+    Buyers pay on the partner's site; we link out with our referral code."""
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=120, unique=True)
+    tool = models.ForeignKey("Tool", null=True, blank=True, on_delete=models.SET_NULL, related_name="courses",
+                             help_text="The platform this course teaches; links it to that tool's job page.")
+    provider = models.CharField(max_length=120, default="Infinite360 Tech Academy")
+    summary = models.TextField(blank=True, help_text="What the course covers, in our own words (2-4 sentences).")
+    modules = models.TextField(blank=True, help_text="One topic per line.")
+    price_inr = models.PositiveIntegerField(null=True, blank=True, help_text="Price in rupees (e.g. 30000).")
+    duration = models.CharField(max_length=80, blank=True, help_text='e.g. "8 weeks" or "40 hours"')
+    format = models.CharField(max_length=120, blank=True, help_text='e.g. "Recorded videos + live projects"')
+    url = models.URLField(max_length=500, help_text="The course page on the partner's site.")
+    coupon_code = models.CharField(max_length=40, blank=True, help_text="Our discount/referral code, e.g. MTJ10.")
+    coupon_note = models.CharField(max_length=120, blank=True, help_text='e.g. "10% off for MarTechJobs readers"')
+    is_active = models.BooleanField(default=False, help_text="Tick when the details are confirmed with the partner.")
+    sort_order = models.PositiveIntegerField(default=0)
+    clicks = models.PositiveIntegerField(default=0, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "title"]
+
+    def __str__(self):
+        return self.title
+
+    def module_list(self):
+        return [m.strip() for m in (self.modules or "").splitlines() if m.strip()]
+
+    def outbound_url(self):
+        """Partner URL with our tracking (and coupon, if the checkout accepts it)."""
+        from urllib.parse import urlencode, urlparse, parse_qsl, urlunparse
+        parts = urlparse(self.url)
+        q = dict(parse_qsl(parts.query))
+        q.update({"utm_source": "martechjobs", "utm_medium": "referral", "utm_campaign": self.slug})
+        if self.coupon_code:
+            q.setdefault("coupon", self.coupon_code)
+        return urlunparse(parts._replace(query=urlencode(q)))

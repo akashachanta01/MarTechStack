@@ -1384,6 +1384,7 @@ def tool_detail(request, slug):
     if slug != slug.lower():
         return redirect('tool_detail', slug=slug.lower(), permanent=True)
     tool = get_object_or_404(Tool, slug=slug)
+    tool_course = tool.courses.filter(is_active=True).first()
 
     query = request.GET.get("q", "").strip()
     location_query = request.GET.get("l", "").strip()
@@ -1432,6 +1433,7 @@ def tool_detail(request, slug):
     has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     return render(request, 'jobs/tool_detail.html', {
+        'tool_course': tool_course,
         'has_interview_guide': has_interview_guide,
         'has_cert_guide': has_cert_guide,
         'tool': tool,
@@ -2034,6 +2036,53 @@ def sponsor(request):
     else:
         form = SponsorInquiryForm()
     return render(request, "jobs/sponsor.html", {"form": form, "stats": _sponsor_stats(), "offers": SPONSOR_OFFERS})
+
+
+def _course_demand(tool):
+    """Real job demand for the platform a course teaches."""
+    if not tool:
+        return None
+    live = Job.objects.filter(is_active=True, screening_status="approved")
+    jobs = live.filter(tools=tool)
+    n = jobs.count()
+    total = live.count() or 1
+    companies = list(jobs.values_list("company", flat=True).distinct()[:200])
+    return {
+        "jobs": n,
+        "india": jobs.filter(country="IN").count(),
+        "pct": round(100 * n / total),
+        "companies": len(companies),
+        "top_companies": [c for c, _ in
+                          __import__("collections").Counter(jobs.values_list("company", flat=True)).most_common(5)],
+    }
+
+
+def course_list(request):
+    from .models import Course
+    courses = list(Course.objects.filter(is_active=True).select_related("tool"))
+    for c in courses:
+        c.demand = _course_demand(c.tool)
+    return render(request, "jobs/course_list.html", {"courses": courses, "page_noindex": not courses})
+
+
+def course_detail(request, slug):
+    from .models import Course
+    course = get_object_or_404(Course.objects.select_related("tool"), slug=slug, is_active=True)
+    return render(request, "jobs/course_detail.html", {
+        "course": course, "demand": _course_demand(course.tool),
+        "others": Course.objects.filter(is_active=True).exclude(pk=course.pk)[:6],
+    })
+
+
+def course_go(request, slug):
+    """Count the click, then send the reader to the partner's course page."""
+    from django.db.models import F
+    from .models import Course
+    course = get_object_or_404(Course, slug=slug, is_active=True)
+    Course.objects.filter(pk=course.pk).update(clicks=F("clicks") + 1)
+    resp = redirect(course.outbound_url())
+    resp["X-Robots-Tag"] = "noindex, nofollow"
+    return resp
 
 
 def contact(request):

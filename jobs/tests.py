@@ -1882,3 +1882,56 @@ class UnknownCountryTests(TestCase):
             call_command("clean_job_data", stdout=mock.Mock())
         j.refresh_from_db()
         self.assertEqual((j.location, j.country), ("Multiple locations", ""))
+
+
+@override_settings(**TEST_SETTINGS)
+class CoursePagesTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Course
+        cat = Category.objects.create(name="CDP", slug="cdp")
+        self.tool = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
+        j = make_job(country="IN", location="Bengaluru, India"); j.tools.add(self.tool)
+        make_job(company="Other")
+        self.course = Course.objects.create(title="AEP Masterclass", slug="aep-masterclass", tool=self.tool,
+                                            summary="Build AEP data flows end to end.", modules="Schemas\nIdentity",
+                                            price_inr=30000, url="https://academy.test/aep?x=1",
+                                            coupon_code="MTJ10", is_active=True)
+
+    def test_list_and_detail_show_real_demand(self):
+        r = self.client.get("/courses/")
+        self.assertContains(r, "AEP Masterclass")
+        self.assertContains(r, "1</b> live job")
+        r = self.client.get("/courses/aep-masterclass/")
+        self.assertEqual(r.context["demand"]["jobs"], 1)
+        self.assertEqual(r.context["demand"]["india"], 1)
+        self.assertEqual(r.context["demand"]["pct"], 50)
+        self.assertContains(r, "₹30,000")
+        self.assertContains(r, '"@type": "Course"')
+        self.assertContains(r, 'rel="sponsored nofollow noopener"')
+        self.assertContains(r, "MTJ10")
+
+    def test_go_counts_click_and_redirects_with_tracking(self):
+        r = self.client.get("/courses/aep-masterclass/go/")
+        self.assertEqual(r.status_code, 302)
+        self.assertIn("utm_source=martechjobs", r["Location"])
+        self.assertIn("coupon=MTJ10", r["Location"])
+        self.assertIn("x=1", r["Location"])
+        self.course.refresh_from_db()
+        self.assertEqual(self.course.clicks, 1)
+
+    def test_inactive_course_hidden_everywhere(self):
+        self.course.is_active = False; self.course.save()
+        self.assertEqual(self.client.get("/courses/aep-masterclass/").status_code, 404)
+        self.assertEqual(self.client.get("/courses/aep-masterclass/go/").status_code, 404)
+        r = self.client.get("/courses/")
+        self.assertContains(r, "coming soon")
+        self.assertContains(r, "noindex")
+        self.assertNotContains(self.client.get("/jobs/adobe-experience-platform/"), "js-india-only")
+        self.assertNotContains(self.client.get("/sitemap.xml"), "/courses/")
+
+    def test_tool_page_box_is_india_only(self):
+        r = self.client.get("/jobs/adobe-experience-platform/")
+        self.assertContains(r, 'class="js-india-only" hidden')
+        self.assertContains(r, "Asia/Kolkata")
+        self.assertContains(self.client.get("/sitemap.xml"), "/courses/aep-masterclass/")
