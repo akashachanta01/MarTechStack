@@ -1597,3 +1597,66 @@ class SecurityBatchTests(TestCase):
         self.assertNotIn("<script", html); self.assertNotIn("onclick", html); self.assertIn("<h3>Role</h3>", html)
         sent = fake.chat.completions.create.call_args.kwargs["messages"][1]["content"]
         self.assertLess(len(sent), 600)
+
+
+@override_settings(**TEST_SETTINGS)
+class RecheckPendingTests(TestCase):
+    """High-score pending jobs go live only if the company site still lists them."""
+
+    def _pending(self, title, url, score=92):
+        return make_job(title=title, apply_url=url, screening_status="pending",
+                        is_active=False, screening_score=score)
+
+    def _resp(self, code, payload=None):
+        r = mock.Mock(status_code=code)
+        r.json.return_value = payload or {}
+        return r
+
+    def test_open_relisted_closed_rejected_offtopic_removed(self):
+        from django.core.management import call_command
+        open_job = self._pending("Marketo Admin", "https://job-boards.greenhouse.io/acme/jobs/111")
+        closed_job = self._pending("SFMC Developer", "https://acme.wd5.myworkdayjobs.com/en-US/Ext/job/NYC/SFMC_R1")
+        welder = self._pending("Welder-Brazer II", "https://job-boards.greenhouse.io/acme/jobs/222")
+        unknown = self._pending("Braze Engineer", "https://example.com/careers/9")
+        low = self._pending("HubSpot Specialist", "https://job-boards.greenhouse.io/acme/jobs/333", score=80)
+
+        def fake_get(url, **kw):
+            if "boards-api.greenhouse.io" in url:
+                return self._resp(200)
+            if "myworkdayjobs.com/wday/cxs" in url:
+                return self._resp(404)
+            raise AssertionError(url)
+
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get", side_effect=fake_get):
+            call_command("recheck_pending", "--confirm", stdout=mock.Mock())
+        for j in (open_job, closed_job, welder, unknown, low):
+            j.refresh_from_db()
+        self.assertEqual((open_job.screening_status, open_job.is_active), ("approved", True))
+        self.assertIsNotNone(open_job.last_seen_at)
+        self.assertEqual((closed_job.screening_status, closed_job.is_active), ("rejected", False))
+        self.assertEqual(welder.screening_status, "rejected")
+        self.assertEqual(unknown.screening_status, "pending")
+        self.assertEqual(low.screening_status, "pending")
+
+    def test_dry_run_changes_nothing(self):
+        from django.core.management import call_command
+        j = self._pending("Marketo Admin", "https://job-boards.greenhouse.io/acme/jobs/111")
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get", return_value=self._resp(200)):
+            call_command("recheck_pending", stdout=mock.Mock())
+        j.refresh_from_db()
+        self.assertEqual(j.screening_status, "pending")
+
+    def test_workday_cant_apply_and_errors(self):
+        from jobs.management.commands.recheck_pending import posting_status, CLOSED, UNKNOWN, OPEN
+        import requests as rq
+        url = "https://acme.wd5.myworkdayjobs.com/en-US/Ext/job/NYC/SFMC_R1"
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get",
+                        return_value=self._resp(200, {"jobPostingInfo": {"canApply": False}})):
+            self.assertEqual(posting_status(url), CLOSED)
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get",
+                        return_value=self._resp(200, {"jobPostingInfo": {"canApply": True}})):
+            self.assertEqual(posting_status(url), OPEN)
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get", side_effect=rq.Timeout()):
+            self.assertEqual(posting_status(url), UNKNOWN)
+        with mock.patch("jobs.management.commands.recheck_pending.requests.get", return_value=self._resp(500)):
+            self.assertEqual(posting_status(url), UNKNOWN)

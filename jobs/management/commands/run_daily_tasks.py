@@ -20,6 +20,7 @@ class Command(BaseCommand):
         'check_dead_links': 20 * 60,
         'expire_featured': 2 * 60,
         'clean_stale_jobs': 2 * 60,
+        'recheck_pending': 8 * 60,
         'fetch_jobs': 25 * 60,
         'update_logos': 10 * 60,
         'send_daily_digest': 5 * 60,
@@ -70,6 +71,7 @@ class Command(BaseCommand):
         self._run("\n[1/7] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
         self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
         self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
+        self._run("      🔁 Re-listing pending jobs still open on company sites...", 'recheck_pending', '--confirm')
 
         # 2. INGESTION (Get new jobs)
         # Daily = --sources-only: polls the saved CompanySource registry (incl. all
