@@ -74,6 +74,8 @@ class Command(BaseCommand):
         self._run("      🔁 Re-listing pending jobs still open on company sites...", 'recheck_pending', '--confirm')
 
         # 2. INGESTION (Get new jobs)
+        # Register any newly curated boards (validated live; existing ones skipped).
+        self._run("      🌏 Registering curated company boards...", 'seed_intl_sources', '--confirm')
         # Daily = --sources-only: polls the saved CompanySource registry (incl. all
         # seeded international boards) for FREE, so every country stays fresh with
         # no SERP spend. Weekly = full discovery to find NEW boards (paid SERP).

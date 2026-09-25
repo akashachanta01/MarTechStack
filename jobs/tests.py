@@ -1660,3 +1660,89 @@ class RecheckPendingTests(TestCase):
             self.assertEqual(posting_status(url), UNKNOWN)
         with mock.patch("jobs.management.commands.recheck_pending.requests.get", return_value=self._resp(500)):
             self.assertEqual(posting_status(url), UNKNOWN)
+
+
+@override_settings(**TEST_SETTINGS)
+class WorkdaySearchTests(TestCase):
+    """Big Workday boards are also searched for MarTech keywords; small ones are walked fully."""
+
+    def _cmd(self):
+        from collections import Counter
+        from jobs.management.commands.fetch_jobs import Command
+        c = Command()
+        c.processed_tokens, c.stats = set(), Counter()
+        c.screened = []
+        c.get_headers = lambda: {}
+        c._is_duplicate = lambda *a, **k: False
+        c._feed_seen = lambda *a: None
+        c._count_known = lambda *a: None
+        c.record_source = lambda *a, **k: None
+        c._company_name = lambda *a, **k: "Acme"
+        c._clean_location = lambda loc, remote: (loc, "onsite")
+        c.screen_and_upsert = lambda d: c.screened.append(d)
+        return c
+
+    def _post(self, total, searched):
+        def fake_post(url, json=None, **kw):
+            searched.append(json["searchText"])
+            r = mock.Mock(status_code=200)
+            if json["searchText"] == "Marketo":
+                r.json.return_value = {"total": 1, "jobPostings": [
+                    {"title": "Marketo Admin", "externalPath": "/job/Bengaluru/Marketo-Admin_R1",
+                     "postedOn": "Posted Today", "locationsText": "Bengaluru, India"}]}
+            elif json["searchText"]:
+                r.json.return_value = {"total": 0, "jobPostings": []}
+            else:
+                r.json.return_value = {"total": total, "jobPostings": [
+                    {"title": "Accountant", "externalPath": f"/job/X/Acct_{json['offset']}",
+                     "postedOn": "Posted Today", "locationsText": "Pune"}]}
+            return r
+        return fake_post
+
+    def _get(self, url, **kw):
+        r = mock.Mock(status_code=200)
+        r.json.return_value = {"jobPostingInfo": {"jobDescription": "<p>JD</p>"}}
+        return r
+
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_big_board_is_keyword_searched(self, _sleep):
+        c, searched = self._cmd(), []
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=self._post(5000, searched)), \
+             mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get):
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/en-US/Careers")
+        self.assertIn("Marketo", searched)
+        self.assertIn("Marketo Admin", [d["title"] for d in c.screened])
+        self.assertFalse(c._feed_complete)
+
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_small_board_walked_without_search(self, _sleep):
+        c, searched = self._cmd(), []
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=self._post(15, searched)), \
+             mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get):
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+        self.assertEqual(searched, [""])
+        self.assertTrue(c._feed_complete)
+
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_same_board_different_casing_polled_once(self, _sleep):
+        c, searched = self._cmd(), []
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=self._post(15, searched)), \
+             mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get):
+            c.fetch_workday_api("https://asda.wd103.myworkdayjobs.com/en-US/AsdaJobs")
+            c.fetch_workday_api("https://asda.wd103.myworkdayjobs.com/asdajobs")
+        self.assertEqual(len(searched), 1)
+
+    def test_seeder_registers_workday_board_as_tenant_site(self):
+        from django.core.management import call_command
+        from jobs.models import CompanySource
+        from jobs.management.commands import seed_intl_sources as seed
+        with mock.patch.object(seed, "CANDIDATES",
+                               [("Deutsche Bank", "india", "workday", ["https://db.wd3.myworkdayjobs.com/DBWebsite"])]), \
+             mock.patch.object(seed, "_count_workday", return_value=900):
+            seed._VALIDATORS["workday"] = seed._count_workday
+            call_command("seed_intl_sources", "--confirm", stdout=mock.Mock())
+            call_command("seed_intl_sources", "--confirm", stdout=mock.Mock())
+        rows = CompanySource.objects.filter(ats_type="workday")
+        self.assertEqual(rows.count(), 1)
+        self.assertEqual((rows[0].token, rows[0].name, rows[0].board_url),
+                         ("db/DBWebsite", "Deutsche Bank", "https://db.wd3.myworkdayjobs.com/DBWebsite"))

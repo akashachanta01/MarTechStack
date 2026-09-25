@@ -19,6 +19,8 @@ still decides which individual roles are MarTech; this only adds the boards.
 Idempotent: existing (ats_type, token) rows are left untouched.
 """
 
+import re
+
 import requests
 from django.core.management.base import BaseCommand
 from jobs.models import CompanySource
@@ -109,7 +111,38 @@ CANDIDATES = [
     ("Airwallex (Ashby)", "australia", "ashby", ["airwallex"]),
     ("SafetyCulture", "australia", "greenhouse", ["safetyculture", "safety-culture"]),
     ("Atlassian", "australia", "greenhouse", ["atlassian"]),
+
+    # --- India: Workday boards with MarTech roles in India (found Sep 2026) ---
+    # Token is the full careers URL; registered as "tenant/site" like fetch_jobs does.
+    ("Deutsche Bank", "india", "workday", ["https://db.wd3.myworkdayjobs.com/DBWebsite"]),
+    ("HPE", "india", "workday", ["https://hpe.wd5.myworkdayjobs.com/ACJobSite"]),
+    ("SailPoint", "india", "workday", ["https://sailpoint.wd1.myworkdayjobs.com/sailpoint"]),
+    ("Wolters Kluwer", "india", "workday", ["https://wk.wd3.myworkdayjobs.com/External"]),
+    ("Lonza", "india", "workday", ["https://lonza.wd3.myworkdayjobs.com/Lonza_Careers"]),
+    ("Broadridge", "india", "workday", ["https://broadridge.wd5.myworkdayjobs.com/Careers"]),
+    ("Workiva", "india", "workday", ["https://workiva.wd1.myworkdayjobs.com/careers"]),
+    ("Fragomen", "india", "workday", ["https://fragomen.wd115.myworkdayjobs.com/FragomenCareers"]),
 ]
+
+_WD_RX = re.compile(r"https://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)")
+
+
+def _workday_token(url):
+    m = _WD_RX.match(url)
+    return f"{m[1]}/{m[3]}" if m else ""
+
+
+def _count_workday(url):
+    m = _WD_RX.match(url)
+    if not m:
+        return None
+    tenant, host, site = m[1], m[2], m[3]
+    r = requests.post(
+        f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs",
+        json={"appliedFacets": {}, "limit": 1, "offset": 0, "searchText": ""},
+        headers={**_HEADERS, "Content-Type": "application/json"}, timeout=8,
+    )
+    return r.json().get("total", 0) if r.status_code == 200 else None
 
 
 def _count_greenhouse(token):
@@ -166,6 +199,7 @@ _VALIDATORS = {
     "smartrecruiters": _count_smartrecruiters,
     "recruitee": _count_recruitee,
     "workable": _count_workable,
+    "workday": _count_workday,
 }
 
 
@@ -187,7 +221,7 @@ class Command(BaseCommand):
         for name, country, ats_type, tokens in CANDIDATES:
             resolved = None
             for token in tokens:
-                if (ats_type, token) in existing:
+                if (ats_type, _workday_token(token) if ats_type == "workday" else token) in existing:
                     skipped.append((name, f"already registered ({ats_type}:{token})"))
                     resolved = "exists"
                     break
@@ -239,9 +273,12 @@ class Command(BaseCommand):
 
         created = 0
         for name, country, ats_type, token, postings in to_create:
+            board_url = ""
+            if ats_type == "workday":
+                board_url, token = token, _workday_token(token)
             _, was_created = CompanySource.objects.get_or_create(
                 ats_type=ats_type, token=token,
-                defaults={"name": name, "notes": f"intl seed: {country}"},
+                defaults={"name": name, "notes": f"intl seed: {country}", "board_url": board_url},
             )
             created += 1 if was_created else 0
         self.stdout.write(self.style.SUCCESS(f"\n✨ Created {created} international company sources."))

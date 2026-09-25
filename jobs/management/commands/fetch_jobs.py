@@ -794,35 +794,107 @@ class Command(BaseCommand):
             return int(m.group(1)) <= 14
         return True
 
+    # Big Workday boards (Accenture, Salesforce, Deutsche Bank...) post hundreds
+    # of roles a day, so their newest 200 are mostly non-MarTech and the MarTech
+    # roles scroll out before we see them. For those boards we also run these
+    # searches, which is how most India MarTech roles (SI firms, GCCs) arrive.
+    WORKDAY_SEARCHES = [
+        "Marketing Cloud", "Marketo", "Adobe Experience", "AEM", "Adobe Campaign",
+        "Journey Optimizer", "Adobe Analytics", "Eloqua", "Braze", "Pardot", "HubSpot",
+        "marketing automation", "marketing operations", "martech", "marketing technology", "CDP",
+    ]
+    WORKDAY_SEARCH_PAGES = 2
+    WORKDAY_MAX_NEW_PER_BOARD = 80   # detail fetch + AI screen budget per board per run
+
     def fetch_workday_api(self, board_url):
         """Workday CXS API. board_url is a full careers URL like
         https://<tenant>.<host>.myworkdayjobs.com/<lang?>/<site> — we derive the
         tenant/host/site and POST to the public /wday/cxs jobs endpoint.
-        Paginates (Workday returns 20/page) and gates on postedOn freshness."""
-        if board_url in self.processed_tokens: return
-        self.processed_tokens.add(board_url)
+        Reads the newest postings (20/page, up to 200); boards bigger than that
+        are also searched for MarTech keywords. Gates on postedOn freshness."""
         m = re.match(r'https?://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:([a-z]{2}-[A-Z]{2})/)?([^/?#]+)', board_url)
         if not m:
             self.stats["Workday:skip_badurl"] += 1
             return
         tenant, host, _lang, site = m.group(1), m.group(2), m.group(3), m.group(4)
+        board_key = f"workday:{tenant.lower()}/{site.lower()}"   # same board, different URL casing
+        if board_key in self.processed_tokens: return
+        self.processed_tokens.add(board_key)
         api = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
         base = f"https://{tenant}.{host}.myworkdayjobs.com/{('%s/' % _lang) if _lang else ''}{site}"
         PAGE = 20
         MAX_PAGES = 10  # cap coverage at 200 postings/board to bound cost
         company = self._company_name("workday", f"{tenant}/{site}", fallback=tenant.capitalize())
+        budget = {"new": 0}
+
+        def list_page(offset, search=""):
+            resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": search},
+                                 headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
+            if resp.status_code != 200:
+                return None
+            return resp.json()
+
+        def handle(item):
+            ext_path = item.get('externalPath') or ""
+            if not ext_path:
+                return
+            self._feed_seen(f"workday:{ext_path}")
+            if not self._workday_fresh(item.get('postedOn')):
+                self.stats["Workday:stale"] += 1
+                return
+            # Known posting: skip the slow per-job detail request.
+            if self._is_duplicate("", "", "", f"workday:{ext_path}"):
+                self._count_known("Workday")
+                return
+            if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD:
+                self.stats["Workday:budget_skip"] += 1
+                return
+            budget["new"] += 1
+            _bullet0 = ((item.get('bulletFields') or []) + [None])[0]
+            raw_loc = str(item.get('locationsText') or _bullet0 or "")
+            is_remote = "remote" in raw_loc.lower()
+            clean_loc, arr = self._clean_location(raw_loc, is_remote)
+            # Fetch the real JD from the CXS detail endpoint (same path
+            # shape as the list API). Storing the title as the
+            # description made every Workday job thin content — bad for
+            # the screener AND the JobPosting schema. Skip postings with
+            # no fetchable body (consistent with SmartRecruiters).
+            desc = ""
+            try:
+                dr = requests.get(
+                    f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}{ext_path}",
+                    headers=self.get_headers(), timeout=8,
+                )
+                if dr.status_code == 200:
+                    info = dr.json().get('jobPostingInfo') or {}
+                    desc = info.get('jobDescription') or ""
+                    # "6 Locations" in the list view: use the primary location instead.
+                    if re.match(r'^\s*\d+\s+locations?\s*$', raw_loc, re.I) and info.get('location'):
+                        clean_loc, arr = self._clean_location(str(info['location']), is_remote)
+            except Exception:
+                desc = ""
+            if not desc:
+                self.stats["Workday:no_description"] += 1
+                return
+            self.screen_and_upsert({
+                "title": item.get('title'), "company": company, "location": clean_loc,
+                "description": desc, "apply_url": f"{base}{ext_path}",
+                "work_arrangement": arr, "source": "Workday",
+                "external_id": f"workday:{ext_path}",
+            })
+
         try:
             recorded = False
             walked_all = False
+            total = 0
             for page in range(MAX_PAGES):
                 offset = page * PAGE
-                resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": ""},
-                                     headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
-                if resp.status_code != 200:
+                payload = list_page(offset)
+                if payload is None:
                     self.stats["Workday:error"] += 1
                     return
-                payload = resp.json()
                 postings = payload.get('jobPostings', [])
+                total = max(total, payload.get('total', 0) or 0)
                 if not postings:
                     walked_all = True
                     break
@@ -830,52 +902,25 @@ class Command(BaseCommand):
                     self.record_source("workday", f"{tenant}/{site}", tenant.capitalize(), board_url=board_url)
                     recorded = True
                 for item in postings:
-                    ext_path = item.get('externalPath') or ""
-                    self._feed_seen(f"workday:{ext_path}")
-                    if not self._workday_fresh(item.get('postedOn')):
-                        self.stats["Workday:stale"] += 1
-                        continue
-                    # Known posting: skip the slow per-job detail request.
-                    if self._is_duplicate("", "", "", f"workday:{ext_path}"):
-                        self._count_known("Workday")
-                        continue
-                    _bullet0 = ((item.get('bulletFields') or []) + [None])[0]
-                    raw_loc = str(item.get('locationsText') or _bullet0 or "")
-                    is_remote = "remote" in raw_loc.lower()
-                    clean_loc, arr = self._clean_location(raw_loc, is_remote)
-                    # Fetch the real JD from the CXS detail endpoint (same path
-                    # shape as the list API). Storing the title as the
-                    # description made every Workday job thin content — bad for
-                    # the screener AND the JobPosting schema. Skip postings with
-                    # no fetchable body (consistent with SmartRecruiters).
-                    desc = ""
-                    try:
-                        dr = requests.get(
-                            f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}{ext_path}",
-                            headers=self.get_headers(), timeout=8,
-                        )
-                        if dr.status_code == 200:
-                            info = dr.json().get('jobPostingInfo') or {}
-                            desc = info.get('jobDescription') or ""
-                            # "6 Locations" in the list view: use the primary location instead.
-                            if re.match(r'^\s*\d+\s+locations?\s*$', raw_loc, re.I) and info.get('location'):
-                                clean_loc, arr = self._clean_location(str(info['location']), is_remote)
-                    except Exception:
-                        desc = ""
-                    if not desc:
-                        self.stats["Workday:no_description"] += 1
-                        continue
-                    self.screen_and_upsert({
-                        "title": item.get('title'), "company": company, "location": clean_loc,
-                        "description": desc, "apply_url": f"{base}{ext_path}",
-                        "work_arrangement": arr, "source": "Workday",
-                        "external_id": f"workday:{ext_path}",
-                    })
+                    handle(item)
                 # Stop once we've walked the whole board.
-                if offset + PAGE >= payload.get('total', 0):
+                if offset + PAGE >= total:
                     walked_all = True
                     break
                 time.sleep(0.3)
+            if not walked_all:
+                for term in self.WORKDAY_SEARCHES:
+                    for page in range(self.WORKDAY_SEARCH_PAGES):
+                        payload = list_page(page * PAGE, term)
+                        postings = (payload or {}).get('jobPostings', [])
+                        if not postings:
+                            break
+                        self.stats["Workday:search_hits"] += len(postings)
+                        for item in postings:
+                            handle(item)
+                        if (page + 1) * PAGE >= (payload.get('total', 0) or 0):
+                            break
+                        time.sleep(0.3)
             # Boards larger than MAX_PAGES are only partly read: never close from those.
             self._feed_complete = walked_all
         except Exception as e:
