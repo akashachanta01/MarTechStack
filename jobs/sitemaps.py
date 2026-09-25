@@ -246,6 +246,7 @@ class StaticViewSitemap(Sitemap):
         return [
             'about',
             'for_employers',
+            'sponsor',
             'job_list',
             'blog_list',
             'salary_guide',

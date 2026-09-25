@@ -625,3 +625,28 @@ class SearchConsoleRow(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["-impressions"], name="jobs_gsc_impr_idx")]
+
+
+class SponsorInquiry(models.Model):
+    """A vendor asking about sponsoring (from /sponsor/). Stored so nothing is
+    lost if the founder's inbox is unavailable; also emailed to CONTACT_EMAIL."""
+    OPTIONS = [
+        ("newsletter", "Weekly email sponsor"),
+        ("tool_page", "Tool page sponsor"),
+        ("featured", "Featured company roles"),
+        ("other", "Not sure yet / other"),
+    ]
+    company = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    option = models.CharField(max_length=20, choices=OPTIONS, default="other")
+    message = models.TextField(blank=True)
+    handled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Sponsor inquiries"
+
+    def __str__(self):
+        return f"{self.company} ({self.get_option_display()})"

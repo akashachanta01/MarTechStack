@@ -1,0 +1,129 @@
+{% extends "jobs/base.html" %}
+{% load humanize %}
+
+{% block title %}Sponsor MarTechJobs — Reach Marketing Ops & MarTech Practitioners | MarTechJobs{% endblock %}
+{% block meta_description %}Put your product in front of the people who run marketing technology: {{ stats.jobs }} live MarTech jobs at {{ stats.companies }} companies, a weekly jobs email and tool-specific job pages. Founding sponsor rates from ${{ offers.2.price }}/month.{% endblock %}
+{% block og_title %}Sponsor MarTechJobs{% endblock %}
+{% block og_desc %}Reach Marketing Ops and MarTech practitioners through the weekly jobs email and tool job pages.{% endblock %}
+
+{% block extra_schema %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://martechjobs.io/"},
+    {"@type":"ListItem","position":2,"name":"Sponsor","item":"https://martechjobs.io/sponsor/"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block messages %}{% endblock %}
+
+{% block content %}
+<style>
+  .sp-wrap { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 560px) { .sp-wrap { padding: 0 16px; } }
+  .sp-hero { padding: 64px 0 40px; border-bottom: 1px solid var(--rule); background: linear-gradient(180deg, var(--amber-light), var(--paper)); }
+  .sp-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4.6vw, 46px); font-weight: 800; color: var(--ink); line-height: 1.12; margin-bottom: 14px; max-width: 760px; }
+  .sp-hero p { font-size: 17px; color: var(--ink2); line-height: 1.6; max-width: 680px; }
+  .sp-sec { margin-top: 44px; }
+  .sp-sec h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: var(--ink); margin-bottom: 8px; }
+  .sp-sec > p { color: var(--ink2); font-size: 15px; line-height: 1.6; margin-bottom: 16px; max-width: 700px; }
+  .sp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .sp-stat { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 16px; }
+  .sp-stat .n { font-size: 30px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .sp-stat .l { font-size: 13px; color: var(--ink3); margin-top: 2px; }
+  .sp-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; font-size: 15px; }
+  .sp-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 10px 14px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .sp-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); color: var(--ink); }
+  .sp-table tr:last-child td { border-bottom: 0; }
+  .sp-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .sp-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .sp-offer { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; }
+  .sp-offer h3 { font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+  .sp-offer .price { font-size: 28px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .sp-offer .price span { font-size: 14px; font-weight: 600; color: var(--ink3); }
+  .sp-offer p { font-size: 14px; color: var(--ink2); line-height: 1.55; }
+  .sp-note { font-size: 13px; color: var(--ink3); margin-top: 10px; }
+  .sp-form { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 22px; max-width: 620px; }
+  .sp-form label { display: block; font-size: 14px; font-weight: 700; color: var(--ink); margin: 12px 0 6px; }
+  .sp-form input, .sp-form select, .sp-form textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 10px; font-size: 15px; font-family: inherit; background: #fff; box-sizing: border-box; }
+  .sp-form button { margin-top: 16px; background: var(--amber); color: #fff; font-weight: 700; border: 0; border-radius: 10px; padding: 13px 20px; font-size: 15px; cursor: pointer; }
+  .sp-form .errorlist { color: #b42318; font-size: 13px; list-style: none; padding: 0; margin: 4px 0 0; }
+  .sp-msg { padding: 12px 14px; border-radius: 10px; background: #ecfdf3; color: #05603a; margin-bottom: 14px; font-weight: 600; }
+  .sp-msg.error { background: #fef3f2; color: #b42318; }
+</style>
+
+<section class="sp-hero">
+  <div class="sp-wrap">
+    <h1>Reach the people who run marketing technology</h1>
+    <p>MarTechJobs is a job board only for Marketing Ops, MarTech engineering and marketing analytics roles. Our readers configure, integrate and buy the platforms you sell. Sponsor the weekly jobs email or the job page for your platform.</p>
+  </div>
+</section>
+
+<div class="sp-wrap" style="margin-bottom:64px">
+  <section class="sp-sec">
+    <h2>The audience, in real numbers</h2>
+    <p>Read live from our database. Nothing rounded up.</p>
+    <div class="sp-stats">
+      <div class="sp-stat"><div class="n">{{ stats.jobs|intcomma }}</div><div class="l">Live MarTech jobs</div></div>
+      <div class="sp-stat"><div class="n">{{ stats.companies|intcomma }}</div><div class="l">Companies hiring</div></div>
+      {% if stats.countries %}<div class="sp-stat"><div class="n">{{ stats.countries|intcomma }}</div><div class="l">Countries</div></div>{% endif %}
+      <div class="sp-stat"><div class="n">{{ stats.readers|intcomma }}</div><div class="l">Weekly email readers</div></div>
+      {% if stats.impressions is not None %}
+      <div class="sp-stat"><div class="n">{{ stats.impressions|intcomma }}</div><div class="l">Google search appearances, last 30 days</div></div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if stats.tools %}
+  <section class="sp-sec">
+    <h2>Platforms our jobs ask for</h2>
+    <p>If your product plugs into one of these, our readers are your users.</p>
+    <table class="sp-table">
+      <thead><tr><th>Platform</th><th class="num">Live jobs</th><th class="num">Share of jobs (pct)</th></tr></thead>
+      <tbody>{% for t in stats.tools %}<tr><td>{{ t.name }}</td><td class="num">{{ t.jobs }}</td><td class="num">{{ t.pct }}%</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="sp-sec">
+    <h2>Ways to sponsor</h2>
+    <p>Founding sponsor rates. Month to month, no contract.</p>
+    <div class="sp-offers">
+      {% for o in offers %}
+      <div class="sp-offer">
+        <h3>{{ o.name }}</h3>
+        <div class="price">${{ o.price }} <span>/ {{ o.per }}</span></div>
+        <p>{{ o.what }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="sp-note">We only accept sponsors relevant to MarTech practitioners, and sponsored placements are always labelled.</p>
+  </section>
+
+  <section class="sp-sec" id="enquire">
+    <h2>Get in touch</h2>
+    <p>Tell us what you'd like to promote and we'll reply within two working days.</p>
+    {% for m in messages %}<div class="sp-msg {% if m.tags == 'error' %}error{% endif %}" role="status">{{ m }}</div>{% endfor %}
+    <form method="post" action="{% url 'sponsor' %}#enquire" class="sp-form js-sp-form" novalidate>
+      {% csrf_token %}
+      {{ form.website }}
+      {% for f in form %}{% if f.name != "website" %}
+      <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+      {{ f }}
+      {{ f.errors }}
+      {% endif %}{% endfor %}
+      <button type="submit">Send enquiry</button>
+    </form>
+  </section>
+</div>
+<script>
+(function () {
+  var f = document.querySelector('.js-sp-form');
+  if (f) f.addEventListener('submit', function () { window.mtjTrack && window.mtjTrack('sponsor_enquiry_submit', {}); });
+})();
+</script>
+{% endblock %}

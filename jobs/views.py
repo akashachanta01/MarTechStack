@@ -23,7 +23,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 
 from .models import Job, Tool, Category, Subscriber, PendingSubscriber, BlogPost, SavedSearch, InterviewGuide, CertificationGuide
-from .forms import JobPostForm, ContactForm
+from .forms import JobPostForm, ContactForm, SponsorInquiryForm
 from .emails import send_job_alert, send_welcome_email, send_admin_new_subscriber_alert, send_confirmation_email
 from .tool_catalog import all_canonical_names, resolve_tool_name
 
@@ -1968,6 +1968,73 @@ def for_employers(request):
     return render(request, 'jobs/for_employers.html', ctx)
 def privacy(request): return render(request, 'jobs/privacy.html')
 def terms(request): return render(request, 'jobs/terms.html')
+
+# Sponsor packages (founding rates). Prices live here so they're easy to change.
+SPONSOR_OFFERS = [
+    {"key": "newsletter", "name": "Weekly email sponsor", "price": 150, "per": "month",
+     "what": "Your logo, one line and a link at the top of the Monday jobs email, four sends a month."},
+    {"key": "tool_page", "name": "Tool page sponsor", "price": 200, "per": "month",
+     "what": "A \"Sponsored by\" panel on the jobs page for your platform, seen by people job hunting with it."},
+    {"key": "featured", "name": "Featured company roles", "price": 99, "per": "month",
+     "what": "Your open MarTech roles pinned to the top of the job list and marked Featured."},
+]
+
+
+def _sponsor_stats():
+    """Audience numbers for /sponsor/, all read live from the database."""
+    data = cache.get("sponsor_stats_v1")
+    if data is not None:
+        return data
+    from .emails import get_digest_recipients
+    from .models import SearchConsoleDaily
+    live = Job.objects.filter(is_active=True, screening_status="approved")
+    jobs = live.count()
+    tools = []
+    if jobs:
+        for t in (Tool.objects.filter(jobs__in=live).annotate(n=Count("jobs", distinct=True))
+                  .order_by("-n")[:6]):
+            tools.append({"name": t.name, "jobs": t.n, "pct": round(100 * t.n / jobs)})
+    since = timezone.now().date() - timedelta(days=30)
+    gsc = SearchConsoleDaily.objects.filter(date__gte=since)
+    data = {
+        "jobs": jobs,
+        "companies": live.values("company").distinct().count(),
+        "countries": live.exclude(country="").values("country").distinct().count(),
+        "readers": len(get_digest_recipients()),
+        "tools": tools,
+        "impressions": sum(g.impressions for g in gsc) if gsc.exists() else None,
+        "clicks": sum(g.clicks for g in gsc) if gsc.exists() else None,
+    }
+    cache.set("sponsor_stats_v1", data, 3600)
+    return data
+
+
+def sponsor(request):
+    if request.method == "POST":
+        if _rate_limited(request, "sponsor", limit=5, window_seconds=3600):
+            messages.error(request, "Too many messages. Please try again later.")
+            return redirect("sponsor")
+        form = SponsorInquiryForm(request.POST)
+        if form.is_valid():
+            from .models import SponsorInquiry
+            d = form.cleaned_data
+            inq = SponsorInquiry.objects.create(company=d["company"], name=d["name"], email=d["email"],
+                                                option=d["option"], message=d.get("message", ""))
+            body = (f"Company: {inq.company}\nName: {inq.name}\nEmail: {inq.email}\n"
+                    f"Interested in: {inq.get_option_display()}\n\n{inq.message}")
+            try:
+                EmailMultiAlternatives(subject=f"Sponsor inquiry: {inq.company}", body=body,
+                                       from_email=settings.DEFAULT_FROM_EMAIL,
+                                       to=[getattr(settings, "CONTACT_EMAIL", "martechjobs@gmail.com")],
+                                       reply_to=[inq.email]).send(fail_silently=True)
+            except Exception:
+                pass
+            messages.success(request, "Thanks. We'll reply within two working days.")
+            return redirect("sponsor")
+    else:
+        form = SponsorInquiryForm()
+    return render(request, "jobs/sponsor.html", {"form": form, "stats": _sponsor_stats(), "offers": SPONSOR_OFFERS})
+
 
 def contact(request):
     if request.method == "POST":

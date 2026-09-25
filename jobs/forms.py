@@ -114,3 +114,14 @@ class ContactForm(HoneypotMixin, forms.Form):
             'placeholder': "What's working, what's broken, what you wish existed…"
         })
     )
+
+
+class SponsorInquiryForm(HoneypotMixin, forms.Form):
+    company = forms.CharField(max_length=200)
+    name = forms.CharField(label="Your name", max_length=200)
+    email = forms.EmailField(label="Work email")
+    option = forms.ChoiceField(label="Interested in", choices=[
+        ("newsletter", "Weekly email sponsor"), ("tool_page", "Tool page sponsor"),
+        ("featured", "Featured company roles"), ("other", "Not sure yet / other")])
+    message = forms.CharField(label="Anything we should know? (optional)", required=False, max_length=2000,
+                              widget=forms.Textarea(attrs={"rows": 4}))
