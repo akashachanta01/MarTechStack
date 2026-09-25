@@ -716,7 +716,7 @@ class Command(BaseCommand):
         budget = {"new": 0}
         name = None
 
-        def handle(item):
+        def handle(item, from_search=False):
             ext_id = f"smartrecruiters:{item.get('id')}"
             self._feed_seen(ext_id)
             if not self.is_fresh(item.get('releasedDate')):
@@ -724,6 +724,9 @@ class Command(BaseCommand):
             # Known posting: skip the per-job detail request entirely.
             if self._is_duplicate("", "", "", ext_id):
                 self._count_known("SmartRecruiters")
+                return
+            if not from_search and not self.screener.title_candidate(item.get('name'), name):
+                self.stats["SmartRecruiters:title_skip"] += 1
                 return
             if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
                 self.stats["SmartRecruiters:budget_skip"] += 1
@@ -784,7 +787,7 @@ class Command(BaseCommand):
                     hits = resp.json().get('content', [])
                     self.stats["SmartRecruiters:search_hits"] += len(hits)
                     for item in hits:
-                        handle(item)
+                        handle(item, from_search=True)
         except Exception as e:
             self.stats["SmartRecruiters:error"] += 1
             logger.warning("SmartRecruiters board '%s' failed: %s", company, e)
@@ -873,7 +876,7 @@ class Command(BaseCommand):
                 return None
             return resp.json()
 
-        def handle(item):
+        def handle(item, from_search=False):
             ext_path = item.get('externalPath') or ""
             if not ext_path:
                 return
@@ -884,6 +887,11 @@ class Command(BaseCommand):
             # Known posting: skip the slow per-job detail request.
             if self._is_duplicate("", "", "", f"workday:{ext_path}"):
                 self._count_known("Workday")
+                return
+            # Newest-postings pass on big boards is mostly non-MarTech: don't spend
+            # a detail fetch (or the run budget) on titles that can't pass screening.
+            if not from_search and not self.screener.title_candidate(item.get('title'), company):
+                self.stats["Workday:title_skip"] += 1
                 return
             if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
                 self.stats["Workday:budget_skip"] += 1
@@ -957,7 +965,7 @@ class Command(BaseCommand):
                             break
                         self.stats["Workday:search_hits"] += len(postings)
                         for item in postings:
-                            handle(item)
+                            handle(item, from_search=True)
                         if (page + 1) * PAGE >= (payload.get('total', 0) or 0):
                             break
                         time.sleep(0.3)

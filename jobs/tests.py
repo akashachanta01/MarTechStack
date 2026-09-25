@@ -1680,6 +1680,8 @@ class WorkdaySearchTests(TestCase):
         c._company_name = lambda *a, **k: "Acme"
         c._clean_location = lambda loc, remote: (loc, "onsite")
         c.screen_and_upsert = lambda d: c.screened.append(d)
+        c.screener = mock.Mock()
+        c.screener.title_candidate = lambda t, co="": "marketo" in (t or "").lower() or "martech" in (t or "").lower()
         return c
 
     def _post(self, total, searched):
@@ -1782,7 +1784,8 @@ class SmartRecruitersPagingTests(TestCase):
         self.assertEqual(calls[0].get("limit"), 100)
         self.assertFalse(any(p.get("q") for p in calls))
         self.assertTrue(c._feed_complete)
-        self.assertEqual(len(c.screened), 30)
+        self.assertEqual(c.screened, [])                      # "Accountant" titles never fetched
+        self.assertEqual(c.stats["SmartRecruiters:title_skip"], 30)
 
     def test_big_board_searched_and_capped(self):
         c, calls = self._cmd(), []
@@ -1790,16 +1793,17 @@ class SmartRecruitersPagingTests(TestCase):
             c.fetch_smartrecruiters_api("PublicisGroupe")
         self.assertTrue(any(p.get("q") == "Marketo" for p in calls))
         self.assertFalse(c._feed_complete)
-        # per-board budget stops detail fetches at 40, so the search hit is budget-skipped
-        self.assertEqual(len(c.screened), c.WORKDAY_MAX_NEW_PER_BOARD)
-        self.assertGreater(c.stats["SmartRecruiters:budget_skip"], 0)
+        # non-MarTech newest postings no longer eat the budget: the search hit gets through
+        self.assertEqual([d["title"] for d in c.screened], ["Marketo Specialist"])
+        self.assertEqual(c.stats["SmartRecruiters:budget_skip"], 0)
 
     def test_run_wide_cap(self):
         c, calls = self._cmd(), []
         c.stats["new_detail_fetches"] = c.MAX_NEW_PER_RUN
-        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 30)):
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 5000)):
             c.fetch_smartrecruiters_api("Acme")
         self.assertEqual(c.screened, [])
+        self.assertGreater(c.stats["SmartRecruiters:budget_skip"], 0)
 
 
 @override_settings(**TEST_SETTINGS)
@@ -1882,3 +1886,14 @@ class UnknownCountryTests(TestCase):
             call_command("clean_job_data", stdout=mock.Mock())
         j.refresh_from_db()
         self.assertEqual((j.location, j.country), ("Multiple locations", ""))
+
+
+
+class TitleCandidateTests(TestCase):
+    def test_title_candidate(self):
+        from jobs.screener import MarTechScreener
+        sc = MarTechScreener()
+        self.assertTrue(sc.title_candidate("Senior Marketo Administrator", "Acme"))
+        self.assertTrue(sc.title_candidate("SFMC Developer", "Acme"))
+        self.assertFalse(sc.title_candidate("Staff Accountant", "Acme"))
+        self.assertFalse(sc.title_candidate("Welder-Brazer II", "Acme"))

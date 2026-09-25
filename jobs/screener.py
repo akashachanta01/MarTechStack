@@ -11,6 +11,58 @@ from jobs.models import BlockRule, Tool
 
 logger = logging.getLogger("screener")
 
+
+# Fast-approve: UNAMBIGUOUS MarTech title terms only (see screen()).
+FAST_APPROVE_TERMS = {
+    "martech", "marketing technology",
+    "marketing operations", "marketing ops", "mops",
+    "marketing automation", "campaign operations",
+    "marketing analytics", "marketing data", "marketing engineer",
+    "digital analytics", "web analytics", "google tag manager",
+    # Salesforce ecosystem (role must be a technical/ops role — gated below)
+    "salesforce administrator", "salesforce admin",
+    "salesforce developer", "salesforce architect",
+    "salesforce consultant", "salesforce analyst",
+    "salesforce solution architect", "salesforce technical architect",
+    "salesforce senior technical architect",
+    "salesforce implementer", "salesforce business analyst",
+    "salesforce engineer", "salesforce engineering",
+    "sfmc", "salesforce marketing cloud", "marketing cloud",
+    "pardot", "account engagement",
+    "salesforce data cloud",
+    # Adobe Experience Cloud — full suite (all unambiguously MarTech)
+    "adobe experience manager", "aem ", "aem-", "(aem)", " aem", "aem)",
+    "aem content", "aem integration", "aem developer", "aem architect",
+    "adobe experience platform",
+    "adobe analytics", "adobe target", "adobe campaign",
+    "adobe journey optimizer", "adobe audience manager",
+    "adobe real-time cdp", "adobe rtcdp", "adobe workfront",
+    "adobe marketo", "marketo engage", "adobe genstudio",
+    "adobe launch",
+    # CDP engineering
+    "cdp engineer", "cdp developer", "cdp architect",
+    # Marketing automation platforms (names that aren't common words)
+    "marketo", "eloqua", "hubspot",
+    "braze", "klaviyo", "iterable", "customer.io", "activecampaign",
+    # CDP / data activation platforms (MarTech-specific names)
+    "tealium", "mparticle", "rudderstack", "hightouch", "actioniq",
+    # ABM / sales-marketing platforms
+    "6sense", "demandbase", "salesloft",
+    # Product / digital analytics (unambiguous tool names)
+    "amplitude", "mixpanel", "twilio segment",
+    "heap", "pendo", "fullstory", "contentsquare",
+}
+
+
+def _has_term(text, term):
+    """Single-word tool names must match as whole words ("braze" is not in
+    "Welder-Brazer", "heap" is not in "cheap"); phrases match as substrings."""
+    t = term.strip()
+    if re.fullmatch(r"[a-z0-9.]+", t):
+        return re.search(r"(?<![a-z0-9])" + re.escape(t) + r"(?![a-z0-9])", text) is not None
+    return term in text
+
+
 class MarTechScreener:
     """
     Diamond-Grade Edition (Strict Mode V5.0 - Tool-First Priority):
@@ -178,6 +230,15 @@ class MarTechScreener:
 
         return None
 
+    def title_candidate(self, title, company=""):
+        """Cheap pre-check before fetching a job's full description: could this
+        title pass screening? (Blocked / quick-killed / no MarTech term -> no.)"""
+        title = str(title or "")
+        if self._is_blocked(title, str(company or ""), "") or self._quick_kill(title, str(company or "")):
+            return False
+        t = self._normalize(title)
+        return any(_has_term(t, term) for term in FAST_APPROVE_TERMS) or any(_has_term(t, kw) for kw in self.gate_terms)
+
     def screen(self, title: str, company: str, location: str, description: str, apply_url: str) -> dict:
         # Coerce EVERY input to a string at the entry point. Some ATS APIs
         # (Workday especially) return null for description/location, and any
@@ -199,53 +260,14 @@ class MarTechScreener:
         # and auto-approve, so generic/ambiguous tools (Tableau, Looker, dbt,
         # Magento, Outreach, etc.) are deliberately EXCLUDED. Those still pass the
         # keyword gate below and get AI-screened against the full JD.
-        _FAST_APPROVE_TERMS = {
-            "martech", "marketing technology",
-            "marketing operations", "marketing ops", "mops",
-            "marketing automation", "campaign operations",
-            "marketing analytics", "marketing data", "marketing engineer",
-            "digital analytics", "web analytics", "google tag manager",
-            # Salesforce ecosystem (role must be a technical/ops role — gated below)
-            "salesforce administrator", "salesforce admin",
-            "salesforce developer", "salesforce architect",
-            "salesforce consultant", "salesforce analyst",
-            "salesforce solution architect", "salesforce technical architect",
-            "salesforce senior technical architect",
-            "salesforce implementer", "salesforce business analyst",
-            "salesforce engineer", "salesforce engineering",
-            "sfmc", "salesforce marketing cloud", "marketing cloud",
-            "pardot", "account engagement",
-            "salesforce data cloud",
-            # Adobe Experience Cloud — full suite (all unambiguously MarTech)
-            "adobe experience manager", "aem ", "aem-", "(aem)", " aem", "aem)",
-            "aem content", "aem integration", "aem developer", "aem architect",
-            "adobe experience platform",
-            "adobe analytics", "adobe target", "adobe campaign",
-            "adobe journey optimizer", "adobe audience manager",
-            "adobe real-time cdp", "adobe rtcdp", "adobe workfront",
-            "adobe marketo", "marketo engage", "adobe genstudio",
-            "adobe launch",
-            # CDP engineering
-            "cdp engineer", "cdp developer", "cdp architect",
-            # Marketing automation platforms (names that aren't common words)
-            "marketo", "eloqua", "hubspot",
-            "braze", "klaviyo", "iterable", "customer.io", "activecampaign",
-            # CDP / data activation platforms (MarTech-specific names)
-            "tealium", "mparticle", "rudderstack", "hightouch", "actioniq",
-            # ABM / sales-marketing platforms
-            "6sense", "demandbase", "salesloft",
-            # Product / digital analytics (unambiguous tool names)
-            "amplitude", "mixpanel", "twilio segment",
-            "heap", "pendo", "fullstory", "contentsquare",
-        }
         title_norm = self._normalize(title)
-        for term in _FAST_APPROVE_TERMS:
-            if term in title_norm:
+        for term in FAST_APPROVE_TERMS:
+            if _has_term(title_norm, term):
                 fn = "engineering" if any(w in title_norm for w in ("developer", "engineer", "architect", "technical", "backend", "frontend", "full stack", "author")) else "operations"
                 return {"status": "approved", "score": 92.0, "reason": f"Fast-approve: '{term.strip()}' in title.", "details": {"stage": "fast_approve", "signals": {"function": fn, "stack": []}}}
 
         # Precision gate: require a hunt keyword in the TITLE.
-        has_keyword = any(kw in title_norm for kw in self.gate_terms)
+        has_keyword = any(_has_term(title_norm, kw) for kw in self.gate_terms)
 
         # Description-signal fallback: a lot of real MarTech roles ship with a
         # generic title ("Marketing Manager", "Technical Consultant", "Senior
