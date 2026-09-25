@@ -402,22 +402,17 @@ class Command(BaseCommand):
         remote_scope: "" if not remote, a country code if the remote role is
         geo-restricted, else "anywhere".
         """
-        low = (clean_loc or "").lower()
-        country = ""
-        for name, code in _COUNTRY_CODES.items():
-            if name in low:
-                country = code
-                break
-        # ", CA" style US state suffix implies the US even without "United States".
-        if not country and re.search(r',\s*[a-z]{2}$', low):
-            country = "US"
+        from jobs.geo import country_code
+        country = country_code(clean_loc or "")
         parts = [p.strip() for p in (clean_loc or "").split(",") if p.strip()]
         # Drop a trailing country token (full name OR 2-letter ISO code like "GB")
         # so it's never mistaken for a region. The old check compared against
         # _COUNTRY_CODES keys (which are country *names*), so an ISO suffix such
         # as ", GB" slipped through and got stored as the region.
         _iso_codes = {c.lower() for c in _COUNTRY_CODES.values()}
-        while parts and (parts[-1].lower() in _COUNTRY_CODES or parts[-1].lower() in _iso_codes):
+        from jobs.geo import code_for_name
+        while parts and (parts[-1].lower() in _COUNTRY_CODES or parts[-1].lower() in _iso_codes
+                         or (country and code_for_name(parts[-1]) == country)):
             parts = parts[:-1]
         region = parts[1] if len(parts) >= 2 else ""
         remote_scope = ""

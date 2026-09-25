@@ -1842,3 +1842,43 @@ class SponsorPageTests(TestCase):
     def test_in_sitemap_and_nav(self):
         self.assertContains(self.client.get("/sitemap.xml"), "/sponsor/")
         self.assertContains(self.client.get("/for-employers/"), 'href="/sponsor/"')
+
+
+@override_settings(**TEST_SETTINGS)
+class UnknownCountryTests(TestCase):
+    def test_nationwide_is_us(self):
+        from jobs.geo import country_code
+        self.assertEqual(country_code("Remote Nationwide"), "US")
+        self.assertEqual(country_code("Latin America"), "")
+
+    def test_ingest_uses_shared_resolver(self):
+        from jobs.management.commands.fetch_jobs import Command
+        c = Command()
+        self.assertEqual(c._geo_fields("Bengaluru, India", "onsite")[0], "IN")
+        self.assertEqual(c._geo_fields("CAN, ON, Mississauga", "onsite")[0], "CA")
+        self.assertEqual(c._geo_fields("Rotterdam", "onsite")[0], "NL")
+        self.assertEqual(c._geo_fields("Remote, Colombia", "remote"), ("CO", "", "CO"))
+
+    def test_workday_multiple_locations_resolved(self):
+        from django.core.management import call_command
+        j = make_job(location="Multiple locations", country="",
+                     apply_url="https://salesforce.wd12.myworkdayjobs.com/en-US/External_Career_Site/job/India---Hyderabad/SFMC_JR1")
+        Job.objects.filter(pk=j.pk).update(location="Multiple locations", country="")
+        r = mock.Mock(status_code=200)
+        r.json.return_value = {"jobPostingInfo": {"location": "India - Hyderabad"}}
+        with mock.patch("requests.get", return_value=r) as g:
+            call_command("clean_job_data", stdout=mock.Mock())
+        self.assertIn("/wday/cxs/salesforce/External_Career_Site/job/India---Hyderabad/SFMC_JR1", g.call_args[0][0])
+        j.refresh_from_db()
+        self.assertEqual(j.country, "IN")
+        self.assertIn("Hyderabad", j.location)
+
+    def test_workday_lookup_failure_leaves_job_alone(self):
+        from django.core.management import call_command
+        import requests as rq
+        j = make_job(apply_url="https://acme.wd1.myworkdayjobs.com/Ext/job/X/Y_1")
+        Job.objects.filter(pk=j.pk).update(location="Multiple locations", country="")
+        with mock.patch("requests.get", side_effect=rq.Timeout()):
+            call_command("clean_job_data", stdout=mock.Mock())
+        j.refresh_from_db()
+        self.assertEqual((j.location, j.country), ("Multiple locations", ""))
