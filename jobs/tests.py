@@ -1800,3 +1800,45 @@ class SmartRecruitersPagingTests(TestCase):
         with mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get(calls, 30)):
             c.fetch_smartrecruiters_api("Acme")
         self.assertEqual(c.screened, [])
+
+
+@override_settings(**TEST_SETTINGS)
+class SponsorPageTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_page_shows_real_numbers(self):
+        make_job(company="Acme")
+        make_job(company="Globex", title="Marketo Admin")
+        Subscriber.objects.create(email="reader@x.test", is_active=True)
+        r = self.client.get("/sponsor/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context["stats"]["jobs"], 2)
+        self.assertEqual(r.context["stats"]["companies"], 2)
+        self.assertGreaterEqual(r.context["stats"]["readers"], 1)
+        self.assertContains(r, "Weekly email sponsor")
+        self.assertNotContains(r, "Google search appearances")  # no Search Console data -> tile hidden
+
+    @override_settings(EMAIL_HOST_PASSWORD="x", EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_enquiry_saved_and_emailed(self):
+        from django.core import mail
+        from jobs.models import SponsorInquiry
+        r = self.client.post("/sponsor/", {"company": "Braze", "name": "Sam", "email": "sam@braze.test",
+                                           "option": "newsletter", "message": "Q4"}, follow=True)
+        self.assertContains(r, "reply within two working days")
+        inq = SponsorInquiry.objects.get()
+        self.assertEqual((inq.company, inq.option), ("Braze", "newsletter"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].reply_to, ["sam@braze.test"])
+
+    def test_bad_input_and_honeypot_rejected(self):
+        from jobs.models import SponsorInquiry
+        r = self.client.post("/sponsor/", {"company": "", "name": "Sam", "email": "not-an-email", "option": "newsletter"})
+        self.assertEqual(r.status_code, 200)
+        self.client.post("/sponsor/", {"company": "Spam", "name": "Bot", "email": "b@x.test", "option": "other",
+                                       "website": "http://spam"})
+        self.assertEqual(SponsorInquiry.objects.count(), 0)
+
+    def test_in_sitemap_and_nav(self):
+        self.assertContains(self.client.get("/sitemap.xml"), "/sponsor/")
+        self.assertContains(self.client.get("/for-employers/"), 'href="/sponsor/"')

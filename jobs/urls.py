@@ -26,6 +26,7 @@ urlpatterns = [
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
     path('for-employers/', views.for_employers, name='for_employers'),
+    path('sponsor/', views.sponsor, name='sponsor'),
     path('contact/', views.contact, name='contact'),
 
     # --- BROWSE ALL JOBS (Jobs nav destination) ---

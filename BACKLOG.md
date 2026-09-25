@@ -254,3 +254,10 @@ fragility for future real migrations.
 - [x] **Per-source progress logging** — DONE. The poll loop prints
   `[idx/total] ats:token → +N` per board so a long `--sources-only` run is
   visibly alive.
+
+## PARKED (Sept 2026): Martechjobs Experts — curated MarTech talent matching
+Decision: parked. Founder can't commit 5-8 hrs/week of outreach/screening now; concierge model is founder-time-bound.
+Revisit when ANY of: founder has ~6 hrs/week for sales; 10+ warm contacts (agency leads / MarTech managers) who'd send briefs; inbound "can you find us a contractor?" requests from employers.
+Spec (founder, Sept 2026): endorsed sub-brand at martechjobs.io/experts; talent pays 0%, client rate = talent_rate/(1-margin), margin 20% (15-25% per engagement); contract-to-hire fee 15% of first-year salary, waived after 6 months billing; minimum 10 hrs/wk or $5K fixed scope. Six pods: Adobe Analytics/CJA; Target/Personalization; AEP/RT-CDP & CDPs; Tagging (GTM/Tealium/Launch); Marketing Automation (Marketo/HubSpot/SFMC/Braze); Analytics Engineering (SQL/dbt). Offers: Tagging & Data Layer Audit (2 wks), Marketo Health Check (4 wks), RT-CDP Activation Sprint (6 wks), Target Program Launch.
+Agreed approach when revived: Django app `experts` in this repo (not Next.js). 30-day validation first (~2 days build): landing + 6 pod SEO pages + offer pages + talent application + client brief forms + admin lists + Resend emails. Matching/shortlist pages, engagements, metrics, Stripe Invoicing/Connect only after: 20+ qualified applications, 3+ briefs, 1 signed engagement. Deel (~$49/contractor/mo) = paid service, ask first. Lawyer before first engagement (MSA, talent agreement, non-circumvention).
+Angle to test: India-based Adobe/SFMC specialists for US agency overflow.
