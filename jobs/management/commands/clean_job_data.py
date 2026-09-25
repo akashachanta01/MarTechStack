@@ -55,6 +55,7 @@ class Command(BaseCommand):
         # engine as the Resume Scanner). The AI screener only tagged ~40% of
         # jobs, so tool pages (e.g. "SFMC jobs") showed a fraction of the roles.
         counts["tools_added"] = self._tag_tools(live, dry)
+        counts["locations_resolved"] = self._resolve_workday_multi(live, dry)
 
         # Clearly non-MarTech roles the AI screener let through (e.g. factory
         # welders, German medical-device "AEMP" jobs matched as AEM).
@@ -119,3 +120,32 @@ class Command(BaseCommand):
                     if not dry:
                         job.tools.add(tool)
         return added
+
+    def _resolve_workday_multi(self, live, dry, limit=150):
+        """Workday lists multi-site roles as "N Locations", stored as "Multiple
+        locations" (no country). Ask Workday for the primary location once."""
+        import re
+        import requests
+        from jobs.geo import country_code
+        rx = re.compile(r"https://([^./]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)/(job/[^?#]+)")
+        fixed = 0
+        for job in live.filter(location__iexact="Multiple locations", apply_url__contains="myworkdayjobs.com")[:limit]:
+            m = rx.match(job.apply_url or "")
+            if not m:
+                continue
+            tenant, wd, site, path = m.groups()
+            try:
+                r = requests.get(f"https://{tenant}.{wd}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/{path}",
+                                 headers={"Accept": "application/json"}, timeout=10)
+                info = (r.json().get("jobPostingInfo") or {}) if r.status_code == 200 else {}
+            except (requests.RequestException, ValueError):
+                continue
+            primary = str(info.get("location") or "").strip()
+            if not primary or re.match(r"^\s*\d+\s+locations?\s*$", primary, re.I):
+                continue
+            loc = normalize_location(tidy_location(primary))
+            code = country_code(loc)
+            if not dry:
+                Job.objects.filter(pk=job.pk).update(location=loc, country=code or job.country)
+            fixed += 1
+        return fixed

@@ -98,6 +98,9 @@ def _one(location):
     low = raw.lower()
     if low in ("multiple locations", "remote", ""):
         return ""
+    # US employers' wording for "anywhere in the US" (Humana, CVS...).
+    if re.fullmatch(r"(remote[\s,-]*)?(nationwide|usa nationwide|us nationwide)([\s,-]*remote)?", low):
+        return "US"
     # ATS feeds end with a lowercase ISO code: "Paris, IDF, fr", "Bengaluru, in".
     # (US states are written in capitals, "Austin, TX", so "in"/"ca" here are countries.)
     last = raw.rsplit(",", 1)[-1].strip() if "," in raw else ""
