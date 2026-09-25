@@ -708,45 +708,88 @@ class Command(BaseCommand):
             self.stats["Workable:error"] += 1
             logger.warning("Workable board '%s' failed: %s", sub, e)
 
+    SR_PAGE = 100
+    SR_MAX_PAGES = 3   # newest 300 postings; bigger boards are keyword-searched too
+
     def fetch_smartrecruiters_api(self, company):
+        """SmartRecruiters public API. Returns 10 postings unless asked for more,
+        so read up to 300 newest (100/page); agencies like Publicis post
+        thousands, so those boards are also searched for MarTech keywords."""
         if company in self.processed_tokens: return
         self.processed_tokens.add(company)
+        api = f"https://api.smartrecruiters.com/v1/companies/{company}/postings"
+        budget = {"new": 0}
+        name = None
+
+        def handle(item):
+            ext_id = f"smartrecruiters:{item.get('id')}"
+            self._feed_seen(ext_id)
+            if not self.is_fresh(item.get('releasedDate')):
+                return
+            # Known posting: skip the per-job detail request entirely.
+            if self._is_duplicate("", "", "", ext_id):
+                self._count_known("SmartRecruiters")
+                return
+            if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
+                self.stats["SmartRecruiters:budget_skip"] += 1
+                return
+            budget["new"] += 1
+            self.stats["new_detail_fetches"] += 1
+            desc = ""
+            try:
+                dr = requests.get(f"{api}/{item.get('id')}", headers=self.get_headers(), timeout=5)
+                if dr.status_code == 200:
+                    d = dr.json()
+                    desc = (d.get('jobAd') or {}).get('sections', {}).get('jobDescription', {}).get('text', '')
+            except Exception:
+                desc = ""
+            # Skip postings with no fetchable body — a placeholder
+            # description produces a thin/invalid JobPosting schema.
+            if not desc:
+                return
+            loc = item.get('location') or {}
+            parts = [loc.get('city'), loc.get('region'), loc.get('country')]
+            raw_loc = ", ".join([p for p in parts if p])
+            clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
+            self.screen_and_upsert({
+                "title": item.get('name'), "company": name, "location": clean_loc,
+                "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
+                "work_arrangement": arr, "source": "SmartRecruiters",
+                "external_id": ext_id,
+            })
+
         try:
-            resp = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings", headers=self.get_headers(), timeout=5)
-            if resp.status_code == 200:
-                self.record_source("smartrecruiters", company, company.capitalize())
-                self._feed_complete = self._sr_complete(resp.json())
-                name = self._company_name("smartrecruiters", company)
-                for item in resp.json().get('content', []):
-                    ext_id = f"smartrecruiters:{item.get('id')}"
-                    self._feed_seen(ext_id)
-                    if self.is_fresh(item.get('releasedDate')):
-                        # Known posting: skip the per-job detail request entirely.
-                        if self._is_duplicate("", "", "", ext_id):
-                            self._count_known("SmartRecruiters")
-                            continue
-                        desc = ""
-                        try:
-                            dr = requests.get(f"https://api.smartrecruiters.com/v1/companies/{company}/postings/{item.get('id')}", headers=self.get_headers(), timeout=5)
-                            if dr.status_code == 200:
-                                d = dr.json()
-                                desc = (d.get('jobAd') or {}).get('sections', {}).get('jobDescription', {}).get('text', '')
-                        except Exception:
-                            desc = ""
-                        # Skip postings with no fetchable body — a placeholder
-                        # description produces a thin/invalid JobPosting schema.
-                        if not desc:
-                            continue
-                        loc = item.get('location') or {}
-                        parts = [loc.get('city'), loc.get('region'), loc.get('country')]
-                        raw_loc = ", ".join([p for p in parts if p])
-                        clean_loc, arr = self._clean_location(raw_loc, loc.get('remote', False))
-                        self.screen_and_upsert({
-                            "title": item.get('name'), "company": name, "location": clean_loc,
-                            "description": desc, "apply_url": f"https://jobs.smartrecruiters.com/{company}/{item.get('id')}",
-                            "work_arrangement": arr, "source": "SmartRecruiters",
-                            "external_id": f"smartrecruiters:{item.get('id')}",
-                        })
+            read, total = 0, 0
+            for page in range(self.SR_MAX_PAGES):
+                resp = requests.get(api, params={"limit": self.SR_PAGE, "offset": page * self.SR_PAGE},
+                                    headers=self.get_headers(), timeout=8)
+                if resp.status_code != 200:
+                    if page == 0:
+                        return
+                    break
+                payload = resp.json()
+                content = payload.get('content', [])
+                if page == 0:
+                    self.record_source("smartrecruiters", company, company.capitalize())
+                    name = self._company_name("smartrecruiters", company)
+                total = int(payload.get("totalFound", 0) or 0)
+                read += len(content)
+                for item in content:
+                    handle(item)
+                if not content or read >= total:
+                    break
+            complete = read >= total
+            self._feed_complete = complete
+            if not complete:
+                for term in self.WORKDAY_SEARCHES:
+                    resp = requests.get(api, params={"q": term, "limit": self.SR_PAGE},
+                                        headers=self.get_headers(), timeout=8)
+                    if resp.status_code != 200:
+                        continue
+                    hits = resp.json().get('content', [])
+                    self.stats["SmartRecruiters:search_hits"] += len(hits)
+                    for item in hits:
+                        handle(item)
         except Exception as e:
             self.stats["SmartRecruiters:error"] += 1
             logger.warning("SmartRecruiters board '%s' failed: %s", company, e)
@@ -804,7 +847,8 @@ class Command(BaseCommand):
         "marketing automation", "marketing operations", "martech", "marketing technology", "CDP",
     ]
     WORKDAY_SEARCH_PAGES = 2
-    WORKDAY_MAX_NEW_PER_BOARD = 80   # detail fetch + AI screen budget per board per run
+    WORKDAY_MAX_NEW_PER_BOARD = 40   # detail fetch + AI screen budget per board per run
+    MAX_NEW_PER_RUN = 400            # same, across all Workday/SmartRecruiters boards
 
     def fetch_workday_api(self, board_url):
         """Workday CXS API. board_url is a full careers URL like
@@ -846,10 +890,11 @@ class Command(BaseCommand):
             if self._is_duplicate("", "", "", f"workday:{ext_path}"):
                 self._count_known("Workday")
                 return
-            if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD:
+            if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
                 self.stats["Workday:budget_skip"] += 1
                 return
             budget["new"] += 1
+            self.stats["new_detail_fetches"] += 1
             _bullet0 = ((item.get('bulletFields') or []) + [None])[0]
             raw_loc = str(item.get('locationsText') or _bullet0 or "")
             is_remote = "remote" in raw_loc.lower()
