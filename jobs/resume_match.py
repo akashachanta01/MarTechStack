@@ -89,6 +89,12 @@ def extract_resume_text(uploaded):
     return text[:15000]
 
 
+# Visitor requests never analyse job descriptions: a single long JD can take
+# seconds, and a cold cache after a deploy once pushed a resume check past the
+# 30s worker timeout (Sept 23). Web paths read what the daily cron cached
+# (warm_resume_match); until that's complete, demand/matches are simply hidden.
+WEB_BUDGET_S = 0.0
+
 _JOB_KEY = "resume_match:job:v1:{id}:{stamp}"
 _JOB_TTL = 7 * 86400
 
@@ -128,7 +134,7 @@ def job_requirements(budget_s=None):
         stamp = int(job.updated_at.timestamp()) if job.updated_at else 0
         cached = cache.get(_JOB_KEY.format(id=job.id, stamp=stamp))
         if cached is None:
-            if budget_s is not None and time.monotonic() - started > budget_s:
+            if budget_s is not None and time.monotonic() - started >= budget_s:
                 complete = False
                 continue
             cached, _ = _job_entry(job)
@@ -140,7 +146,7 @@ def job_requirements(budget_s=None):
     return reqs_clean, complete
 
 
-def term_demand(budget_s=2.0):
+def term_demand(budget_s=WEB_BUDGET_S):
     """({canon: pct_of_live_jobs_asking}, n_jobs). Real numbers only: returns
     ({}, 0) until every live job has been analysed (never partial percentages)."""
     reqs, complete = job_requirements(budget_s)
@@ -180,7 +186,7 @@ def best_matches(resume_text, exclude_id=None, limit=3, better_than=None):
     """Top live jobs for this resume by share of required terms covered.
     better_than: only jobs whose coverage ratio is strictly higher (for a
     'stretch' result, 'fits you better' must actually be better)."""
-    reqs, complete = job_requirements(budget_s=2.0)
+    reqs, complete = job_requirements(budget_s=WEB_BUDGET_S)
     if not complete:
         return []
     have = set(extract_terms(resume_text).keys())
@@ -249,7 +255,7 @@ def lines_needing_numbers(resume_text, limit=3):
     return picks
 
 
-def score_all_jobs(resume_text, budget_s=2.0):
+def score_all_jobs(resume_text, budget_s=WEB_BUDGET_S):
     """({job_id: {"matched","required","label","missing"}}, complete) for every
     analysed live job. Pure set maths on the cached job requirements."""
     reqs, complete = job_requirements(budget_s)
