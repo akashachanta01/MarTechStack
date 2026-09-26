@@ -1036,8 +1036,14 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
     _year = _date.today().year
 
     if tool and location_name:
-        page_title = f"{location_name} {tool.name} Jobs"
-        meta_desc = f"Apply to the best {tool.name} jobs in {location_name}. Curated Marketing Operations roles."
+        _month = _date.today().strftime("%B %Y")
+        if location_name == "Remote":
+            page_title = f"{total_count} Remote {tool.name} Jobs — Updated {_month}"
+        else:
+            page_title = f"{total_count} {tool.name} Jobs in {location_name} — Updated {_month}"
+        meta_desc = (f"{total_count} {tool.name} job{'s' if total_count != 1 else ''} "
+                     f"{'that are remote' if location_name == 'Remote' else 'in ' + location_name}: Marketing Ops, "
+                     f"admin, developer and consultant roles. Apply direct on each company's site. Updated daily.")
         header_text = f"{escape(location_name)} <span class='text-martech-green'>{escape(tool.name)}</span> Jobs"
     elif tool:
         page_title = f"{tool.name} Jobs"
@@ -1070,11 +1076,19 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     # Unique intro + remote cross-link for international country pages (only on
     # the location-only page, not tool combos, to keep tool pages focused).
+    # The hand-written intro keeps only its first sentence (market/hub cities);
+    # employers named in it went stale, so the rest is built from live jobs.
     country_intro = None
     is_country_page = False
-    if not tool and _loc_slug in SEO_COUNTRY_MATCH:
-        is_country_page = True
-        country_intro = COUNTRY_INTROS.get(_loc_slug)
+    if _loc_slug in SEO_COUNTRY_MATCH and not page_noindex:
+        is_country_page = not tool
+        from jobs.role_pages import facts_intro, top_platforms
+        live_jobs = list(jobs.prefetch_related("tools")[:300])
+        facts = facts_intro(tool.name if tool else "MarTech", live_jobs)
+        platforms = "" if tool else top_platforms(live_jobs)
+        lead = "" if tool else (COUNTRY_INTROS.get(_loc_slug, "").split(". ")[0].rstrip(".") + ". ")
+        country_intro = (lead if lead.strip(". ") else "") + facts + (
+            f" Most requested platforms: {platforms}." if platforms else "")
 
     # Country-aware cross-links: on India/UK/etc. (and their member cities), the
     # "by city / by region" rows point to that country, not the US.

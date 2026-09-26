@@ -1948,3 +1948,37 @@ class SearchTrackingAndWebBudgetTests(TestCase):
         # the daily cron path still computes everything
         reqs, complete = resume_match.job_requirements(budget_s=None)
         self.assertTrue(complete)
+
+
+@override_settings(**TEST_SETTINGS)
+class CountryToolPagesTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        cat = Category.objects.create(name="Automation", slug="automation")
+        self.sfmc = Tool.objects.create(name="Salesforce Marketing Cloud", slug="salesforce-marketing-cloud", category=cat)
+        for i, co in enumerate(["Merkle", "Nagarro", "Dentsu"]):
+            j = make_job(title=f"SFMC Developer {i}", company=co, location="Bengaluru, India", country="IN",
+                         work_arrangement="onsite")
+            j.tools.add(self.sfmc)
+
+    def test_country_tool_page_counted_title_and_live_facts(self):
+        r = self.client.get("/india/salesforce-marketing-cloud-jobs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "3 Salesforce Marketing Cloud Jobs in India")
+        self.assertContains(r, "3 open Salesforce Marketing Cloud roles at 3 companies")
+        self.assertNotContains(r, "noindex")
+
+    def test_country_page_intro_uses_live_employers(self):
+        r = self.client.get("/india/jobs/")
+        self.assertContains(r, "open MarTech roles at 3 companies")
+        self.assertNotContains(r, "CleverTap")       # stale hand-written employer claims are gone
+
+    def test_country_and_city_tool_combos_in_sitemap(self):
+        body = self.client.get("/sitemap.xml").content.decode()
+        self.assertIn("/india/salesforce-marketing-cloud-jobs/", body)
+        self.assertIn("/bengaluru/salesforce-marketing-cloud-jobs/", body)
+
+    def test_thin_combo_not_in_sitemap(self):
+        Job.objects.filter(company="Dentsu").update(is_active=False)
+        body = self.client.get("/sitemap.xml").content.decode()
+        self.assertNotIn("/india/salesforce-marketing-cloud-jobs/", body)
