@@ -442,6 +442,7 @@ class ResumeMatchTests(TestCase):
         saved = UserResume.objects.get(user=self.user)
         self.assertIn("Marketo", saved.text)
         self.assertEqual(saved.filename, "resume.docx")
+        from django.core.management import call_command; call_command("warm_resume_match", stdout=mock.Mock())  # as the daily cron does
         # No resume in the request: the saved one is used.
         r = self.client.post(self.API, data=json.dumps({"job_id": self.job.id}), content_type="application/json")
         d = r.json()
@@ -566,6 +567,7 @@ class ResultsPageImprovementTests(TestCase):
         make_job(title="Marketing Operations Manager", company="Acme")      # ~4/8 for RESUME
         make_job(title="Pure Marketo admin", company="Globex",
                  description="<p>Own our Marketo instance, lead scoring and nurture programs.</p>")
+        from django.core.management import call_command; call_command("warm_resume_match", stdout=mock.Mock())  # as the daily cron does
         r = self.client.post("/tools/api/ats-match/", data=json.dumps({"resume_text": RESUME, "job_id": hard.id}),
                              content_type="application/json")
         d = r.json()
@@ -620,6 +622,7 @@ class Phase2MatchBadgeTests(TestCase):
         from accounts.models import UserResume
         UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
         self.client.force_login(self.user)
+        from django.core.management import call_command; call_command("warm_resume_match", stdout=mock.Mock())  # as the daily cron does
         d = self.client.get("/tools/api/my-matches/").json()
         self.assertTrue(d["ready"])
         m, n, label = d["jobs"][str(self.job.id)]
@@ -643,6 +646,7 @@ class Phase2MatchBadgeTests(TestCase):
         self.client.force_login(self.user)
         self.assertContains(self.client.get("/accounts/matches/"), "Upload your resume to see your matches")
         UserResume.objects.create(user=self.user, text=RESUME, filename="cv.pdf")
+        from django.core.management import call_command; call_command("warm_resume_match", stdout=mock.Mock())  # as the daily cron does
         r = self.client.get("/accounts/matches/?show=all")
         body = r.content.decode()
         self.assertLess(body.index("Marketo &amp; SFMC Specialist"), body.index("Marketing Operations Manager"))
@@ -1921,3 +1925,26 @@ class SearchHitTitleCheckTests(TestCase):
             c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
         g.assert_not_called()          # no detail fetches spent on non-MarTech titles
         self.assertEqual(c.stats["new_detail_fetches"], 0)
+
+
+@override_settings(**TEST_SETTINGS)
+class SearchTrackingAndWebBudgetTests(TestCase):
+    def test_search_event_records_result_count(self):
+        make_job(title="Marketo Admin")
+        r = self.client.get("/", {"q": "marketo"})
+        self.assertContains(r, "results: 1")
+        self.assertContains(r, "no_results: false")
+        r = self.client.get("/", {"q": "zzzz-nothing"})
+        self.assertContains(r, "no_results: true")
+
+    def test_web_paths_never_analyse_jobs(self):
+        from jobs import resume_match
+        cache.clear()
+        make_job()
+        with mock.patch("jobs.resume_match._job_entry") as entry:
+            self.assertEqual(resume_match.term_demand(), ({}, 0))
+            self.assertEqual(resume_match.best_matches("Marketo SQL Salesforce " * 20), [])
+            entry.assert_not_called()
+        # the daily cron path still computes everything
+        reqs, complete = resume_match.job_requirements(budget_s=None)
+        self.assertTrue(complete)

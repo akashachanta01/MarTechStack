@@ -1000,7 +1000,9 @@
         tool: "{{ request.GET.tool|default:''|escapejs }}",
         location: "{{ request.GET.l|default:''|escapejs }}",
         job_function: "{{ request.GET.function|default:''|escapejs }}",
-        arrangement: "{{ request.GET.arrangement|default:''|escapejs }}"
+        arrangement: "{{ request.GET.arrangement|default:''|escapejs }}"{% if total_count is not None %},
+        results: {{ total_count|default:0 }},
+        no_results: {% if total_count %}false{% else %}true{% endif %}{% endif %}
       });
       {% endif %}
       {% if just_signed_up %}window.mtjTrack('signup_completed', { method: "{{ just_signed_up|escapejs }}" });{% endif %}

@@ -1,7 +1,8 @@
 from config.settings import *  # noqa
 DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "/tmp/mtj_e2e.db"}}
 MIGRATION_MODULES = {"jobs": None, "accounts": None, "tools": None}
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+# Shared across processes like prod Redis (cron warm_resume_match -> web server).
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": "/tmp/mtj_e2e_cache"}}
 ALLOWED_HOSTS = ["*"]
 SECURE_SSL_REDIRECT = False
 
