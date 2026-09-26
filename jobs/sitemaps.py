@@ -122,6 +122,21 @@ class SEOLandingSitemap(Sitemap):
             if live.filter(location__icontains=name).exists():
                 seo_pages.add((page_slug, ''))
 
+        # 5. Country × tool and international city × tool combos ("SFMC jobs in
+        # India", "Adobe Experience Platform jobs in Bengaluru") — indexable by the
+        # same rules but were never submitted. Only combos clearing COMBO_MIN.
+        from .views import seo_landing_jobs as _slj
+        combo_locs = list(SEO_COUNTRY_MATCH.keys()) + sorted({slugify(n) for n in intl_locs})
+        for loc in combo_locs:
+            if (loc, '') not in seo_pages:
+                continue
+            loc_jobs, _ = _slj(loc, None)
+            counts = dict(loc_jobs.filter(tools__slug__in=[t.slug for t in canonical_tools])
+                          .values_list('tools__slug').annotate(n=Count('id', distinct=True)))
+            for tslug, n in counts.items():
+                if n >= COMBO_MIN:
+                    seo_pages.add((loc, tslug))
+
         # Final gate: the exact rule the page's robots meta uses.
         from .views import seo_landing_jobs, seo_landing_indexable
         tools_by_slug = {t.slug: t for t in canonical_tools}
