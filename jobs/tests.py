@@ -1897,3 +1897,27 @@ class TitleCandidateTests(TestCase):
         self.assertTrue(sc.title_candidate("SFMC Developer", "Acme"))
         self.assertFalse(sc.title_candidate("Staff Accountant", "Acme"))
         self.assertFalse(sc.title_candidate("Welder-Brazer II", "Acme"))
+
+
+class SearchHitTitleCheckTests(TestCase):
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_generic_search_hits_not_fetched(self, _sleep):
+        c, searched = WorkdaySearchTests._cmd(self), []
+
+        def fake_post(url, json=None, **kw):
+            searched.append(json["searchText"])
+            r = mock.Mock(status_code=200)
+            if json["searchText"] == "AEM":
+                r.json.return_value = {"total": 1, "jobPostings": [
+                    {"title": "Financial Analyst", "externalPath": "/job/X/FA_1", "postedOn": "Posted Today"}]}
+            elif json["searchText"]:
+                r.json.return_value = {"total": 0, "jobPostings": []}
+            else:
+                r.json.return_value = {"total": 5000, "jobPostings": [
+                    {"title": "Accountant", "externalPath": f"/job/X/A_{json['offset']}", "postedOn": "Posted Today"}]}
+            return r
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=fake_post), \
+             mock.patch("jobs.management.commands.fetch_jobs.requests.get") as g:
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+        g.assert_not_called()          # no detail fetches spent on non-MarTech titles
+        self.assertEqual(c.stats["new_detail_fetches"], 0)

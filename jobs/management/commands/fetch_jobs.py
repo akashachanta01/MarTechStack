@@ -725,7 +725,7 @@ class Command(BaseCommand):
             if self._is_duplicate("", "", "", ext_id):
                 self._count_known("SmartRecruiters")
                 return
-            if not from_search and not self.screener.title_candidate(item.get('name'), name):
+            if not self.screener.title_candidate(item.get('name'), name):
                 self.stats["SmartRecruiters:title_skip"] += 1
                 return
             if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
@@ -890,7 +890,9 @@ class Command(BaseCommand):
                 return
             # Newest-postings pass on big boards is mostly non-MarTech: don't spend
             # a detail fetch (or the run budget) on titles that can't pass screening.
-            if not from_search and not self.screener.title_candidate(item.get('title'), company):
+            # Search hits too: Workday matches the search word anywhere in the JD, and
+            # ~98% of those generic-title hits were rejected after a detail fetch.
+            if not self.screener.title_candidate(item.get('title'), company):
                 self.stats["Workday:title_skip"] += 1
                 return
             if budget["new"] >= self.WORKDAY_MAX_NEW_PER_BOARD or self.stats["new_detail_fetches"] >= self.MAX_NEW_PER_RUN:
