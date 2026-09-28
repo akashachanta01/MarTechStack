@@ -18,7 +18,8 @@ Always think: "What's the simplest solution with the most leverage?"
 - No paid postings live yet
 
 ## Tech Stack
-[ Python/Django, Postgres, render, github, serp API]
+[ Python/Django, Postgres, render, github ]
+- Job sourcing: NO paid search API. SerpAPI was cancelled Sept 2026 (it was only used to *discover* boards and had not run in 30+ days). Jobs come from the free public APIs of ~250 company boards in the `CompanySource` registry (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable), polled daily by `fetch_jobs --sources-only`. New employers are added by researching them and adding to `seed_intl_sources` (validated live, runs daily). If automated discovery is ever needed, use Serper.dev (`SEARCH_PROVIDER=serper`, `SERPER_API_KEY`) — ask the founder first (paid service).
 
 ## SEO Foundation (already implemented — don't re-explain basics)
 - Programmatic SEO pages per job title, stack, and location
