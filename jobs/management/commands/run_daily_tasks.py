@@ -21,7 +21,7 @@ class Command(BaseCommand):
         'expire_featured': 2 * 60,
         'clean_stale_jobs': 2 * 60,
         'recheck_pending': 8 * 60,
-        'fetch_jobs': 40 * 60,
+        'fetch_jobs': 55 * 60,
         'update_logos': 10 * 60,
         'send_daily_digest': 5 * 60,
         'send_saved_search_alerts': 5 * 60,
@@ -79,8 +79,15 @@ class Command(BaseCommand):
         # Daily = --sources-only: polls the saved CompanySource registry (incl. all
         # seeded international boards) for FREE, so every country stays fresh with
         # no SERP spend. Weekly = full discovery to find NEW boards (paid SERP).
+        # Sundays: also run Serper discovery (US + India + one rotating country,
+        # ~90 searches) to find NEW company boards; needs SERPER_API_KEY.
+        import os as _os
+        from django.utils import timezone as _tzn
+        discovery_day = _tzn.now().weekday() == 6 and bool(_os.environ.get("SERPER_API_KEY"))
         if weekly:
             self._run("\n[2/7] 🏹 Hunting via API (FULL discovery — paid)...", 'fetch_jobs', '--countries', 'all')
+        elif discovery_day:
+            self._run("\n[2/7] 🔎 Weekly discovery: known boards + search for new ones...", 'fetch_jobs')
         else:
             self._run("\n[2/7] 🏹 Polling known boards (cheap, all countries)...", 'fetch_jobs', '--sources-only')
         # Data quality on everything live (names, titles, locations, pay, duplicates).

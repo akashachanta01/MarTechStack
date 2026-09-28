@@ -1994,3 +1994,28 @@ class NoBlockingThirdPartyCssTests(TestCase):
             self.assertEqual(r.status_code, 200, url)
             self.assertNotContains(r, "cdn.tailwindcss.com")
             self.assertContains(r, "css/tools-tw.css")
+
+
+class WeeklyDiscoveryScheduleTests(TestCase):
+    def _run_on(self, weekday, key):
+        from datetime import datetime, timezone as dtz
+        from django.core.management import call_command
+        # 2026-09-27 is a Sunday (weekday 6); 2026-09-28 a Monday.
+        day = datetime(2026, 9, 27 + (0 if weekday == 6 else 1), 9, 0, tzinfo=dtz.utc)
+        calls = []
+        env = {"SERPER_API_KEY": "k"} if key else {}
+        with mock.patch("django.utils.timezone.now", return_value=day), \
+             mock.patch.dict("os.environ", env, clear=False), \
+             mock.patch("jobs.management.commands.run_daily_tasks.call_command",
+                        side_effect=lambda *a, **k: calls.append(a)):
+            if not key:
+                import os; os.environ.pop("SERPER_API_KEY", None)
+            call_command("run_daily_tasks", stdout=mock.Mock())
+        return [c for c in calls if c[0] == "fetch_jobs"][0]
+
+    def test_sunday_with_key_runs_discovery(self):
+        self.assertEqual(self._run_on(6, True), ("fetch_jobs",))
+
+    def test_other_days_or_no_key_poll_only(self):
+        self.assertEqual(self._run_on(0, True), ("fetch_jobs", "--sources-only"))
+        self.assertEqual(self._run_on(6, False), ("fetch_jobs", "--sources-only"))
