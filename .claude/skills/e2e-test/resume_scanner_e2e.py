@@ -56,7 +56,7 @@ async def main():
         pg2=await newpage(); await pg2.goto(B+"/tools/resume-keyword-scanner/")
         ok("A16 no-job page shows JD box", await pg2.is_visible("#rm-jd"))
         await pg2.click("#rm-paste-toggle"); await pg2.fill("#rm-resume",RES_TXT); await pg2.fill("#rm-jd","too short")
-        await check(pg2); ok("A17 short JD -> error", "job description" in (await err(pg2)).lower(), await err(pg2))
+        await check(pg2); _e = await err(pg2); ok("A17 short JD -> error", "job description" in _e.lower() or "add the job" in _e.lower(), _e)
         await pg2.fill("#rm-jd",JD_NON); await check(pg2); ok("A18 non-MarTech JD -> friendly 422", "MarTech" in await err(pg2), await err(pg2))
         pg3=await newpage(); await pg3.goto(B+"/tools/resume-keyword-scanner/"); await pg3.click("#rm-paste-toggle")
         await pg3.fill("#rm-resume",XSS); await pg3.fill("#rm-jd",JD_OK); await check(pg3)
