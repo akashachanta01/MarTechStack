@@ -1982,3 +1982,15 @@ class CountryToolPagesTests(TestCase):
         Job.objects.filter(company="Dentsu").update(is_active=False)
         body = self.client.get("/sitemap.xml").content.decode()
         self.assertNotIn("/india/salesforce-marketing-cloud-jobs/", body)
+
+
+@override_settings(**TEST_SETTINGS)
+class NoBlockingThirdPartyCssTests(TestCase):
+    """Tool pages must not load the Tailwind play CDN (a render-blocking JS compiler)."""
+    def test_tool_pages_use_static_css(self):
+        for url in ["/tools/salary-calculator/", "/tools/sql-generator/", "/tools/utm-link-builder/",
+                    "/tools/roas-calculator/", "/tools/qr-code-generator/"]:
+            r = self.client.get(url)
+            self.assertEqual(r.status_code, 200, url)
+            self.assertNotContains(r, "cdn.tailwindcss.com")
+            self.assertContains(r, "css/tools-tw.css")
