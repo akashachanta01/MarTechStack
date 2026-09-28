@@ -452,6 +452,15 @@
       if (pasted && save && save.checked) body.save = true;
     }
     if (jobId) body.job_id = jobId; else body.jd_text = $('rm-jd') ? $('rm-jd').value : '';
+    if (!jobId && (body.jd_text || '').trim().length < 150) {
+      // Common stumble (session data, Sept 2026): clicking Check before adding a job.
+      showError('Add the job you want to check against: paste its full description above, or ');
+      var a = document.createElement('a'); a.href = "{% url 'job_list' %}"; a.textContent = 'pick a live job →';
+      a.addEventListener('click', function () { track('ats_pick_job_click', {}); });
+      errBox.appendChild(a);
+      if ($('rm-jd')) { $('rm-jd').focus(); $('rm-jd').scrollIntoView({ block: 'center' }); }
+      return;
+    }
 
     track('ats_check_submit', { source: jobId ? 'job' : 'pasted_jd', resume: hasSaved ? 'saved' : (pasted ? 'pasted' : 'uploaded') });
     btn.disabled = true; btn.textContent = 'Checking…';

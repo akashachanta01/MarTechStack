@@ -142,6 +142,28 @@ CANDIDATES = [
     ("LevelUp", "india", "lever", ["levelup"]),
     ("Viseven", "india", "lever", ["viseven"]),
     ("CI&T", "india", "lever", ["ciandt"]),
+
+    # --- UK / Canada / Germany / Australia / US: MarTech & Marketing Ops employers (found Sep 28) ---
+    ("Talkdesk", "united-kingdom", "greenhouse", ["talkdesk2", "talkdesk"]),
+    ("LTK", "united-kingdom", "greenhouse", ["ltkuk"]),
+    ("Fresha", "united-kingdom", "lever", ["fresha"]),
+    ("Snowplow", "united-kingdom", "lever", ["snowplowanalytics"]),
+    ("The Athletic", "united-kingdom", "lever", ["theathletic"]),
+    ("Massive Rocket", "united-kingdom", "lever", ["massive-rocket"]),
+    ("League", "canada", "greenhouse", ["leagueinc"]),
+    ("Arc'teryx", "canada", "lever", ["arcteryx.com", "arcteryx"]),
+    ("Blink Health", "canada", "greenhouse", ["blinkhealth"]),
+    ("Kobie Marketing", "canada", "lever", ["kobie"]),
+    ("Penrod", "canada", "lever", ["penrodsoftware"]),
+    ("Princeton10", "canada", "lever", ["princeton10"]),
+    ("Apply Digital", "canada", "lever", ["applydigital"]),
+    ("LeasingMarkt.de", "germany", "greenhouse", ["leasingmarkt"]),
+    ("Deputy", "australia", "lever", ["deputy"]),
+    ("Aircall", "global", "lever", ["aircall"]),
+    ("Gurobi", "global", "lever", ["GurobiOptimization", "gurobioptimization"]),
+    ("Talend", "global", "lever", ["talend"]),
+    ("Teikametrics", "global", "lever", ["teikametrics"]),
+    ("Pattern", "global", "lever", ["pattern"]),
 ]
 
 _WD_RX = re.compile(r"https://([^.]+)\.([^.]+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)")
