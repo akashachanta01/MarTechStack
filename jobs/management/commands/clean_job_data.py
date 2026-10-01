@@ -123,13 +123,17 @@ class Command(BaseCommand):
 
     def _resolve_workday_multi(self, live, dry, limit=150):
         """Workday lists multi-site roles as "N Locations", stored as "Multiple
-        locations" (no country). Ask Workday for the primary location once."""
+        locations" (no country), and some boards put the requisition id where the
+        location belongs. Ask Workday for the primary location once."""
         import re
         import requests
         from jobs.geo import country_code
         rx = re.compile(r"https://([^./]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([^/?#]+)/(job/[^?#]+)")
         fixed = 0
-        for job in live.filter(location__iexact="Multiple locations", apply_url__contains="myworkdayjobs.com")[:limit]:
+        from django.db.models import Q
+        from jobs.geo import REQ_ID_RE
+        stuck = Q(location__iexact="Multiple locations") | Q(location__regex=REQ_ID_RE)
+        for job in live.filter(stuck, apply_url__contains="myworkdayjobs.com")[:limit]:
             m = rx.match(job.apply_url or "")
             if not m:
                 continue

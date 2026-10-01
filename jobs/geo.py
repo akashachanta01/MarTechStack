@@ -80,6 +80,15 @@ _CITY_RX = [(_WORD(n), c) for n, c in sorted(_CITY_TO_CODE.items(), key=lambda x
 _STATE_RX = [_WORD(s) for s in sorted(_US_STATES, key=len, reverse=True)]
 
 
+# Workday sometimes puts the requisition id ("R00353479", "JR5580", "14707172")
+# where the location belongs. Never show that as a place.
+REQ_ID_RE = r"^[A-Za-z]{0,4}[-_]?[0-9]{4,}$"
+
+
+def is_req_id(location):
+    return bool(re.match(REQ_ID_RE, (location or "").strip()))
+
+
 def country_code(location):
     """ISO-2 country for a location string, or "" if it doesn't name exactly one.
     Multi-location strings ("A; B") count only when every part is the same country."""

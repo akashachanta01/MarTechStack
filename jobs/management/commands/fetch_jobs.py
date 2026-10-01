@@ -21,6 +21,7 @@ from django.db import IntegrityError
 from django.db.models import Q
 
 from jobs.models import Job, Tool, Category, CompanySource, clean_html_description, normalize_location
+from jobs.geo import is_req_id
 from jobs.screener import MarTechScreener
 from jobs.tool_catalog import resolve_tool_name
 from jobs.ingest_quality import clean_title, display_company, extract_salary
@@ -919,7 +920,8 @@ class Command(BaseCommand):
                     info = dr.json().get('jobPostingInfo') or {}
                     desc = info.get('jobDescription') or ""
                     # "6 Locations" in the list view: use the primary location instead.
-                    if re.match(r'^\s*\d+\s+locations?\s*$', raw_loc, re.I) and info.get('location'):
+                    if (re.match(r'^\s*\d+\s+locations?\s*$', raw_loc, re.I) or is_req_id(raw_loc)
+                            or not raw_loc.strip()) and info.get('location'):
                         clean_loc, arr = self._clean_location(str(info['location']), is_remote)
             except Exception:
                 desc = ""

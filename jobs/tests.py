@@ -1881,6 +1881,25 @@ class UnknownCountryTests(TestCase):
         self.assertEqual(j.country, "IN")
         self.assertIn("Hyderabad", j.location)
 
+    def test_req_id_is_not_a_location(self):
+        from jobs.geo import is_req_id
+        for bad in ("R00353479", "JR5580", "14707172", "R1130400"):
+            self.assertTrue(is_req_id(bad), bad)
+        for ok in ("Sofia", "Remote", "CDMX", "Bengaluru, India", "Multiple locations", ""):
+            self.assertFalse(is_req_id(ok), ok)
+
+    def test_workday_req_id_location_resolved(self):
+        from django.core.management import call_command
+        j = make_job(apply_url="https://acme.wd5.myworkdayjobs.com/Ext/job/Toronto/Marketing-Ops_R00353479")
+        Job.objects.filter(pk=j.pk).update(location="R00353479", country="")
+        r = mock.Mock(status_code=200)
+        r.json.return_value = {"jobPostingInfo": {"location": "Toronto, Ontario, Canada"}}
+        with mock.patch("requests.get", return_value=r):
+            call_command("clean_job_data", stdout=mock.Mock())
+        j.refresh_from_db()
+        self.assertEqual(j.country, "CA")
+        self.assertIn("Toronto", j.location)
+
     def test_workday_lookup_failure_leaves_job_alone(self):
         from django.core.management import call_command
         import requests as rq
