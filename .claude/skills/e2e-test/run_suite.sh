@@ -7,6 +7,6 @@ export DEBUG=True SECRET_KEY=x POSTHOG_KEY=${POSTHOG_KEY:-} PYTHONPATH=$H:. DJAN
 rm -rf /tmp/mtj_e2e.db /tmp/mtj_e2e_cache && python manage.py migrate --run-syncdb -v0 && python $H/seed.py >/dev/null && python manage.py warm_resume_match >/dev/null
 setsid nohup timeout 900 python manage.py runserver 8765 --noreload > /tmp/mtj_srv.log 2>&1 < /dev/null &
 sleep 5
-mkdir -p /tmp/mtj_e2e_run && cd /tmp/mtj_e2e_run && timeout 500 python $H/$1 2>&1 | grep -E "FAIL|passed"
+mkdir -p /tmp/mtj_e2e_run && cd /tmp/mtj_e2e_run && timeout 500 python $H/$1 2>&1 | grep -E "FAIL|passed|^   "
 pgrep -f "[m]anage.py runserver 8765" | xargs -r kill 2>/dev/null
 exit 0

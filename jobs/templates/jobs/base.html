@@ -948,6 +948,7 @@
         display: flex; align-items: center; gap: 14px; max-width: min(680px, calc(100vw - 24px));
         background: var(--navy3, #1e2a3a); color: #fff; border-radius: 14px; padding: 12px 14px 12px 18px;
         box-shadow: 0 10px 30px rgba(0,0,0,.25); transition: transform .35s ease; }
+      #signup-bar[hidden] { display: none; }
       #signup-bar.sb-in { transform: translate(-50%, 0); }
       #signup-bar p { margin: 0; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.92); }
       #signup-bar p b { color: #fff; }
@@ -959,8 +960,8 @@
       @media (max-width: 560px) { #signup-bar { flex-wrap: wrap; padding: 12px 14px; } #signup-bar .sb-cta { flex: 1; text-align: center; } }
     </style>
     <div id="signup-bar" hidden role="complementary" aria-label="Create a free account">
-      <p><b>Job hunting in MarTech?</b> Save roles &amp; get alerts tuned to your stack — free forever.</p>
-      <a class="sb-cta" href="{% url 'account_signup' %}">Create free account</a>
+      <p id="sb-text"><b>Job hunting in MarTech?</b> Save roles &amp; get alerts tuned to your stack — free forever.</p>
+      <a class="sb-cta" id="sb-cta" href="{% url 'account_signup' %}">Create free account</a>
       <button class="sb-close" id="signup-bar-close" aria-label="Dismiss">&times;</button>
     </div>
     <script>
@@ -970,11 +971,35 @@
       try { if (Date.now() < (+localStorage.getItem(KEY) || 0)) return; } catch (e) {}
       var bar = document.getElementById('signup-bar');
       if (!bar) return;
+      // A/B test (Oct 2026): half of visitors see a Resume Scanner prompt instead
+      // of the signup prompt. Variant is fixed per device and sent with every event.
+      var variant = null;
+      try { variant = localStorage.getItem('mtj_nudge_ab'); } catch (e) {}
+      if (variant !== 'signup' && variant !== 'scanner') {
+        variant = Math.random() < 0.5 ? 'signup' : 'scanner';
+        try { localStorage.setItem('mtj_nudge_ab', variant); } catch (e) {}
+      }
+      try { window.posthog && window.posthog.register({ nudge_variant: variant }); } catch (e) {}
+      var cta = document.getElementById('sb-cta');
+      if (variant === 'scanner') {
+        if (location.pathname.indexOf('/tools/resume-keyword-scanner/') === 0) return;
+        var fit = document.getElementById('mtj-fit');
+        var jobId = fit && fit.getAttribute('data-job-id');
+        document.getElementById('sb-text').innerHTML = jobId
+          ? '<b>Will your resume pass for this job?</b> Free check against its platforms &amp; skills — 30 seconds.'
+          : '<b>Will your resume pass MarTech screens?</b> Free check against live job requirements — 30 seconds.';
+        cta.textContent = 'Check my resume';
+        cta.href = '{% url "resume_scanner" %}' + (jobId ? '?job=' + encodeURIComponent(jobId) : '');
+        cta.rel = 'nofollow';
+        bar.setAttribute('aria-label', 'Check your resume');
+      }
+      cta.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('nudge_click', { variant: variant }); });
       // Appear after a genuine engagement signal: 25% scroll or 8s on page.
       var shown = false;
       function show() {
         if (shown) return; shown = true;
         bar.hidden = false;
+        window.mtjTrack && window.mtjTrack('nudge_shown', { variant: variant });
         requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add('sb-in'); }); });
       }
       var t = setTimeout(show, 8000);
@@ -986,6 +1011,7 @@
         bar.classList.remove('sb-in');
         setTimeout(function () { bar.hidden = true; }, 350);
         clearTimeout(t);
+        window.mtjTrack && window.mtjTrack('nudge_dismiss', { variant: variant });
         try { localStorage.setItem(KEY, String(Date.now() + 14 * 864e5)); } catch (e) {}
       });
     })();

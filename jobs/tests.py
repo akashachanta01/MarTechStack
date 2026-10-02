@@ -1084,6 +1084,13 @@ class ScannerVisibilityTests(TestCase):
         self.assertContains(r, "apply_nudge_shown")
         self.assertContains(r, 'data-placement="apply_nudge"')
 
+    def test_nudge_ab_test_wired(self):
+        r = self.client.get(self.url())
+        self.assertContains(r, "mtj_nudge_ab")
+        self.assertContains(r, "nudge_shown")
+        self.assertContains(r, "nudge_click")
+        self.assertContains(r, "/tools/resume-keyword-scanner/")
+
     def test_no_skills_card_when_member_has_saved_resume(self):
         from accounts.models import UserResume
         u = get_user_model().objects.create_user("sr", "sr@x.test", "pw12345!x")
