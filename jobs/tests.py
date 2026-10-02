@@ -2045,3 +2045,45 @@ class WeeklyDiscoveryScheduleTests(TestCase):
     def test_other_days_or_no_key_poll_only(self):
         self.assertEqual(self._run_on(0, True), ("fetch_jobs", "--sources-only"))
         self.assertEqual(self._run_on(6, False), ("fetch_jobs", "--sources-only"))
+
+
+class SearchNoDeadEndTests(TestCase):
+    """Oct 2026: 'Martech' + Remote and 'Martech' + Denmark returned empty pages."""
+    def setUp(self):
+        self.a = make_job(title="Marketing Operations Manager", location="New York, NY")
+        Job.objects.filter(pk=self.a.pk).update(work_arrangement="remote", country="US")
+        self.b = make_job(title="CRM Specialist", company="Nordic Co", location="Copenhagen")
+        Job.objects.filter(pk=self.b.pk).update(country="DK", work_arrangement="onsite")
+
+    def test_generic_martech_query_shows_all_jobs(self):
+        r = self.client.get("/jobs/", {"q": "Martech"})
+        self.assertContains(r, "Marketing Operations Manager")
+        self.assertContains(r, "CRM Specialist")
+
+    def test_remote_location_matches_remote_arrangement(self):
+        r = self.client.get("/jobs/", {"q": "martech", "l": "Remote"})
+        self.assertContains(r, "Marketing Operations Manager")
+        self.assertNotContains(r, "CRM Specialist")
+
+    def test_words_matched_in_any_order(self):
+        r = self.client.get("/jobs/", {"q": "operations marketing"})
+        self.assertContains(r, "Marketing Operations Manager")
+
+    def test_no_match_shows_closest_jobs_not_dead_end(self):
+        r = self.client.get("/jobs/", {"q": "vice president", "l": "Denmark"})
+        self.assertContains(r, "No exact match")
+        self.assertContains(r, "Latest MarTech jobs in Denmark")
+        self.assertContains(r, "CRM Specialist")
+        self.assertContains(r, "search_fallback_shown")
+
+    def test_no_match_anywhere_falls_back_to_latest(self):
+        r = self.client.get("/jobs/", {"q": "zzzqqq"})
+        self.assertContains(r, "Latest MarTech jobs")
+        self.assertContains(r, "Marketing Operations Manager")
+
+    def test_homepage_search_has_same_behaviour(self):
+        r = self.client.get("/", {"q": "Martech", "l": "Remote"})
+        self.assertContains(r, "Marketing Operations Manager")
+        r = self.client.get("/", {"q": "vice president", "l": "Denmark"})
+        self.assertContains(r, "Latest MarTech jobs in Denmark")
+        self.assertContains(r, "CRM Specialist")

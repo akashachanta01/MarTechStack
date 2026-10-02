@@ -594,10 +594,16 @@
     </a>
     {% empty %}
     <div style="text-align:center;padding:60px 20px">
-      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--ink);margin-bottom:10px">No jobs match your search.</div>
-      <p style="color:var(--ink2);margin-bottom:20px">Try broader search terms, or browse all open roles.</p>
-      <a href="{% url 'job_list' %}" class="btn btn-amber">View all jobs →</a>
+      <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--ink);margin-bottom:10px">No exact match{% if query %} for “{{ query }}”{% endif %}.</div>
+      <p style="color:var(--ink2);margin-bottom:20px">{% if fallback_jobs %}Here are the closest live roles instead.{% else %}Try broader search terms, or browse all open roles.{% endif %}</p>
+      {% if not fallback_jobs %}<a href="{% url 'job_list' %}" class="btn btn-amber">View all jobs →</a>{% endif %}
     </div>
+    {% if fallback_jobs %}
+    <h2 class="jl-fallback-h" style="font-size:18px;font-weight:800;color:var(--ink);margin:0 0 12px">{{ fallback_label }}</h2>
+    {% for job in fallback_jobs %}{% include "jobs/partials/job_row.html" %}{% endfor %}
+    <div style="text-align:center;margin-top:24px"><a href="{% url 'all_jobs' %}" class="btn btn-amber">View all jobs →</a></div>
+    <script>window.mtjTrack && window.mtjTrack('search_fallback_shown', { count: {{ fallback_jobs|length }} });</script>
+    {% endif %}
     {% endfor %}
 
     {% if limited and total_count > 10 %}

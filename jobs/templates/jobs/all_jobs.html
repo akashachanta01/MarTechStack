@@ -304,10 +304,15 @@
       </a>
     {% empty %}
       <div class="aj-empty">
-        <h3>No jobs match your filters</h3>
-        <p>Try broadening your search or clearing filters.</p>
+        <h3>No exact match{% if query %} for “{{ query }}”{% endif %}</h3>
+        <p>{% if fallback_jobs %}Here are the closest live roles instead.{% else %}Try broadening your search or clearing filters.{% endif %}</p>
         <a href="{% url 'all_jobs' %}" class="btn btn-amber">Clear filters →</a>
       </div>
+      {% if fallback_jobs %}
+      <h2 style="font-size:18px;font-weight:800;color:var(--ink);margin:8px 0 12px">{{ fallback_label }}</h2>
+      {% for job in fallback_jobs %}{% include "jobs/partials/job_row.html" %}{% endfor %}
+      <script>window.mtjTrack && window.mtjTrack('search_fallback_shown', { count: {{ fallback_jobs|length }} });</script>
+      {% endif %}
     {% endfor %}
     </div>
 
