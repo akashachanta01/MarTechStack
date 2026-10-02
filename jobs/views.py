@@ -333,6 +333,38 @@ TITLE_JOBS = {
     },
 }
 
+# Searches that mean "show me the board", not a title keyword.
+GENERIC_QUERIES = {"martech", "mar tech", "marketing technology", "marketing tech", "jobs", "job", "all", "all jobs"}
+
+
+def keyword_q(query):
+    """Every word must appear in the title, company or a tagged platform
+    ("operations marketing" finds "Marketing Operations Manager"). Generic
+    words like "martech" match the whole board. None = no keyword filter."""
+    if not query or query.lower() in GENERIC_QUERIES:
+        return None
+    q = Q()
+    for w in [w for w in re.split(r"\s+", query) if len(w) > 1] or [query]:
+        q &= Q(title__icontains=w) | Q(company__icontains=w) | Q(tools__name__icontains=w)
+    return q
+
+
+def search_fallback(location_query, arrangement):
+    """Closest live jobs for a search with no results, so it's never a dead end:
+    same location / remote filter without the keywords, else the newest."""
+    base = Job.objects.filter(is_active=True, screening_status="approved")
+    near = base
+    if location_query:
+        near = near.filter(location_q(location_query))
+    if arrangement:
+        near = near.filter(work_arrangement__iexact=arrangement)
+    if (location_query or arrangement) and near.exists():
+        label = f"Latest MarTech jobs in {location_query}" if location_query else "Latest remote MarTech jobs"
+    else:
+        near, label = base, "Latest MarTech jobs"
+    return list(near.order_by("-created_at").prefetch_related("tools")[:12]), label
+
+
 def job_list(request):
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip()
@@ -358,9 +390,8 @@ def job_list(request):
                     matching_tool_ids.append(tool.id)
             jobs = jobs.filter(tools__id__in=matching_tool_ids)
     
-    elif query:
-        search_q = Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
-        jobs = jobs.filter(search_q).annotate(
+    elif keyword_q(query) is not None:
+        jobs = jobs.filter(keyword_q(query)).annotate(
             relevance=Case(
                 When(title__icontains=query, then=Value(10)),
                 When(Q(company__icontains=query) | Q(tools__name__icontains=query), then=Value(5)),
@@ -371,7 +402,7 @@ def job_list(request):
     
     if sort == "oldest":
         jobs = jobs.order_by('created_at')
-    elif query:
+    elif keyword_q(query) is not None:
         jobs = jobs.order_by('-is_pinned', '-relevance', '-created_at')
     else:
         jobs = jobs.order_by('-is_pinned', '-created_at')
@@ -400,6 +431,10 @@ def job_list(request):
 
     distinct_jobs = jobs.distinct()
     total_count = distinct_jobs.count()
+
+    fallback_jobs, fallback_label = [], ""
+    if has_filters and total_count == 0:
+        fallback_jobs, fallback_label = search_fallback(location_query, work_arrangement_filter)
 
     if limited:
         paginator = Paginator(distinct_jobs, 10)
@@ -435,6 +470,8 @@ def job_list(request):
         "salary_preview": salary_preview,
         "jobs": jobs_page,
         "query": query,
+        "fallback_jobs": fallback_jobs,
+        "fallback_label": fallback_label,
         "location_filter": location_query,
         "selected_country": country_query,
         "vendor_filter": vendor_query,
@@ -575,10 +612,8 @@ def category_detail(request, slug):
     jobs = category_jobs_qs(slug).prefetch_related("tools")
 
     # Optional user refinements within the category.
-    if query:
-        jobs = jobs.filter(
-            Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
-        )
+    if keyword_q(query) is not None:
+        jobs = jobs.filter(keyword_q(query))
     if tool_filter:
         jobs = jobs.filter(tools__slug=tool_filter)
     if location_query:
@@ -646,10 +681,8 @@ def all_jobs(request):
             cat_q |= Q(tools__slug__in=config["tool_slugs"])
             jobs = jobs.filter(Q(function=function) | (Q(function="other") & cat_q))
 
-    if query:
-        jobs = jobs.filter(
-            Q(title__icontains=query) | Q(company__icontains=query) | Q(tools__name__icontains=query)
-        )
+    if keyword_q(query) is not None:
+        jobs = jobs.filter(keyword_q(query))
     if tool_filter:
         jobs = jobs.filter(tools__slug=tool_filter)
     if location_query:
@@ -664,6 +697,9 @@ def all_jobs(request):
 
     jobs = jobs.distinct()
     total_count = jobs.count()
+    fallback_jobs, fallback_label = [], ""
+    if total_count == 0 and (query or tool_filter or location_query or work_arrangement_filter or function):
+        fallback_jobs, fallback_label = search_fallback(location_query, work_arrangement_filter)
 
     paginator = Paginator(jobs, 25)
     jobs_page = paginator.get_page(request.GET.get("page"))
@@ -675,6 +711,8 @@ def all_jobs(request):
     return render(request, "jobs/all_jobs.html", {
         "jobs": jobs_page,
         "total_count": total_count,
+        "fallback_jobs": fallback_jobs,
+        "fallback_label": fallback_label,
         "query": query,
         "location_filter": location_query,
         "selected_tool": tool_filter,
@@ -692,6 +730,8 @@ def location_q(value):
     from jobs.geo import code_for_name
     code = code_for_name(value)
     q = Q(location__icontains=value)
+    if value.strip().lower() in ("remote", "anywhere", "remote anywhere"):
+        q |= Q(work_arrangement__iexact="remote")
     return (q | Q(country=code)) if code else q
 
 
