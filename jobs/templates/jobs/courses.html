@@ -1,6 +1,6 @@
 {% extends "jobs/base.html" %}
-{% block title %}Adobe AEP, AJO & CJA Training | MarTechJobs{% endblock %}
-{% block meta_description %}Programs in Adobe Experience Platform, Journey Optimizer and Customer Journey Analytics from a working MarTech architect. Request full details.{% endblock %}
+{% block title %}MarTech Courses | MarTechJobs{% endblock %}
+{% block meta_description %}Hands-on MarTech courses taught by working architects, starting with Adobe Experience Platform, Journey Optimizer and Customer Journey Analytics. Request full details.{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 {% block messages %}{% endblock %}
 {% block content %}
@@ -11,6 +11,9 @@
   .ac-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,42px);font-weight:800;color:var(--ink);line-height:1.15;margin-bottom:12px}
   .ac-hero p{font-size:17px;color:var(--ink2);line-height:1.6}
   .ac-sec{margin-top:36px}
+  .ac-new{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 9px;border-radius:999px;background:var(--amber);color:#fff;margin-bottom:12px}
+  .ac-acct{padding:12px 14px;border-radius:10px;background:var(--paper);border:1px solid var(--rule);font-size:14px;color:var(--ink2);margin-bottom:12px}
+  .ac-acct a{font-weight:700;color:var(--amber)}
   .ac-sec h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--ink);margin-bottom:10px}
   .ac-sec p,.ac-sec li{color:var(--ink2);font-size:15px;line-height:1.6}
   .ac-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);font-size:15px}
@@ -45,8 +48,9 @@
 </style>
 <div class="ac-wrap">
   <section class="ac-hero">
-    <h1>Adobe AEP, Journey Optimizer &amp; CJA training</h1>
-    <p>Programs run by our training partner Infinite360, taught by a working Adobe MarTech architect. Request the full details below. Nothing is charged on this page.</p>
+    <span class="ac-new">New</span>
+    <h1>MarTech courses</h1>
+    <p>Hands-on programs taught by working MarTech architects, built around the platforms employers ask for. Request the full details below. Nothing is charged on this page.</p>
   </section>
 
   {% if demand %}
@@ -61,7 +65,8 @@
   {% endif %}
 
   <section class="ac-sec">
-    <h2>The programs</h2>
+    <h2>Adobe Experience Platform, Journey Optimizer &amp; CJA</h2>
+    <p>Taught by a working Adobe MarTech architect.</p>
     <div class="ac-cards">
       <div class="ac-card best">
         <span class="ac-tag">Start here</span>
@@ -106,22 +111,27 @@
       </div>
     </div>
     <div class="ac-tool"><b>Only need one tool?</b> Pricing can be broken down by tool — for example AEP only, AJO only or CJA only. Choose “A single tool” in the form below and tell us which one.</div>
-    <div class="ac-trust"><span>Taught by a working Adobe MarTech architect</span><span>No payment on this page</span><span>Full syllabus sent by email</span></div>
+    <div class="ac-trust"><span>Taught by working MarTech architects</span><span>No payment on this page</span><span>Full syllabus sent by email</span></div>
   </section>
 
   <section class="ac-sec" id="interest">
     <h2>Request details</h2>
-    <p>Tell us which program interests you and we'll email the full syllabus and next steps.</p>
+    <p>Tell us which program interests you and we'll email the full syllabus and next steps. Want a course on another platform? Pick “A course on another platform” and tell us which.</p>
+    {% if user.is_authenticated %}
+    <div class="ac-acct">Requesting as <b>{{ acct_name }}</b> ({{ user.email }}). We'll use your account details.</div>
+    {% else %}
+    <div class="ac-acct">Already have a MarTechJobs account? <a href="{% url 'account_login' %}?next={% url 'courses' %}%23interest">Log in</a> and we'll fill in your details.</div>
+    {% endif %}
     {% for m in messages %}<div class="ac-msg {% if m.tags == 'error' %}error{% endif %}" role="status">{{ m }}</div>{% endfor %}
-    <form method="post" action="{% url 'adobe_course' %}#interest" class="ac-form js-ac-form" novalidate>
+    <form method="post" action="{% url 'courses' %}#interest" class="ac-form js-ac-form" novalidate>
       {% csrf_token %}
       {{ form.website }}
       <input type="hidden" name="src" value="{{ src }}">
-      {% for f in form %}{% if f.name != "website" %}
+      {% for f in form %}{% if f.name != "website" %}{% if user.is_authenticated and f.name == "name" or user.is_authenticated and f.name == "email" %}{% else %}
       <label for="{{ f.id_for_label }}">{{ f.label }}</label>
       {{ f }}
       {{ f.errors }}
-      {% endif %}{% endfor %}
+      {% endif %}{% endif %}{% endfor %}
       <button type="submit">Request details</button>
       <p class="ac-note">We only use your details to send you program information.</p>
     </form>

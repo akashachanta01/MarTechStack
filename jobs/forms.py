@@ -135,5 +135,6 @@ class CourseInterestForm(HoneypotMixin, forms.Form):
         ("foundation", "Foundation + Advanced MarTech Architecture (recorded) — ₹60,000 / ≈ US$625"),
         ("cxo", "CXO Hive — Executive & Architecture Program (live) — ₹1,00,000 / ≈ US$1,041"),
         ("custom", "Live customised program — ₹1,00,000 / ≈ US$1,041"),
-        ("cheaper", "A single tool (AEP, AJO or CJA) at a lower price")])
-    tool_note = forms.CharField(label="Which tool? (optional)", max_length=200, required=False)
+        ("cheaper", "A single tool (AEP, AJO or CJA) at a lower price"),
+        ("other", "A course on another platform")])
+    tool_note = forms.CharField(label="Which tool or platform? (optional)", max_length=200, required=False)

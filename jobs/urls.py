@@ -27,7 +27,8 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('for-employers/', views.for_employers, name='for_employers'),
     path('sponsor/', views.sponsor, name='sponsor'),
-    path('learn/adobe-martech/', views.adobe_course, name='adobe_course'),
+    path('courses/', views.courses, name='courses'),
+    path('learn/adobe-martech/', RedirectView.as_view(pattern_name='courses', permanent=True, query_string=True)),
     path('contact/', views.contact, name='contact'),
 
     # --- BROWSE ALL JOBS (Jobs nav destination) ---

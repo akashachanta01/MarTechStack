@@ -2089,8 +2089,8 @@ class SearchNoDeadEndTests(TestCase):
         self.assertContains(r, "CRM Specialist")
 
 
-class AdobeCourseInterestTests(TestCase):
-    """Interest test for partner Adobe programs: no payment, no partner phone number."""
+class CourseInterestTests(TestCase):
+    """Courses interest test: no payment, no partner name or phone number."""
     def setUp(self):
         cat = Category.objects.create(name="CDP", slug="cdp")
         self.aep = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
@@ -2098,8 +2098,37 @@ class AdobeCourseInterestTests(TestCase):
         self.job.tools.add(self.aep)
         self.other = make_job(title="HubSpot Admin")
 
+    def test_old_url_redirects_to_courses(self):
+        r = self.client.get("/learn/adobe-martech/?src=job_page")
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r["Location"], "/courses/?src=job_page")
+
+    def test_no_partner_name_and_nav_home_links(self):
+        r = self.client.get("/courses/")
+        self.assertNotContains(r, "Infinite360")
+        self.assertContains(r, "MarTech courses")
+        self.assertContains(r, 'href="/courses/">Courses')
+        r = self.client.get("/")
+        self.assertContains(r, "New courses")
+
+    def test_signed_in_user_details_used_and_linked(self):
+        from jobs.models import CourseInterest
+        u = get_user_model().objects.create_user("ravi", "ravi@x.test", "pw12345!x", first_name="Ravi", last_name="K")
+        self.client.force_login(u)
+        r = self.client.get("/courses/")
+        self.assertContains(r, "Requesting as <b>Ravi K</b>")
+        self.assertNotContains(r, 'id="id_email"')
+        self.client.post("/courses/", {"program": "other", "tool_note": "Braze"})
+        ci = CourseInterest.objects.get()
+        self.assertEqual((ci.user, ci.email, ci.name, ci.program), (u, "ravi@x.test", "Ravi K", "other"))
+
+    def test_anonymous_sees_login_prompt(self):
+        r = self.client.get("/courses/")
+        self.assertContains(r, "Already have a MarTechJobs account?")
+        self.assertContains(r, "/accounts/login/?next=/courses/%23interest")
+
     def test_page_lists_programs_and_real_demand(self):
-        r = self.client.get("/learn/adobe-martech/")
+        r = self.client.get("/courses/")
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "₹60,000")
         self.assertContains(r, "Request details")
@@ -2111,7 +2140,7 @@ class AdobeCourseInterestTests(TestCase):
 
     def test_submit_saves_interest(self):
         from jobs.models import CourseInterest
-        r = self.client.post("/learn/adobe-martech/", {"name": "Asha", "email": "asha@x.test", "phone": "",
+        r = self.client.post("/courses/", {"name": "Asha", "email": "asha@x.test", "phone": "",
                                                        "program": "cheaper", "tool_note": "CJA", "src": "job_page"})
         self.assertEqual(r.status_code, 302)
         ci = CourseInterest.objects.get()
@@ -2119,8 +2148,8 @@ class AdobeCourseInterestTests(TestCase):
 
     def test_bad_email_and_honeypot_rejected(self):
         from jobs.models import CourseInterest
-        self.client.post("/learn/adobe-martech/", {"name": "A", "email": "nope", "program": "foundation"})
-        self.client.post("/learn/adobe-martech/", {"name": "Bot", "email": "b@x.test", "program": "foundation", "website": "spam"})
+        self.client.post("/courses/", {"name": "A", "email": "nope", "program": "foundation"})
+        self.client.post("/courses/", {"name": "Bot", "email": "b@x.test", "program": "foundation", "website": "spam"})
         self.assertEqual(CourseInterest.objects.count(), 0)
 
     def test_box_only_on_adobe_job_and_tool_pages(self):

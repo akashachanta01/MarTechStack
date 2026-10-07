@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -653,14 +654,17 @@ class SponsorInquiry(models.Model):
 
 
 class CourseInterest(models.Model):
-    """Interest test (Oct 2026) for partner Adobe MarTech programs, all visitors.
-    No payment is taken; the founder follows up by email."""
+    """Courses interest test (Oct 2026). No payment is taken; the founder
+    follows up by email. Signed-in visitors are linked to their account."""
     PROGRAMS = [
         ("foundation", "Foundation + Advanced MarTech Architecture (recorded) - Rs 60,000"),
         ("cxo", "CXO Hive - Executive & Architecture Program (live) - Rs 1,00,000"),
         ("custom", "Live customised program - Rs 1,00,000"),
         ("cheaper", "A shorter, lower-priced course would suit me better"),
+        ("other", "A course on another platform"),
     ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="course_interests")
     name = models.CharField(max_length=200)
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)

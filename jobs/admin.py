@@ -234,7 +234,7 @@ class SponsorInquiryAdmin(admin.ModelAdmin):
 
 @admin.register(CourseInterest)
 class CourseInterestAdmin(admin.ModelAdmin):
-    list_display = ("name", "email", "phone", "program", "tool_note", "source_page", "handled", "created_at")
+    list_display = ("name", "email", "user", "phone", "program", "tool_note", "source_page", "handled", "created_at")
     list_filter = ("handled", "program")
     list_editable = ("handled",)
     search_fields = ("name", "email")
