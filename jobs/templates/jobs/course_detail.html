@@ -1,0 +1,176 @@
+{% extends "jobs/base.html" %}
+{% load course_tags %}
+{% block title %}{{ course.title }} | MarTechJobs Courses{% endblock %}
+{% block meta_description %}{{ course.subtitle|default:course.title|truncatechars:155 }}{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block messages %}{% endblock %}
+{% block content %}
+{% include "jobs/partials/course_ui.html" %}
+<style>
+  .cd-head{background:linear-gradient(180deg,var(--amber-light,#fbeee2) 0%,var(--paper,#f7f4ef) 100%);border-bottom:1px solid var(--rule);color:var(--ink);padding:32px 0 34px}
+  .cd-crumb{font-size:14px;margin-bottom:12px}
+  .cd-crumb{color:var(--ink3)}
+  .cd-crumb a{color:var(--amber);font-weight:700;text-decoration:none}
+  .cd-head h1{font-family:'Playfair Display',serif;font-size:clamp(26px,3.6vw,38px);font-weight:800;line-height:1.2;margin:0 0 12px;color:var(--ink);max-width:760px}
+  .cd-sub{font-size:17px;line-height:1.55;color:var(--ink2);max-width:740px;margin:0 0 14px}
+  .cd-facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--ink2)}
+  .cd-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;align-items:start}
+  .cd-main{padding:28px 0 56px;min-width:0}
+  .cd-side{position:relative;align-self:stretch}
+  .cd-card{position:sticky;top:84px;margin-top:-220px;background:#fff;border:1px solid var(--rule);border-radius:14px;box-shadow:0 12px 36px rgba(0,0,0,.14);overflow:hidden;z-index:2}
+  .cd-card .cx-tile{border-radius:0;min-height:150px;font-size:17px}
+  .cd-card-body{padding:18px 20px 20px}
+  .cd-card-body .cx-btn{margin-top:14px}
+  .cd-inc{list-style:none;padding:0;margin:16px 0 0}
+  .cd-inc li{font-size:14px;color:var(--ink2);margin:7px 0;padding-left:22px;position:relative}
+  .cd-inc li:before{content:"✓";position:absolute;left:0;font-weight:800;color:#12805c}
+  .cd-box{border:1px solid var(--rule);border-radius:12px;padding:20px 22px;background:#fff;margin-bottom:28px}
+  .cd-main h2{font-family:'Playfair Display',serif;font-size:23px;font-weight:800;color:var(--ink);margin:0 0 14px}
+  .cd-learn{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 24px}
+  .cd-learn li{position:relative;padding-left:24px;font-size:15px;color:var(--ink2);line-height:1.45}
+  .cd-learn li:before{content:"✓";position:absolute;left:0;font-weight:800;color:var(--ink)}
+  .cd-sec{margin-bottom:30px}
+  .cd-cur details{border:1px solid var(--rule);border-bottom:0;background:#fff}
+  .cd-cur details:last-child{border-bottom:1px solid var(--rule)}
+  .cd-cur summary{cursor:pointer;padding:14px 16px;font-weight:800;color:var(--ink);background:var(--paper);display:flex;justify-content:space-between;gap:12px;list-style:none}
+  .cd-cur summary::-webkit-details-marker{display:none}
+  .cd-cur summary span{font-weight:500;font-size:14px;color:var(--ink3);white-space:nowrap}
+  .cd-cur ul{margin:0;padding:10px 16px 14px 36px}
+  .cd-cur li{font-size:15px;color:var(--ink2);margin:6px 0}
+  .cd-for{padding-left:20px;margin:0}
+  .cd-for li{font-size:15px;color:var(--ink2);margin:6px 0;line-height:1.5}
+  .cd-tbl{width:100%;border-collapse:collapse;border:1px solid var(--rule);background:#fff;font-size:15px}
+  .cd-tbl th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:10px 12px;background:var(--paper);border-bottom:1px solid var(--rule)}
+  .cd-tbl td{padding:10px 12px;border-bottom:1px solid var(--rule)}
+  .cd-tbl .num{text-align:right}
+  .cd-others{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .cd-others a{display:block;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:#fff;text-decoration:none;color:var(--ink)}
+  .cd-others .cx-tile{min-height:70px;border-radius:0;font-size:13px}
+  .cd-others b{display:block;padding:10px 12px;font-size:14px;line-height:1.35}
+  html,body{overflow-x:clip}
+  .cd-mbar{display:none}
+  @media (max-width:900px){
+    .cd-grid{grid-template-columns:1fr;gap:0}
+    .cd-side{order:-1}
+    .cd-card{position:static;margin:20px 0 0;box-shadow:none}
+    .cd-card .cx-tile{display:none}
+    .cd-learn{grid-template-columns:1fr}
+    .cd-mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:950;background:#fff;border-top:1px solid var(--rule);padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:12px;align-items:center;box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+    .cd-mbar .cx-price{font-size:19px;white-space:nowrap}
+    .cd-mbar .cx-btn{flex:1;padding:12px}
+    body{padding-bottom:76px}
+  }
+</style>
+
+<section class="cd-head">
+  <div class="cx-wrap">
+    <div class="cd-grid">
+      <div>
+        <div class="cd-crumb"><a href="{% url 'courses' %}">Courses</a> › {{ course.platform }}</div>
+        <h1>{{ course.title }}</h1>
+        {% if course.subtitle %}<p class="cd-sub">{{ course.subtitle }}</p>{% endif %}
+        <div class="cd-facts">
+          {% if course.badge %}<span class="cx-badge">{{ course.badge }}</span>{% endif %}
+          <span>{{ course.get_level_display }}</span>
+          <span>{{ course.get_format_display }}{% if course.format_note %} · {{ course.format_note }}{% endif %}</span>
+          <span>Taught by a working MarTech architect</span>
+        </div>
+      </div>
+      <div></div>
+    </div>
+  </div>
+</section>
+
+<div class="cx-wrap">
+  <div class="cd-grid">
+    <div class="cd-main">
+      {% if course.learn_list %}
+      <div class="cd-box">
+        <h2>What you'll learn</h2>
+        <ul class="cd-learn">{% for l in course.learn_list %}<li>{{ l }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+
+      {% if course.curriculum_sections %}
+      <div class="cd-sec cd-cur">
+        <h2>Course content</h2>
+        {% for sec in course.curriculum_sections %}
+        <details {% if forloop.first %}open{% endif %}>
+          <summary>{{ sec.title }} <span>{{ sec.items|length }} topic{{ sec.items|length|pluralize }}</span></summary>
+          <ul>{% for it in sec.items %}<li>{{ it }}</li>{% endfor %}</ul>
+        </details>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if course.for_whom_list %}
+      <div class="cd-sec">
+        <h2>Who this course is for</h2>
+        <ul class="cd-for">{% for w in course.for_whom_list %}<li>{{ w }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+
+      {% if demand %}
+      <div class="cd-sec">
+        <h2>Why these skills</h2>
+        <table class="cd-tbl">
+          <thead><tr><th>Platform</th><th class="num">Live jobs on MarTechJobs</th></tr></thead>
+          <tbody>{% for d in demand %}<tr><td><a href="{% url 'tool_detail' d.slug %}">{{ d.name }}</a></td><td class="num">{{ d.jobs }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <div class="cd-sec">
+        <h2>Request details</h2>
+        <p style="color:var(--ink2);font-size:15px;line-height:1.6;margin:0 0 14px">Tell us you're interested and we'll email the full syllabus, dates and next steps. Only need one tool? Pricing can be broken down by tool — choose “A single tool at a lower price” and tell us which.</p>
+        {% include "jobs/partials/course_form.html" %}
+      </div>
+
+      {% if others %}
+      <div class="cd-sec">
+        <h2>More courses</h2>
+        <div class="cd-others">{% for o in others %}<a href="{% url 'course_detail' o.slug %}"><div class="cx-tile {{ o.color }}">{{ o.platform }}</div><b>{{ o.title }}</b></a>{% endfor %}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="cd-side">
+      <div class="cd-card">
+        <div class="cx-tile {{ course.color }}">{{ course.platform }}</div>
+        <div class="cd-card-body">
+          {% include "jobs/partials/course_price.html" with c=course show_member_cta=True %}
+          <div class="cx-meta" style="margin-top:4px">{{ course.price_note }}</div>
+          <a class="cx-btn js-cd-cta" href="#interest">Request details</a>
+          {% if course.includes_list %}
+          <ul class="cd-inc">{% for i in course.includes_list %}<li>{{ i }}</li>{% endfor %}</ul>
+          {% endif %}
+          <p class="cx-note">No payment now.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="cd-mbar">
+  {% if course.member_discount_pct and user.is_authenticated %}
+  <span class="cx-price"><span class="js-price" data-inr="{{ course.member_price_inr|inr }}" data-usd="{{ course.member_price_usd|usd }}">{{ course.member_price_usd|usd }}</span></span>
+  {% else %}
+  <span class="cx-price"><span class="js-price" data-inr="{{ course.price_inr|inr }}" data-usd="{{ course.price_usd|usd }}">{{ course.price_usd|usd }}</span></span>
+  {% endif %}
+  <a class="cx-btn js-cd-cta" href="#interest">Request details</a>
+</div>
+
+<script>
+(function () {
+  window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}", page: "{{ course.slug|escapejs }}" });
+  document.querySelectorAll('.js-cd-cta').forEach(function (a) {
+    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_cta_click', { course: "{{ course.slug|escapejs }}" }); });
+  });
+  var f = document.querySelector('.js-cx-form');
+  if (f) f.addEventListener('submit', function () {
+    var p = f.querySelector('[name=program]:checked');
+    window.mtjTrack && window.mtjTrack('course_interest_submit', { course: "{{ course.slug|escapejs }}", program: p ? p.value : '' });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
@@ -652,15 +653,89 @@ class SponsorInquiry(models.Model):
         return f"{self.company} ({self.get_option_display()})"
 
 
+class Course(models.Model):
+    """A course on /courses/ (Udemy-style catalog). Added and edited in admin.
+    Content must be real: no invented ratings, student counts or discounts."""
+    LEVELS = [("beginner", "Beginner"), ("intermediate", "Intermediate"), ("advanced", "Advanced"),
+              ("leaders", "Leaders & architects"), ("all", "All levels")]
+    FORMATS = [("recorded", "Recorded"), ("live", "Live"), ("hybrid", "Recorded + live")]
+    COLORS = [("navy", "Navy"), ("amber", "Amber"), ("violet", "Violet"), ("green", "Green")]
+    slug = models.SlugField(unique=True)
+    title = models.CharField(max_length=200)
+    subtitle = models.CharField(max_length=300, blank=True)
+    platform = models.CharField(max_length=100, help_text="Shown on the card, e.g. 'Adobe Experience Cloud'")
+    level = models.CharField(max_length=20, choices=LEVELS, default="all")
+    format = models.CharField(max_length=20, choices=FORMATS, default="recorded")
+    format_note = models.CharField(max_length=120, blank=True, help_text="e.g. '1 month support after'")
+    badge = models.CharField(max_length=40, blank=True, help_text="Optional tag, e.g. 'Start here'")
+    color = models.CharField(max_length=10, choices=COLORS, default="navy")
+    price_inr = models.PositiveIntegerField(help_text="Full price in rupees")
+    price_usd = models.PositiveIntegerField(help_text="Full price in US dollars")
+    price_note = models.CharField(max_length=40, default="one-time")
+    member_discount_pct = models.PositiveSmallIntegerField(
+        default=0, help_text="Discount for signed-in members, agreed with the course partner. 0 = none.")
+    learn = models.TextField(blank=True, help_text="What you'll learn: one point per line")
+    curriculum = models.TextField(blank=True, help_text="Course content: '## Section' lines, then one topic per line")
+    includes = models.TextField(blank=True, help_text="This course includes: one item per line")
+    for_whom = models.TextField(blank=True, help_text="Who this course is for: one point per line")
+    tool_slugs = models.CharField(max_length=300, blank=True, help_text="Comma-separated tool slugs for live job demand")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.title
+
+    @staticmethod
+    def _lines(text):
+        return [l.strip() for l in (text or "").splitlines() if l.strip()]
+
+    def learn_list(self):
+        return self._lines(self.learn)
+
+    def includes_list(self):
+        return self._lines(self.includes)
+
+    def for_whom_list(self):
+        return self._lines(self.for_whom)
+
+    def curriculum_sections(self):
+        sections, cur = [], None
+        for line in self._lines(self.curriculum):
+            if line.startswith("##"):
+                cur = {"title": line.lstrip("#").strip(), "items": []}
+                sections.append(cur)
+            else:
+                if cur is None:
+                    cur = {"title": "Course content", "items": []}
+                    sections.append(cur)
+                cur["items"].append(line)
+        return sections
+
+    def member_price_inr(self):
+        return round(self.price_inr * (100 - self.member_discount_pct) / 100)
+
+    def member_price_usd(self):
+        return round(self.price_usd * (100 - self.member_discount_pct) / 100)
+
+
 class CourseInterest(models.Model):
-    """Interest test (Oct 2026) for partner Adobe MarTech programs, all visitors.
-    No payment is taken; the founder follows up by email."""
+    """Courses interest test (Oct 2026). No payment is taken; the founder
+    follows up by email. Signed-in visitors are linked to their account."""
     PROGRAMS = [
         ("foundation", "Foundation + Advanced MarTech Architecture (recorded) - Rs 60,000"),
         ("cxo", "CXO Hive - Executive & Architecture Program (live) - Rs 1,00,000"),
         ("custom", "Live customised program - Rs 1,00,000"),
         ("cheaper", "A shorter, lower-priced course would suit me better"),
+        ("other", "A course on another platform"),
+        ("course", "This course"),
     ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="course_interests")
+    course = models.ForeignKey("Course", null=True, blank=True, on_delete=models.SET_NULL, related_name="interests")
     name = models.CharField(max_length=200)
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)

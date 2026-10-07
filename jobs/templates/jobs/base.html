@@ -452,6 +452,7 @@
 .tool-alert-msg { flex-basis:100%; margin:0; font-size:13px; min-height:1em; }
 </style>
 
+    <style>.nav-new{display:inline-block;margin-left:4px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:var(--amber);color:#fff;vertical-align:middle}</style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -523,6 +524,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
             Resume Scanner
           </a></li>
+          <li><a href="{% url 'courses' %}">Courses <span class="nav-new">New</span></a></li>
           <li class="nav-mega-wrap">
             <a href="{% url 'blog_list' %}" class="nav-mega-trigger" aria-haspopup="true">
               Blog
@@ -661,6 +663,7 @@
           <li><a href="{% url 'salary_guide' %}">Salary Guide</a></li>
           <li><a href="{% url 'directory' %}">Jobs by Tool</a></li>
           <li><a href="{% url 'resume_scanner' %}" class="tools-link">Resume Scanner</a></li>
+          <li><a href="{% url 'courses' %}">Courses <span class="nav-new">New</span></a></li>
           <li><a href="{% url 'blog_list' %}">Blog</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'for_employers' %}">For Employers</a></li>
@@ -966,7 +969,7 @@
     </div>
     <script>
     (function () {
-      if (location.pathname.indexOf('/accounts/') === 0 || location.pathname.indexOf('/admin') === 0) return;
+      if (location.pathname.indexOf('/accounts/') === 0 || location.pathname.indexOf('/admin') === 0 || location.pathname.indexOf('/courses/') === 0) return;
       var KEY = 'mtj_signup_snooze';
       try { if (Date.now() < (+localStorage.getItem(KEY) || 0)) return; } catch (e) {}
       var bar = document.getElementById('signup-bar');

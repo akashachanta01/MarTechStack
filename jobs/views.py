@@ -2242,46 +2242,75 @@ def role_resume_keywords(request, role_slug):
     })
 
 
-# Adobe tools covered by the partner program (interest test, Oct 2026).
+# Adobe tools whose job and platform pages show the courses box (interest test, Oct 2026).
 ADOBE_COURSE_TOOLS = {"adobe-experience-platform", "adobe-journey-optimizer", "adobe-analytics",
                       "adobe-campaign", "adobe-target", "customer-journey-analytics"}
 
 
-def adobe_course(request):
-    """Interest test for a partner's Adobe MarTech programs (all visitors). Takes
-    no payment: visitors request details and the founder follows up."""
+def _course_interest(request, course, template, ctx):
+    """Shared request-details handling for the catalog and course pages. Takes no
+    payment. Signed-in visitors' name/email come from their account."""
     from .forms import CourseInterestForm
     from .models import CourseInterest
+    user = request.user if request.user.is_authenticated else None
+    acct_name = (user.get_full_name() or user.username) if user else ""
+    here = request.path
     if request.method == "POST":
         if _rate_limited(request, "course_interest", limit=5, window_seconds=3600):
             messages.error(request, "Too many requests. Please try again later.")
-            return redirect("adobe_course")
-        form = CourseInterestForm(request.POST)
+            return redirect(here)
+        data = request.POST.copy()
+        if user:
+            data["name"], data["email"] = acct_name, user.email
+        if course is None:
+            data["program"] = "other"
+        form = CourseInterestForm(data)
         if form.is_valid():
             d = form.cleaned_data
             src = (request.POST.get("src") or "")[:300]
-            ci = CourseInterest.objects.create(name=d["name"], email=d["email"], phone=d.get("phone", ""),
-                                               program=d["program"], source_page=src,
-                                               tool_note=d.get("tool_note", ""))
+            ci = CourseInterest.objects.create(user=user, course=course, name=d["name"], email=d["email"],
+                                               phone=d.get("phone", ""), program=d["program"],
+                                               source_page=src, tool_note=d.get("tool_note", ""))
             try:
                 EmailMultiAlternatives(
-                    subject=f"Course interest: {ci.get_program_display()}",
-                    body=f"Name: {ci.name}\nEmail: {ci.email}\nPhone: {ci.phone}\nProgram: {ci.get_program_display()}\nTool: {ci.tool_note}\nFrom: {src}",
+                    subject=f"Course interest: {course.title if course else 'another platform'}",
+                    body=(f"Name: {ci.name}\nEmail: {ci.email}\nPhone: {ci.phone}\nAccount: {'yes' if user else 'no'}\n"
+                          f"Course: {course.title if course else '-'}\nInterested in: {ci.get_program_display()}\n"
+                          f"Tool: {ci.tool_note}\nFrom: {src}"),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[getattr(settings, "CONTACT_EMAIL", "")], reply_to=[ci.email]).send(fail_silently=True)
             except Exception:
                 pass
-            messages.success(request, "Thanks — we'll email you the full program details within two working days.")
-            return redirect(reverse("adobe_course") + "#interest")
+            messages.success(request, "Thanks — we'll email you the full details within two working days.")
+            return redirect(here + "#interest")
     else:
         form = CourseInterestForm()
+    ctx.update({"form": form, "acct_name": acct_name,
+                "src": (request.POST.get("src") or request.GET.get("src", ""))[:300]})
+    return render(request, template, ctx)
+
+
+def courses(request):
+    """Udemy-style course catalog."""
+    from .models import Course
+    items = list(Course.objects.filter(is_active=True))
+    platforms = sorted({c.platform for c in items})
+    return _course_interest(request, None, "jobs/courses.html",
+                            {"courses": items, "platforms": platforms,
+                             "has_discount": any(c.member_discount_pct for c in items)})
+
+
+def course_detail(request, slug):
+    from .models import Course
+    course = get_object_or_404(Course, slug=slug, is_active=True)
     live = Job.objects.filter(is_active=True, screening_status="approved")
     demand = []
-    for slug in ["adobe-experience-platform", "adobe-journey-optimizer", "adobe-analytics"]:
-        t = Tool.objects.filter(slug=slug).first()
+    for tslug in [t.strip() for t in course.tool_slugs.split(",") if t.strip()]:
+        t = Tool.objects.filter(slug=tslug).first()
         if t:
             n = live.filter(tools=t).count()
             if n:
                 demand.append({"name": t.name, "slug": t.slug, "jobs": n})
-    return render(request, "jobs/adobe_course.html", {"form": form, "demand": demand,
-                                                      "src": (request.POST.get("src") or request.GET.get("src", ""))[:300]})
+    others = Course.objects.filter(is_active=True).exclude(pk=course.pk)[:3]
+    return _course_interest(request, course, "jobs/course_detail.html",
+                            {"course": course, "demand": demand, "others": others})

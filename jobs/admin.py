@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.utils.timezone import now
 
 # Import all models
-from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide, CertificationGuide, SponsorInquiry, CourseInterest
+from .models import Job, Tool, Category, Subscriber, BlockRule, UserSubmission, ActiveJob, BlogPost, SavedSearch, CompanySource, InterviewGuide, CertificationGuide, SponsorInquiry, CourseInterest, Course
 from .emails import send_job_alert, send_digest_alert 
 
 # --- 1. GLOBAL ACTIONS ---
@@ -234,7 +234,14 @@ class SponsorInquiryAdmin(admin.ModelAdmin):
 
 @admin.register(CourseInterest)
 class CourseInterestAdmin(admin.ModelAdmin):
-    list_display = ("name", "email", "phone", "program", "tool_note", "source_page", "handled", "created_at")
+    list_display = ("name", "email", "user", "course", "program", "tool_note", "phone", "source_page", "handled", "created_at")
     list_filter = ("handled", "program")
     list_editable = ("handled",)
     search_fields = ("name", "email")
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("title", "platform", "level", "format", "price_inr", "price_usd", "member_discount_pct", "is_active", "order")
+    list_editable = ("member_discount_pct", "is_active", "order")
+    prepopulated_fields = {"slug": ("title",)}

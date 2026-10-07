@@ -16,6 +16,12 @@ from .models import UserProfile
 from .emails import send_pro_waitlist_alert
 
 
+def _max_course_discount():
+    from django.db.models import Max
+    from jobs.models import Course
+    return Course.objects.filter(is_active=True).aggregate(m=Max("member_discount_pct"))["m"] or 0
+
+
 @login_required
 def dashboard(request):
     profile = request.user.userprofile
@@ -61,6 +67,7 @@ def dashboard(request):
         'saved_count': saved_count,
         'profile_pct': profile.profile_complete_pct(),
         'pro_waitlist': profile.pro_waitlist,
+        'course_discount': _max_course_discount(),
     }
     return render(request, 'accounts/dashboard.html', ctx)
 

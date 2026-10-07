@@ -1,0 +1,88 @@
+{% extends "jobs/base.html" %}
+{% block title %}MarTech Courses | MarTechJobs{% endblock %}
+{% block meta_description %}Hands-on MarTech courses taught by working architects, starting with Adobe Experience Platform, Journey Optimizer and Customer Journey Analytics.{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block messages %}{% endblock %}
+{% block content %}
+{% include "jobs/partials/course_ui.html" %}
+<style>
+  .cl-hero{background:linear-gradient(180deg,var(--amber-light,#fbeee2) 0%,var(--paper,#f7f4ef) 100%);border-bottom:1px solid var(--rule);color:var(--ink);padding:44px 0 36px}
+  .cl-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,42px);font-weight:800;margin:10px 0 10px;color:var(--ink)}
+  .cl-hero p{font-size:17px;color:var(--ink2);line-height:1.6;max-width:720px;margin:0}
+  .cl-new{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 9px;border-radius:999px;background:var(--amber);color:#fff}
+  .cl-perk{margin-top:18px;display:inline-block;padding:10px 14px;border-radius:10px;background:#fff;border:1px solid var(--rule);font-size:14px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .cl-perk a{color:var(--amber);font-weight:700}
+  .cl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 8px}
+  .cl-chip{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
+  .cl-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px;margin:16px 0 40px}
+  .cl-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--rule);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;transition:box-shadow .15s,transform .15s}
+  .cl-card:hover{box-shadow:0 10px 30px rgba(0,0,0,.1);transform:translateY(-2px)}
+  .cl-card .cx-tile{border-radius:0}
+  .cl-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .cl-body h3{font-size:16px;font-weight:800;line-height:1.35;color:var(--ink);margin:0}
+  .cl-body .cx-price{margin-top:auto;padding-top:8px}
+  .cl-more{margin:8px 0 56px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+  .cl-more h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--ink);margin:0 0 8px}
+  .cl-more p{color:var(--ink2);font-size:15px;line-height:1.6}
+  @media (max-width:760px){.cl-more{grid-template-columns:1fr}}
+</style>
+
+<section class="cl-hero">
+  <div class="cx-wrap">
+    <span class="cl-new">New</span>
+    <h1>MarTech courses</h1>
+    <p>Hands-on programs taught by working MarTech architects, built around the platforms employers ask for.</p>
+    {% if has_discount %}
+    <div class="cl-perk">{% if user.is_authenticated %}✓ Your member discount is applied to the prices below.{% else %}Members get a discount on every course. <a href="{% url 'account_signup' %}?next={% url 'courses' %}">Create a free account</a>{% endif %}</div>
+    {% endif %}
+  </div>
+</section>
+
+<div class="cx-wrap">
+  {% if platforms|length > 1 %}
+  <div class="cl-chips" role="group" aria-label="Filter by platform">
+    <button type="button" class="cl-chip on" data-p="">All</button>
+    {% for p in platforms %}<button type="button" class="cl-chip" data-p="{{ p }}">{{ p }}</button>{% endfor %}
+  </div>
+  {% else %}<div style="height:24px"></div>{% endif %}
+
+  <div class="cl-grid">
+    {% for c in courses %}
+    <a class="cl-card js-course-card" href="{% url 'course_detail' c.slug %}" data-p="{{ c.platform }}">
+      <div class="cx-tile {{ c.color }}">{{ c.platform }}</div>
+      <div class="cl-body">
+        <h3>{{ c.title }}</h3>
+        <div class="cx-meta">{{ c.get_level_display }} · {{ c.get_format_display }}</div>
+        {% if c.badge %}<div><span class="cx-badge">{{ c.badge }}</span></div>{% endif %}
+        {% include "jobs/partials/course_price.html" with c=c show_member_cta=False %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <section class="cl-more">
+    <div>
+      <h2>Want a course on another platform?</h2>
+      <p>Tell us which platform you want to learn, for example Salesforce Marketing Cloud, Braze or HubSpot. We use these requests to decide which courses to add next.</p>
+    </div>
+    {% include "jobs/partials/course_form.html" %}
+  </section>
+</div>
+<script>
+(function () {
+  window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}", page: "catalog" });
+  document.querySelectorAll('.cl-chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.cl-chip').forEach(function (x) { x.classList.toggle('on', x === b); });
+      document.querySelectorAll('.js-course-card').forEach(function (c) { c.hidden = !!b.dataset.p && c.dataset.p !== b.dataset.p; });
+    });
+  });
+  document.querySelectorAll('.js-course-card').forEach(function (a) {
+    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_card_click', { course: a.getAttribute('href') }); });
+  });
+  var f = document.querySelector('.js-cx-form');
+  if (f) f.addEventListener('submit', function () { window.mtjTrack && window.mtjTrack('course_interest_submit', { course: '', program: 'other' }); });
+})();
+</script>
+{% endblock %}

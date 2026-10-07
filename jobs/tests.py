@@ -2089,44 +2089,115 @@ class SearchNoDeadEndTests(TestCase):
         self.assertContains(r, "CRM Specialist")
 
 
-class AdobeCourseInterestTests(TestCase):
-    """Interest test for partner Adobe programs: no payment, no partner phone number."""
+class CourseInterestTests(TestCase):
+    """Udemy-style courses (interest test): no payment, no partner name or phone,
+    member discount only when set in admin, signed-in details from the account."""
     def setUp(self):
+        from jobs.models import Course
         cat = Category.objects.create(name="CDP", slug="cdp")
         self.aep = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
         self.job = make_job(title="AEP Architect")
         self.job.tools.add(self.aep)
         self.other = make_job(title="HubSpot Admin")
+        self.c = Course.objects.create(slug="adobe-aep", title="Adobe AEP Course", platform="Adobe Experience Cloud",
+                                       price_inr=100000, price_usd=1041, learn="AEP\nAJO",
+                                       curriculum="## Foundation\nAEP\nAJO\n## Advanced\nCDP architecture",
+                                       includes="Test series", tool_slugs="adobe-experience-platform")
 
-    def test_page_lists_programs_and_real_demand(self):
-        r = self.client.get("/learn/adobe-martech/")
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "₹60,000")
-        self.assertContains(r, "Request details")
-        self.assertContains(r, 'data-usd="US$625"')
-        self.assertContains(r, "Only need one tool?")
+    def test_inr_formatting(self):
+        from jobs.templatetags.course_tags import inr, usd
+        self.assertEqual((inr(60000), inr(100000), inr(999), usd(1041)), ("₹60,000", "₹1,00,000", "₹999", "US$1,041"))
+
+    def test_catalog_lists_courses_no_partner_name(self):
+        r = self.client.get("/courses/")
+        self.assertContains(r, "Adobe AEP Course")
+        self.assertContains(r, "/courses/adobe-aep/")
+        self.assertContains(r, 'data-inr="₹1,00,000"')
         self.assertContains(r, "noindex, follow")
-        self.assertContains(r, "Adobe Experience Platform</a></td><td class=\"num\">1</td>", html=False)
+        self.assertNotContains(r, "Infinite360")
         self.assertNotContains(r, "9014649905")
 
-    def test_submit_saves_interest(self):
+    def test_detail_page_udemy_sections_and_demand(self):
+        r = self.client.get("/courses/adobe-aep/")
+        for text in ["What you'll learn", "Course content", "2 topics", "Live jobs on MarTechJobs", "Request details", "Test series"]:
+            self.assertContains(r, text)
+        self.assertEqual(self.client.get("/courses/nope/").status_code, 404)
+
+    def test_old_url_redirects_to_courses(self):
+        r = self.client.get("/learn/adobe-martech/?src=job_page")
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r["Location"], "/courses/?src=job_page")
+
+    def test_nav_and_home_links(self):
+        self.assertContains(self.client.get("/courses/"), 'href="/courses/">Courses')
+        self.assertContains(self.client.get("/"), "New courses")
+
+    def test_no_discount_shown_when_none_set(self):
+        r = self.client.get("/courses/adobe-aep/")
+        self.assertNotContains(r, "Members save")
+        self.assertNotContains(r, "Member price")
+
+    def test_member_discount_anon_vs_signed_in(self):
+        self.c.member_discount_pct = 10
+        self.c.save()
+        r = self.client.get("/courses/adobe-aep/")
+        self.assertContains(r, "Members save 10%")
+        self.assertNotContains(r, "Member price")
+        u = get_user_model().objects.create_user("m1", "m1@x.test", "pw12345!x")
+        self.client.force_login(u)
+        r = self.client.get("/courses/adobe-aep/")
+        self.assertContains(r, "Member price · 10% off")
+        self.assertContains(r, 'data-inr="₹90,000"')
+        self.assertContains(r, 'data-usd="US$937"')
+
+    def test_anonymous_request_saved_against_course(self):
         from jobs.models import CourseInterest
-        r = self.client.post("/learn/adobe-martech/", {"name": "Asha", "email": "asha@x.test", "phone": "",
-                                                       "program": "cheaper", "tool_note": "CJA", "src": "job_page"})
+        r = self.client.post("/courses/adobe-aep/", {"name": "Asha", "email": "asha@x.test", "program": "cheaper",
+                                                     "tool_note": "CJA", "src": "job_page"})
         self.assertEqual(r.status_code, 302)
         ci = CourseInterest.objects.get()
-        self.assertEqual((ci.email, ci.program, ci.source_page, ci.tool_note), ("asha@x.test", "cheaper", "job_page", "CJA"))
+        self.assertEqual((ci.course, ci.program, ci.tool_note, ci.source_page, ci.user), (self.c, "cheaper", "CJA", "job_page", None))
+
+    def test_catalog_request_is_other_platform(self):
+        from jobs.models import CourseInterest
+        self.client.post("/courses/", {"name": "B", "email": "b@x.test", "tool_note": "Braze"})
+        ci = CourseInterest.objects.get()
+        self.assertEqual((ci.course, ci.program, ci.tool_note), (None, "other", "Braze"))
+
+    def test_signed_in_user_details_used_and_linked(self):
+        from jobs.models import CourseInterest
+        u = get_user_model().objects.create_user("ravi", "ravi@x.test", "pw12345!x", first_name="Ravi", last_name="K")
+        self.client.force_login(u)
+        r = self.client.get("/courses/adobe-aep/")
+        self.assertContains(r, "Requesting as <b>Ravi K</b>")
+        self.assertNotContains(r, 'id="id_email"')
+        self.client.post("/courses/adobe-aep/", {"program": "course"})
+        ci = CourseInterest.objects.get()
+        self.assertEqual((ci.user, ci.email, ci.name, ci.course), (u, "ravi@x.test", "Ravi K", self.c))
+
+    def test_anonymous_sees_login_prompt(self):
+        r = self.client.get("/courses/adobe-aep/")
+        self.assertContains(r, "Already have a MarTechJobs account?")
+        self.assertContains(r, "/accounts/login/?next=/courses/adobe-aep/%23interest")
 
     def test_bad_email_and_honeypot_rejected(self):
         from jobs.models import CourseInterest
-        self.client.post("/learn/adobe-martech/", {"name": "A", "email": "nope", "program": "foundation"})
-        self.client.post("/learn/adobe-martech/", {"name": "Bot", "email": "b@x.test", "program": "foundation", "website": "spam"})
+        self.client.post("/courses/adobe-aep/", {"name": "A", "email": "nope", "program": "course"})
+        self.client.post("/courses/adobe-aep/", {"name": "Bot", "email": "b@x.test", "program": "course", "website": "spam"})
         self.assertEqual(CourseInterest.objects.count(), 0)
 
     def test_box_only_on_adobe_job_and_tool_pages(self):
-        r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
-        self.assertContains(r, "mtj-course-box")
-        r = self.client.get(f"/job/{self.other.id}/{self.other.slug}/")
-        self.assertNotContains(r, "mtj-course-box")
-        r = self.client.get("/jobs/adobe-experience-platform/")
-        self.assertContains(r, "mtj-course-box")
+        self.assertContains(self.client.get(f"/job/{self.job.id}/{self.job.slug}/"), "mtj-course-box")
+        self.assertNotContains(self.client.get(f"/job/{self.other.id}/{self.other.slug}/"), "mtj-course-box")
+        self.assertContains(self.client.get("/jobs/adobe-experience-platform/"), "mtj-course-box")
+
+    def test_dashboard_has_courses_card_not_pro(self):
+        u = get_user_model().objects.create_user("d1", "d1@x.test", "pw12345!x")
+        self.client.force_login(u)
+        r = self.client.get("/accounts/dashboard/")
+        self.assertContains(r, "MarTech courses")
+        self.assertNotContains(r, "Go Pro")
+        self.assertNotContains(r, "joinProWaitlist")
+        self.c.member_discount_pct = 15
+        self.c.save()
+        self.assertContains(self.client.get("/accounts/dashboard/"), "up to 15% off")

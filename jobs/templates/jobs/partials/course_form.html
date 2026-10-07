@@ -1,0 +1,25 @@
+{# Request-details form. `course` set = course page; unset = "another platform" request. No payment. #}
+<div class="cx-form" id="interest">
+  {% for m in messages %}<div class="cx-msg {% if m.tags == 'error' %}error{% endif %}" role="status">{{ m }}</div>{% endfor %}
+  {% if user.is_authenticated %}
+  <div class="cx-acct">Requesting as <b>{{ acct_name }}</b> ({{ user.email }}). We'll use your account details.</div>
+  {% else %}
+  <div class="cx-acct">Already have a MarTechJobs account? <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}%23interest">Log in</a> and we'll fill in your details.</div>
+  {% endif %}
+  <form method="post" action="{{ request.path }}#interest" class="js-cx-form" novalidate>
+    {% csrf_token %}
+    {{ form.website }}
+    <input type="hidden" name="src" value="{{ src }}">
+    {% if not user.is_authenticated %}
+    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>{{ form.name }}{{ form.name.errors }}
+    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>{{ form.email }}{{ form.email.errors }}
+    {% endif %}
+    <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>{{ form.phone }}{{ form.phone.errors }}
+    {% if course %}
+    <label>{{ form.program.label }}</label>{{ form.program }}{{ form.program.errors }}
+    {% else %}<input type="hidden" name="program" value="other">{% endif %}
+    <label for="{{ form.tool_note.id_for_label }}">{% if course %}Which tool? (optional, e.g. AEP only){% else %}Which platform should we add?{% endif %}</label>{{ form.tool_note }}{{ form.tool_note.errors }}
+    <button type="submit" class="cx-btn">Request details</button>
+    <p class="cx-note">No payment now. We'll email you the full details. We only use your details for this.</p>
+  </form>
+</div>
