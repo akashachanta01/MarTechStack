@@ -1,3 +1,4 @@
+from django.urls import reverse
 import stripe
 import json
 import os
@@ -1486,6 +1487,7 @@ def tool_detail(request, slug):
     has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     return render(request, 'jobs/tool_detail.html', {
+        'show_course': tool.slug in ADOBE_COURSE_TOOLS,
         'has_interview_guide': has_interview_guide,
         'has_cert_guide': has_cert_guide,
         'tool': tool,
@@ -1646,8 +1648,10 @@ def job_detail(request, id, slug):
     # Similar jobs: same company / same tools / same function — keeps the
     # session alive instead of dead-ending after the apply CTA.
     related_jobs = _related_jobs_for(job, tool_ids)
+    show_course = any(t.slug in ADOBE_COURSE_TOOLS for t in job.tools.all())
     return render(request, 'jobs/job_detail.html', {'job': job, 'related_jobs': related_jobs,
-                                                    'key_skills': _job_key_skills(job)})
+                                                    'key_skills': _job_key_skills(job),
+                                                    'show_course': show_course})
 
 
 def _job_key_skills(job, limit=3):
@@ -2236,3 +2240,47 @@ def role_resume_keywords(request, role_slug):
         "top": (stats["rows"][:3] if stats else []), "related_roles": related,
         "page_noindex": not role_keywords_indexable(stats),
     })
+
+
+# Adobe tools covered by the partner program (India interest test, Oct 2026).
+ADOBE_COURSE_TOOLS = {"adobe-experience-platform", "adobe-journey-optimizer", "adobe-analytics",
+                      "adobe-campaign", "adobe-target", "customer-journey-analytics"}
+
+
+def adobe_course(request):
+    """India-only interest test for a partner's Adobe MarTech programs. Takes no
+    payment: visitors request details and the founder follows up."""
+    from .forms import CourseInterestForm
+    from .models import CourseInterest
+    if request.method == "POST":
+        if _rate_limited(request, "course_interest", limit=5, window_seconds=3600):
+            messages.error(request, "Too many requests. Please try again later.")
+            return redirect("adobe_course")
+        form = CourseInterestForm(request.POST)
+        if form.is_valid():
+            d = form.cleaned_data
+            src = (request.POST.get("src") or "")[:300]
+            ci = CourseInterest.objects.create(name=d["name"], email=d["email"], phone=d.get("phone", ""),
+                                               program=d["program"], source_page=src)
+            try:
+                EmailMultiAlternatives(
+                    subject=f"Course interest: {ci.get_program_display()}",
+                    body=f"Name: {ci.name}\nEmail: {ci.email}\nPhone: {ci.phone}\nProgram: {ci.get_program_display()}\nFrom: {src}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[getattr(settings, "CONTACT_EMAIL", "")], reply_to=[ci.email]).send(fail_silently=True)
+            except Exception:
+                pass
+            messages.success(request, "Thanks — we'll email you the full program details within two working days.")
+            return redirect(reverse("adobe_course") + "#interest")
+    else:
+        form = CourseInterestForm()
+    live = Job.objects.filter(is_active=True, screening_status="approved")
+    demand = []
+    for slug in ["adobe-experience-platform", "adobe-journey-optimizer", "adobe-analytics"]:
+        t = Tool.objects.filter(slug=slug).first()
+        if t:
+            n = live.filter(tools=t).count()
+            if n:
+                demand.append({"name": t.name, "slug": t.slug, "jobs": n})
+    return render(request, "jobs/adobe_course.html", {"form": form, "demand": demand,
+                                                      "src": (request.POST.get("src") or request.GET.get("src", ""))[:300]})

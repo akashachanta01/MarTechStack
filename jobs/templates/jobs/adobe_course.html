@@ -1,0 +1,89 @@
+{% extends "jobs/base.html" %}
+{% block title %}Adobe AEP, AJO & CJA Training (India) | MarTechJobs{% endblock %}
+{% block meta_description %}Programs in Adobe Experience Platform, Journey Optimizer and Customer Journey Analytics from a working MarTech architect. Request full details.{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block messages %}{% endblock %}
+{% block content %}
+<style>
+  .ac-wrap{max-width:860px;margin:0 auto;padding:0 32px 64px}
+  @media (max-width:560px){.ac-wrap{padding:0 16px 48px}}
+  .ac-hero{padding:48px 0 28px;border-bottom:1px solid var(--rule)}
+  .ac-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,42px);font-weight:800;color:var(--ink);line-height:1.15;margin-bottom:12px}
+  .ac-hero p{font-size:17px;color:var(--ink2);line-height:1.6}
+  .ac-sec{margin-top:36px}
+  .ac-sec h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--ink);margin-bottom:10px}
+  .ac-sec p,.ac-sec li{color:var(--ink2);font-size:15px;line-height:1.6}
+  .ac-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule);font-size:15px}
+  .ac-table th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:10px 12px;background:var(--paper);border-bottom:1px solid var(--rule)}
+  .ac-table td{padding:10px 12px;border-bottom:1px solid var(--rule);color:var(--ink);vertical-align:top}
+  .ac-table .num{text-align:right;white-space:nowrap}
+  .ac-form{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:22px;max-width:560px}
+  .ac-form label{display:block;font-size:14px;font-weight:700;color:var(--ink);margin:12px 0 6px}
+  .ac-form input,.ac-form select{width:100%;padding:11px 12px;border:1px solid var(--rule);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;box-sizing:border-box}
+  .ac-form button{margin-top:16px;background:var(--amber);color:#fff;font-weight:700;border:0;border-radius:10px;padding:13px 20px;font-size:15px;cursor:pointer}
+  .ac-form .errorlist{color:#b42318;font-size:13px;list-style:none;padding:0;margin:4px 0 0}
+  .ac-msg{padding:12px 14px;border-radius:10px;background:#ecfdf3;color:#05603a;margin-bottom:14px;font-weight:600}
+  .ac-msg.error{background:#fef3f2;color:#b42318}
+  .ac-note{font-size:13px;color:var(--ink3);margin-top:10px}
+</style>
+<div class="ac-wrap">
+  <section class="ac-hero">
+    <h1>Adobe AEP, Journey Optimizer &amp; CJA training</h1>
+    <p>Programs run by our training partner Infinite360, taught by a working Adobe MarTech architect. Request the full details below. Nothing is charged on this page.</p>
+  </section>
+
+  {% if demand %}
+  <section class="ac-sec">
+    <h2>Why these skills</h2>
+    <p>Live jobs on MarTechJobs right now that ask for each platform:</p>
+    <table class="ac-table">
+      <thead><tr><th>Platform</th><th class="num">Live jobs</th></tr></thead>
+      <tbody>{% for d in demand %}<tr><td><a href="{% url 'tool_detail' d.slug %}">{{ d.name }}</a></td><td class="num">{{ d.jobs }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="ac-sec">
+    <h2>The programs</h2>
+    <table class="ac-table">
+      <thead><tr><th>Program</th><th>What it covers</th><th class="num">Price</th></tr></thead>
+      <tbody>
+        <tr><td><b>Foundation + Advanced MarTech Architecture</b><br><span style="color:var(--ink3);font-size:13px">Recorded</span></td>
+            <td>Adobe Experience Platform, Journey Optimizer, Customer Journey Analytics; MarTech architecture, enterprise implementation patterns, CDP architecture, AI-driven customer experience. Includes test series, e-library and learning material.</td><td class="num">₹60,000</td></tr>
+        <tr><td><b>CXO Hive</b><br><span style="color:var(--ink3);font-size:13px">Live sessions, 1 month support</span></td>
+            <td>For leaders and enterprise architects: setting up a MarTech / AI Center of Excellence, CDP strategy, AI and agentic AI strategy, architecture and governance.</td><td class="num">₹1,00,000</td></tr>
+        <tr><td><b>Live customised program</b><br><span style="color:var(--ink3);font-size:13px">Live</span></td>
+            <td>Built around your role, business requirements and technology landscape.</td><td class="num">₹1,00,000</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="ac-sec" id="interest">
+    <h2>Request details</h2>
+    <p>Tell us which program interests you and we'll email the full syllabus and next steps.</p>
+    {% for m in messages %}<div class="ac-msg {% if m.tags == 'error' %}error{% endif %}" role="status">{{ m }}</div>{% endfor %}
+    <form method="post" action="{% url 'adobe_course' %}#interest" class="ac-form js-ac-form" novalidate>
+      {% csrf_token %}
+      {{ form.website }}
+      <input type="hidden" name="src" value="{{ src }}">
+      {% for f in form %}{% if f.name != "website" %}
+      <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+      {{ f }}
+      {{ f.errors }}
+      {% endif %}{% endfor %}
+      <button type="submit">Request details</button>
+      <p class="ac-note">We only use your details to send you program information.</p>
+    </form>
+  </section>
+</div>
+<script>
+(function () {
+  window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}" });
+  var f = document.querySelector('.js-ac-form');
+  if (f) f.addEventListener('submit', function () {
+    var p = f.querySelector('[name=program]');
+    window.mtjTrack && window.mtjTrack('course_interest_submit', { program: p ? p.value : '' });
+  });
+})();
+</script>
+{% endblock %}

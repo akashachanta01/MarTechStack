@@ -27,6 +27,7 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('for-employers/', views.for_employers, name='for_employers'),
     path('sponsor/', views.sponsor, name='sponsor'),
+    path('learn/adobe-martech/', views.adobe_course, name='adobe_course'),
     path('contact/', views.contact, name='contact'),
 
     # --- BROWSE ALL JOBS (Jobs nav destination) ---

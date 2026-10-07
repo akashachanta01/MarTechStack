@@ -650,3 +650,28 @@ class SponsorInquiry(models.Model):
 
     def __str__(self):
         return f"{self.company} ({self.get_option_display()})"
+
+
+class CourseInterest(models.Model):
+    """Interest test (Oct 2026) for partner Adobe MarTech programs, India only.
+    No payment is taken; the founder follows up by email."""
+    PROGRAMS = [
+        ("foundation", "Foundation + Advanced MarTech Architecture (recorded) - Rs 60,000"),
+        ("cxo", "CXO Hive - Executive & Architecture Program (live) - Rs 1,00,000"),
+        ("custom", "Live customised program - Rs 1,00,000"),
+        ("cheaper", "A shorter, lower-priced course would suit me better"),
+    ]
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    phone = models.CharField(max_length=30, blank=True)
+    program = models.CharField(max_length=20, choices=PROGRAMS, default="foundation")
+    source_page = models.CharField(max_length=300, blank=True)
+    handled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Course interest"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_program_display()})"
