@@ -55,16 +55,16 @@
       {% endif %}
 
       <div class="auth-field">
-        <label class="auth-label">Email address</label>
-        <input type="email" name="login" required autocomplete="email" placeholder="you@company.com" class="auth-input" value="{{ form.login.value|default:'' }}">
+        <label class="auth-label" for="f-login">Email address</label>
+        <input id="f-login" type="email" name="login" required autocomplete="email" placeholder="you@company.com" class="auth-input" value="{{ form.login.value|default:'' }}">
       </div>
 
       <div class="auth-field">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <label class="auth-label">Password</label>
+          <label class="auth-label" for="f-password">Password</label>
           <a href="{% url 'account_reset_password' %}" style="font-size:12px;color:var(--amber);font-weight:600;">Forgot password?</a>
         </div>
-        <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" class="auth-input">
+        <input id="f-password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" class="auth-input">
       </div>
 
       <button type="submit" class="btn btn-amber btn-block" style="margin-top:8px;padding:14px;">Sign In</button>

@@ -61,7 +61,9 @@ class Command(BaseCommand):
         # welders, German medical-device "AEMP" jobs matched as AEM).
         import re as _re
         offtopic_rx = _re.compile(r"\b(welder|brazer|brazing|forklift|warehouse associate|truck driver|"
-                                  r"registered nurse|medizinprodukt\w*|aufbereitung\w*)\b", _re.I)
+                                  r"registered nurse|medizinprodukt\w*|aufbereitung\w*|"
+                                  # hardware/product engineering, not MarTech (Nvidia, Pure Storage...)
+                                  r"technical (?:product )?marketing engineer)\b", _re.I)
         offtopic = [pk for pk, t in live.values_list("id", "title") if offtopic_rx.search(t or "")]
         counts["offtopic_removed"] = len(offtopic)
         if offtopic and not dry:

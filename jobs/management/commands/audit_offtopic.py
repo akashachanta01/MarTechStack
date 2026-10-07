@@ -34,6 +34,7 @@ OFFTOPIC_TERMS = [
     # Other clearly non-MarTech
     "security guard", "warehouse associate", "flight attendant",
     "teacher aide", "childcare", "social worker",
+    "technical marketing engineer", "technical product marketing engineer",
 ]
 
 

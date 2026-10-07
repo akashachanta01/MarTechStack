@@ -49,28 +49,28 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="auth-field">
-          <label class="auth-label">First name</label>
-          <input type="text" name="first_name" placeholder="Alex" class="auth-input" value="{{ form.first_name.value|default:'' }}">
+          <label class="auth-label" for="f-first_name">First name</label>
+          <input id="f-first_name" type="text" name="first_name" placeholder="Alex" class="auth-input" value="{{ form.first_name.value|default:'' }}">
         </div>
         <div class="auth-field">
-          <label class="auth-label">Last name</label>
-          <input type="text" name="last_name" placeholder="Kim" class="auth-input" value="{{ form.last_name.value|default:'' }}">
+          <label class="auth-label" for="f-last_name">Last name</label>
+          <input id="f-last_name" type="text" name="last_name" placeholder="Kim" class="auth-input" value="{{ form.last_name.value|default:'' }}">
         </div>
       </div>
 
       <div class="auth-field">
-        <label class="auth-label">Email address</label>
-        <input type="email" name="email" required autocomplete="email" placeholder="you@company.com" class="auth-input" value="{{ form.email.value|default:'' }}">
+        <label class="auth-label" for="f-email">Email address</label>
+        <input id="f-email" type="email" name="email" required autocomplete="email" placeholder="you@company.com" class="auth-input" value="{{ form.email.value|default:'' }}">
       </div>
 
       <div class="auth-field">
-        <label class="auth-label">Password</label>
-        <input type="password" name="password1" required autocomplete="new-password" placeholder="At least 8 characters" class="auth-input">
+        <label class="auth-label" for="f-password1">Password</label>
+        <input id="f-password1" type="password" name="password1" required autocomplete="new-password" placeholder="At least 8 characters" class="auth-input">
       </div>
 
       <div class="auth-field">
-        <label class="auth-label">Confirm password</label>
-        <input type="password" name="password2" required autocomplete="new-password" placeholder="Repeat password" class="auth-input">
+        <label class="auth-label" for="f-password2">Confirm password</label>
+        <input id="f-password2" type="password" name="password2" required autocomplete="new-password" placeholder="Repeat password" class="auth-input">
       </div>
 
       <button type="submit" class="btn btn-amber btn-block" style="margin-top:8px;padding:14px;">Create Free Account</button>
