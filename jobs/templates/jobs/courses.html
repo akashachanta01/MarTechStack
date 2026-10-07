@@ -34,7 +34,7 @@
     <h1>MarTech courses</h1>
     <p>Hands-on programs taught by working MarTech architects, built around the platforms employers ask for.</p>
     {% if has_discount %}
-    <div class="cl-perk">{% if user.is_authenticated %}✓ Your member discount is applied to the prices below.{% else %}Members get a discount on every course. <a href="{% url 'account_signup' %}?next={% url 'courses' %}">Create a free account</a>{% endif %}</div>
+    <div class="cl-perk">{% if user.is_authenticated %}✓ Your member discount is applied to the prices below.{% else %}Members get a discount on every course. <a class="js-member-link" data-action="signup" href="{% url 'account_signup' %}?next={% url 'courses' %}">Create a free account</a>{% endif %}</div>
     {% endif %}
   </div>
 </section>
@@ -76,13 +76,17 @@
     b.addEventListener('click', function () {
       document.querySelectorAll('.cl-chip').forEach(function (x) { x.classList.toggle('on', x === b); });
       document.querySelectorAll('.js-course-card').forEach(function (c) { c.hidden = !!b.dataset.p && c.dataset.p !== b.dataset.p; });
+      window.mtjTrack && window.mtjTrack('course_filter', { platform: b.dataset.p || 'all' });
     });
   });
   document.querySelectorAll('.js-course-card').forEach(function (a) {
     a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_card_click', { course: a.getAttribute('href') }); });
   });
+  document.querySelectorAll('.js-member-link').forEach(function (a) {
+    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_member_signup_click', { course: '', action: a.dataset.action }); });
+  });
   var f = document.querySelector('.js-cx-form');
-  if (f) f.addEventListener('submit', function () { window.mtjTrack && window.mtjTrack('course_interest_submit', { course: '', program: 'other' }); });
+  if (f) f.addEventListener('submit', function () { window.mtjTrack && window.mtjTrack('course_interest_submit', { course: '', program: 'other', signed_in: {{ user.is_authenticated|yesno:"true,false" }} }); });
 })();
 </script>
 {% endblock %}
