@@ -25,6 +25,22 @@
   .ac-msg{padding:12px 14px;border-radius:10px;background:#ecfdf3;color:#05603a;margin-bottom:14px;font-weight:600}
   .ac-msg.error{background:#fef3f2;color:#b42318}
   .ac-note{font-size:13px;color:var(--ink3);margin-top:10px}
+  .ac-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:6px}
+  .ac-card{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid var(--rule);border-radius:16px;padding:22px 20px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+  .ac-card.best{border:2px solid var(--amber);box-shadow:0 8px 28px rgba(0,0,0,.08)}
+  .ac-tag{display:inline-block;align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--paper);color:var(--ink2);margin-bottom:12px}
+  .ac-card.best .ac-tag{background:var(--amber);color:#fff}
+  .ac-card h3{font-size:19px;font-weight:800;color:var(--ink);line-height:1.3;margin:0 0 6px}
+  .ac-fmt{font-size:13px;color:var(--ink3);margin-bottom:14px}
+  .ac-price{font-size:32px;font-weight:800;color:var(--navy);line-height:1}
+  .ac-price span{display:block;font-size:13px;font-weight:600;color:var(--ink3);margin-top:6px}
+  .ac-list{list-style:none;padding:0;margin:16px 0 20px;flex:1}
+  .ac-list li{position:relative;padding-left:24px;margin:8px 0;font-size:14px;color:var(--ink2);line-height:1.45}
+  .ac-list li:before{content:"✓";position:absolute;left:0;top:0;font-weight:800;color:var(--green,#12805c)}
+  .ac-cta{display:block;text-align:center;background:var(--amber);color:#fff;font-weight:800;border-radius:10px;padding:13px 16px;font-size:15px;text-decoration:none}
+  .ac-card:not(.best) .ac-cta{background:#fff;color:var(--amber);border:2px solid var(--amber)}
+  .ac-trust{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:18px;font-size:14px;color:var(--ink2)}
+  .ac-trust span:before{content:"✓ ";color:var(--green,#12805c);font-weight:800}
 </style>
 <div class="ac-wrap">
   <section class="ac-hero">
@@ -45,17 +61,50 @@
 
   <section class="ac-sec">
     <h2>The programs</h2>
-    <table class="ac-table">
-      <thead><tr><th>Program</th><th>What it covers</th><th class="num">Price</th></tr></thead>
-      <tbody>
-        <tr><td><b>Foundation + Advanced MarTech Architecture</b><br><span style="color:var(--ink3);font-size:13px">Recorded</span></td>
-            <td>Adobe Experience Platform, Journey Optimizer, Customer Journey Analytics; MarTech architecture, enterprise implementation patterns, CDP architecture, AI-driven customer experience. Includes test series, e-library and learning material.</td><td class="num">₹60,000<br><span style="color:var(--ink3);font-size:13px">≈ US$625</span></td></tr>
-        <tr><td><b>CXO Hive</b><br><span style="color:var(--ink3);font-size:13px">Live sessions, 1 month support</span></td>
-            <td>For leaders and enterprise architects: setting up a MarTech / AI Center of Excellence, CDP strategy, AI and agentic AI strategy, architecture and governance.</td><td class="num">₹1,00,000<br><span style="color:var(--ink3);font-size:13px">≈ US$1,041</span></td></tr>
-        <tr><td><b>Live customised program</b><br><span style="color:var(--ink3);font-size:13px">Live</span></td>
-            <td>Built around your role, business requirements and technology landscape.</td><td class="num">₹1,00,000<br><span style="color:var(--ink3);font-size:13px">≈ US$1,041</span></td></tr>
-      </tbody>
-    </table>
+    <div class="ac-cards">
+      <div class="ac-card best">
+        <span class="ac-tag">Start here</span>
+        <h3>Foundation + Advanced MarTech Architecture</h3>
+        <div class="ac-fmt">Recorded · learn at your own pace</div>
+        <div class="ac-price">₹60,000<span>≈ US$625 · one-time</span></div>
+        <ul class="ac-list">
+          <li>Adobe Experience Platform (AEP)</li>
+          <li>Adobe Journey Optimizer (AJO)</li>
+          <li>Customer Journey Analytics (CJA)</li>
+          <li>MarTech &amp; CDP architecture, enterprise implementation patterns</li>
+          <li>AI + data-driven customer experience</li>
+          <li>Test series, e-library and learning material included</li>
+        </ul>
+        <a class="ac-cta js-pick" data-program="foundation" href="#interest">Request details</a>
+      </div>
+      <div class="ac-card">
+        <span class="ac-tag">For leaders</span>
+        <h3>CXO Hive — Executive &amp; Architecture</h3>
+        <div class="ac-fmt">Live sessions · 1 month support after</div>
+        <div class="ac-price">₹1,00,000<span>≈ US$1,041 · one-time</span></div>
+        <ul class="ac-list">
+          <li>Setting up a MarTech / AI Center of Excellence</li>
+          <li>Customer Data Platform strategy</li>
+          <li>AI &amp; agentic AI strategy</li>
+          <li>Enterprise architecture and governance</li>
+          <li>Reusable capabilities and global delivery models</li>
+        </ul>
+        <a class="ac-cta js-pick" data-program="cxo" href="#interest">Request details</a>
+      </div>
+      <div class="ac-card">
+        <span class="ac-tag">Tailored</span>
+        <h3>Live customised program</h3>
+        <div class="ac-fmt">Live · for individuals or teams</div>
+        <div class="ac-price">₹1,00,000<span>≈ US$1,041 · per program</span></div>
+        <ul class="ac-list">
+          <li>Built around your role</li>
+          <li>Fitted to your business requirements</li>
+          <li>Matched to your technology landscape</li>
+        </ul>
+        <a class="ac-cta js-pick" data-program="custom" href="#interest">Request details</a>
+      </div>
+    </div>
+    <div class="ac-trust"><span>Taught by a working Adobe MarTech architect</span><span>No payment on this page</span><span>Full syllabus sent by email</span></div>
   </section>
 
   <section class="ac-sec" id="interest">
@@ -79,6 +128,12 @@
 <script>
 (function () {
   window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}" });
+  document.querySelectorAll('.js-pick').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var sel = document.getElementById('id_program'); if (sel) sel.value = a.dataset.program;
+      window.mtjTrack && window.mtjTrack('course_card_click', { program: a.dataset.program });
+    });
+  });
   var f = document.querySelector('.js-ac-form');
   if (f) f.addEventListener('submit', function () {
     var p = f.querySelector('[name=program]');
