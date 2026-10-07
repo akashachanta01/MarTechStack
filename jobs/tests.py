@@ -2103,6 +2103,8 @@ class AdobeCourseInterestTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "₹60,000")
         self.assertContains(r, "Request details")
+        self.assertContains(r, 'data-usd="US$625"')
+        self.assertContains(r, "Only need one tool?")
         self.assertContains(r, "noindex, follow")
         self.assertContains(r, "Adobe Experience Platform</a></td><td class=\"num\">1</td>", html=False)
         self.assertNotContains(r, "9014649905")
@@ -2110,10 +2112,10 @@ class AdobeCourseInterestTests(TestCase):
     def test_submit_saves_interest(self):
         from jobs.models import CourseInterest
         r = self.client.post("/learn/adobe-martech/", {"name": "Asha", "email": "asha@x.test", "phone": "",
-                                                       "program": "cheaper", "src": "job_page"})
+                                                       "program": "cheaper", "tool_note": "CJA", "src": "job_page"})
         self.assertEqual(r.status_code, 302)
         ci = CourseInterest.objects.get()
-        self.assertEqual((ci.email, ci.program, ci.source_page), ("asha@x.test", "cheaper", "job_page"))
+        self.assertEqual((ci.email, ci.program, ci.source_page, ci.tool_note), ("asha@x.test", "cheaper", "job_page", "CJA"))
 
     def test_bad_email_and_honeypot_rejected(self):
         from jobs.models import CourseInterest

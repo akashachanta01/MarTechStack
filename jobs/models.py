@@ -665,6 +665,7 @@ class CourseInterest(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)
     program = models.CharField(max_length=20, choices=PROGRAMS, default="foundation")
+    tool_note = models.CharField(max_length=200, blank=True)
     source_page = models.CharField(max_length=300, blank=True)
     handled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

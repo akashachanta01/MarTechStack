@@ -2261,11 +2261,12 @@ def adobe_course(request):
             d = form.cleaned_data
             src = (request.POST.get("src") or "")[:300]
             ci = CourseInterest.objects.create(name=d["name"], email=d["email"], phone=d.get("phone", ""),
-                                               program=d["program"], source_page=src)
+                                               program=d["program"], source_page=src,
+                                               tool_note=d.get("tool_note", ""))
             try:
                 EmailMultiAlternatives(
                     subject=f"Course interest: {ci.get_program_display()}",
-                    body=f"Name: {ci.name}\nEmail: {ci.email}\nPhone: {ci.phone}\nProgram: {ci.get_program_display()}\nFrom: {src}",
+                    body=f"Name: {ci.name}\nEmail: {ci.email}\nPhone: {ci.phone}\nProgram: {ci.get_program_display()}\nTool: {ci.tool_note}\nFrom: {src}",
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[getattr(settings, "CONTACT_EMAIL", "")], reply_to=[ci.email]).send(fail_silently=True)
             except Exception:

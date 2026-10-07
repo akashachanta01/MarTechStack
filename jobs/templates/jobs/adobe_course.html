@@ -33,7 +33,8 @@
   .ac-card h3{font-size:19px;font-weight:800;color:var(--ink);line-height:1.3;margin:0 0 6px}
   .ac-fmt{font-size:13px;color:var(--ink3);margin-bottom:14px}
   .ac-price{font-size:32px;font-weight:800;color:var(--navy);line-height:1}
-  .ac-price span{display:block;font-size:13px;font-weight:600;color:var(--ink3);margin-top:6px}
+  .ac-price .ac-per{display:block;font-size:13px;font-weight:600;color:var(--ink3);margin-top:6px}
+  .ac-tool{margin-top:18px;padding:14px 16px;border:1px dashed var(--amber);border-radius:12px;background:var(--amber-light,#fff7ea);font-size:15px;color:var(--ink);line-height:1.5}
   .ac-list{list-style:none;padding:0;margin:16px 0 20px;flex:1}
   .ac-list li{position:relative;padding-left:24px;margin:8px 0;font-size:14px;color:var(--ink2);line-height:1.45}
   .ac-list li:before{content:"✓";position:absolute;left:0;top:0;font-weight:800;color:var(--green,#12805c)}
@@ -66,7 +67,7 @@
         <span class="ac-tag">Start here</span>
         <h3>Foundation + Advanced MarTech Architecture</h3>
         <div class="ac-fmt">Recorded · learn at your own pace</div>
-        <div class="ac-price">₹60,000<span>≈ US$625 · one-time</span></div>
+        <div class="ac-price"><span class="js-price" data-inr="₹60,000" data-usd="US$625">US$625</span><span class="ac-per">one-time</span></div>
         <ul class="ac-list">
           <li>Adobe Experience Platform (AEP)</li>
           <li>Adobe Journey Optimizer (AJO)</li>
@@ -81,7 +82,7 @@
         <span class="ac-tag">For leaders</span>
         <h3>CXO Hive — Executive &amp; Architecture</h3>
         <div class="ac-fmt">Live sessions · 1 month support after</div>
-        <div class="ac-price">₹1,00,000<span>≈ US$1,041 · one-time</span></div>
+        <div class="ac-price"><span class="js-price" data-inr="₹1,00,000" data-usd="US$1,041">US$1,041</span><span class="ac-per">one-time</span></div>
         <ul class="ac-list">
           <li>Setting up a MarTech / AI Center of Excellence</li>
           <li>Customer Data Platform strategy</li>
@@ -95,7 +96,7 @@
         <span class="ac-tag">Tailored</span>
         <h3>Live customised program</h3>
         <div class="ac-fmt">Live · for individuals or teams</div>
-        <div class="ac-price">₹1,00,000<span>≈ US$1,041 · per program</span></div>
+        <div class="ac-price"><span class="js-price" data-inr="₹1,00,000" data-usd="US$1,041">US$1,041</span><span class="ac-per">per program</span></div>
         <ul class="ac-list">
           <li>Built around your role</li>
           <li>Fitted to your business requirements</li>
@@ -104,6 +105,7 @@
         <a class="ac-cta js-pick" data-program="custom" href="#interest">Request details</a>
       </div>
     </div>
+    <div class="ac-tool"><b>Only need one tool?</b> Pricing can be broken down by tool — for example AEP only, AJO only or CJA only. Choose “A single tool” in the form below and tell us which one.</div>
     <div class="ac-trust"><span>Taught by a working Adobe MarTech architect</span><span>No payment on this page</span><span>Full syllabus sent by email</span></div>
   </section>
 
@@ -127,7 +129,15 @@
 </div>
 <script>
 (function () {
-  window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}" });
+  // Show rupees to visitors in India, US dollars to everyone else.
+  var inr = false;
+  try { var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; inr = tz === "Asia/Kolkata" || tz === "Asia/Calcutta"; } catch (e) {}
+  document.querySelectorAll('.js-price').forEach(function (el) { el.textContent = inr ? el.dataset.inr : el.dataset.usd; });
+  document.querySelectorAll('#id_program option').forEach(function (o) {
+    var m = o.textContent.match(/^(.*) — (₹[\d,]+) \/ ≈ (US\$[\d,]+)$/);
+    if (m) o.textContent = m[1] + ' — ' + (inr ? m[2] : m[3]);
+  });
+  window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}", currency: inr ? "INR" : "USD" });
   document.querySelectorAll('.js-pick').forEach(function (a) {
     a.addEventListener('click', function () {
       var sel = document.getElementById('id_program'); if (sel) sel.value = a.dataset.program;

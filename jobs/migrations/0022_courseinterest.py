@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
                 ("email", models.EmailField(max_length=254)),
                 ("phone", models.CharField(blank=True, max_length=30)),
                 ("program", models.CharField(choices=[("foundation", "Foundation + Advanced MarTech Architecture (recorded) - Rs 60,000"), ("cxo", "CXO Hive - Executive & Architecture Program (live) - Rs 1,00,000"), ("custom", "Live customised program - Rs 1,00,000"), ("cheaper", "A shorter, lower-priced course would suit me better")], default="foundation", max_length=20)),
+                ("tool_note", models.CharField(blank=True, max_length=200)),
                 ("source_page", models.CharField(blank=True, max_length=300)),
                 ("handled", models.BooleanField(default=False)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
