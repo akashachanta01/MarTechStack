@@ -140,7 +140,7 @@
         <div class="cd-card-body">
           {% include "jobs/partials/course_price.html" with c=course show_member_cta=True %}
           <div class="cx-meta" style="margin-top:4px">{{ course.price_note }}</div>
-          <a class="cx-btn js-cd-cta" href="#interest">Request details</a>
+          <a class="cx-btn js-cd-cta" data-where="price_card" href="#interest">Request details</a>
           {% if course.includes_list %}
           <ul class="cd-inc">{% for i in course.includes_list %}<li>{{ i }}</li>{% endfor %}</ul>
           {% endif %}
@@ -157,19 +157,27 @@
   {% else %}
   <span class="cx-price"><span class="js-price" data-inr="{{ course.price_inr|inr }}" data-usd="{{ course.price_usd|usd }}">{{ course.price_usd|usd }}</span></span>
   {% endif %}
-  <a class="cx-btn js-cd-cta" href="#interest">Request details</a>
+  <a class="cx-btn js-cd-cta" data-where="phone_bar" href="#interest">Request details</a>
 </div>
 
 <script>
 (function () {
   window.mtjTrack && window.mtjTrack('course_page_view', { src: "{{ src|escapejs }}", page: "{{ course.slug|escapejs }}" });
   document.querySelectorAll('.js-cd-cta').forEach(function (a) {
-    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_cta_click', { course: "{{ course.slug|escapejs }}" }); });
+    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_cta_click', { course: "{{ course.slug|escapejs }}", where: a.dataset.where || '' }); });
+  });
+  document.querySelectorAll('.cd-cur details').forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (d.open) window.mtjTrack && window.mtjTrack('course_curriculum_open', { course: "{{ course.slug|escapejs }}", section: d.querySelector('summary').firstChild.textContent.trim() });
+    });
+  });
+  document.querySelectorAll('.js-member-link').forEach(function (a) {
+    a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('course_member_signup_click', { course: "{{ course.slug|escapejs }}", action: a.dataset.action }); });
   });
   var f = document.querySelector('.js-cx-form');
   if (f) f.addEventListener('submit', function () {
     var p = f.querySelector('[name=program]:checked');
-    window.mtjTrack && window.mtjTrack('course_interest_submit', { course: "{{ course.slug|escapejs }}", program: p ? p.value : '' });
+    window.mtjTrack && window.mtjTrack('course_interest_submit', { course: "{{ course.slug|escapejs }}", program: p ? p.value : '', signed_in: {{ user.is_authenticated|yesno:"true,false" }}, member_discount: {{ course.member_discount_pct }} });
   });
 })();
 </script>

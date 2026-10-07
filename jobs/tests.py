@@ -2201,3 +2201,26 @@ class CourseInterestTests(TestCase):
         self.c.member_discount_pct = 15
         self.c.save()
         self.assertContains(self.client.get("/accounts/dashboard/"), "up to 15% off")
+
+
+class CourseTrackingTests(TestCase):
+    """Every new course / home / dashboard feature sends its PostHog event."""
+    def setUp(self):
+        from jobs.models import Course
+        Course.objects.create(slug="c1", title="C1", platform="Adobe", price_inr=1000, price_usd=12,
+                              member_discount_pct=20, curriculum="## A\nx")
+
+    def test_events_wired(self):
+        detail = self.client.get("/courses/c1/").content.decode()
+        for ev in ["course_page_view", "course_cta_click", "course_curriculum_open", "course_member_signup_click",
+                   "course_interest_submit", 'data-where="phone_bar"', 'data-where="price_card"']:
+            self.assertIn(ev, detail, ev)
+        catalog = self.client.get("/courses/").content.decode()
+        for ev in ["course_page_view", "course_card_click", "course_filter", "course_member_signup_click", "course_interest_submit"]:
+            self.assertIn(ev, catalog, ev)
+        home = self.client.get("/").content.decode()
+        for ev in ["hero_scan_click", "hero_course_click"]:
+            self.assertIn(ev, home, ev)
+        u = get_user_model().objects.create_user("t1", "t1@x.test", "pw12345!x")
+        self.client.force_login(u)
+        self.assertContains(self.client.get("/accounts/dashboard/"), "dashboard_course_click", count=1)

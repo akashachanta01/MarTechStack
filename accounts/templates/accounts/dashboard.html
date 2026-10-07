@@ -197,7 +197,7 @@
         <span class="label">New</span>
         <span class="title">MarTech courses</span>
         <span class="sub">{% if course_discount %}As a member you get up to {{ course_discount }}% off.{% else %}Hands-on Adobe AEP, AJO &amp; CJA programs from a working architect.{% endif %}</span>
-        <a href="{% url 'courses' %}?src=dashboard">{% if course_discount %}See your member prices{% else %}See the courses{% endif %}</a>
+        <a class="js-dash-course" href="{% url 'courses' %}?src=dashboard">{% if course_discount %}See your member prices{% else %}See the courses{% endif %}</a>
       </div>
       <div class="dash-signout">
         <a href="{% url 'account_logout' %}">
@@ -314,4 +314,9 @@
 </div>
 
 
+<script>
+document.querySelectorAll('.js-dash-course').forEach(function (a) {
+  a.addEventListener('click', function () { window.mtjTrack && window.mtjTrack('dashboard_course_click', {}); });
+});
+</script>
 {% endblock %}
