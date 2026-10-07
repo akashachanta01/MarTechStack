@@ -79,7 +79,7 @@ async def main():
         saved = django("from jobs.models import CourseInterest as C; c=C.objects.order_by('id').last(); print(c.email, c.course.slug, c.program, c.tool_note.replace(' ','_'), c.source_page)")
         ok("K17 saved with course, program, tool, source", saved == "asha@example.com adobe-aep-ajo-cja cheaper AJO_only job_page", saved)
         # member discount
-        django("from jobs.models import Course; Course.objects.filter(slug='adobe-aep-ajo-cja').update(member_discount_pct=10); print('ok')")
+        django("from jobs.models import Course; Course.objects.update(member_discount_pct=10); print('ok')")
         await ind.goto(B + C)
         ok("K18 logged out: 'Members save 10%' + sign-up link", "Members save 10%" in await ind.locator(".cd-card").inner_text())
         await login(us)

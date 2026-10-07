@@ -7,12 +7,13 @@
 {% block content %}
 {% include "jobs/partials/course_ui.html" %}
 <style>
-  .cd-head{background:var(--ink,#1c1a17);color:#fff;padding:32px 0 34px}
+  .cd-head{background:linear-gradient(180deg,var(--amber-light,#fbeee2) 0%,var(--paper,#f7f4ef) 100%);border-bottom:1px solid var(--rule);color:var(--ink);padding:32px 0 34px}
   .cd-crumb{font-size:14px;margin-bottom:12px}
-  .cd-crumb a{color:#ffd9a8;font-weight:700;text-decoration:none}
-  .cd-head h1{font-family:'Playfair Display',serif;font-size:clamp(26px,3.6vw,38px);font-weight:800;line-height:1.2;margin:0 0 12px;color:#fff;max-width:760px}
-  .cd-sub{font-size:17px;line-height:1.55;color:rgba(255,255,255,.85);max-width:740px;margin:0 0 14px}
-  .cd-facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:rgba(255,255,255,.85)}
+  .cd-crumb{color:var(--ink3)}
+  .cd-crumb a{color:var(--amber);font-weight:700;text-decoration:none}
+  .cd-head h1{font-family:'Playfair Display',serif;font-size:clamp(26px,3.6vw,38px);font-weight:800;line-height:1.2;margin:0 0 12px;color:var(--ink);max-width:760px}
+  .cd-sub{font-size:17px;line-height:1.55;color:var(--ink2);max-width:740px;margin:0 0 14px}
+  .cd-facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--ink2)}
   .cd-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;align-items:start}
   .cd-main{padding:28px 0 56px;min-width:0}
   .cd-side{position:relative;align-self:stretch}

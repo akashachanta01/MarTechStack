@@ -6,12 +6,12 @@
 {% block content %}
 {% include "jobs/partials/course_ui.html" %}
 <style>
-  .cl-hero{background:var(--ink,#1c1a17);color:#fff;padding:44px 0 36px}
-  .cl-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,42px);font-weight:800;margin:10px 0 10px;color:#fff}
-  .cl-hero p{font-size:17px;color:rgba(255,255,255,.82);line-height:1.6;max-width:720px;margin:0}
+  .cl-hero{background:linear-gradient(180deg,var(--amber-light,#fbeee2) 0%,var(--paper,#f7f4ef) 100%);border-bottom:1px solid var(--rule);color:var(--ink);padding:44px 0 36px}
+  .cl-hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,42px);font-weight:800;margin:10px 0 10px;color:var(--ink)}
+  .cl-hero p{font-size:17px;color:var(--ink2);line-height:1.6;max-width:720px;margin:0}
   .cl-new{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 9px;border-radius:999px;background:var(--amber);color:#fff}
-  .cl-perk{margin-top:18px;display:inline-block;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.1);font-size:14px;color:#fff}
-  .cl-perk a{color:#ffd9a8;font-weight:700}
+  .cl-perk{margin-top:18px;display:inline-block;padding:10px 14px;border-radius:10px;background:#fff;border:1px solid var(--rule);font-size:14px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  .cl-perk a{color:var(--amber);font-weight:700}
   .cl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 8px}
   .cl-chip{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--ink2);cursor:pointer}
   .cl-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
