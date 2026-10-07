@@ -22,6 +22,7 @@ async def main():
             ok(f"M2 [{w}px] no sideways scrolling", await m.evaluate("document.documentElement.scrollWidth") <= w + 1)
             f, g = boxes['.s-field'], boxes['.s-go']
             ok(f"M3 [{w}px] search box and button full width, button below", g["y"] > f["y"] + f["height"] - 1 and abs(f["width"] - g["width"]) < 2)
+            ok(f"M3b [{w}px] search box is full height (not squashed)", f["height"] >= 44, f["height"])
             fs = await m.evaluate("parseFloat(getComputedStyle(document.querySelector('.s-field input')).fontSize)")
             ok(f"M4 [{w}px] input text 16px (no iPhone zoom)", fs >= 16, fs)
             ph = await m.evaluate("(() => { const i = document.querySelector('.s-field input'); return i.scrollWidth <= i.clientWidth + 2; })()")
