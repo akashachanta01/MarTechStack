@@ -2087,3 +2087,46 @@ class SearchNoDeadEndTests(TestCase):
         r = self.client.get("/", {"q": "vice president", "l": "Denmark"})
         self.assertContains(r, "Latest MarTech jobs in Denmark")
         self.assertContains(r, "CRM Specialist")
+
+
+class AdobeCourseInterestTests(TestCase):
+    """Interest test for partner Adobe programs: no payment, no partner phone number."""
+    def setUp(self):
+        cat = Category.objects.create(name="CDP", slug="cdp")
+        self.aep = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
+        self.job = make_job(title="AEP Architect")
+        self.job.tools.add(self.aep)
+        self.other = make_job(title="HubSpot Admin")
+
+    def test_page_lists_programs_and_real_demand(self):
+        r = self.client.get("/learn/adobe-martech/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "₹60,000")
+        self.assertContains(r, "Request details")
+        self.assertContains(r, 'data-usd="US$625"')
+        self.assertContains(r, "Only need one tool?")
+        self.assertContains(r, "noindex, follow")
+        self.assertContains(r, "Adobe Experience Platform</a></td><td class=\"num\">1</td>", html=False)
+        self.assertNotContains(r, "9014649905")
+
+    def test_submit_saves_interest(self):
+        from jobs.models import CourseInterest
+        r = self.client.post("/learn/adobe-martech/", {"name": "Asha", "email": "asha@x.test", "phone": "",
+                                                       "program": "cheaper", "tool_note": "CJA", "src": "job_page"})
+        self.assertEqual(r.status_code, 302)
+        ci = CourseInterest.objects.get()
+        self.assertEqual((ci.email, ci.program, ci.source_page, ci.tool_note), ("asha@x.test", "cheaper", "job_page", "CJA"))
+
+    def test_bad_email_and_honeypot_rejected(self):
+        from jobs.models import CourseInterest
+        self.client.post("/learn/adobe-martech/", {"name": "A", "email": "nope", "program": "foundation"})
+        self.client.post("/learn/adobe-martech/", {"name": "Bot", "email": "b@x.test", "program": "foundation", "website": "spam"})
+        self.assertEqual(CourseInterest.objects.count(), 0)
+
+    def test_box_only_on_adobe_job_and_tool_pages(self):
+        r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
+        self.assertContains(r, "mtj-course-box")
+        r = self.client.get(f"/job/{self.other.id}/{self.other.slug}/")
+        self.assertNotContains(r, "mtj-course-box")
+        r = self.client.get("/jobs/adobe-experience-platform/")
+        self.assertContains(r, "mtj-course-box")

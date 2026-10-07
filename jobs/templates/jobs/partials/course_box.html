@@ -1,0 +1,18 @@
+{# Partner course box (interest test, Oct 2026), shown to every visitor on Adobe pages. #}
+<aside class="mtj-course-box" aria-label="Adobe MarTech training">
+  <style>
+    .mtj-course-box{margin:28px 0;padding:18px 20px;border:1px solid var(--rule);border-radius:14px;background:var(--amber-light,#fff7ea)}
+    .mtj-course-box p{margin:0 0 10px;font-size:15px;line-height:1.5;color:var(--ink)}
+    .mtj-course-box a{font-weight:700;color:var(--amber);font-size:15px}
+  </style>
+  <p><b>Want to work on Adobe Experience Platform, Journey Optimizer or CJA?</b> Hands-on training from a working Adobe MarTech architect.</p>
+  <a class="js-course-click" data-where="{{ course_where }}" href="{% url 'adobe_course' %}?src={{ course_where }}" rel="nofollow">See the programs →</a>
+</aside>
+<script>
+(function () {
+  window.mtjTrack && window.mtjTrack("course_box_shown", { where: "{{ course_where|escapejs }}" });
+  document.querySelectorAll(".js-course-click").forEach(function (a) {
+    a.addEventListener("click", function () { window.mtjTrack && window.mtjTrack("course_click", { where: a.dataset.where }); });
+  });
+})();
+</script>

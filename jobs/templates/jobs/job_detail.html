@@ -262,6 +262,7 @@
   </div>
 </section>
 {% endif %}
+{% if show_course %}<div style="max-width:1100px;margin:0 auto;padding:0 32px">{% include "jobs/partials/course_box.html" with course_where="job_page" %}</div>{% endif %}
 {% if job.description and key_skills.shown %}
 <div id="jd-nudge" class="jd-nudge" role="status" hidden>
   <button type="button" class="jd-nudge-x" aria-label="Dismiss">×</button>

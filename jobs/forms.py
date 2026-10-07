@@ -125,3 +125,15 @@ class SponsorInquiryForm(HoneypotMixin, forms.Form):
         ("featured", "Featured company roles"), ("other", "Not sure yet / other")])
     message = forms.CharField(label="Anything we should know? (optional)", required=False, max_length=2000,
                               widget=forms.Textarea(attrs={"rows": 4}))
+
+
+class CourseInterestForm(HoneypotMixin, forms.Form):
+    name = forms.CharField(label="Your name", max_length=200)
+    email = forms.EmailField(label="Email")
+    phone = forms.CharField(label="Phone / WhatsApp (optional)", max_length=30, required=False)
+    program = forms.ChoiceField(label="Which program interests you?", choices=[
+        ("foundation", "Foundation + Advanced MarTech Architecture (recorded) — ₹60,000 / ≈ US$625"),
+        ("cxo", "CXO Hive — Executive & Architecture Program (live) — ₹1,00,000 / ≈ US$1,041"),
+        ("custom", "Live customised program — ₹1,00,000 / ≈ US$1,041"),
+        ("cheaper", "A single tool (AEP, AJO or CJA) at a lower price")])
+    tool_note = forms.CharField(label="Which tool? (optional)", max_length=200, required=False)
