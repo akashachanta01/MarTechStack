@@ -182,7 +182,28 @@ def indexnow_key(request):
 
 
 
+from django.http import HttpResponsePermanentRedirect
+from django.templatetags.static import static as static_url
+from django.views.generic import RedirectView
+
+
+def _static_redirect(name):
+    # Resolve the hashed static URL per request (the manifest isn't ready at import time).
+    return lambda request: HttpResponsePermanentRedirect(static_url(name))
+
 urlpatterns = [
+    # Icons browsers and iPhones ask for at the site root.
+    path('favicon.ico', _static_redirect('favicon-48.png')),
+    path('apple-touch-icon.png', _static_redirect('apple-touch-icon.png')),
+    path('apple-touch-icon-precomposed.png', _static_redirect('apple-touch-icon.png')),
+    # Old or mistyped addresses seen in the logs.
+    path('learn', RedirectView.as_view(pattern_name='courses', permanent=True)),
+    path('learn/', RedirectView.as_view(pattern_name='courses', permanent=True)),
+    path('job', RedirectView.as_view(pattern_name='all_jobs', permanent=True)),
+    path('job/', RedirectView.as_view(pattern_name='all_jobs', permanent=True)),
+    path('location/<slug:location_slug>', RedirectView.as_view(pattern_name='seo_loc_only', permanent=True)),
+    path('location/<slug:location_slug>/', RedirectView.as_view(pattern_name='seo_loc_only', permanent=True)),
+
     # Admin & Apps
     path('admin/', admin.site.urls),
     path('tools/', include('tools.urls')),

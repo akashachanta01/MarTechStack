@@ -806,7 +806,15 @@ def tool_role_jobs(request, slug, func):
     siblings = [{"func": f, "name": r["name"], "count": len(r["ids"])}
                 for (t, f), r in tool_roles().items() if t == slug and f != func and r["indexable"]]
     paginator = Paginator(listed, 20)
+    # "Salesforce Developer" can also exist as the job-title page
+    # /salesforce-developer-jobs/. Two indexable pages with the same title
+    # compete in Google; point this one at the title page instead.
+    from jobs.role_pages import auto_roles
+    from django.utils.text import slugify
+    twin = slugify(combo["name"])
+    twin_live = twin in TITLE_JOBS or (auto_roles().get(twin) or {}).get("indexable")
     return render(request, "jobs/title_jobs.html", {
+        "canonical_url": f"https://martechjobs.io/{twin}-jobs/" if twin_live else "",
         "jobs": paginator.get_page(request.GET.get("page")),
         "total_count": len(listed),
         "title_name": combo["name"],
@@ -818,7 +826,7 @@ def tool_role_jobs(request, slug, func):
         "related_titles": [],
         "tool_siblings": sorted(siblings, key=lambda x: -x["count"]),
         "curated": False,
-        "page_noindex": not combo["indexable"],
+        "page_noindex": not combo["indexable"] or bool(twin_live),
     })
 
 
@@ -1041,6 +1049,11 @@ def seo_landing_indexable(location_slug, tool, total_count):
     return not thin and loc_indexable and tool_indexable
 
 
+# Short names people and old links use for a platform -> its real tool slug.
+TOOL_SLUG_ALIASES = {"aem": "adobe-experience-manager", "aep": "adobe-experience-platform", "ajo": "adobe-journey-optimizer",
+                     "sfmc": "salesforce-marketing-cloud", "cja": "customer-journey-analytics"}
+
+
 def seo_landing_page(request, location_slug=None, tool_slug=None):
     # Location slugs are free text in the URL: only letters, digits and hyphens
     # are real locations. Anything else (e.g. injected HTML) is a 404.
@@ -1066,8 +1079,17 @@ def seo_landing_page(request, location_slug=None, tool_slug=None):
 
     tool = None
     if tool_slug:
-        clean_tool_slug = tool_slug.replace("-jobs", "")
-        tool = get_object_or_404(Tool, slug=clean_tool_slug)
+        clean_tool_slug = TOOL_SLUG_ALIASES.get(tool_slug.replace("-jobs", ""), tool_slug.replace("-jobs", ""))
+        tool = Tool.objects.filter(slug=clean_tool_slug).first()
+        if tool is None:
+            # Old links to platforms we don't track (e.g. /florida/wordpress-jobs/):
+            # keep the visitor and the link value on that place's jobs page.
+            if location_slug:
+                return redirect('seo_loc_only', location_slug=location_slug.lower(), permanent=True)
+            raise Http404("Unknown tool")
+        if clean_tool_slug != tool_slug.replace("-jobs", ""):
+            if location_slug:
+                return redirect('seo_tool_loc', location_slug=location_slug.lower(), tool_slug=clean_tool_slug, permanent=True)
 
     jobs, location_name = seo_landing_jobs(location_slug, tool)
     jobs = jobs.order_by('-is_pinned', '-created_at')
@@ -1519,6 +1541,10 @@ def tool_interview(request, tool_slug):
     guide = (InterviewGuide.objects.filter(slug=tool_slug, is_published=True)
              .select_related('tool').first())
     if not guide:
+        # Old/guessed guide URLs (e.g. /salesforce-interview-questions/): send
+        # people and crawlers to that platform's jobs instead of a dead end.
+        if Tool.objects.filter(slug=tool_slug).exists():
+            return redirect('tool_detail', slug=tool_slug, permanent=True)
         raise Http404("No interview guide for this tool")
     tool = guide.tool
 

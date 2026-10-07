@@ -1371,7 +1371,7 @@ class SearchConsoleBatchTests(TestCase):
         r = self.client.get("/remote/jobs/")
         self.assertContains(r, "Remote MarTech Jobs — Updated")
         r = self.client.get("/jobs-by-tool/")
-        self.assertContains(r, "MarTech Jobs by Platform: Salesforce Marketing Cloud")
+        self.assertContains(r, "MarTech Jobs by Platform (3 live roles): Salesforce Marketing")
         self.assertContains(r, "(3 live roles)")
 
     def test_blog_snippet_migration(self):
@@ -2224,3 +2224,75 @@ class CourseTrackingTests(TestCase):
         u = get_user_model().objects.create_user("t1", "t1@x.test", "pw12345!x")
         self.client.force_login(u)
         self.assertContains(self.client.get("/accounts/dashboard/"), "dashboard_course_click", count=1)
+
+
+class ErrorPageTests(TestCase):
+    """Dead links show the site's own 404 page (nav, jobs links), not Django's bare page."""
+    def test_custom_404(self):
+        r = self.client.get("/this-page-does-not-exist/")
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "Browse Open Jobs", status_code=404)
+        self.assertContains(r, "noindex", status_code=404)
+
+    def test_500_template_is_standalone(self):
+        from django.template.loader import get_template
+        html = get_template("500.html").render({})
+        self.assertIn("Something went wrong", html)
+        self.assertNotIn("{%", html)
+
+
+class SeoLengthTests(TestCase):
+    def test_filters(self):
+        from jobs.templatetags.seo_tags import seo_title, seo_desc
+        self.assertEqual(seo_title("Short | MarTechJobs"), "Short | MarTechJobs")
+        long_t = "202 Salesforce Marketing Cloud (SFMC) Jobs — Updated October 2026 | MarTechJobs"
+        out = seo_title(long_t)
+        self.assertLessEqual(len(out), 65)
+        self.assertNotIn("MarTechJobs", out)
+        d = seo_desc("Marketing Ops &amp; RevOps " * 20)
+        self.assertLessEqual(len(d), 158)
+        self.assertTrue(d.endswith("…"))
+        self.assertNotRegex(d, r"&[#\w]*…$")
+
+    def test_pages_render_trimmed_and_not_double_escaped(self):
+        r = self.client.get("/")
+        html = r.content.decode()
+        import re
+        desc = re.search(r'<meta name="description" content="([^"]*)"', html).group(1)
+        self.assertLessEqual(len(re.sub(r"&[#\w]+;", "x", desc)), 158)
+        self.assertNotIn("&amp;amp;", html)
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+        self.assertLessEqual(len(title.strip()), 70)
+
+
+class DeadLinkRedirectTests(TestCase):
+    """Addresses seen 404ing in production logs (Oct 2026) now go somewhere useful."""
+    def setUp(self):
+        cat = Category.objects.create(name="CMS", slug="cms")
+        Tool.objects.create(name="Adobe Experience Manager", slug="adobe-experience-manager", category=cat)
+        Tool.objects.create(name="Salesforce", slug="salesforce", category=cat)
+
+    def test_icons(self):
+        for p in ("/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"):
+            r = self.client.get(p)
+            self.assertEqual(r.status_code, 301, p)
+            self.assertIn("/static/", r["Location"])
+
+    def test_old_addresses(self):
+        for src, dst in (("/learn", "/courses/"), ("/learn/", "/courses/"), ("/job", "/jobs/"),
+                         ("/location/canada", "/canada/jobs/")):
+            r = self.client.get(src)
+            self.assertEqual((r.status_code, r["Location"]), (301, dst), src)
+
+    def test_unknown_tool_in_place_goes_to_place(self):
+        r = self.client.get("/florida/wordpress-jobs/")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/florida/jobs/"))
+
+    def test_tool_short_name_goes_to_real_tool(self):
+        r = self.client.get("/florida/aem-jobs/")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/florida/adobe-experience-manager-jobs/"))
+
+    def test_missing_interview_guide_goes_to_tool_jobs(self):
+        r = self.client.get("/salesforce-interview-questions/")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/jobs/salesforce/"))
+        self.assertEqual(self.client.get("/nosuchtool-interview-questions/").status_code, 404)
