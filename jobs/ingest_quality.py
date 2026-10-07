@@ -11,6 +11,7 @@ import re
 # ATS board tokens that are run-together company names ("doordashusa").
 # Only names we are sure of; anything else keeps its current name.
 COMPANY_NAME_OVERRIDES = {
+    "3m": "3M",
     "abnormalsecurity": "Abnormal Security",
     "aboutyougmbh": "ABOUT YOU",
     "alphasense": "AlphaSense",

@@ -2296,3 +2296,18 @@ class DeadLinkRedirectTests(TestCase):
         r = self.client.get("/salesforce-interview-questions/")
         self.assertEqual((r.status_code, r["Location"]), (301, "/jobs/salesforce/"))
         self.assertEqual(self.client.get("/nosuchtool-interview-questions/").status_code, 404)
+
+
+class DataQualityOct7Tests(TestCase):
+    def test_3m_name(self):
+        from jobs.ingest_quality import display_company
+        self.assertEqual(display_company("3m"), "3M")
+
+    def test_technical_marketing_engineer_removed_daily(self):
+        from django.core.management import call_command
+        j = make_job(title="Technical Marketing Engineer - AI Platform Software", company="Nvidia")
+        k = make_job(title="Marketing Operations Engineer", company="Acme")
+        call_command("clean_job_data", stdout=mock.Mock())
+        j.refresh_from_db(); k.refresh_from_db()
+        self.assertFalse(j.is_active)
+        self.assertTrue(k.is_active)

@@ -99,19 +99,19 @@
 
           <div class="pj-row">
             <div class="form-group">
-              <label class="form-label">Job Title <span class="req">*</span></label>
+              <label class="form-label" for="{{ form.title.id_for_label }}">Job Title <span class="req">*</span></label>
               {{ form.title }}
               {% if form.title.errors %}<p class="form-err">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
             <div class="form-group">
-              <label class="form-label">Company Name <span class="req">*</span></label>
+              <label class="form-label" for="{{ form.company.id_for_label }}">Company Name <span class="req">*</span></label>
               {{ form.company }}
               {% if form.company.errors %}<p class="form-err">{{ form.company.errors.0 }}</p>{% endif %}
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Logo URL</label>
+            <label class="form-label" for="{{ form.company_logo.id_for_label }}">Logo URL</label>
             {{ form.company_logo }}
             {% if form.company_logo.errors %}<p class="form-err">{{ form.company_logo.errors.0 }}</p>{% endif %}
             <p class="form-hint">Direct link to a square logo image (PNG/JPG recommended)</p>
@@ -119,12 +119,12 @@
 
           <div class="pj-row">
             <div class="form-group">
-              <label class="form-label">Location <span class="req">*</span></label>
+              <label class="form-label" for="{{ form.location.id_for_label }}">Location <span class="req">*</span></label>
               {{ form.location }}
               {% if form.location.errors %}<p class="form-err">{{ form.location.errors.0 }}</p>{% endif %}
             </div>
             <div class="form-group">
-              <label class="form-label">Work Type</label>
+              <label class="form-label" for="{{ form.work_arrangement.id_for_label }}">Work Type</label>
               {{ form.work_arrangement }}
               {% if form.work_arrangement.errors %}<p class="form-err">{{ form.work_arrangement.errors.0 }}</p>{% endif %}
             </div>
@@ -132,39 +132,39 @@
 
           <div class="pj-row">
             <div class="form-group">
-              <label class="form-label">Salary Range</label>
+              <label class="form-label" for="{{ form.salary_range.id_for_label }}">Salary Range</label>
               {{ form.salary_range }}
               {% if form.salary_range.errors %}<p class="form-err">{{ form.salary_range.errors.0 }}</p>{% endif %}
             </div>
             <div class="form-group">
-              <label class="form-label">Role Type</label>
+              <label class="form-label" for="{{ form.role_type.id_for_label }}">Role Type</label>
               {{ form.role_type }}
               {% if form.role_type.errors %}<p class="form-err">{{ form.role_type.errors.0 }}</p>{% endif %}
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Job Function</label>
+            <label class="form-label" for="{{ form.function.id_for_label }}">Job Function</label>
             {{ form.function }}
             {% if form.function.errors %}<p class="form-err">{{ form.function.errors.0 }}</p>{% endif %}
             <p class="form-hint">Which category does this role belong to? (Engineering, Operations, or Data &amp; Analytics)</p>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Tech Stack</label>
+            <label class="form-label" for="{{ form.new_tools.id_for_label }}">Tech Stack</label>
             {{ form.new_tools }}
             {% if form.new_tools.errors %}<p class="form-err">{{ form.new_tools.errors.0 }}</p>{% endif %}
             <p class="form-hint">e.g. HubSpot, Salesforce, Marketo — comma separated</p>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Job Description <span class="req">*</span></label>
+            <label class="form-label" for="{{ form.description.id_for_label }}">Job Description <span class="req">*</span></label>
             {{ form.description }}
             {% if form.description.errors %}<p class="form-err">{{ form.description.errors.0 }}</p>{% endif %}
           </div>
 
           <div class="form-group">
-            <label class="form-label">Application Link <span class="req">*</span></label>
+            <label class="form-label" for="{{ form.apply_url.id_for_label }}">Application Link <span class="req">*</span></label>
             {{ form.apply_url }}
             {% if form.apply_url.errors %}<p class="form-err">{{ form.apply_url.errors.0 }}</p>{% endif %}
             <p class="form-hint">The URL where candidates will apply (your ATS link)</p>
