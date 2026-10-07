@@ -382,8 +382,15 @@ class ToolRoleSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        from jobs.role_pages import tool_roles
-        return sorted(k for k, r in tool_roles().items() if r["indexable"])
+        from django.utils.text import slugify
+        from jobs.role_pages import auto_roles, tool_roles
+        from jobs.views import TITLE_JOBS
+        roles = auto_roles()
+
+        def has_twin(name):  # same title already has its own job-title page
+            t = slugify(name)
+            return t in TITLE_JOBS or (roles.get(t) or {}).get("indexable")
+        return sorted(k for k, r in tool_roles().items() if r["indexable"] and not has_twin(r["name"]))
 
     def location(self, key):
         return reverse('tool_role_jobs', args=[key[0], key[1]])

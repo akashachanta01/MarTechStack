@@ -135,7 +135,7 @@ def salary_calculator(request):
 # --- 3. INTERVIEW GENERATOR ---
 def interview_generator(request):
     jobs = Job.objects.filter(is_active=True, screening_status='approved').filter(Q(title__icontains='Lead') | Q(title__icontains='Manager')).order_by('-created_at')[:5]
-    return render(request, 'tools/interview_generator.html', {'seo_title': "MarTech Interview Question Generator", 'seo_description': "Generate technical interview questions.", 'jobs': jobs})
+    return render(request, 'tools/interview_generator.html', {'seo_title': "MarTech Interview Question Generator", 'seo_description': "Free MarTech interview question generator: technical questions for Salesforce, Marketo, HubSpot and Adobe roles, based on the skills real job posts ask for.", 'jobs': jobs})
 
 @require_POST
 def api_generate_interview(request):
@@ -159,7 +159,7 @@ def api_generate_interview(request):
 # --- 4. TEXT TO SQL ---
 def sql_generator(request):
     jobs = Job.objects.filter(is_active=True, screening_status='approved', title__icontains='SQL').order_by('-created_at')[:5]
-    return render(request, 'tools/sql_generator.html', {'seo_title': "AI Text-to-SQL Generator for Marketing Data", 'seo_description': "Convert plain English into SQL queries.", 'jobs': jobs})
+    return render(request, 'tools/sql_generator.html', {'seo_title': "AI Text-to-SQL Generator for Marketing Data", 'seo_description': "Free AI text-to-SQL generator for marketing data: describe what you need in plain English and get a SQL query for campaign, CRM and analytics tables.", 'jobs': jobs})
 
 @require_POST
 def api_generate_sql(request):
@@ -560,12 +560,12 @@ def api_test_subject_line(request):
 
 
 # --- OTHER STATIC TOOLS ---
-def signature_generator(request): return render(request, 'tools/signature_generator.html', {'seo_title': "HubSpot Email Signature Generator", 'seo_description': "Create a professional email signature."})
-def sf_id_converter(request): return render(request, 'tools/sf_id_converter.html', {'seo_title': "Salesforce 15 to 18 Character ID Converter", 'seo_description': "Convert Salesforce IDs easily."})
-def consultant_calculator(request): return render(request, 'tools/rate_calculator.html', {'seo_title': "Freelance MarTech Consultant Rate Calculator", 'seo_description': "Calculate your hourly rate."})
-def qr_generator(request): return render(request, 'tools/qr_generator.html', {'seo_title': "HubSpot QR Code Generator", 'seo_description': "Generate trackable QR codes."})
-def utm_builder(request): return render(request, 'tools/utm_builder.html', {'seo_title': "Bulk UTM Link Builder for Marketers", 'seo_description': "Build Google Analytics tracking links."})
-def roas_calculator(request): return render(request, 'tools/roas_calculator.html', {'seo_title': "Free ROAS Calculator", 'seo_description': "Calculate Return on Ad Spend."})
+def signature_generator(request): return render(request, 'tools/signature_generator.html', {'seo_title': "HubSpot Email Signature Generator", 'seo_description': "Free HubSpot email signature generator: build a clean, professional signature with your photo, title and links, then copy it into HubSpot or Gmail."})
+def sf_id_converter(request): return render(request, 'tools/sf_id_converter.html', {'seo_title': "Salesforce 15 to 18 Character ID Converter", 'seo_description': "Free Salesforce ID converter: turn 15-character case-sensitive record IDs into 18-character IDs for Excel, VLOOKUPs and data imports. Runs in your browser."})
+def consultant_calculator(request): return render(request, 'tools/rate_calculator.html', {'seo_title': "Freelance MarTech Consultant Rate Calculator", 'seo_description': "Free MarTech consultant rate calculator: get a suggested hourly rate for freelance or contract work from your platform specialization, experience level and engagement type."})
+def qr_generator(request): return render(request, 'tools/qr_generator.html', {'seo_title': "HubSpot QR Code Generator", 'seo_description': "Free QR code generator for marketers: create QR codes with UTM tracking so print and event campaigns show up correctly in HubSpot and Google Analytics."})
+def utm_builder(request): return render(request, 'tools/utm_builder.html', {'seo_title': "Bulk UTM Link Builder for Marketers", 'seo_description': "Free bulk UTM link builder: create consistent Google Analytics UTM tracking links for campaigns in seconds, with lowercase rules that keep reports clean."})
+def roas_calculator(request): return render(request, 'tools/roas_calculator.html', {'seo_title': "Free ROAS Calculator", 'seo_description': "Free ROAS calculator: enter ad spend and the revenue it brought in to get your return on ad spend instantly, and see whether a paid campaign is paying back."})
 
 # --- THE TOOLS HUB ---
 def tools_hub(request):

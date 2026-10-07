@@ -46,6 +46,7 @@
   .dash-nav a.active svg, .dash-nav a:hover svg { opacity:1; }
 
   .dash-sidebar-foot { margin-top:auto; padding:16px 20px; border-top:1px solid rgba(255,255,255,.08); }
+  .dash-course-m { display:none; align-items:center; justify-content:space-between; gap:10px; margin:0 0 16px; padding:12px 14px; border-radius:10px; background:var(--amber); color:#fff; font-size:14px; text-decoration:none; }
   .dash-gopro { background:var(--amber); color:#fff; border-radius:8px; padding:12px 14px; text-align:center; }
   .dash-gopro .label { font-family:'Courier Prime',monospace; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; opacity:.85; display:block; margin-bottom:3px; }
   .dash-gopro .title { font-family:'Playfair Display',serif; font-size:14px; font-weight:800; display:block; margin-bottom:6px; }
@@ -137,6 +138,7 @@
     .dash-nav a span { display:none; }
     .dash-sidebar-foot { margin:0 0 0 auto; padding:0; border:none; flex-shrink:0; }
     .dash-gopro { display:none; }
+    .dash-course-m { display:flex; }
     .dash-signout { margin:0; }
     .dash-main { padding:24px 20px 60px; }
   }
@@ -210,9 +212,12 @@
 
   <!-- Main content -->
   <main class="dash-main">
+    <a class="dash-course-m js-dash-course" href="{% url 'courses' %}?src=dashboard">
+      <span><b>New: MarTech courses</b>{% if course_discount %} · up to {{ course_discount }}% off for members{% endif %}</span><span aria-hidden="true">→</span>
+    </a>
 
     <div class="dash-greeting">
-      <h1>{% if request.user.first_name %}Good morning, {{ request.user.first_name }}.{% else %}Welcome back.{% endif %}</h1>
+      <h1>{% if request.user.first_name %}Welcome back, {{ request.user.first_name }}.{% else %}Welcome back.{% endif %}</h1>
       <p>Here's your job search at a glance.</p>
     </div>
 
