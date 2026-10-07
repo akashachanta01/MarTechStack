@@ -351,7 +351,20 @@
 @media (max-width: 680px) {
   .jl-h1 { font-size: 32px; }
   .jrow-right { display: none; }
-  .search-row2 { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  /* Phone search: full-width query + button, filters in a tidy grid, nothing cut off. */
+  .searchcard { padding: 12px; margin-top: 24px; }
+  .search-row1 { flex-direction: column; gap: 8px; }
+  .s-field { height: 50px; }
+  .s-field input { font-size: 16px; }
+  .s-go { width: 100%; height: 50px; }
+  .s-clear { height: 36px; justify-content: center; }
+  .search-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .s-select-wrap { min-width: 0; }
+  .s-select { font-size: 14px; padding: 0 28px 0 32px; text-overflow: ellipsis; }
+  .s-select-wrap-icon { left: 11px; }
+  .s-remote { grid-column: 1 / -1; }
+  .s-remote-trigger { width: 100%; justify-content: center; }
+  .s-remote-panel { left: 0; right: 0; width: auto; max-width: none; }
   .testi-grid { grid-template-columns: 1fr; }
   .loc-grid { grid-template-columns: repeat(2, 1fr); }
   .nl-band { padding: 26px 22px; }
