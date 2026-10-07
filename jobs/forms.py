@@ -132,7 +132,7 @@ class CourseInterestForm(HoneypotMixin, forms.Form):
     email = forms.EmailField(label="Email")
     phone = forms.CharField(label="Phone / WhatsApp (optional)", max_length=30, required=False)
     program = forms.ChoiceField(label="Which program interests you?", choices=[
-        ("foundation", "Foundation + Advanced MarTech Architecture (recorded) — ₹60,000"),
-        ("cxo", "CXO Hive — Executive & Architecture Program (live) — ₹1,00,000"),
-        ("custom", "Live customised program — ₹1,00,000"),
+        ("foundation", "Foundation + Advanced MarTech Architecture (recorded) — ₹60,000 / ≈ US$625"),
+        ("cxo", "CXO Hive — Executive & Architecture Program (live) — ₹1,00,000 / ≈ US$1,041"),
+        ("custom", "Live customised program — ₹1,00,000 / ≈ US$1,041"),
         ("cheaper", "A shorter, lower-priced course would suit me better")])

@@ -2242,14 +2242,14 @@ def role_resume_keywords(request, role_slug):
     })
 
 
-# Adobe tools covered by the partner program (India interest test, Oct 2026).
+# Adobe tools covered by the partner program (interest test, Oct 2026).
 ADOBE_COURSE_TOOLS = {"adobe-experience-platform", "adobe-journey-optimizer", "adobe-analytics",
                       "adobe-campaign", "adobe-target", "customer-journey-analytics"}
 
 
 def adobe_course(request):
-    """India-only interest test for a partner's Adobe MarTech programs. Takes no
-    payment: visitors request details and the founder follows up."""
+    """Interest test for a partner's Adobe MarTech programs (all visitors). Takes
+    no payment: visitors request details and the founder follows up."""
     from .forms import CourseInterestForm
     from .models import CourseInterest
     if request.method == "POST":

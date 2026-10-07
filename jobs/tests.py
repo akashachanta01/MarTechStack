@@ -2090,7 +2090,7 @@ class SearchNoDeadEndTests(TestCase):
 
 
 class AdobeCourseInterestTests(TestCase):
-    """India-only interest test for partner Adobe programs: no payment, no partner phone number."""
+    """Interest test for partner Adobe programs: no payment, no partner phone number."""
     def setUp(self):
         cat = Category.objects.create(name="CDP", slug="cdp")
         self.aep = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
@@ -2123,8 +2123,8 @@ class AdobeCourseInterestTests(TestCase):
 
     def test_box_only_on_adobe_job_and_tool_pages(self):
         r = self.client.get(f"/job/{self.job.id}/{self.job.slug}/")
-        self.assertContains(r, "js-india-only")
+        self.assertContains(r, "mtj-course-box")
         r = self.client.get(f"/job/{self.other.id}/{self.other.slug}/")
-        self.assertNotContains(r, "js-india-only")
+        self.assertNotContains(r, "mtj-course-box")
         r = self.client.get("/jobs/adobe-experience-platform/")
-        self.assertContains(r, "js-india-only")
+        self.assertContains(r, "mtj-course-box")

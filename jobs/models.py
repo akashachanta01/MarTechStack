@@ -653,7 +653,7 @@ class SponsorInquiry(models.Model):
 
 
 class CourseInterest(models.Model):
-    """Interest test (Oct 2026) for partner Adobe MarTech programs, India only.
+    """Interest test (Oct 2026) for partner Adobe MarTech programs, all visitors.
     No payment is taken; the founder follows up by email."""
     PROGRAMS = [
         ("foundation", "Foundation + Advanced MarTech Architecture (recorded) - Rs 60,000"),

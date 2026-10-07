@@ -1,5 +1,4 @@
-"""India-only Adobe course interest test: box shows only for India time zone on
-Adobe pages, request-details form saves interest, no payment, no partner phone."""
+"""Adobe course interest test: box shows to every visitor on Adobe pages, request-details form saves interest, no payment, no partner phone."""
 import asyncio, glob, subprocess, os
 from playwright.async_api import async_playwright
 B = "http://127.0.0.1:8765"; R = []
@@ -27,13 +26,13 @@ async def main():
         pu = await us.new_page(); pu.on("pageerror", lambda e: errs.append(str(e)))
         box = ".mtj-course-box"
         await pi.goto(B + adobe); ok("C1 India visitor sees box on Adobe job", await pi.locator(box).is_visible())
-        await pu.goto(B + adobe); ok("C2 US visitor does not see box", not await pu.locator(box).is_visible())
+        await pu.goto(B + adobe); ok("C2 US visitor also sees box", await pu.locator(box).is_visible())
         await pi.goto(B + other); ok("C3 no box on non-Adobe job", await pi.locator(box).count() == 0)
         await pi.goto(B + "/jobs/adobe-experience-platform/"); ok("C4 India visitor sees box on AEP tool page", await pi.locator(box).is_visible())
         await pi.goto(B + adobe); await pi.locator(box + " a").click(); await pi.wait_for_load_state()
         ok("C5 box opens request-details page", "/learn/adobe-martech/" in pi.url and "src=job_page" in pi.url, pi.url)
         body = await pi.locator("body").inner_text()
-        ok("C6 page shows real prices and live job demand", "₹60,000" in body and "Live jobs" in body)
+        ok("C6 page shows real prices (₹ and US$) and live job demand", "₹60,000" in body and "US$625" in body and "Live jobs" in body)
         ok("C7 no partner phone / payment details shown", "9014649905" not in body and "PhonePe" not in body.replace("Phone / WhatsApp", ""))
         await pi.click("button[type=submit]"); await pi.wait_for_load_state()
         ok("C8 empty form shows errors, nothing saved", await pi.locator(".errorlist").count() > 0)
