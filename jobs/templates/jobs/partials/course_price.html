@@ -1,0 +1,8 @@
+{% load course_tags %}{# Price for one course `c`, with the member discount when one is set. #}
+{% if c.member_discount_pct and user.is_authenticated %}
+<div class="cx-price"><span class="js-price" data-inr="{{ c.member_price_inr|inr }}" data-usd="{{ c.member_price_usd|usd }}">{{ c.member_price_usd|usd }}</span><s class="js-price" data-inr="{{ c.price_inr|inr }}" data-usd="{{ c.price_usd|usd }}">{{ c.price_usd|usd }}</s></div>
+<div class="cx-save">Member price · {{ c.member_discount_pct }}% off</div>
+{% else %}
+<div class="cx-price"><span class="js-price" data-inr="{{ c.price_inr|inr }}" data-usd="{{ c.price_usd|usd }}">{{ c.price_usd|usd }}</span></div>
+{% if c.member_discount_pct and show_member_cta %}<div class="cx-member">Members save {{ c.member_discount_pct }}%. <a href="{% url 'account_signup' %}?next={{ request.path|urlencode }}">Create a free account</a> or <a href="{% url 'account_login' %}?next={{ request.path|urlencode }}">log in</a>.</div>{% endif %}
+{% endif %}

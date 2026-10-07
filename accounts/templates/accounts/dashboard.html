@@ -193,17 +193,11 @@
     </div>
 
     <div class="dash-sidebar-foot">
-      <div class="dash-gopro" id="gopro-card">
-        {% if pro_waitlist %}
-        <span class="label">You're on the list</span>
-        <span class="title">Go Pro ⭐</span>
-        <span class="sub" style="margin-bottom:0;">We'll email you the moment Pro launches.</span>
-        {% else %}
-        <span class="label">Coming Soon</span>
-        <span class="title">Go Pro</span>
-        <span class="sub">Priority alerts, salary insights, and profile boost.</span>
-        <a href="#" id="gopro-join" onclick="joinProWaitlist(event)">Join the waitlist</a>
-        {% endif %}
+      <div class="dash-gopro" id="courses-card">
+        <span class="label">New</span>
+        <span class="title">MarTech courses</span>
+        <span class="sub">{% if course_discount %}As a member you get up to {{ course_discount }}% off.{% else %}Hands-on Adobe AEP, AJO &amp; CJA programs from a working architect.{% endif %}</span>
+        <a href="{% url 'courses' %}?src=dashboard">{% if course_discount %}See your member prices{% else %}See the courses{% endif %}</a>
       </div>
       <div class="dash-signout">
         <a href="{% url 'account_logout' %}">
@@ -319,21 +313,5 @@
   </main>
 </div>
 
-<script>
-function joinProWaitlist(e) {
-  e.preventDefault();
-  fetch('{% url "join_pro_waitlist" %}', {
-    method: 'POST',
-    headers: {'X-CSRFToken': '{{ csrf_token }}'},
-  }).then(r => r.json()).then(d => {
-    if (d.ok) {
-      window.mtjTrack && window.mtjTrack('pro_waitlist_join', {});
-      var card = document.getElementById('gopro-card');
-      card.innerHTML = '<span class="label">You\'re on the list</span>'
-        + '<span class="title">Go Pro &#11088;</span>'
-        + '<span class="sub" style="margin-bottom:0;">We\'ll email you the moment Pro launches.</span>';
-    }
-  }).catch(function(){});
-}
-</script>
+
 {% endblock %}

@@ -969,7 +969,7 @@
     </div>
     <script>
     (function () {
-      if (location.pathname.indexOf('/accounts/') === 0 || location.pathname.indexOf('/admin') === 0) return;
+      if (location.pathname.indexOf('/accounts/') === 0 || location.pathname.indexOf('/admin') === 0 || location.pathname.indexOf('/courses/') === 0) return;
       var KEY = 'mtj_signup_snooze';
       try { if (Date.now() < (+localStorage.getItem(KEY) || 0)) return; } catch (e) {}
       var bar = document.getElementById('signup-bar');
