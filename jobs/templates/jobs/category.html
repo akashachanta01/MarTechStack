@@ -318,6 +318,13 @@ function toggleRemotePanel(e) {
   const r = document.getElementById('s-remote');
   const open = r.classList.toggle('open');
   r.querySelector('.s-remote-trigger').setAttribute('aria-expanded', open ? 'true' : 'false');
+  // On phones the panel can open below the fold; bring it into view so the tap visibly works.
+  if (open) {
+    const p = r.querySelector('.s-remote-panel');
+    if (p && p.getBoundingClientRect().bottom > window.innerHeight) {
+      setTimeout(function () { p.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
+    }
+  }
 }
 document.addEventListener('click', function(e) {
   const r = document.getElementById('s-remote');

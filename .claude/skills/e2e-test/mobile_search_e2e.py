@@ -33,6 +33,11 @@ async def main():
             await m.locator(".s-remote-trigger").click()
             await m.fill(".s-field input", "marketo"); await m.locator(".s-go").click(); await m.wait_for_load_state()
             ok(f"M7 [{w}px] searching works", "q=marketo" in m.url, m.url)
+        for path in ("/", "/jobs/"):
+            m = await (await b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)).new_page()
+            await m.goto(B + path); await m.locator(".s-remote-trigger").click(); await m.wait_for_timeout(1600)
+            pb = await m.locator(".s-remote-panel").bounding_box()
+            ok(f"M9 phone {path}: Remote panel scrolled fully into view", pb and pb["y"] >= 0 and pb["y"] + pb["height"] <= 844 + 8, pb)
         d = await (await b.new_context(viewport={"width": 1280, "height": 900})).new_page()
         await d.goto(B + "/")
         f = await d.locator(".s-field").bounding_box(); g = await d.locator(".s-go").bounding_box()

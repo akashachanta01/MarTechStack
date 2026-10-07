@@ -47,6 +47,8 @@
 
   .dash-sidebar-foot { margin-top:auto; padding:16px 20px; border-top:1px solid rgba(255,255,255,.08); }
   .dash-course-m { display:none; align-items:center; justify-content:space-between; gap:10px; margin:0 0 16px; padding:12px 14px; border-radius:10px; background:var(--amber); color:#fff; font-size:14px; text-decoration:none; }
+  a.dash-stat { display:block; color:inherit; text-decoration:none; transition:box-shadow .15s, transform .15s; }
+  a.dash-stat:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08); }
   .dash-gopro { background:var(--amber); color:#fff; border-radius:8px; padding:12px 14px; text-align:center; }
   .dash-gopro .label { font-family:'Courier Prime',monospace; font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; opacity:.85; display:block; margin-bottom:3px; }
   .dash-gopro .title { font-family:'Playfair Display',serif; font-size:14px; font-weight:800; display:block; margin-bottom:6px; }
@@ -223,20 +225,20 @@
 
     <!-- Stats -->
     <div class="dash-stats">
-      <div class="dash-stat">
+      <a class="dash-stat" href="{% url 'accounts_saved_jobs' %}">
         <span class="dash-stat-val">{{ saved_count }}</span>
         <span class="dash-stat-label">Saved Jobs</span>
-      </div>
-      <div class="dash-stat">
+      </a>
+      <a class="dash-stat" href="{% url 'accounts_profile' %}">
         <span class="dash-stat-val">{{ profile_pct }}%</span>
         <span class="dash-stat-label">Profile Complete</span>
         <div class="progress-bar"><div class="progress-fill" style="width:{{ profile_pct }}%"></div></div>
-      </div>
-      <div class="dash-stat">
+      </a>
+      <a class="dash-stat" href="{% url 'accounts_my_matches' %}">
         <span class="dash-stat-val">{{ matches_count }}</span>
         <span class="dash-stat-label">Matches Found</span>
         <span class="dash-stat-sub">{% if has_stack %}Based on your stack{% else %}Add stack to personalise{% endif %}</span>
-      </div>
+      </a>
     </div>
 
     <!-- Top Matches -->
