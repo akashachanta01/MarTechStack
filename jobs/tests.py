@@ -2093,6 +2093,7 @@ class CourseInterestTests(TestCase):
     """Udemy-style courses (interest test): no payment, no partner name or phone,
     member discount only when set in admin, signed-in details from the account."""
     def setUp(self):
+        cache.clear()  # course form is rate-limited per IP (5/hour)
         from jobs.models import Course
         cat = Category.objects.create(name="CDP", slug="cdp")
         self.aep = Tool.objects.create(name="Adobe Experience Platform", slug="adobe-experience-platform", category=cat)
@@ -2311,3 +2312,30 @@ class DataQualityOct7Tests(TestCase):
         j.refresh_from_db(); k.refresh_from_db()
         self.assertFalse(j.is_active)
         self.assertTrue(k.is_active)
+
+
+class CourseFormEmailOnlyTests(TestCase):
+    """Oct 9: 3 of 3 visitors dropped off at the request form -> email is the only required field."""
+    def setUp(self):
+        cache.clear()  # course form is rate-limited per IP (5/hour)
+        from jobs.models import Course
+        self.c = Course.objects.create(slug="c2", title="C2", platform="Adobe", price_inr=1000, price_usd=12)
+
+    def test_email_only_request_saved(self):
+        from jobs.models import CourseInterest
+        r = self.client.post("/courses/c2/", {"email": "lee@example.com"})
+        self.assertEqual(r.status_code, 302)
+        ci = CourseInterest.objects.get()
+        self.assertEqual((ci.email, ci.name, ci.program, ci.course), ("lee@example.com", "lee", "course", self.c))
+
+    def test_form_shows_email_first_and_extras_optional(self):
+        html = self.client.get("/courses/c2/").content.decode()
+        self.assertIn("Email me the details", html)
+        self.assertIn("Add details (optional)", html)
+        self.assertLess(html.index('id="id_email"'), html.index("Add details (optional)"))
+        self.assertGreater(html.index('id="id_name"'), html.index("Add details (optional)"))
+
+    def test_missing_email_rejected(self):
+        from jobs.models import CourseInterest
+        self.client.post("/courses/c2/", {"name": "x"})
+        self.assertEqual(CourseInterest.objects.count(), 0)
