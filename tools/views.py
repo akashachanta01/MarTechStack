@@ -211,6 +211,7 @@ def resume_scanner(request):
         'monthly_runs': ATS_ACCOUNT_MONTHLY_RUNS,
         'saved_resume': _saved_resume(request.user),
         'stats': _scanner_stats(),
+        'pick_jobs': [] if job else _scanner_pick_jobs(),
         'tailor_free_left': (None if request.user.is_staff else max(0, TAILOR_FREE_RUNS - _tailor_runs_used(request.user)))
                             if request.user.is_authenticated else None,
     })
@@ -229,6 +230,17 @@ def _scanner_stats():
         }
         cache.set('rm:hero_stats', stats, 3600)
     return stats
+
+
+def _scanner_pick_jobs():
+    """Compact list of live jobs for the in-page job picker (cached; ~200 rows)."""
+    rows = cache.get('rm:pick_jobs')
+    if rows is None:
+        rows = [{'id': j['id'], 't': j['title'], 'c': j['company'], 'l': j['location'] or '', 's': j['slug'] or 'job'}
+                for j in Job.objects.filter(is_active=True, screening_status='approved')
+                .order_by('-created_at').values('id', 'title', 'company', 'location', 'slug')[:400]]
+        cache.set('rm:pick_jobs', rows, 3600)
+    return rows
 
 
 def _saved_resume(user):

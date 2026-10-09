@@ -2339,3 +2339,25 @@ class CourseFormEmailOnlyTests(TestCase):
         from jobs.models import CourseInterest
         self.client.post("/courses/c2/", {"name": "x"})
         self.assertEqual(CourseInterest.objects.count(), 0)
+
+
+class ScannerJobPickerTests(TestCase):
+    """Users kept clicking Check with no job: the scanner now has an in-page live-job picker."""
+    def setUp(self):
+        cache.clear()
+        self.live = make_job(title="Marketo Admin", company="Globex")
+        self.closed = make_job(title="Old Closed Role", company="Initech")
+        Job.objects.filter(pk=self.closed.pk).update(is_active=False)
+
+    def test_picker_lists_only_live_jobs(self):
+        import json as _json, re as _re
+        r = self.client.get("/tools/resume-keyword-scanner/")
+        self.assertContains(r, 'id="rm-pick"')
+        rows = _json.loads(_re.search(r'id="rm-jobs" type="application/json">(.*?)</script>', r.content.decode()).group(1))
+        self.assertIn(self.live.id, [j["id"] for j in rows])
+        self.assertNotIn(self.closed.id, [j["id"] for j in rows])
+
+    def test_no_picker_when_job_given(self):
+        r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.live.id}")
+        self.assertNotContains(r, 'id="rm-pick"')
+        self.assertContains(r, "Checking against")
