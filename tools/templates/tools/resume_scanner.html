@@ -61,6 +61,13 @@
   .rm-label { display: block; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink3); margin: 0 0 8px; }
   .rm textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.55; font-family: inherit; resize: vertical; }
   .rm-job { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper2, #f7f4ef); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 14px; }
+  .rm-pickwrap { position: relative; }
+  #rm-pick { width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px 14px; border: 1px solid var(--rule, #e5ded2); border-radius: 10px; background: #fff; }
+  .rm-picklist { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin: 4px 0 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--rule, #e5ded2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.12); max-height: 300px; overflow-y: auto; }
+  .rm-picklist li { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; line-height: 1.35; }
+  .rm-picklist li:hover, .rm-picklist li.on { background: var(--paper2, #f7f4ef); }
+  .rm-picklist li small { display: block; color: var(--ink3, #78716c); font-size: 12px; }
+  .rm-picklist li.none { cursor: default; color: var(--ink3, #78716c); }
   .rm-job a { font-size: 13px; white-space: nowrap; flex-shrink: 0; }
   .rm-drop { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px 20px; border: 2px dashed var(--rule2, #d6cbb6); border-radius: 14px; background: var(--paper2, #faf7f1); cursor: pointer; text-align: center; transition: border-color .15s, background .15s; }
   .rm-drop:hover, .rm-drop.drag { border-color: var(--amber, #bf5420); background: #fff; }
@@ -171,9 +178,24 @@
         <a href="{% url 'resume_scanner' %}">Use a different job</a>
       </div>
     {% else %}
-      <label class="rm-label" for="rm-jd">Job description</label>
-      <textarea id="rm-jd" rows="6" placeholder="Paste the full job description — or click “Check my resume” on any job on MarTechJobs."></textarea>
+      <div id="rm-picked" class="rm-job" hidden>
+        <span>Checking against: <strong id="rm-picked-t"></strong></span>
+        <button type="button" class="rm-linkbtn" id="rm-unpick">Change job</button>
+      </div>
+      <div id="rm-pickbox">
+        <label class="rm-label" for="rm-pick">Pick a live job</label>
+        <div class="rm-pickwrap">
+          <input id="rm-pick" type="search" autocomplete="off" placeholder="Search {{ pick_jobs|length }} live jobs by title or company, e.g. Marketo" aria-controls="rm-picklist">
+          <ul id="rm-picklist" class="rm-picklist" role="listbox" hidden></ul>
+        </div>
+        <p class="rm-or"><button type="button" class="rm-linkbtn" id="rm-jd-toggle">Or paste a job description from another site</button></p>
+        <div id="rm-jdbox" hidden>
+          <label class="rm-label" for="rm-jd">Job description</label>
+          <textarea id="rm-jd" rows="6" placeholder="Paste the full job description"></textarea>
+        </div>
+      </div>
       <div style="height:18px"></div>
+      {{ pick_jobs|json_script:"rm-jobs" }}
     {% endif %}
 
     <span class="rm-label">Your resume</span>
@@ -316,6 +338,8 @@
         {% endif %}
         {% if job %}
         <a class="rm-cta" href="{% url 'job_detail' job.id job.slug %}">View the job &amp; apply</a>
+        {% else %}
+        <a class="rm-cta" id="rm-picked-apply" href="#" hidden>View the job &amp; apply</a>
         {% endif %}
       </aside>
     </div>
@@ -440,6 +464,60 @@
     if (res.ok) { setSaved(false); showOk('Deleted. We no longer have your resume.'); track('resume_deleted', {}); }
   });
 
+  // ---- In-page job picker (users kept clicking Check with no job, Sept-Oct 2026) ----
+  var pickJobs = [];
+  try { pickJobs = JSON.parse(($('rm-jobs') || {}).textContent || '[]'); } catch (e) {}
+  var pick = $('rm-pick'), plist = $('rm-picklist'), pickHits = [], pickOn = -1, pickTracked = false;
+  function pickRender() {
+    var words = (pick.value || '').toLowerCase().split(/\s+/).filter(Boolean);
+    pickHits = pickJobs.filter(function (j) {
+      var hay = (j.t + ' ' + j.c + ' ' + j.l).toLowerCase();
+      return words.every(function (w) { return hay.indexOf(w) !== -1; });
+    }).slice(0, 30);
+    pickOn = -1; plist.textContent = '';
+    if (!pickHits.length) {
+      var li = document.createElement('li'); li.className = 'none';
+      li.textContent = 'No live jobs match. Try a platform (e.g. HubSpot) or paste a description below.';
+      plist.appendChild(li);
+    }
+    pickHits.forEach(function (j, i) {
+      var li = document.createElement('li'); li.setAttribute('role', 'option');
+      var b = document.createElement('b'); b.textContent = j.t; li.appendChild(b);
+      var sm = document.createElement('small'); sm.textContent = j.c + (j.l ? ' · ' + j.l : ''); li.appendChild(sm);
+      li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(j); });
+      plist.appendChild(li);
+    });
+    plist.hidden = false;
+  }
+  function choose(j) {
+    jobId = j.id;
+    $('rm-picked-t').textContent = j.t + ' at ' + j.c;
+    $('rm-picked').hidden = false; $('rm-pickbox').hidden = true; plist.hidden = true;
+    errBox.style.display = 'none';
+    var ap = $('rm-picked-apply'); if (ap) { ap.href = '/job/' + j.id + '/' + j.s + '/'; ap.hidden = false; }
+    track('ats_job_picked', { job_id: j.id });
+  }
+  if (pick) {
+    pick.addEventListener('focus', function () { pickRender(); if (!pickTracked) { pickTracked = true; track('ats_pick_open', {}); } });
+    pick.addEventListener('input', pickRender);
+    pick.addEventListener('blur', function () { plist.hidden = true; });
+    pick.addEventListener('keydown', function (e) {
+      var items = plist.querySelectorAll('li[role=option]');
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault(); if (!items.length) return;
+        pickOn = (pickOn + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items.forEach(function (x, i) { x.classList.toggle('on', i === pickOn); });
+        items[pickOn].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault(); if (pickHits.length) choose(pickHits[pickOn >= 0 ? pickOn : 0]);
+      } else if (e.key === 'Escape') { plist.hidden = true; }
+    });
+    $('rm-unpick').addEventListener('click', function () {
+      jobId = null; if ($('rm-picked-apply')) $('rm-picked-apply').hidden = true; $('rm-picked').hidden = true; $('rm-pickbox').hidden = false; pick.value = ''; pick.focus();
+    });
+    $('rm-jd-toggle').addEventListener('click', function () { $('rm-jdbox').hidden = !$('rm-jdbox').hidden; if (!$('rm-jdbox').hidden) $('rm-jd').focus(); });
+  }
+
   // ---- Check ----
   btn.addEventListener('click', async function () {
     errBox.style.display = 'none';
@@ -454,11 +532,14 @@
     if (jobId) body.job_id = jobId; else body.jd_text = $('rm-jd') ? $('rm-jd').value : '';
     if (!jobId && (body.jd_text || '').trim().length < 150) {
       // Common stumble (session data, Sept 2026): clicking Check before adding a job.
-      showError('Add the job you want to check against: paste its full description above, or ');
-      var a = document.createElement('a'); a.href = "{% url 'job_list' %}"; a.textContent = 'pick a live job →';
-      a.addEventListener('click', function () { track('ats_pick_job_click', {}); });
-      errBox.appendChild(a);
-      if ($('rm-jd')) { $('rm-jd').focus(); $('rm-jd').scrollIntoView({ block: 'center' }); }
+      track('ats_no_job_prompt', {});
+      if ($('rm-jdbox') && !$('rm-jdbox').hidden && (body.jd_text || '').trim()) {
+        showError('That description is too short. Paste the full job description, or pick a live job above.');
+        $('rm-jd').focus();
+      } else {
+        showError('First pick the job to check against: type a job title or company in the box above.');
+        if ($('rm-pick')) { $('rm-pick').scrollIntoView({ block: 'center' }); $('rm-pick').focus(); }
+      }
       return;
     }
 
