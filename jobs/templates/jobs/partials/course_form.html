@@ -11,15 +11,22 @@
     {{ form.website }}
     <input type="hidden" name="src" value="{{ src }}">
     {% if not user.is_authenticated %}
-    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>{{ form.name }}{{ form.name.errors }}
     <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>{{ form.email }}{{ form.email.errors }}
     {% endif %}
-    <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>{{ form.phone }}{{ form.phone.errors }}
-    {% if course %}
-    <label>{{ form.program.label }}</label>{{ form.program }}{{ form.program.errors }}
-    {% else %}<input type="hidden" name="program" value="other">{% endif %}
-    <label for="{{ form.tool_note.id_for_label }}">{% if course %}Which tool? (optional, e.g. AEP only){% else %}Which platform should we add?{% endif %}</label>{{ form.tool_note }}{{ form.tool_note.errors }}
-    <button type="submit" class="cx-btn">Request details</button>
+    {% if not course %}
+    <input type="hidden" name="program" value="other">
+    <label for="{{ form.tool_note.id_for_label }}">Which platform should we add? (optional)</label>{{ form.tool_note }}{{ form.tool_note.errors }}
+    {% endif %}
+    <details class="cx-more"{% if form.errors and course %} open{% endif %}>
+      <summary>Add details (optional)</summary>
+      {% if not user.is_authenticated %}<label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>{{ form.name }}{{ form.name.errors }}{% endif %}
+      <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>{{ form.phone }}{{ form.phone.errors }}
+      {% if course %}
+      <label>{{ form.program.label }}</label>{{ form.program }}{{ form.program.errors }}
+      <label for="{{ form.tool_note.id_for_label }}">Which tool? (optional, e.g. AEP only)</label>{{ form.tool_note }}{{ form.tool_note.errors }}
+      {% endif %}
+    </details>
+    <button type="submit" class="cx-btn">{% if user.is_authenticated %}Send my request{% else %}Email me the details{% endif %}</button>
     <p class="cx-note">No payment now. We'll email you the full details. We only use your details for this.</p>
   </form>
 </div>

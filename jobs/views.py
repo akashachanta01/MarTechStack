@@ -2294,7 +2294,7 @@ def _course_interest(request, course, template, ctx):
         if form.is_valid():
             d = form.cleaned_data
             src = (request.POST.get("src") or "")[:300]
-            ci = CourseInterest.objects.create(user=user, course=course, name=d["name"], email=d["email"],
+            ci = CourseInterest.objects.create(user=user, course=course, name=d["name"] or d["email"].split("@")[0], email=d["email"],
                                                phone=d.get("phone", ""), program=d["program"],
                                                source_page=src, tool_note=d.get("tool_note", ""))
             try:

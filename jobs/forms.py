@@ -128,10 +128,18 @@ class SponsorInquiryForm(HoneypotMixin, forms.Form):
 
 
 class CourseInterestForm(HoneypotMixin, forms.Form):
-    name = forms.CharField(label="Your name", max_length=200)
-    email = forms.EmailField(label="Email")
+    name = forms.CharField(label="Your name (optional)", max_length=200, required=False)
+    email = forms.EmailField(label="Your email")
     phone = forms.CharField(label="Phone / WhatsApp (optional)", max_length=30, required=False)
     program = forms.ChoiceField(choices=[("course", "This course"), ("cheaper", "A single tool at a lower price"),
                                          ("other", "A course on another platform")],
-                                initial="course", widget=forms.RadioSelect, label="What are you interested in?")
+                                initial="course", required=False, widget=forms.RadioSelect,
+                                label="What are you interested in? (optional)")
+
+    def clean_program(self):
+        return self.cleaned_data.get("program") or "course"
+
+    def clean_name(self):
+        # Email-only requests: use the part before @ so admin rows stay readable.
+        return (self.cleaned_data.get("name") or "").strip()
     tool_note = forms.CharField(label="Which tool or platform? (optional)", max_length=200, required=False)
