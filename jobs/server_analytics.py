@@ -50,6 +50,52 @@ def is_bot(request):
     return not ua or bool(BOT_RE.search(ua))
 
 
+# Order matters: first match wins. (name shown on dashboards, pattern)
+AI_ASSISTANTS = [  # an AI fetching the page right now because a person asked it something
+    ("ChatGPT", r"ChatGPT-User"), ("Claude", r"Claude-User"), ("Perplexity", r"Perplexity-User"),
+    ("Mistral", r"MistralAI-User"), ("DuckDuckGo AI", r"DuckAssistBot"), ("Gemini", r"Google-Agent|Gemini"),
+    ("Meta AI", r"meta-externalfetcher"),
+]
+AI_CRAWLERS = [  # AI companies collecting pages to train models or power AI search
+    ("OpenAI (GPTBot)", r"GPTBot"), ("OpenAI search", r"OAI-SearchBot"),
+    ("Anthropic (ClaudeBot)", r"ClaudeBot|Claude-SearchBot|anthropic-ai"),
+    ("Perplexity", r"PerplexityBot"), ("Google AI (Gemini)", r"Google-Extended|GoogleOther"),
+    ("ByteDance", r"Bytespider"), ("Common Crawl", r"CCBot"), ("Amazon", r"Amazonbot"),
+    ("Meta AI", r"meta-externalagent|FacebookBot"), ("Cohere", r"cohere-ai"), ("You.com", r"YouBot"),
+    ("Diffbot", r"Diffbot"), ("Timpi", r"Timpibot"), ("ImageSift", r"ImagesiftBot"),
+]
+SEARCH_ENGINES = [
+    ("Google", r"Googlebot|Google-InspectionTool|Storebot-Google|AdsBot-Google"), ("Bing", r"bingbot|BingPreview"),
+    ("Apple", r"Applebot"), ("DuckDuckGo", r"DuckDuckBot"), ("Yandex", r"YandexBot"), ("Baidu", r"Baiduspider"),
+    ("Yahoo", r"Slurp"), ("Seznam", r"SeznamBot"), ("Naver", r"Yeti"),
+]
+_COMPILED_GROUPS = [(kind, [(name, re.compile(rx, re.I)) for name, rx in group]) for kind, group in (
+    ("ai_assistant", AI_ASSISTANTS), ("ai_crawler", AI_CRAWLERS), ("search_engine", SEARCH_ENGINES))]
+_MODERN_BROWSER = re.compile(r"Chrome/|Firefox/|Safari/|Edg/", re.I)
+
+
+def classify(request):
+    """(visitor_type, agent) for a page request. visitor_type is one of:
+    person, ai_assistant, ai_crawler, search_engine, other_bot, suspected_bot.
+    Self-identified agents are matched by name; 'suspected_bot' is a client that
+    claims to be a modern browser but omits headers every modern browser sends
+    (Sec-Fetch-Mode, Accept-Language) — typical of scrapers faking a browser."""
+    ua = request.META.get("HTTP_USER_AGENT", "")
+    for kind, group in _COMPILED_GROUPS:
+        for name, rx in group:
+            if rx.search(ua):
+                return kind, name
+    if not ua or BOT_RE.search(ua):
+        return "other_bot", (ua.split("/")[0][:40] or "No user agent")
+    # Chrome/Edge/Firefox always send Sec-Fetch-Mode (older Safari doesn't), and
+    # every real browser sends Accept-Language.
+    needs_sec_fetch = bool(re.search(r"Chrome/|Firefox/", ua))
+    if _MODERN_BROWSER.search(ua) and (not request.META.get("HTTP_ACCEPT_LANGUAGE")
+                                       or (needs_sec_fetch and not request.META.get("HTTP_SEC_FETCH_MODE"))):
+        return "suspected_bot", "Fake browser (missing browser headers)"
+    return "person", ""
+
+
 def distinct_id_for(request):
     """Same id as the browser when possible, so server and browser events join up:
     signed-in user id, else the PostHog cookie's id, else a daily anonymous hash."""
@@ -155,7 +201,9 @@ def _send(batch):
 
 
 class ServerPageviewMiddleware:
-    """One `server_pageview` per real HTML page served (not bots, assets, APIs or staff)."""
+    """One `server_pageview` per HTML page served (not assets, APIs or staff), labelled
+    with visitor_type so people, AI assistants, AI crawlers, search engines and
+    scrapers can be counted separately instead of being thrown away."""
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -165,9 +213,14 @@ class ServerPageviewMiddleware:
         try:
             if (request.method == "GET" and response.status_code == 200
                     and "text/html" in response.get("Content-Type", "")
-                    and not request.path.startswith(SKIP_PREFIXES)
-                    and not is_bot(request)):
-                capture("server_pageview", request)
+                    and not request.path.startswith(SKIP_PREFIXES)):
+                kind, agent = classify(request)
+                if kind == "person":
+                    capture("server_pageview", request, {"visitor_type": kind})
+                else:
+                    # One shared id per agent; never creates person profiles.
+                    capture("server_pageview", request, {"visitor_type": kind, "agent": agent},
+                            distinct_id="agent:%s:%s" % (kind, agent))
             elif (request.method == "POST" and response.status_code == 200
                     and request.path.rstrip("/") == "/tools/api/ats-match"):
                 capture("server_resume_check", request)
