@@ -2371,3 +2371,94 @@ class ScannerJobPickerTests(TestCase):
         r = self.client.get(f"/tools/resume-keyword-scanner/?job={self.live.id}")
         self.assertNotContains(r, 'id="rm-pick"')
         self.assertContains(r, "Checking against")
+
+
+class ServerAnalyticsTests(TestCase):
+    """Server-side PostHog: counts real page views and conversions even when the
+    browser blocks analytics; skips bots, assets, APIs and staff; never blocks a page."""
+    def setUp(self):
+        cache.clear()
+        from jobs import server_analytics as sa
+        self.sa = sa
+        while not sa._q.empty():
+            sa._q.get_nowait()
+        self.p1 = mock.patch.object(sa, "enabled", return_value=True)
+        self.p2 = mock.patch.object(sa, "_ensure_worker")
+        self.p1.start(); self.p2.start()
+        self.job = make_job()
+
+    def tearDown(self):
+        self.p1.stop(); self.p2.stop()
+
+    def events(self):
+        out = []
+        while not self.sa._q.empty():
+            out.append(self.sa._q.get_nowait())
+        return out
+
+    UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Safari/605.1.15"
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._key = mock.patch("django.conf.settings.POSTHOG_KEY", "phc_test")
+        cls._key.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._key.stop()
+        super().tearDownClass()
+
+    def test_real_visitor_pageview_is_counted(self):
+        self.client.get("/?utm_source=linkedin", HTTP_USER_AGENT=self.UA, HTTP_REFERER="https://www.linkedin.com/",
+                        HTTP_X_FORWARDED_FOR="81.2.69.142")
+        ev = [e for e in self.events() if e["event"] == "server_pageview"]
+        self.assertEqual(len(ev), 1)
+        p = ev[0]["properties"]
+        self.assertEqual(p["$pathname"], "/")
+        self.assertEqual(p["utm_source"], "linkedin")
+        self.assertEqual(p["$ip"], "81.2.69.142")
+        self.assertEqual(p["source"], "server")
+        self.assertFalse(p["$process_person_profile"])
+        self.assertTrue(ev[0]["distinct_id"].startswith("srv_"))
+
+    def test_bots_assets_and_staff_are_skipped(self):
+        self.client.get("/", HTTP_USER_AGENT="Googlebot/2.1 (+http://www.google.com/bot.html)")
+        self.client.get("/", HTTP_USER_AGENT="")
+        self.client.get("/robots.txt", HTTP_USER_AGENT=self.UA)
+        self.client.get("/does-not-exist-xyz/", HTTP_USER_AGENT=self.UA)
+        staff = get_user_model().objects.create_user("boss", "boss@x.test", "pw12345!x", is_staff=True)
+        self.client.force_login(staff)
+        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.assertEqual([e for e in self.events() if e["event"] == "server_pageview"], [])
+
+    def test_signed_in_and_cookie_ids_match_the_browser(self):
+        import json as _json
+        from urllib.parse import quote
+        from django.conf import settings
+        self.client.cookies["ph_%s_posthog" % settings.POSTHOG_KEY] = quote(_json.dumps({"distinct_id": "abc-123"}))
+        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.assertEqual(self.events()[0]["distinct_id"], "abc-123")
+        u = get_user_model().objects.create_user("lee", "lee@x.test", "pw12345!x")
+        self.client.force_login(u)
+        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        ev = self.events()[0]
+        self.assertEqual(ev["distinct_id"], str(u.id))
+        self.assertNotIn("$process_person_profile", ev["properties"])
+
+    def test_course_request_and_sponsor_inquiry_events(self):
+        self.client.post("/courses/", {"email": "pat@example.com", "program": "other", "tool_note": "Braze"},
+                         HTTP_USER_AGENT=self.UA)
+        names = [e["event"] for e in self.events()]
+        self.assertIn("server_course_request", names)
+
+    def test_send_failure_never_raises(self):
+        with mock.patch("requests.post", side_effect=Exception("down")):
+            self.sa._send([{"event": "x", "distinct_id": "y", "properties": {}}])
+
+    def test_disabled_without_key(self):
+        self.p1.stop()
+        with self.settings(POSTHOG_KEY=""):
+            self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.p1.start()
+        self.assertEqual(self.events(), [])

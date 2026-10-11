@@ -1839,6 +1839,8 @@ def confirm_subscription(request, token):
         reactivated = True
     pending.delete()
     if created or reactivated:
+        from .server_analytics import capture
+        capture("server_subscribed", request, {"reactivated": reactivated})
         send_welcome_email(email)
         ua = request.META.get('HTTP_USER_AGENT', 'Unknown')
         xff = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -2104,6 +2106,8 @@ def sponsor(request):
             d = form.cleaned_data
             inq = SponsorInquiry.objects.create(company=d["company"], name=d["name"], email=d["email"],
                                                 option=d["option"], message=d.get("message", ""))
+            from .server_analytics import capture
+            capture("server_sponsor_inquiry", request, {"option": inq.option})
             body = (f"Company: {inq.company}\nName: {inq.name}\nEmail: {inq.email}\n"
                     f"Interested in: {inq.get_option_display()}\n\n{inq.message}")
             try:
@@ -2297,6 +2301,8 @@ def _course_interest(request, course, template, ctx):
             ci = CourseInterest.objects.create(user=user, course=course, name=d["name"] or d["email"].split("@")[0], email=d["email"],
                                                phone=d.get("phone", ""), program=d["program"],
                                                source_page=src, tool_note=d.get("tool_note", ""))
+            from .server_analytics import capture
+            capture("server_course_request", request, {"course": course.slug if course else "", "program": d["program"]})
             try:
                 EmailMultiAlternatives(
                     subject=f"Course interest: {course.title if course else 'another platform'}",

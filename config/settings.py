@@ -101,6 +101,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    # Server-side PostHog: counts visitors whose browsers block analytics scripts
+    'jobs.server_analytics.ServerPageviewMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -108,6 +110,8 @@ ROOT_URLCONF = 'config.urls'
 # PostHog product analytics (public project key; empty = disabled)
 POSTHOG_KEY = os.environ.get('POSTHOG_KEY', '')
 POSTHOG_HOST = os.environ.get('POSTHOG_HOST', 'https://us.i.posthog.com')
+# Server-side events go straight to PostHog (no ad blockers on the server).
+POSTHOG_SERVER_HOST = os.environ.get('POSTHOG_SERVER_HOST', 'https://us.i.posthog.com')
 
 TEMPLATES = [
     {

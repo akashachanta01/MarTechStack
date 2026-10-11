@@ -13,5 +13,8 @@ def on_user_signed_up(request, user, **kwargs):
     mail hiccup never breaks the signup."""
     if request is not None and hasattr(request, 'session'):
         request.session['mtj_signed_up'] = 'google' if kwargs.get('sociallogin') else 'email'
+    from jobs.server_analytics import capture
+    capture("server_signup", request, {"method": 'google' if kwargs.get('sociallogin') else 'email'},
+            distinct_id=str(user.id))
     send_account_welcome_email(user)
     send_admin_new_user_alert(user)
