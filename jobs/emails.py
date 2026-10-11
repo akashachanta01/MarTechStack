@@ -179,7 +179,7 @@ def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
     Send admin alert synchronously.
     """
     try:
-        admin_email = getattr(settings, 'CONTACT_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com')
+        admin_email = getattr(settings, 'CONTACT_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io')
         subject = f"🔔 New Subscriber: {subscriber_email}"
         body = f"""
 New subscriber: {subscriber_email}

@@ -79,7 +79,7 @@ Never gate job seekers — keep browsing free always.
 - NEVER push to GitHub or deploy without explicit approval ("push and deploy" / "push and merge"). Discuss and agree on the approach first. Commit locally is fine.
 - "Just plan / don't implement" means plan only — no code changes.
 - Always full E2E testing before asking to push (see Testing Rule + the `e2e-test` skill). Report results with the approval request.
-- Email: use martechjobs@gmail.com everywhere. NEVER use achantaa9@gmail.com.
+- Email: use hello@martechjobs.io (Namecheap Private Email, set up Oct 11 2026) everywhere; martechjobs@gmail.com was deleted. NEVER use achantaa9@gmail.com.
 - Bing Webmaster verification is parked — don't bring it up.
 - Founder is non-technical: explain in plain English, give click-by-click steps for any dashboard work.
 - Dashboards/reports: show human-readable names, never URL paths ("/job/...").
@@ -90,7 +90,7 @@ Never gate job seekers — keep browsing free always.
 - Render workspace `tea-d4qusbbuibrs739obvl0`. Web service `srv-d4t3hkeuk2gs73ehrpl0` (autoDeploy OFF → trigger_deploy after merge). Cron `crn-d55jjn75r7bs73f34og0` runs `run_daily_tasks` 09:00 UTC (auto-deploys). Postgres `dpg-d4t3idchg0os73cklvo0-a`. Redis cache `red-d8ms8m3tqb8s73cgjgag`. Production Python 3.9 (avoid 3.10+ syntax).
 - GitHub `akashachanta01/martechstack`, dev branch `claude/vibrant-bell-g4cbjo`, squash-merge PRs; on merge conflicts keep branch version (`git merge -X ours origin/main`).
 - Email: Resend SMTP from alerts@martechjobs.io (SPF/DKIM/DMARC set on Namecheap). Resend open/click tracking OFF by design — email clicks are measured via UTM tags added in `jobs/emails.py::_add_utm`.
-- Analytics: PostHog project 623314 (US cloud, key in Render env `POSTHOG_KEY`), dashboard "MarTechJobs — Where to focus" id 2124800. GA4 via GTM-P5B8FN4C. Founder HQ at /staff/ shows real people (resume checks, users). See `analytics` skill.
+- Analytics: PostHog project 657916 (US cloud, owner akashachanta01@gmail.com, key in Render env `POSTHOG_KEY`; moved Oct 11 2026 — old project 623314 is unreachable), dashboard "MarTechJobs — Where to focus" id 2196032. Managed proxy t.martechjobs.io pending (e.martechjobs.io is stuck in the old org). GA4 via GTM-P5B8FN4C. Founder HQ at /staff/ shows real people (resume checks, users). See `analytics` skill.
 
 ## Product State (Sept 2026)
 - Resume Match (the monetization bet) — ALL 4 phases built Sept 2026:
