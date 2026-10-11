@@ -2033,7 +2033,9 @@ def review_action(request, job_id, action):
     if action == "approve": 
         if job.screening_status != "approved":
             job.screening_status = "approved"; job.is_active = True; job.screened_at = timezone.now(); job.save()
-            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4'); send_job_alert(job)
+            # No per-job email blast: new jobs reach subscribers in the Monday weekly email
+            # (per-approval blasts broke Resend's quota and caused spam complaints).
+            cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4')
     elif action == "reject": job.screening_status = "rejected"; job.is_active = False; job.save()
     elif action == "pending": job.screening_status = "pending"; job.save()
     # Return to the review queue the staffer came from, but only if the Referer

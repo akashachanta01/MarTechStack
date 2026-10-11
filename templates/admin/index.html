@@ -1,0 +1,101 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin admin_dash %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard mtj-today{% endblock %}
+{% block content_title %}Today{% endblock %}
+{% block breadcrumbs %}<ol class="breadcrumb"><li class="breadcrumb-item">Overview of martechjobs.io</li></ol>{% endblock %}
+
+{% block content %}
+{% admin_kpis as k %}
+<div class="mtj-wrap">
+
+  {% if k.attention %}
+  <div class="mtj-attn">
+    <div class="mtj-attn-t"><i class="fas fa-bell"></i> Needs your attention</div>
+    <div class="mtj-attn-row">
+      {% if k.pending_review %}<a class="mtj-pill warn" href="/staff/review/">{{ k.pending_review }} job{{ k.pending_review|pluralize }} waiting for review</a>{% endif %}
+      {% if k.course_open %}<a class="mtj-pill hot" href="{% url 'admin:jobs_courseinterest_changelist' %}?handled__exact=0">{{ k.course_open }} new course request{{ k.course_open|pluralize }}</a>{% endif %}
+      {% if k.sponsor_open %}<a class="mtj-pill hot" href="{% url 'admin:jobs_sponsorinquiry_changelist' %}?handled__exact=0">{{ k.sponsor_open }} sponsor enquir{{ k.sponsor_open|pluralize:"y,ies" }}</a>{% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="mtj-attn ok"><i class="fas fa-check-circle"></i> All caught up — nothing waiting for you.</div>
+  {% endif %}
+
+  <div class="mtj-kpis">
+    <a class="mtj-kpi" href="{% url 'admin:jobs_activejob_changelist' %}"><span>Live jobs</span><b>{{ k.live_jobs }}</b><small>{{ k.live_companies }} companies · +{{ k.jobs_added_week }} this week</small></a>
+    <a class="mtj-kpi" href="{% url 'admin:auth_user_changelist' %}"><span>Accounts</span><b>{{ k.accounts }}</b><small>+{{ k.accounts_week }} this week · +{{ k.accounts_today }} last 24h</small></a>
+    <a class="mtj-kpi" href="{% url 'admin:jobs_subscriber_changelist' %}?is_active__exact=1"><span>Newsletter subscribers</span><b>{{ k.subscribers }}</b><small>+{{ k.subscribers_week }} this week</small></a>
+    <a class="mtj-kpi" href="{% url 'admin:jobs_courseinterest_changelist' %}"><span>Course requests</span><b>{{ k.course_total }}</b><small>{{ k.course_open }} not handled yet</small></a>
+    <a class="mtj-kpi" href="/staff/"><span>Saved resumes</span><b>{{ k.resumes }}</b><small>{{ k.waitlist }} on Pro waitlist · {{ k.alerts }} job alerts</small></a>
+    <a class="mtj-kpi" href="{% url 'admin:jobs_companysource_changelist' %}"><span>Company job boards</span><b>{{ k.sources_enabled }}</b><small>{{ k.sources_quiet }} with no new jobs for 7+ days</small></a>
+  </div>
+
+  <div class="mtj-grid">
+    <div class="mtj-card">
+      <div class="mtj-card-h"><span>Newest people</span><a href="{% url 'admin:auth_user_changelist' %}">All accounts →</a></div>
+      <table class="mtj-t">
+        <tr><th>Email</th><th>Name</th><th>Joined</th></tr>
+        {% for u in k.recent_people %}
+        <tr><td><a href="{% url 'admin:auth_user_change' u.pk %}">{{ u.email }}</a></td><td>{{ u.get_full_name|default:"—" }}</td><td>{{ u.date_joined|timesince }} ago</td></tr>
+        {% empty %}<tr><td colspan="3" class="mtj-empty">No accounts yet.</td></tr>{% endfor %}
+      </table>
+    </div>
+    <div class="mtj-card">
+      <div class="mtj-card-h"><span>Open course requests</span><a href="{% url 'admin:jobs_courseinterest_changelist' %}">All →</a></div>
+      <table class="mtj-t">
+        <tr><th>Who</th><th>Course</th><th>When</th></tr>
+        {% for c in k.recent_courses %}
+        <tr><td><a href="{% url 'admin:jobs_courseinterest_change' c.pk %}">{{ c.name }}</a><br><small>{{ c.email }}</small></td><td>{{ c.course.title|default:c.get_program_display }}</td><td>{{ c.created_at|timesince }} ago</td></tr>
+        {% empty %}<tr><td colspan="3" class="mtj-empty">No open requests.</td></tr>{% endfor %}
+      </table>
+      {% if k.recent_sponsors %}
+      <div class="mtj-card-h mtj-sub"><span>Open sponsor enquiries</span><a href="{% url 'admin:jobs_sponsorinquiry_changelist' %}">All →</a></div>
+      <table class="mtj-t">
+        {% for s in k.recent_sponsors %}
+        <tr><td><a href="{% url 'admin:jobs_sponsorinquiry_change' s.pk %}">{{ s.company }}</a><br><small>{{ s.email }}</small></td><td>{{ s.get_option_display }}</td><td>{{ s.created_at|timesince }} ago</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2 class="mtj-h">Go to</h2>
+  <div class="mtj-sections">
+    <div class="mtj-sec"><h3><i class="fas fa-users"></i> People</h3>
+      <a href="{% url 'admin:auth_user_changelist' %}">Accounts</a>
+      <a href="{% url 'admin:jobs_subscriber_changelist' %}">Newsletter subscribers</a>
+      <a href="{% url 'admin:jobs_savedsearch_changelist' %}">Job alerts</a>
+      <a href="{% url 'admin:accounts_prowaitlistentry_changelist' %}">Pro waitlist</a>
+      <a href="/staff/">Founder HQ (who's engaged)</a>
+    </div>
+    <div class="mtj-sec"><h3><i class="fas fa-briefcase"></i> Jobs</h3>
+      <a href="/staff/review/">Review queue</a>
+      <a href="{% url 'admin:jobs_activejob_changelist' %}">Live jobs</a>
+      <a href="{% url 'admin:jobs_job_changelist' %}">All jobs (incl. pending &amp; closed)</a>
+      <a href="{% url 'admin:jobs_usersubmission_changelist' %}">Jobs posted by employers</a>
+      <a href="{% url 'admin:jobs_companysource_changelist' %}">Company job boards we pull from</a>
+      <a href="{% url 'admin:jobs_blockrule_changelist' %}">Block rules</a>
+    </div>
+    <div class="mtj-sec"><h3><i class="fas fa-dollar-sign"></i> Money</h3>
+      <a href="{% url 'admin:jobs_courseinterest_changelist' %}">Course requests</a>
+      <a href="{% url 'admin:jobs_course_changelist' %}">Courses (prices, discount)</a>
+      <a href="{% url 'admin:jobs_sponsorinquiry_changelist' %}">Sponsor enquiries</a>
+    </div>
+    <div class="mtj-sec"><h3><i class="fas fa-pen-nib"></i> Content</h3>
+      <a href="{% url 'admin:jobs_blogpost_changelist' %}">Blog posts</a>
+      <a href="{% url 'admin:jobs_interviewguide_changelist' %}">Interview guides</a>
+      <a href="{% url 'admin:jobs_certificationguide_changelist' %}">Certification guides</a>
+      <a href="{% url 'admin:jobs_tool_changelist' %}">Platforms (tools)</a>
+      <a href="{% url 'admin:jobs_category_changelist' %}">Categories</a>
+    </div>
+    <div class="mtj-sec"><h3><i class="fas fa-chart-line"></i> Numbers</h3>
+      <a href="https://us.posthog.com/project/657916/dashboard/2196032" target="_blank" rel="noopener">Analytics dashboards (PostHog) ↗</a>
+      <a href="/staff/">Founder HQ</a>
+      <a href="/martech-job-market-statistics/" target="_blank">Public stats page ↗</a>
+      <a href="/" target="_blank">View the website ↗</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

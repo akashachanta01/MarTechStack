@@ -2462,3 +2462,73 @@ class ServerAnalyticsTests(TestCase):
             self.client.get("/", HTTP_USER_AGENT=self.UA)
         self.p1.start()
         self.assertEqual(self.events(), [])
+
+
+class AdminTodayPageTests(TestCase):
+    """Admin home is a 'Today' overview: what needs attention, key numbers, and
+    one-click links to every section. Staff only."""
+    def setUp(self):
+        cache.clear()
+        self.job = make_job()
+        self.staff = get_user_model().objects.create_user("boss", "boss@x.test", "pw12345!x", is_staff=True, is_superuser=True)
+
+    def test_today_page_shows_numbers_and_sections(self):
+        from jobs.models import CourseInterest
+        CourseInterest.objects.create(name="Pat", email="pat@example.com", program="course")
+        self.client.force_login(self.staff)
+        r = self.client.get("/admin/")
+        self.assertEqual(r.status_code, 200)
+        for text in ("Needs your attention", "1 new course request", "Live jobs", "Newest people",
+                     "Open course requests", "Pat", "Review queue", "Sponsor enquiries", "admin_custom/admin.css"):
+            self.assertContains(r, text)
+
+    def test_every_admin_list_page_loads(self):
+        from django.contrib import admin as dj_admin
+        from django.urls import reverse
+        self.client.force_login(self.staff)
+        for model in dj_admin.site._registry:
+            url = reverse("admin:%s_%s_changelist" % (model._meta.app_label, model._meta.model_name))
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+
+    def test_admin_requires_staff(self):
+        r = self.client.get("/admin/")
+        self.assertEqual(r.status_code, 302)
+
+
+class EmailBatchLimitTests(TestCase):
+    """Resend rejects >50 BCC recipients; approving a job must not blast the list."""
+    def test_bcc_chunks_stay_under_resend_limit(self):
+        from jobs import emails
+        self.assertLessEqual(emails.BCC_CHUNK, 50)
+        sent = []
+        with mock.patch.object(emails, "get_digest_recipients", return_value=[f"u{i}@x.test" for i in range(130)]), \
+             mock.patch.object(emails, "send_html_email", side_effect=lambda **kw: sent.append(len(kw["bcc_list"]))), \
+             mock.patch.object(emails.threading, "Thread") as T:
+            emails.send_job_alert(make_job())
+            T.call_args.kwargs["target"]()
+        self.assertEqual(sum(sent), 130)
+        self.assertTrue(all(n <= 50 for n in sent))
+
+    def test_review_approve_does_not_email_everyone(self):
+        staff = get_user_model().objects.create_user("rev", "rev@x.test", "pw12345!x", is_staff=True)
+        job = make_job(screening_status="pending")
+        from jobs.models import Job
+        Job.objects.filter(pk=job.pk).update(screening_status="pending", is_active=False)
+        self.client.force_login(staff)
+        with mock.patch("jobs.emails.send_html_email") as send:
+            self.client.post(f"/staff/review/{job.pk}/approve/")
+        send.assert_not_called()
+        self.assertTrue(Job.objects.get(pk=job.pk).is_active)
+
+
+class BlogHiringLinksTests(TestCase):
+    """Blog posts link to live platform job pages (blog -> category pages)."""
+    def test_post_shows_platform_links(self):
+        from jobs.models import BlogPost, Tool, Category
+        cache.clear()
+        t = Tool.objects.create(name="Marketo", slug="marketo", category=Category.objects.create(name="MT", slug="mt"))
+        j = make_job(); j.tools.add(t)
+        BlogPost.objects.create(title="Guide", slug="guide", excerpt="x", content="<p>Body</p>")
+        r = self.client.get("/blog/guide/")
+        self.assertContains(r, "Hiring now, by platform")
+        self.assertContains(r, 'href="/jobs/marketo/"')

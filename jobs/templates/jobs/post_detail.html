@@ -121,6 +121,14 @@
   .post-toc-card a.active { color: var(--amber); border-left-color: var(--amber); font-weight: 700; }
   .post-content h2 { scroll-margin-top: 84px; }
 
+  .post-hiring { margin: 2.5rem 0 0; padding: 22px 24px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); }
+  .post-hiring h2 { margin: 0 0 .3rem !important; font-size: 1.35rem !important; }
+  .post-hiring p { margin: 0 0 .8rem; font-size: 14px; }
+  .post-hiring ul { list-style: none; padding: 0 !important; margin: 0 0 .9rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+  .post-hiring li { margin: 0 !important; font-size: 15px; }
+  .post-hiring li span { color: var(--ink3); font-size: 13px; }
+  .post-hiring-all { font-weight: 700; }
+  @media (max-width: 600px) { .post-hiring ul { grid-template-columns: 1fr; } }
   .post-related { padding: 60px 0; border-top: 1px solid var(--rule); background: var(--paper2); }
   .post-related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 28px; }
   @media(max-width:768px){ .post-related-grid { grid-template-columns: 1fr; } }
@@ -205,6 +213,14 @@
 
       <div class="post-content" itemprop="articleBody">
         {{ post.content|safe }}
+        {% if popular_tech_stacks %}
+        <div class="post-hiring">
+          <h2>Hiring now, by platform</h2>
+          <p>Live MarTech roles on MarTechJobs, updated daily.</p>
+          <ul>{% for s in popular_tech_stacks|slice:":8" %}<li><a href="{% url 'tool_detail' s.slug %}">{{ s.name }} jobs</a> <span>{{ s.count }} open</span></li>{% endfor %}</ul>
+          <a class="post-hiring-all" href="{% url 'job_list' %}">Browse all MarTech jobs →</a>
+        </div>
+        {% endif %}
       </div>
 
       <aside class="post-sidebar">
