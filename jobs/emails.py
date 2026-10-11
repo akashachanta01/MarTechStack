@@ -192,6 +192,11 @@ Total: {Subscriber.objects.count()}
     except: 
         pass
 
+# Resend's hard limit is 50 BCC recipients per email (Oct 2026: batches of 90
+# were rejected, then the failed retries used up the daily quota).
+BCC_CHUNK = 49
+
+
 def send_job_alert(job):
     """
     Sends a Single Job Alert to ALL subscribers.
@@ -207,8 +212,8 @@ def send_job_alert(job):
 
         print(f"📧 Sending SINGLE alert to {len(subscribers)} subscribers...")
         
-        # Gmail limits to 100 BCCs per email. We chunk them into groups of 90.
-        chunk_size = 90
+        # Resend rejects more than 50 BCC recipients per email.
+        chunk_size = BCC_CHUNK
         for i in range(0, len(subscribers), chunk_size):
             chunk = subscribers[i:i + chunk_size]
             send_html_email(
@@ -232,7 +237,7 @@ def send_digest_alert(jobs):
         count = len(jobs)
         print(f"📧 Sending DIGEST alert ({count} jobs) to {len(subscribers)} subscribers...")
         
-        chunk_size = 90
+        chunk_size = BCC_CHUNK
         for i in range(0, len(subscribers), chunk_size):
             chunk = subscribers[i:i + chunk_size]
             send_html_email(

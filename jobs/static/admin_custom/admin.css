@@ -1,0 +1,99 @@
+/* MarTechJobs admin — clean, modern skin on top of Jazzmin/AdminLTE. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --mtj-brand: #e0692a;
+  --mtj-brand-dark: #bf5420;
+  --mtj-ink: #1c1917;
+  --mtj-ink2: #44403c;
+  --mtj-ink3: #78716c;
+  --mtj-bg: #f6f5f3;
+  --mtj-card: #ffffff;
+  --mtj-line: #e7e5e4;
+  --mtj-radius: 12px;
+}
+
+body, .content-wrapper, .main-footer, .brand-link, .nav-link, .btn, input, select, textarea, table {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
+}
+body { color: var(--mtj-ink); -webkit-font-smoothing: antialiased; }
+.content-wrapper { background: var(--mtj-bg) !important; }
+
+/* Top bar */
+.main-header.navbar { background: #fff !important; border-bottom: 1px solid var(--mtj-line) !important; box-shadow: none; }
+.main-header .nav-link { color: var(--mtj-ink2) !important; font-weight: 500; font-size: 14px; }
+.main-header .nav-link:hover { color: var(--mtj-brand) !important; }
+
+/* Sidebar */
+.main-sidebar { background: #fff !important; border-right: 1px solid var(--mtj-line); box-shadow: none !important; }
+.main-sidebar .brand-link { border-bottom: 1px solid var(--mtj-line) !important; color: var(--mtj-ink) !important; font-weight: 800; letter-spacing: -.01em; }
+.main-sidebar .brand-link .brand-image { box-shadow: none; }
+.sidebar .nav-header { color: var(--mtj-ink3) !important; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding-top: 18px; }
+.sidebar .nav-link { color: var(--mtj-ink2) !important; border-radius: 8px !important; font-size: 14px; margin: 1px 6px; }
+.sidebar .nav-link .nav-icon { color: var(--mtj-ink3); font-size: 14px !important; }
+.sidebar .nav-link:hover { background: #fdf3ec !important; color: var(--mtj-brand-dark) !important; }
+.sidebar .nav-link.active, .sidebar .nav-item.menu-open > .nav-link.active {
+  background: #fdf3ec !important; color: var(--mtj-brand-dark) !important; font-weight: 600; box-shadow: none !important;
+}
+.sidebar .nav-link.active .nav-icon { color: var(--mtj-brand) !important; }
+.user-panel { border-bottom: 1px solid var(--mtj-line) !important; }
+.user-panel .info a { color: var(--mtj-ink) !important; }
+
+/* Page header */
+.content-header h1 { font-weight: 800 !important; letter-spacing: -.02em; color: var(--mtj-ink); }
+.breadcrumb { background: transparent !important; font-size: 13px; }
+.breadcrumb a { color: var(--mtj-brand-dark); }
+
+/* Cards, tables, forms */
+.card { border: 1px solid var(--mtj-line) !important; border-radius: var(--mtj-radius) !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; }
+.card-header { background: #fff !important; border-bottom: 1px solid var(--mtj-line) !important; border-radius: var(--mtj-radius) var(--mtj-radius) 0 0 !important; }
+.table thead th, #result_list thead th { background: #fafaf9 !important; color: var(--mtj-ink3) !important; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--mtj-line) !important; }
+#result_list tbody tr:hover { background: #fffaf6 !important; }
+#result_list td, #result_list th { vertical-align: middle; }
+.form-control, .select2-container--default .select2-selection--single { border-radius: 8px !important; border-color: #d6d3d1 !important; }
+.form-control:focus { border-color: var(--mtj-brand) !important; box-shadow: 0 0 0 3px rgba(224,105,42,.15) !important; }
+.btn { border-radius: 8px !important; font-weight: 600; }
+.btn-primary, .btn-success { background: var(--mtj-brand) !important; border-color: var(--mtj-brand) !important; color: #fff !important; }
+.btn-primary:hover, .btn-success:hover { background: var(--mtj-brand-dark) !important; border-color: var(--mtj-brand-dark) !important; }
+.btn-info { background: #fff !important; border: 1px solid #d6d3d1 !important; color: var(--mtj-ink) !important; }
+.btn-info:hover { border-color: var(--mtj-brand) !important; color: var(--mtj-brand-dark) !important; }
+a { color: var(--mtj-brand-dark); }
+.page-item.active .page-link { background: var(--mtj-brand) !important; border-color: var(--mtj-brand) !important; }
+#changelist-filter, .changelist-filter { border-radius: var(--mtj-radius); }
+.alert { border-radius: 10px; }
+
+/* ---------- Today (admin home) ---------- */
+.mtj-today .content-header { padding-bottom: 0; }
+.mtj-wrap { max-width: 1280px; padding: 4px 4px 40px; }
+.mtj-attn { background: #fff7ed; border: 1px solid #fed7aa; border-radius: var(--mtj-radius); padding: 14px 18px; margin-bottom: 18px; }
+.mtj-attn.ok { background: #f0fdf4; border-color: #bbf7d0; color: #166534; font-weight: 600; }
+.mtj-attn-t { font-weight: 700; color: #9a3412; margin-bottom: 8px; }
+.mtj-attn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.mtj-pill { display: inline-block; padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 14px; text-decoration: none !important; }
+.mtj-pill.warn { background: #fff; border: 1px solid #fdba74; color: #9a3412 !important; }
+.mtj-pill.hot { background: var(--mtj-brand); color: #fff !important; }
+.mtj-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.mtj-kpi { display: flex; flex-direction: column; gap: 4px; background: #fff; border: 1px solid var(--mtj-line); border-radius: var(--mtj-radius); padding: 16px 18px; text-decoration: none !important; color: var(--mtj-ink) !important; transition: box-shadow .15s, transform .15s, border-color .15s; }
+.mtj-kpi:hover { border-color: #fdba74; box-shadow: 0 8px 24px rgba(0,0,0,.06); transform: translateY(-1px); }
+.mtj-kpi span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--mtj-ink3); }
+.mtj-kpi b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.mtj-kpi small { color: var(--mtj-ink3); font-size: 13px; }
+.mtj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.mtj-card { background: #fff; border: 1px solid var(--mtj-line); border-radius: var(--mtj-radius); padding: 6px 0 4px; overflow: hidden; }
+.mtj-card-h { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; font-weight: 700; }
+.mtj-card-h a { font-size: 13px; font-weight: 600; }
+.mtj-card-h.mtj-sub { border-top: 1px solid var(--mtj-line); margin-top: 6px; }
+.mtj-t { width: 100%; font-size: 14px; }
+.mtj-t th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--mtj-ink3); padding: 6px 18px; background: #fafaf9; }
+.mtj-t td { padding: 9px 18px; border-top: 1px solid #f5f5f4; vertical-align: top; }
+.mtj-t small { color: var(--mtj-ink3); }
+.mtj-empty { color: var(--mtj-ink3); text-align: center; padding: 18px !important; }
+.mtj-h { font-size: 18px; font-weight: 800; margin: 26px 0 12px; letter-spacing: -.01em; }
+.mtj-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.mtj-sec { background: #fff; border: 1px solid var(--mtj-line); border-radius: var(--mtj-radius); padding: 14px 16px; display: flex; flex-direction: column; }
+.mtj-sec h3 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+.mtj-sec h3 i { color: var(--mtj-brand); margin-right: 6px; }
+.mtj-sec a { padding: 6px 0; font-size: 14px; color: var(--mtj-ink2) !important; border-top: 1px solid #f5f5f4; text-decoration: none !important; }
+.mtj-sec a:first-of-type { border-top: 0; }
+.mtj-sec a:hover { color: var(--mtj-brand-dark) !important; }
+@media (max-width: 900px) { .mtj-grid { grid-template-columns: 1fr; } }

@@ -148,7 +148,7 @@ class BaseJobAdmin(admin.ModelAdmin):
         if qs.count() > 3: self.message_user(request, f"⚠️ Too many jobs for single alerts.", messages.ERROR); return
         for job in qs:
             if job.screening_status != 'approved':
-                job.screening_status = "approved"; job.is_active = True; job.save(); send_job_alert(job)
+                job.screening_status = "approved"; job.is_active = True; job.save()  # weekly email covers it
         self.message_user(request, f"✅ Approved {qs.count()} jobs.", messages.SUCCESS)
 
     @admin.action(description="❌ Reject")
@@ -196,6 +196,7 @@ class UserSubmissionAdmin(BaseJobAdmin):
 class SubscriberAdmin(admin.ModelAdmin):
     list_display = ("email", "is_active", "created_at", "unsubscribed_at")
     list_filter = ("is_active",)
+    date_hierarchy = "created_at"
     search_fields = ("email",)
     ordering = ("-created_at",)
 
@@ -228,6 +229,8 @@ class CertificationGuideAdmin(admin.ModelAdmin):
 class SponsorInquiryAdmin(admin.ModelAdmin):
     list_display = ("company", "name", "email", "option", "handled", "created_at")
     list_filter = ("handled", "option")
+    date_hierarchy = "created_at"
+    ordering = ("handled", "-created_at")
     list_editable = ("handled",)
     search_fields = ("company", "name", "email")
 
@@ -235,7 +238,10 @@ class SponsorInquiryAdmin(admin.ModelAdmin):
 @admin.register(CourseInterest)
 class CourseInterestAdmin(admin.ModelAdmin):
     list_display = ("name", "email", "user", "course", "program", "tool_note", "phone", "source_page", "handled", "created_at")
-    list_filter = ("handled", "program")
+    list_filter = ("handled", "course", "program")
+    date_hierarchy = "created_at"
+    ordering = ("handled", "-created_at")
+    list_select_related = ("course", "user")
     list_editable = ("handled",)
     search_fields = ("name", "email")
 
