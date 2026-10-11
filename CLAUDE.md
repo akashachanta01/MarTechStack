@@ -79,7 +79,7 @@ Never gate job seekers — keep browsing free always.
 - NEVER push to GitHub or deploy without explicit approval ("push and deploy" / "push and merge"). Discuss and agree on the approach first. Commit locally is fine.
 - "Just plan / don't implement" means plan only — no code changes.
 - Always full E2E testing before asking to push (see Testing Rule + the `e2e-test` skill). Report results with the approval request.
-- Email: use martechjobs@gmail.com everywhere. NEVER use achantaa9@gmail.com.
+- Email: use hello@martechjobs.io (Namecheap Private Email, set up Oct 11 2026) everywhere; martechjobs@gmail.com was deleted. NEVER use achantaa9@gmail.com.
 - Bing Webmaster verification is parked — don't bring it up.
 - Founder is non-technical: explain in plain English, give click-by-click steps for any dashboard work.
 - Dashboards/reports: show human-readable names, never URL paths ("/job/...").

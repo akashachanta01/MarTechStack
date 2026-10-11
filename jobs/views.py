@@ -2109,7 +2109,7 @@ def sponsor(request):
             try:
                 EmailMultiAlternatives(subject=f"Sponsor inquiry: {inq.company}", body=body,
                                        from_email=settings.DEFAULT_FROM_EMAIL,
-                                       to=[getattr(settings, "CONTACT_EMAIL", "martechjobs@gmail.com")],
+                                       to=[getattr(settings, "CONTACT_EMAIL", "hello@martechjobs.io")],
                                        reply_to=[inq.email]).send(fail_silently=True)
             except Exception:
                 pass
@@ -2130,7 +2130,7 @@ def contact(request):
             cleaned = form.cleaned_data
             reply_to = [cleaned["email"]] if cleaned.get("email") else None
             topic = cleaned.get("subject") or "General feedback"
-            recipient = getattr(settings, "CONTACT_EMAIL", "martechjobs@gmail.com")
+            recipient = getattr(settings, "CONTACT_EMAIL", "hello@martechjobs.io")
             body = cleaned["message"]
             if not reply_to:
                 body += "\n\n(No email provided — anonymous feedback.)"
@@ -2304,7 +2304,7 @@ def _course_interest(request, course, template, ctx):
                           f"Course: {course.title if course else '-'}\nInterested in: {ci.get_program_display()}\n"
                           f"Tool: {ci.tool_note}\nFrom: {src}"),
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[getattr(settings, "CONTACT_EMAIL", "")], reply_to=[ci.email]).send(fail_silently=True)
+                    to=[getattr(settings, "CONTACT_EMAIL", "hello@martechjobs.io")], reply_to=[ci.email]).send(fail_silently=True)
             except Exception:
                 pass
             messages.success(request, "Thanks — we'll email you the full details within two working days.")

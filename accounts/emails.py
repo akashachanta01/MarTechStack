@@ -25,7 +25,7 @@ def send_pro_waitlist_alert(user):
     Non-fatal."""
     try:
         admin_email = (getattr(settings, 'CONTACT_EMAIL', None)
-                       or getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com'))
+                       or getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io'))
         from .models import UserProfile
         total = UserProfile.objects.filter(pro_waitlist=True).count()
         body = (
@@ -50,7 +50,7 @@ def send_admin_new_user_alert(user):
     """Notify the founder that a new account was created. Non-fatal."""
     try:
         admin_email = (getattr(settings, 'CONTACT_EMAIL', None)
-                       or getattr(settings, 'EMAIL_HOST_USER', 'martechjobs@gmail.com'))
+                       or getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io'))
         body = (
             "New account created on MarTechJobs\n\n"
             f"Name:  {user.get_full_name() or '—'}\n"

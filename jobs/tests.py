@@ -387,6 +387,16 @@ class SecurityRegressionTests(TestCase):
         from django.conf import settings
         self.assertNotIn("gmail", settings.EMAIL_HOST)
 
+    def test_contact_email_is_business_mailbox(self):
+        """martechjobs@gmail.com was deleted (Oct 2026); nothing may route mail to it."""
+        import pathlib
+        from django.conf import settings
+        self.assertEqual(settings.CONTACT_EMAIL, "hello@martechjobs.io")
+        root = pathlib.Path(settings.BASE_DIR)
+        for f in list(root.glob("jobs/*.py")) + list(root.glob("accounts/*.py")) + [root / "config/settings.py"]:
+            if f.name != "tests.py":
+                self.assertNotIn("martechjobs@gmail.com", f.read_text(), f.name)
+
 
 # ---------------------------------------------------------------------------
 # Resume Match phase 1: saved resume, upload, ranking, more matches

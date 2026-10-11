@@ -207,7 +207,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MarTechJobs <alerts@martechjobs.io>').strip()
 # A real, monitored inbox for replies and admin notifications. Kept separate
 # from EMAIL_HOST_USER because the SMTP username ("resend") is not an address.
-CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'martechjobs@gmail.com').strip()
+CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'hello@martechjobs.io').strip()
 
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "").strip()
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "").strip()
