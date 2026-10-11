@@ -2397,6 +2397,7 @@ class ServerAnalyticsTests(TestCase):
         return out
 
     UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 Safari/605.1.15"
+    HDRS = {"HTTP_SEC_FETCH_MODE": "navigate", "HTTP_ACCEPT_LANGUAGE": "en-US,en;q=0.9"}
 
     @classmethod
     def setUpClass(cls):
@@ -2411,7 +2412,7 @@ class ServerAnalyticsTests(TestCase):
 
     def test_real_visitor_pageview_is_counted(self):
         self.client.get("/?utm_source=linkedin", HTTP_USER_AGENT=self.UA, HTTP_REFERER="https://www.linkedin.com/",
-                        HTTP_X_FORWARDED_FOR="81.2.69.142")
+                        HTTP_X_FORWARDED_FOR="81.2.69.142", **self.HDRS)
         ev = [e for e in self.events() if e["event"] == "server_pageview"]
         self.assertEqual(len(ev), 1)
         p = ev[0]["properties"]
@@ -2419,17 +2420,43 @@ class ServerAnalyticsTests(TestCase):
         self.assertEqual(p["utm_source"], "linkedin")
         self.assertEqual(p["$ip"], "81.2.69.142")
         self.assertEqual(p["source"], "server")
+        self.assertEqual(p["visitor_type"], "person")
         self.assertFalse(p["$process_person_profile"])
         self.assertTrue(ev[0]["distinct_id"].startswith("srv_"))
 
-    def test_bots_assets_and_staff_are_skipped(self):
-        self.client.get("/", HTTP_USER_AGENT="Googlebot/2.1 (+http://www.google.com/bot.html)")
-        self.client.get("/", HTTP_USER_AGENT="")
-        self.client.get("/robots.txt", HTTP_USER_AGENT=self.UA)
-        self.client.get("/does-not-exist-xyz/", HTTP_USER_AGENT=self.UA)
+    def test_agents_are_labelled_not_dropped(self):
+        cases = [
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ChatGPT-User/1.0; +https://openai.com/bot)", "ai_assistant", "ChatGPT"),
+            ("Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)", "ai_assistant", "Claude"),
+            ("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot", "ai_crawler", "OpenAI (GPTBot)"),
+            ("Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)", "ai_crawler", "Anthropic (ClaudeBot)"),
+            ("Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)", "ai_crawler", "Perplexity"),
+            ("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "search_engine", "Google"),
+            ("python-requests/2.32", "other_bot", "python-requests"),
+            # claims to be Chrome but sends none of Chrome's headers -> scraper
+            ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36",
+             "suspected_bot", "Fake browser (missing browser headers)"),
+        ]
+        for ua, kind, agent in cases:
+            self.client.get("/", HTTP_USER_AGENT=ua)
+            ev = [e for e in self.events() if e["event"] == "server_pageview"]
+            self.assertEqual(len(ev), 1, ua)
+            self.assertEqual(ev[0]["properties"]["visitor_type"], kind, ua)
+            self.assertEqual(ev[0]["properties"]["agent"], agent, ua)
+            self.assertTrue(ev[0]["distinct_id"].startswith("agent:"), ua)
+            self.assertFalse(ev[0]["properties"]["$process_person_profile"])
+
+    def test_old_iphone_safari_counts_as_person(self):
+        ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6 Mobile/15E148 Safari/604.1"
+        self.client.get("/", HTTP_USER_AGENT=ua, HTTP_ACCEPT_LANGUAGE="en-GB")
+        self.assertEqual(self.events()[0]["properties"]["visitor_type"], "person")
+
+    def test_assets_404s_and_staff_are_skipped(self):
+        self.client.get("/robots.txt", HTTP_USER_AGENT=self.UA, **self.HDRS)
+        self.client.get("/does-not-exist-xyz/", HTTP_USER_AGENT=self.UA, **self.HDRS)
         staff = get_user_model().objects.create_user("boss", "boss@x.test", "pw12345!x", is_staff=True)
         self.client.force_login(staff)
-        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.client.get("/", HTTP_USER_AGENT=self.UA, **self.HDRS)
         self.assertEqual([e for e in self.events() if e["event"] == "server_pageview"], [])
 
     def test_signed_in_and_cookie_ids_match_the_browser(self):
@@ -2437,11 +2464,11 @@ class ServerAnalyticsTests(TestCase):
         from urllib.parse import quote
         from django.conf import settings
         self.client.cookies["ph_%s_posthog" % settings.POSTHOG_KEY] = quote(_json.dumps({"distinct_id": "abc-123"}))
-        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.client.get("/", HTTP_USER_AGENT=self.UA, **self.HDRS)
         self.assertEqual(self.events()[0]["distinct_id"], "abc-123")
         u = get_user_model().objects.create_user("lee", "lee@x.test", "pw12345!x")
         self.client.force_login(u)
-        self.client.get("/", HTTP_USER_AGENT=self.UA)
+        self.client.get("/", HTTP_USER_AGENT=self.UA, **self.HDRS)
         ev = self.events()[0]
         self.assertEqual(ev["distinct_id"], str(u.id))
         self.assertNotIn("$process_person_profile", ev["properties"])
