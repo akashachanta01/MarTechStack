@@ -1,6 +1,6 @@
 ---
 name: analytics
-description: martechjobs.io analytics — PostHog event taxonomy, dashboard 2124800, HogQL patterns, readable page-type labels. Use when adding tracking, building charts, or answering "how is X doing".
+description: martechjobs.io analytics — PostHog event taxonomy, dashboard 2196032, HogQL patterns, readable page-type labels. Use when adding tracking, building charts, or answering "how is X doing".
 ---
 
 # Analytics for martechjobs.io
@@ -10,7 +10,7 @@ description: martechjobs.io analytics — PostHog event taxonomy, dashboard 2124
   Every event auto-gets `page_type` (Django url_name) and `came_from` (previous page_type, external source like
   google/linkedin, or direct). NEVER send URL paths, names or emails in params.
 - PostHog loads async only when `POSTHOG_KEY` is set, skips staff users, identifies signed-in users by id+email.
-- PostHog project 623314 (US). Dashboard "MarTechJobs — Where to focus": id 2124800. PostHog MCP tool is pre-allowed.
+- PostHog project 657916 (US). Dashboard "MarTechJobs — Where to focus": id 2196032. PostHog MCP tool is pre-allowed.
 
 ## Event taxonomy
 apply_click, job_search, newsletter_subscribe, signup_click, signup_completed (one-shot via session flag set in
