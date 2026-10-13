@@ -2559,3 +2559,26 @@ class BlogHiringLinksTests(TestCase):
         r = self.client.get("/blog/guide/")
         self.assertContains(r, "Hiring now, by platform")
         self.assertContains(r, 'href="/jobs/marketo/"')
+
+
+class SearchFixesOct12Tests(TestCase):
+    """Weekly Google review (Oct 12): role pages linked site-wide; job-titles guide answers
+    the 'Director of Marketing Technology and Systems' classification question."""
+    def test_footer_links_role_pages(self):
+        r = self.client.get("/")
+        self.assertContains(r, 'href="/marketing-technology-analyst-jobs/"')
+        self.assertContains(r, "Jobs by Role")
+
+    def test_classification_box_migration(self):
+        import importlib
+        from django.apps import apps as real_apps
+        from jobs.models import BlogPost
+        mig = importlib.import_module("jobs.migrations.0025_job_titles_classification_answer")
+        BlogPost.objects.create(title="T", slug=mig.SLUG, excerpt="x", content="<figure>img</figure><p>Body</p>")
+        mig.forwards(real_apps, None)
+        mig.forwards(real_apps, None)  # idempotent
+        c = BlogPost.objects.get(slug=mig.SLUG).content
+        self.assertEqual(c.count(mig.MARKER), 1)
+        self.assertTrue(c.index(mig.MARKER) > c.index("</figure>") and c.index(mig.MARKER) < c.index("<p>Body"))
+        r = self.client.get(f"/blog/{mig.SLUG}/")
+        self.assertContains(r, "How to classify")

@@ -353,7 +353,7 @@
     ============================================================ */
     .footer { background: var(--paper2); color: var(--ink2); padding: 64px 0 30px; margin-top: 80px; border-top: 1px solid var(--rule); }
     .ft-grid {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px;
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 1fr; gap: 32px;
       padding-bottom: 48px; border-bottom: 1px solid var(--rule); margin-bottom: 26px;
     }
     .ft-tag { font-size: 13px; color: var(--ink3); line-height: 1.65; margin: 14px 0 20px; max-width: 240px; }
@@ -738,6 +738,21 @@
               <li><a href="{% url 'tool_detail' stack.slug %}">{{ stack.name }} Jobs</a></li>
               {% endfor %}
               <li><a href="{% url 'directory' %}">All MarTech Stacks →</a></li>
+            </ul>
+          </div>
+
+          <!-- Job titles: site-wide links so Google ranks the role pages (not the home
+               page) for searches like "marketing technology analyst jobs". -->
+          <div class="ft-col">
+            <div class="ft-ct">Jobs by Role</div>
+            <ul>
+              <li><a href="{% url 'title_jobs' 'marketing-technology-analyst' %}">Marketing Technology Analyst Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'marketing-operations-manager' %}">Marketing Operations Manager Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'marketing-automation-specialist' %}">Marketing Automation Specialist Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'marketing-technologist' %}">Marketing Technologist Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'salesforce-marketing-cloud-developer' %}">SFMC Developer Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'crm-manager' %}">CRM Manager Jobs</a></li>
+              <li><a href="{% url 'title_jobs' 'marketing-analytics-manager' %}">Marketing Analytics Manager Jobs</a></li>
             </ul>
           </div>
 
