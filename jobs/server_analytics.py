@@ -216,7 +216,12 @@ class ServerPageviewMiddleware:
                     and not request.path.startswith(SKIP_PREFIXES)):
                 kind, agent = classify(request)
                 if kind == "person":
-                    capture("server_pageview", request, {"visitor_type": kind})
+                    # Returning-browser signal: real browsers keep our cookies (CSRF,
+                    # session, PostHog) after the first page; scraper networks that
+                    # fake a browser fetch one page per address and never keep any.
+                    # Dashboards count "real people" = had a cookie OR viewed 2+ pages.
+                    capture("server_pageview", request, {"visitor_type": kind,
+                                                         "has_cookie": bool(request.COOKIES)})
                 else:
                     # One shared id per agent; never creates person profiles.
                     capture("server_pageview", request, {"visitor_type": kind, "agent": agent},

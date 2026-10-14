@@ -2421,6 +2421,10 @@ class ServerAnalyticsTests(TestCase):
         self.assertEqual(p["$ip"], "81.2.69.142")
         self.assertEqual(p["source"], "server")
         self.assertEqual(p["visitor_type"], "person")
+        self.assertFalse(p["has_cookie"])  # first visit: no cookies yet
+        self.client.cookies["csrftoken"] = "x"
+        self.client.get("/", HTTP_USER_AGENT=self.UA, **self.HDRS)
+        self.assertTrue([e for e in self.events() if e["event"] == "server_pageview"][-1]["properties"]["has_cookie"])
         self.assertFalse(p["$process_person_profile"])
         self.assertTrue(ev[0]["distinct_id"].startswith("srv_"))
 
