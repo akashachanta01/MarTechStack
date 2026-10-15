@@ -2049,8 +2049,11 @@ class WeeklyDiscoveryScheduleTests(TestCase):
             call_command("run_daily_tasks", stdout=mock.Mock())
         return [c for c in calls if c[0] == "fetch_jobs"][0]
 
-    def test_sunday_with_key_runs_discovery(self):
-        self.assertEqual(self._run_on(6, True), ("fetch_jobs",))
+    def test_sunday_with_key_runs_discovery_only_when_enabled(self):
+        import os
+        self.assertEqual(self._run_on(6, True), ("fetch_jobs", "--sources-only"))  # off by default (Oct 15)
+        with mock.patch.dict(os.environ, {"DISCOVERY_ENABLED": "1"}):
+            self.assertEqual(self._run_on(6, True), ("fetch_jobs",))
 
     def test_other_days_or_no_key_poll_only(self):
         self.assertEqual(self._run_on(0, True), ("fetch_jobs", "--sources-only"))
@@ -2586,3 +2589,31 @@ class SearchFixesOct12Tests(TestCase):
         self.assertTrue(c.index(mig.MARKER) > c.index("</figure>") and c.index(mig.MARKER) < c.index("<p>Body"))
         r = self.client.get(f"/blog/{mig.SLUG}/")
         self.assertContains(r, "How to classify")
+
+
+class DiscoveryOffTests(TestCase):
+    """Sunday Serper discovery is off unless DISCOVERY_ENABLED=1 (free plan rejected every search)."""
+    def _steps(self, env):
+        import datetime, os
+        from django.core.management import call_command
+        calls = []
+        sunday = datetime.datetime(2026, 10, 18, 9, 0, tzinfo=datetime.timezone.utc)
+        with mock.patch.dict(os.environ, env, clear=False), \
+             mock.patch("django.utils.timezone.now", return_value=sunday), \
+             mock.patch("jobs.management.commands.run_daily_tasks.Command._run",
+                        side_effect=lambda self_or_msg, *a, **k: calls.append(a)) as run:
+            try:
+                call_command("run_daily_tasks")
+            except Exception:
+                pass
+        return [c for c in calls if c and c[0] == "fetch_jobs"] or [tuple(c.args[1:]) for c in run.call_args_list if len(c.args) > 1 and c.args[1] == "fetch_jobs"]
+
+    def test_sunday_polls_known_boards_only_by_default(self):
+        steps = self._steps({"SERPER_API_KEY": "k", "DISCOVERY_ENABLED": ""})
+        self.assertTrue(steps)
+        self.assertIn("--sources-only", steps[0])
+
+    def test_can_be_turned_back_on(self):
+        steps = self._steps({"SERPER_API_KEY": "k", "DISCOVERY_ENABLED": "1"})
+        self.assertTrue(steps)
+        self.assertNotIn("--sources-only", steps[0])
