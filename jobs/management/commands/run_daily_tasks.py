@@ -83,7 +83,11 @@ class Command(BaseCommand):
         # ~90 searches) to find NEW company boards; needs SERPER_API_KEY.
         import os as _os
         from django.utils import timezone as _tzn
-        discovery_day = _tzn.now().weekday() == 6 and bool(_os.environ.get("SERPER_API_KEY"))
+        # Switched OFF Oct 15 2026 (founder): Serper's free plan rejects our search
+        # patterns ("Query pattern not allowed for free accounts"), so it found
+        # nothing. Set DISCOVERY_ENABLED=1 on the cron to turn it back on.
+        discovery_day = (_tzn.now().weekday() == 6 and bool(_os.environ.get("SERPER_API_KEY"))
+                         and _os.environ.get("DISCOVERY_ENABLED") == "1")
         if weekly:
             self._run("\n[2/7] 🏹 Hunting via API (FULL discovery — paid)...", 'fetch_jobs', '--countries', 'all')
         elif discovery_day:
