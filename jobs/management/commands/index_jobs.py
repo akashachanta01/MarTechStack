@@ -81,6 +81,17 @@ class Command(BaseCommand):
                               .exclude(id__in=[j.id for j in gone_jobs])
                               .order_by('-updated_at')[:DAILY_CAP - len(new_jobs) - len(gone_jobs)])
 
+        # Refresh: re-announce live jobs Google last heard about 21+ days ago, so it
+        # recrawls them and sees the rolling validThrough (Oct 2026 audit: live jobs
+        # last crawled in August still showed Google an expired date).
+        if len(new_jobs) + len(gone_jobs) < DAILY_CAP:
+            cutoff = (timezone.now() - timedelta(days=21)).isoformat()
+            stale = [j for j in Job.objects.filter(is_active=True, screening_status='approved',
+                                                   screening_details__has_key='index_updated')
+                     .exclude(id__in=[j.id for j in new_jobs]).order_by('went_live_at')
+                     if (j.screening_details or {}).get('index_updated', '') < cutoff]
+            new_jobs += stale[:DAILY_CAP - len(new_jobs) - len(gone_jobs)]
+
         if not new_jobs and not gone_jobs:
             self.stdout.write("   Nothing new or closed to send to Google today.")
             return
