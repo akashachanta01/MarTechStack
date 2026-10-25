@@ -3151,3 +3151,46 @@ class SiteCssIntegrityTests(TestCase):
         html = self.client.get("/").content.decode()
         self.assertNotIn("{#", html)
         self.assertNotIn("#}", html)
+
+
+class LeakyLandingPageTests(TestCase):
+    """GA Oct 2026: 'Role Closed' (95% left) and '0 Oracle Eloqua Jobs' (94% left) pages.
+    Closed roles now lead with the closest live roles + an alert for the role's platform;
+    platform pages with no jobs drop the '0' title and show live roles on similar platforms."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Category, Tool, Job
+        cat = Category.objects.create(name="Marketing Automation", slug="marketing-automation")
+        self.marketo = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        self.eloqua = Tool.objects.create(name="Oracle Eloqua", slug="oracle-eloqua", category=cat)
+        def mk(title, tools=(), active=True, company="Acme"):
+            j = Job.objects.create(title=title, company=company, location="Austin, TX", country="US",
+                                   apply_url=f"https://acme.com/{title}", screening_status="approved" if active else "rejected",
+                                   is_active=active, function="operations")
+            for t in tools: j.tools.add(t)
+            return j
+        self.closed = mk("Marketo Operations Manager", [self.marketo], active=False)
+        self.close_match = mk("Senior Marketo Operations Specialist", [self.marketo], company="Beta")
+        self.loose = mk("Data Analyst", [], company="Acme")
+        for i in range(5):
+            mk(f"Field Marketing Coordinator {i}", [], company="Gamma")
+
+    def test_closed_role_shows_closest_match_first_and_platform_alert(self):
+        r = self.client.get(f"/job/{self.closed.id}/{self.closed.slug}/")
+        self.assertEqual(r.status_code, 410)
+        html = r.content.decode()
+        self.assertIn("These similar roles are open now", html)
+        self.assertLess(html.index("Senior Marketo Operations Specialist"), html.index("Data Analyst"))
+        self.assertIn('id="jc-alert-form"', html)
+        self.assertIn('value="marketo"', html)
+
+    def test_empty_platform_page_has_no_zero_title_and_shows_similar(self):
+        import re
+        r = self.client.get("/jobs/oracle-eloqua/")
+        self.assertEqual(r.status_code, 200)
+        title = re.search(r"<title>(.*?)</title>", r.content.decode(), re.S).group(1)
+        self.assertNotIn("0 Oracle", title)
+        self.assertIn("Oracle Eloqua Jobs: Alerts + Similar Live Roles", title)
+        self.assertContains(r, "Live roles on similar platforms")
+        self.assertContains(r, "Senior Marketo Operations Specialist")
+        self.assertContains(r, "noindex")

@@ -1566,6 +1566,18 @@ def tool_detail(request, slug):
 
     # Junk/non-canonical tools (ssf, paid-media-data, crm, …) get noindex'd so
     # they stop diluting site quality, even if they carry a few mis-tagged jobs.
+    # No live jobs for this platform: Google still sends people here (GA, Oct 2026:
+    # "0 Oracle Eloqua Jobs" had 47 visitors, 94% left at once). Show live roles on
+    # platforms in the same category instead of an empty page.
+    similar_jobs = []
+    if total_count == 0 and not (query or location_query or work_arrangement_filter):
+        similar_jobs = list(
+            Job.objects.filter(is_active=True, screening_status='approved', tools__category=tool.category)
+            .exclude(tools=tool).prefetch_related('tools').distinct().order_by('-created_at')[:8]
+        ) if tool.category_id else []
+        if len(similar_jobs) < 4:
+            similar_jobs = list(Job.objects.filter(is_active=True, screening_status='approved')
+                                .prefetch_related('tools').order_by('-created_at')[:8])
     tool_is_canonical = tool.name.lower() in _CANONICAL_TOOL_NAMES
     has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
     has_cert_guide = CertificationGuide.objects.filter(slug__iexact=tool.slug, is_published=True).exists()
@@ -1576,6 +1588,7 @@ def tool_detail(request, slug):
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,
+        'similar_jobs': similar_jobs,
         'page_noindex': (total_count == 0) or (not tool_is_canonical),
         'query': query,
         'location_filter': location_query,
@@ -1692,6 +1705,38 @@ def tool_certification(request, tool_slug):
     })
 
 
+_TITLE_STOP = {"senior", "junior", "lead", "manager", "specialist", "associate", "director", "head", "principal",
+               "with", "and", "the", "for", "remote", "hybrid", "contract", "full", "time", "staff", "global"}
+
+
+def _title_words(title):
+    return {w for w in re.findall(r"[a-z]{4,}", (title or "").lower()) if w not in _TITLE_STOP}
+
+
+def _closest_live_jobs(job, tool_ids, limit=6):
+    """Live roles most like a closed one, best first: shared title words (e.g.
+    'marketing operations', 'marketo') count most, then shared platforms, then the
+    same country or company. Visitors landing on a closed role from Google left
+    95% of the time (GA, Oct 2026) when shown merely the newest loosely-related jobs."""
+    pool = list(
+        Job.objects.filter(is_active=True, screening_status='approved').exclude(id=job.id)
+        .filter(Q(tools__id__in=tool_ids) | Q(company=job.company) | Q(function=job.function))
+        .prefetch_related('tools').distinct().order_by('-created_at')[:300]
+    )
+    words, tools = _title_words(job.title), set(tool_ids)
+
+    def score(j):
+        return (3 * len(words & _title_words(j.title)) + 2 * len(tools & {t.id for t in j.tools.all()})
+                + (1 if job.country and j.country == job.country else 0) + (1 if j.company == job.company else 0))
+    ranked = sorted(pool, key=lambda j: -score(j))  # stable: newest first within a score
+    picks = ranked[:limit]
+    if len(picks) < limit:
+        seen = {j.id for j in picks} | {job.id}
+        picks += list(Job.objects.filter(is_active=True, screening_status='approved').exclude(id__in=seen)
+                      .order_by('-created_at')[:limit - len(picks)])
+    return picks
+
+
 def _related_jobs_for(job, tool_ids, limit=6):
     return (
         Job.objects.filter(is_active=True, screening_status='approved')
@@ -1726,9 +1771,11 @@ def job_detail(request, id, slug):
     # as Soft 404s and de-indexes them cleanly, while the visitor still gets live
     # alternatives instead of a dead end.
     if not (job.is_active and job.screening_status == 'approved'):
+        main_tool = job.tools.order_by('name').first()
         return render(request, 'jobs/job_closed.html', {
             'job': job,
-            'related_jobs': _related_jobs_for(job, tool_ids),
+            'related_jobs': _closest_live_jobs(job, tool_ids),
+            'alert_tool': main_tool,
         }, status=410)
 
     if job.slug and job.slug != slug: return redirect('job_detail', id=job.id, slug=job.slug, permanent=True)

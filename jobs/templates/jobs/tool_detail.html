@@ -1,8 +1,8 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}{{ total_count }} {{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs — Updated {{ title_month }} | MarTechJobs{% endblock %}
-{% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}{{ total_count }} open {{ tool.name }} MarTech roles — admin, developer, architect & consultant jobs. Apply directly. Updated daily.{% endblock %}
-{% block og_title %}{{ total_count }} {{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs — Updated {{ title_month }}{% endblock %}
+{% block title %}{% if total_count %}{{ total_count }} {{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs — Updated {{ title_month }}{% else %}{{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs: Alerts + Similar Live Roles{% endif %} | MarTechJobs{% endblock %}
+{% block meta_description %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}{% if total_count %}{{ total_count }} open {{ tool.name }} MarTech roles{% else %}Get the next {{ tool.name }} role by email, and browse live MarTech roles on similar platforms{% endif %} — admin, developer, architect & consultant jobs. Apply directly. Updated daily.{% endblock %}
+{% block og_title %}{% if total_count %}{{ total_count }} {{ tool.name }}{% if tool_short %} ({{ tool_short }}){% endif %} Jobs — Updated {{ title_month }}{% else %}{{ tool.name }} Jobs: Alerts + Similar Live Roles{% endif %}{% endblock %}
 {% block og_desc %}{% if tool_tagline %}{{ tool_tagline }} {% endif %}{{ total_count }} open {{ tool.name }} MarTech roles — admin, developer, architect & consultant jobs. Apply directly. Updated daily.{% endblock %}
 {% block meta_keywords %}{{ tool.name }} jobs, {{ tool.name }} marketing jobs, {{ tool.name }} careers, {{ tool.name }} marketing operations{% endblock %}
 
@@ -116,6 +116,13 @@
   .jrow-apply { margin-top: 2px; }
   .td-rows.grid .jrow { margin-bottom: 0; }
 
+  .td-similar { margin-top: 4px; }
+  .td-sim-note { color: var(--ink2); margin: 0 0 14px; }
+  .td-similar h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+  .td-sim { display: block; background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; text-decoration: none; color: inherit; }
+  .td-sim:hover { border-color: var(--amber); }
+  .td-sim .ti { display: block; font-weight: 700; color: var(--ink); font-size: 15px; }
+  .td-sim .me { display: block; font-size: 13px; color: var(--ink3); margin-top: 2px; }
   .td-empty { text-align: center; padding: 60px 24px; background: #fff; border: 1px dashed var(--rule2); border-radius: 12px; }
   .td-empty h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
   .td-empty p { color: var(--ink2); margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; }
@@ -139,7 +146,7 @@
     <div class="td-topline">
       <span class="td-badge">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-        <b>{{ total_count }}</b> open position{{ total_count|pluralize }}
+        {% if total_count %}<b>{{ total_count }}</b> open position{{ total_count|pluralize }}{% else %}No open roles today · alerts on{% endif %}
       </span>
       <span class="td-updated">Updated {% now "F j, Y" %}</span>
     </div>
@@ -249,7 +256,7 @@
   <div class="wrap">
     {% include "jobs/partials/tool_alert.html" with alert_tool=tool.slug alert_label=tool.name alert_id="td-alert-form" %}
     <div class="td-list-head">
-      <h2>{{ tool.name }} Jobs <span class="count">— {{ total_count }} result{{ total_count|pluralize }}</span></h2>
+      <h2>{{ tool.name }} Jobs <span class="count">— {% if total_count %}{{ total_count }} result{{ total_count|pluralize }}{% else %}none open today{% endif %}</span></h2>
       <div class="td-controls">
         <span class="td-sort-lbl">Sort:</span>
         <form method="get" class="sort-form">
@@ -316,11 +323,25 @@
         </div>
       </a>
     {% empty %}
+      {% if similar_jobs %}
+      <p class="td-sim-note">No {{ tool.name }} roles are open today. Set the alert above to hear first, or look at these:</p>
+      <div class="td-similar">
+        <h3>Live roles on similar platforms</h3>
+        {% for sj in similar_jobs %}
+        <a class="td-sim" href="{% url 'job_detail' sj.id sj.slug %}" onclick="window.mtjTrack&&mtjTrack('empty_tool_similar_click',{tool:'{{ tool.slug }}'})">
+          <span class="ti">{{ sj.title }}</span>
+          <span class="me">{{ sj.company }} · {{ sj.location|default:"Not specified" }}{% for t in sj.tools.all|slice:":2" %} · {{ t.name }}{% endfor %}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if not similar_jobs %}
       <div class="td-empty">
         <h3>No {{ tool.name }} jobs match right now</h3>
         <p>Top {{ tool.name }} roles fill fast. Set a free alert and we'll email you the moment a new one is posted.</p>
         <a href="#td-alert-form" class="btn btn-amber">Set {{ tool.name }} Job Alert</a>
       </div>
+      {% endif %}
     {% endfor %}
     </div>
 

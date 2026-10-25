@@ -6,7 +6,9 @@
 
 {% block content %}
 <style>
-  .jc-wrap { max-width: 720px; margin: 0 auto; padding: 64px 24px 24px; text-align: center; }
+  .jc-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 12px; text-align: center; }
+  .jc-note { font-size: 14.5px !important; color: var(--ink3) !important; margin-bottom: 10px !important; }
+  .jc-after { max-width: 980px; margin: 0 auto; padding: 0 24px 72px; }
   .jc-ico { width: 60px; height: 60px; border-radius: 50%; background: var(--paper2); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; margin: 0 auto 22px; color: var(--ink3); }
   .jc-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .jc-wrap h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,4vw,40px); font-weight: 800; color: var(--ink); margin-bottom: 12px; line-height: 1.15; }
@@ -14,7 +16,7 @@
   .jc-role { font-weight: 700; color: var(--ink); }
   .jc-cta { margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-  .jc-related { max-width: 980px; margin: 0 auto; padding: 16px 24px 80px; }
+  .jc-related { max-width: 980px; margin: 0 auto; padding: 8px 24px 24px; }
   .jc-related h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 800; color: var(--ink); margin-bottom: 18px; text-align: center; }
   .jc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
   .jc-card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; text-decoration: none; color: inherit; transition: transform .16s, box-shadow .16s, border-color .16s; display: flex; flex-direction: column; gap: 6px; }
@@ -25,25 +27,15 @@
 </style>
 
 <div class="jc-wrap">
-  <div class="jc-ico">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>
-  </div>
-  <h1>This role is no longer available</h1>
-  {% if job %}<p>The <span class="jc-role">{{ job.title }}</span> position at <span class="jc-role">{{ job.company }}</span> has closed or expired.</p>
-  {% else %}<p>This position has closed or expired and is no longer listed.</p>{% endif %}
-  <p>Good news — there are plenty of live MarTech roles, and we can email you when matching ones are posted.</p>
-  <div class="jc-cta">
-    <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse open roles →</a>
-    <button onclick="toggleModal('subscribe-modal')" class="btn btn-ghost btn-lg">Get job alerts</button>
-  </div>
+  <p class="jc-note">{% if job %}The <span class="jc-role">{{ job.title }}</span> role at <span class="jc-role">{{ job.company }}</span> has closed.{% else %}This role has closed.{% endif %}</p>
+  <h1>{% if related_jobs %}These similar roles are open now{% else %}This role is no longer available{% endif %}</h1>
 </div>
 
 {% if related_jobs %}
 <section class="jc-related">
-  <h2>Similar live roles</h2>
   <div class="jc-grid">
     {% for rjob in related_jobs %}
-    <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jc-card" aria-label="{{ rjob.title }} at {{ rjob.company }}">
+    <a href="{% url 'job_detail' rjob.id rjob.slug %}" class="jc-card" aria-label="{{ rjob.title }} at {{ rjob.company }}" onclick="window.mtjTrack&&mtjTrack('closed_role_similar_click',{position:{{ forloop.counter }}})">
       <span class="co">{{ rjob.company }}</span>
       <span class="ti">{{ rjob.title }}</span>
       <span class="me">{{ rjob.location|default:"Not specified" }}{% if rjob.salary_range %} · {{ rjob.salary_range }}{% endif %}</span>
@@ -52,4 +44,12 @@
   </div>
 </section>
 {% endif %}
+
+<div class="jc-after">
+  {% if alert_tool %}{% include "jobs/partials/tool_alert.html" with alert_tool=alert_tool.slug alert_label=alert_tool.name alert_id="jc-alert-form" %}{% endif %}
+  <div class="jc-cta">
+    <a href="{% url 'all_jobs' %}" class="btn btn-amber btn-lg">Browse all open roles →</a>
+    {% if not alert_tool %}<button onclick="toggleModal('subscribe-modal')" class="btn btn-ghost btn-lg">Get job alerts</button>{% endif %}
+  </div>
+</div>
 {% endblock %}
