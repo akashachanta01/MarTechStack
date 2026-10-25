@@ -707,6 +707,13 @@ def all_jobs(request):
 
     params = request.GET.copy()
     params.pop("page", None)
+    # One view value at most: the list/grid toggle used to append "view=" on every
+    # click, giving crawlers endless URL variants (?view=list&view=list&...).
+    view_mode = "grid" if request.GET.get("view") == "grid" else "list"
+    params.pop("view", None)
+    base_qs = params.urlencode()
+    if view_mode == "grid":
+        params["view"] = "grid"
     filter_qs = params.urlencode()
 
     return render(request, "jobs/all_jobs.html", {
@@ -720,7 +727,8 @@ def all_jobs(request):
         "current_arrangement": work_arrangement_filter,
         "current_function": function,
         "current_sort": sort,
-        "view_mode": request.GET.get("view", "list"),
+        "view_mode": view_mode,
+        "base_qs": base_qs,
         "filter_qs": filter_qs,
         "popular_titles": [{"slug": s, "name": c["name"]} for s, c in TITLE_JOBS.items()],
     })
@@ -1501,6 +1509,13 @@ def tool_detail(request, slug):
 
     params = request.GET.copy()
     params.pop("page", None)
+    # One view value at most: the list/grid toggle used to append "view=" on every
+    # click, giving crawlers endless URL variants (?view=list&view=list&...).
+    view_mode = "grid" if request.GET.get("view") == "grid" else "list"
+    params.pop("view", None)
+    base_qs = params.urlencode()
+    if view_mode == "grid":
+        params["view"] = "grid"
     filter_qs = params.urlencode()
 
     # Junk/non-canonical tools (ssf, paid-media-data, crm, …) get noindex'd so
@@ -1520,7 +1535,8 @@ def tool_detail(request, slug):
         'location_filter': location_query,
         'current_arrangement': work_arrangement_filter,
         'current_sort': sort,
-        'view_mode': request.GET.get("view", "list"),
+        'view_mode': view_mode,
+        'base_qs': base_qs,
         'often_paired': often_paired,
         'tool_tagline': tool.description or TOOL_TAGLINES.get(slug, ""),
         'tool_short': TOOL_SHORT_NAMES.get(slug, ""),

@@ -2713,3 +2713,25 @@ class DeadLinkCheckTests(TestCase):
         self.assertTrue(unknown.is_active)
         self.assertTrue(fresh.is_active)
         self.assertEqual(scrape.call_count, 1)  # only the job with no readable API is scraped
+
+
+class ViewToggleTests(TestCase):
+    """Audit Oct 25: the list/grid toggle appended '&view=...' on every click; Meta's crawler
+    followed ?view=list&view=list&... hundreds deep. Links now carry at most one view value."""
+    def setUp(self):
+        from jobs.models import Category, Tool
+        cat = Category.objects.create(name="MAP", slug="map")
+        Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+
+    def test_toggle_links_never_repeat_view(self):
+        import re
+        for url in ("/jobs/", "/jobs/marketo/"):
+            r = self.client.get(url + "?l=Canada&view=list&view=list&view=grid&page=1")
+            self.assertEqual(r.status_code, 200, url)
+            html = r.content.decode()
+            hrefs = re.findall(r'class="(?:aj|td)-view-btn[^"]*" href="([^"]*)"', html)
+            self.assertEqual(len(hrefs), 2, url)
+            for h in hrefs:
+                self.assertLessEqual(h.count("view="), 1, (url, h))
+                self.assertIn("l=Canada", h)
+                self.assertNotIn("page=", h)
