@@ -2785,3 +2785,34 @@ class FounderAlertTests(TestCase):
         self.assertIn("[MTJ copy] This week in MarTech", copies[0].subject)
         self.assertIn("(sent to 3 people)", copies[0].subject)
         self.assertIn("Copy of what MarTechJobs just sent", copies[0].alternatives[0][0])
+
+
+# ---------------------------------------------------------------------------
+# Job rows on phones show the salary (it used to be hidden under 640px)
+# ---------------------------------------------------------------------------
+@override_settings(**TEST_SETTINGS)
+class MobileSalaryTests(TestCase):
+    LISTING_PAGES = ["/", "/jobs/", "/jobs/marketo/", "/category/operations/",
+                     "/remote/jobs/", "/remote/marketo-jobs/", "/marketing-operations-manager-jobs/",
+                     "/companies/acme/"]
+
+    def setUp(self):
+        cache.clear()
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        tool = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        self.job = make_job(salary_range="$120,000 - $150,000", role_type="full_time")
+        self.job.tools.add(tool)
+
+    def test_no_listing_page_hides_the_salary_column(self):
+        for url in self.LISTING_PAGES:
+            with self.subTest(url=url):
+                r = self.client.get(url)
+                self.assertEqual(r.status_code, 200)
+                html = r.content.decode()
+                self.assertNotIn(".jrow-right { display: none; }", html)
+                self.assertIn("$120,000 - $150,000", html)
+
+    def test_base_shows_salary_under_title_on_phones(self):
+        html = self.client.get("/jobs/").content.decode()
+        self.assertIn(".jrow > .jrow-right {", html)
+        self.assertIn("$120,000 - $150,000", html)

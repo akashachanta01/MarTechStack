@@ -437,6 +437,22 @@
     .sec-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; cursor: pointer; text-decoration: none; padding-top: 8px; transition: color .15s; }
     .sec-link:hover { color: var(--amber2); }
 
+    /* ---- Job rows on phones: salary moves under the title instead of being hidden ----
+       Pages define .jrow-right in their own <style> (later in the document), so these
+       rules use .jrow > .jrow-right to win on specificity. Date stays in the meta line;
+       "Salary not listed" is dropped here so rows without a salary stay compact. */
+    @media (max-width: 680px) {
+      .jrow { flex-wrap: wrap; row-gap: 8px; }
+      .jrow > .jrow-right {
+        display: flex; flex-direction: row; align-items: baseline; gap: 8px;
+        width: 100%; padding-left: 70px; text-align: left;
+      }
+      .jrow > .jrow-right .jrow-date,
+      .jrow > .jrow-right .jrow-apply,
+      .jrow > .jrow-right .jrow-salary.na { display: none; }
+      .jrow > .jrow-right:not(:has(.jrow-salary:not(.na))) { display: none; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
       html { scroll-behavior: auto; }
