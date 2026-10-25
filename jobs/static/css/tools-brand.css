@@ -1,0 +1,112 @@
+/* MarTechJobs brand remap for the free-tools pages.
+   The tools are built with Tailwind utility classes (tools-tw.css) in a cool
+   slate/blue/purple palette that doesn't match the rest of the site. Rather than
+   rewrite 10 templates, this file (loaded after tools-tw.css) points those classes
+   at the site's own tokens from base.html. Success/error colours (green, red,
+   yellow) keep their meaning; only on-brand greens are swapped to the site green. */
+
+/* ---- Type ---- */
+.font-serif { font-family: 'Playfair Display', Georgia, serif; }
+
+/* ---- Neutrals: slate -> warm paper and ink ---- */
+.bg-slate-50 { background-color: var(--paper); }
+.bg-slate-100 { background-color: var(--tint-ink); }
+.text-slate-900, .text-slate-800 { color: var(--ink); }
+.text-slate-600, .text-slate-500 { color: var(--ink2); }
+.text-slate-400, .text-slate-300 { color: var(--ink3); }
+.placeholder-slate-300::placeholder { color: var(--ink3); }
+.border-slate-100, .border-slate-200 { border-color: var(--rule); }
+.border-slate-300 { border-color: var(--rule2); }
+
+/* ---- Dark panels and dark buttons: slate/black/purple/emerald -> navy ---- */
+.bg-slate-900, .bg-purple-900, .bg-emerald-900 { background-color: var(--navy3); }
+.bg-slate-800, .bg-black { background-color: var(--navy); }
+.border-slate-700 { border-color: rgba(255,255,255,.18); }
+.hover\:bg-slate-800:hover, .hover\:bg-slate-700:hover, .hover\:bg-purple-800:hover { background-color: var(--navy2); }
+.hover\:bg-black:hover { background-color: var(--navy3); }
+.text-purple-200 { color: var(--amber-accent); }
+/* Light labels inside dark panels stay light (the warm ink above is for light grounds). */
+.bg-slate-900 .text-slate-400, .bg-slate-900 .text-slate-300,
+.bg-purple-900 .text-slate-400, .bg-emerald-900 .text-slate-400 { color: rgba(255,255,255,.7); }
+
+/* ---- Accent text: blue/indigo/purple -> navy ---- */
+.text-blue-700, .text-blue-800, .text-blue-900,
+.text-indigo-600, .text-indigo-700, .text-indigo-800, .text-indigo-900,
+.text-purple-700, .text-purple-800, .text-purple-900 { color: var(--navy); }
+.hover\:text-blue-600:hover { color: var(--amber); }
+.group:hover .group-hover\:text-blue-700, .group:hover .group-hover\:text-indigo-500 { color: var(--amber); }
+
+/* ---- Accent tints: blue/indigo/purple 50-100 -> navy tint ---- */
+.bg-blue-50, .bg-indigo-50, .bg-purple-50 { background-color: var(--tint-navy); }
+/* 100-level tints (badges, icon tiles) use the amber tint: navy tint is too close to paper to see. */
+.bg-blue-100, .bg-indigo-100, .bg-purple-100 { background-color: var(--amber-light); }
+.hover\:bg-purple-50:hover { background-color: var(--tint-navy); }
+.border-blue-100, .border-blue-200, .border-indigo-100, .border-indigo-200,
+.border-purple-100, .border-purple-200 { border-color: var(--rule); }
+.hover\:border-indigo-300:hover { border-color: var(--rule2); }
+
+/* ---- Accent buttons: blue/indigo/purple 600 -> amber CTA ---- */
+.bg-blue-600, .bg-indigo-600, .bg-purple-600 { background-color: var(--amber); }
+.hover\:bg-blue-600:hover, .hover\:bg-blue-700:hover, .hover\:bg-indigo-500:hover,
+.hover\:bg-indigo-600:hover, .hover\:bg-indigo-700:hover, .hover\:bg-purple-700:hover { background-color: var(--amber2); }
+
+/* ---- Focus and hover borders ---- */
+.focus\:border-blue-500:focus, .focus\:border-indigo-500:focus, .focus\:border-purple-500:focus { border-color: var(--navy); }
+.hover\:border-blue-500:hover { border-color: var(--amber); }
+
+/* ---- Orange -> amber ---- */
+.bg-orange-50, .bg-orange-100 { background-color: var(--amber-light); }
+.border-orange-100 { border-color: var(--amber-border); }
+.bg-orange-500, .bg-orange-600 { background-color: var(--amber); }
+.border-orange-500, .focus\:border-orange-500:focus { border-color: var(--amber); }
+.hover\:bg-orange-600:hover, .hover\:bg-orange-700:hover, .hover\:bg-orange-800:hover { background-color: var(--amber2); }
+.text-orange-700, .text-orange-800 { color: var(--amber); }
+
+/* ---- Greens on light grounds -> the site's green ---- */
+.text-green-700, .text-green-800, .text-emerald-800 { color: var(--green); }
+.bg-green-50, .bg-green-100, .bg-emerald-100, .hover\:bg-green-50:hover { background-color: var(--green-light); }
+.border-green-100, .border-green-200 { border-color: rgba(31,111,67,.2); }
+
+/* ---- Utilities the precompiled tools-tw.css is missing ----
+   The Job Description Generator was never given a stylesheet, so its layout classes
+   were left out when tools-tw.css was compiled. Standard Tailwind values. */
+.-mb-8 { margin-bottom: -2rem; }
+.-mx-8 { margin-left: -2rem; margin-right: -2rem; }
+.mb-3 { margin-bottom: .75rem; }
+.pb-4 { padding-bottom: 1rem; }
+.pt-6 { padding-top: 1.5rem; }
+.gap-1 { gap: .25rem; }
+.inline-flex { display: inline-flex; }
+.flex-grow { flex-grow: 1; }
+.h-3 { height: .75rem; } .w-3 { width: .75rem; }
+.h-12 { height: 3rem; } .w-12 { width: 3rem; }
+.min-h-\[600px\] { min-height: 600px; }
+.sticky { position: sticky; }
+.top-24 { top: 6rem; }
+.z-20 { z-index: 20; }
+.rounded-b-lg { border-bottom-left-radius: .5rem; border-bottom-right-radius: .5rem; }
+.bg-white\/90 { background-color: rgba(255,255,255,.9); }
+.hover\:-translate-y-0\.5:hover { transform: translateY(-.125rem); }
+.focus\:ring-2:focus { box-shadow: 0 0 0 2px var(--navy); }
+.focus\:ring-green-500:focus { box-shadow: 0 0 0 2px var(--green); }
+/* Window-dot decoration (red / yellow / green) keeps its usual colours. */
+.bg-red-400 { background-color: #f87171; } .bg-yellow-400 { background-color: #facc15; } .bg-green-400 { background-color: #4ade80; }
+.border-green-200 { border-color: rgba(31,111,67,.2); }
+.border-green-700, .border-t-green-700 { border-color: var(--green); }
+.hover\:bg-green-900:hover { background-color: #14532d; }
+@media (min-width: 1024px) {
+  .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .lg\:col-span-4 { grid-column: span 4 / span 4; }
+  .lg\:col-span-8 { grid-column: span 8 / span 8; }
+}
+/* A small stand-in for Tailwind's typography plugin (.prose), used for the generated JD and the article below it. */
+.prose { color: var(--ink2); line-height: 1.7; }
+.prose h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6em; font-weight: 800; color: var(--ink); margin: 1.4em 0 .5em; line-height: 1.2; }
+.prose h3 { font-size: 1.15em; font-weight: 700; color: var(--ink); margin: 1.3em 0 .4em; }
+.prose p { margin: .8em 0; }
+.prose ul { list-style: disc; padding-left: 1.4em; margin: .8em 0; }
+.prose ol { list-style: decimal; padding-left: 1.4em; margin: .8em 0; }
+.prose li { margin: .3em 0; }
+.prose strong { color: var(--ink); }
+.prose a { color: var(--amber); text-decoration: underline; }
+.prose > :first-child { margin-top: 0; }

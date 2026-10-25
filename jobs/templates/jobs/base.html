@@ -134,14 +134,14 @@
       --card:    #ffffff;
       --ink:     #1a1714;
       --ink2:    #4f4a44;
-      --ink3:    #857e75;
+      --ink3:    #706a62;   /* was #857e75 (3.6:1 on paper); now 4.8:1 */
       --rule:    #e7e1d8;
       --rule2:   #d8d1c6;
 
       --navy:    #1b2e4b;
       --navy2:   #152540;
       --navy3:   #0e1c30;
-      --amber:   #bf5420;
+      --amber:   #b44f1e;   /* was #bf5420 (4.2:1 as text on paper); now 4.65:1. Logo keeps #bf5420. */
       --amber2:  #d96025;
       --amber-accent: #f0a06a;
       --amber-light:  #faeee5;
@@ -190,6 +190,9 @@
     .font-mono  { font-family: 'Courier Prime', ui-monospace, monospace; }
 
     ::selection { background: var(--amber); color: #fff; }
+
+    /* Keyboard focus: a visible outline when tabbing. Only shows for keyboard users. */
+    :where(a, button, summary, [role="button"], [tabindex]):focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
 
     /* ---- Eyebrow label ---- */
     .eyebrow {
@@ -281,7 +284,7 @@
     .nav-mega-wrap:hover .nav-mega-trigger .chev { transform: rotate(180deg); }
     .nav-mega-wrap:hover .nav-mega-trigger { color: var(--ink); background: var(--amber-light); }
     .nav-mega { position: absolute; top: 100%; left: 0; padding-top: 10px; display: none; z-index: 90; }
-    .nav-mega-wrap:hover .nav-mega, .nav-mega-wrap:focus-within .nav-mega { display: block; }
+    .nav-mega-wrap:hover .nav-mega, .nav-mega-wrap:focus-within .nav-mega, .nav-mega-wrap.tap-open .nav-mega { display: block; }
     .nav-mega-inner { width: 480px; max-width: 92vw; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 14px; animation: megaIn .16s ease-out; }
     .nav-mega-inner.nav-mega-narrow { width: 256px; }
     @keyframes megaIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
@@ -310,7 +313,7 @@
     .nav-avatar-btn .chev { width: 11px; height: 11px; fill: none; stroke: var(--ink3); stroke-width: 2.5; transition: transform .2s; }
     .nav-profile-wrap:hover .nav-avatar-btn .chev { transform: rotate(180deg); }
     .nav-profile-menu { position: absolute; top: 100%; right: 0; padding-top: 10px; display: none; z-index: 90; }
-    .nav-profile-wrap:hover .nav-profile-menu, .nav-profile-wrap:focus-within .nav-profile-menu { display: block; }
+    .nav-profile-wrap:hover .nav-profile-menu, .nav-profile-wrap:focus-within .nav-profile-menu, .nav-profile-wrap.tap-open .nav-profile-menu { display: block; }
     .nav-profile-inner { width: 250px; background: #fff; border: 1px solid var(--rule); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; animation: megaIn .16s ease-out; }
     .nav-profile-head { padding: 16px 18px; border-bottom: 1px solid var(--rule); }
     .nav-profile-name { font-size: 14px; font-weight: 800; color: var(--ink); line-height: 1.2; }
@@ -436,6 +439,29 @@
     .sec-head .sub { font-size: 15px; color: var(--ink2); margin-top: 8px; line-height: 1.55; }
     .sec-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; cursor: pointer; text-decoration: none; padding-top: 8px; transition: color .15s; }
     .sec-link:hover { color: var(--amber2); }
+
+    /* ---- Job rows (every job list: home, all jobs, tool, category, landing, title, company) ----
+       One shared copy. Pages keep only what genuinely differs (logo tint, spacing) in their
+       own <style>, which comes later in the document and so wins. */
+    .jrow { display: flex; align-items: center; gap: 18px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; text-decoration: none; color: inherit; margin-bottom: 10px; }
+    .jrow:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--rule2); }
+    .jrow.feat { border-color: rgba(240,160,106,.6); box-shadow: 0 0 0 1px rgba(240,160,106,.2); background: linear-gradient(180deg, #fffdf9, #fff); }
+    .jrow-logo { width: 52px; height: 52px; border-radius: 10px; background: var(--violet-light); border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-weight: 800; font-size: 22px; color: var(--violet); flex-shrink: 0; overflow: hidden; }
+    .jrow-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .jrow-main { flex: 1; min-width: 0; }
+    .jrow-title { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.3; transition: color .12s; }
+    .jrow:hover .jrow-title { color: var(--navy); }
+    .jrow-meta { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink3); margin-top: 4px; flex-wrap: wrap; }
+    .jrow-meta .co { color: var(--ink2); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .jrow-meta .co svg { color: var(--green); width: 13px; height: 13px; }
+    .jrow-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .jrow-right { text-align: right; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .jrow-salary { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); }
+    .jrow-salary.na { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink3); font-style: italic; }
+    .jrow-date { font-size: 12px; color: var(--ink3); }
+    .jrow-apply { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; opacity: 0; transform: translateX(-4px); transition: all .18s; }
+    .jrow:hover .jrow-apply { opacity: 1; transform: none; }
+    @media (hover: none) { .jrow-apply { opacity: 1; transform: none; } }
 
     /* ---- Job rows on phones: salary moves under the title instead of being hidden ----
        Pages define .jrow-right in their own <style> (later in the document), so these
@@ -684,9 +710,9 @@
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'for_employers' %}">For Employers</a></li>
           <li><a href="{% url 'post_job' %}">Post a Job</a></li>
-          <li><a href="#" onclick="toggleModal('subscribe-modal'); toggleMobileMenu(); return false;">🔔 Get Job Alerts</a></li>
+          <li><a href="#" onclick="toggleModal('subscribe-modal'); toggleMobileMenu(); return false;">Get Job Alerts</a></li>
           {% if user.is_authenticated %}
-          <li><a href="{% url 'accounts_dashboard' %}" class="tools-link">📊 Dashboard</a></li>
+          <li><a href="{% url 'accounts_dashboard' %}" class="tools-link">Dashboard</a></li>
           <li><a href="{% url 'accounts_my_matches' %}">My Matches</a></li>
           <li><a href="{% url 'accounts_saved_jobs' %}">Saved Jobs</a></li>
           <li><a href="{% url 'accounts_profile' %}">Profile</a></li>
@@ -893,6 +919,24 @@
     }
 
     // ---- Mobile menu ----
+    // Touch screens (tablets wider than 1040px show the desktop nav): hover menus can't open,
+    // so the first tap on a menu label opens it and a second tap follows the link.
+    // Tapping anywhere else closes it. Mouse users are unaffected.
+    (function () {
+      if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
+      var wraps = document.querySelectorAll('.nav-mega-wrap, .nav-profile-wrap');
+      function closeAll(except) { wraps.forEach(function (w) { if (w !== except) w.classList.remove('tap-open'); }); }
+      wraps.forEach(function (w) {
+        var t = w.querySelector('.nav-mega-trigger, .nav-avatar-btn');
+        if (!t) return;
+        t.addEventListener('click', function (e) {
+          if (w.classList.contains('tap-open')) return;
+          e.preventDefault(); closeAll(w); w.classList.add('tap-open');
+        });
+      });
+      document.addEventListener('click', function (e) { if (!e.target.closest('.nav-mega-wrap, .nav-profile-wrap')) closeAll(null); });
+    })();
+
     function toggleMobileMenu() {
       const m = document.getElementById('mobile-menu');
       const btn = document.getElementById('nav-toggle-btn');
