@@ -1,7 +1,8 @@
 {% extends "jobs/base.html" %}
+{% load humanize %}
 
-{% block title %}{{ company_name }} Marketing Jobs & Careers | MarTechJobs{% endblock %}
-{% block meta_description %}Browse {{ job_count }} open Marketing Operations and Technology roles at {{ company_name }}. See salaries, tech stack requirements, and apply directly.{% endblock %}
+{% block title %}{% if job_count %}{{ company_name }} MarTech Jobs: {{ job_count }} Open Role{{ job_count|pluralize }} ({{ title_month }}){% else %}{{ company_name }} Marketing Jobs & Careers{% endif %} | MarTechJobs{% endblock %}
+{% block meta_description %}{% if job_count %}{{ job_count }} open MarTech role{{ job_count|pluralize }} at {{ company_name }}{% if platforms %} using {% for t in platforms|slice:":3" %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}{% if where %} in {{ where|join:", " }}{% endif %}{% if pay %}. Disclosed pay ${{ pay.avg_low|intcomma }}–${{ pay.avg_high|intcomma }}{% endif %}. Apply directly on their careers site.{% else %}{{ company_name }} marketing technology roles on MarTechJobs.{% endif %}{% endblock %}
 {% block meta_keywords %}{{ company_name }} jobs, {{ company_name }} marketing operations, {{ company_name }} careers{% endblock %}
 {% block og_title %}{{ company_name }} Marketing Jobs & Careers{% endblock %}
 {% block og_desc %}Browse open Marketing Operations and Technology roles at {{ company_name }}. See tech stack requirements and apply directly.{% endblock %}
@@ -18,6 +19,11 @@
   ]
 }
 </script>
+{% if jobs %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"{{ company_name|escapejs }} MarTech jobs","numberOfItems":{{ job_count }},"itemListElement":[{% for job in jobs|slice:":20" %}{"@type":"ListItem","position":{{ forloop.counter }},"url":"https://martechjobs.io{% url 'job_detail' job.id job.slug %}","name":"{{ job.title|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]}
+</script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -29,6 +35,22 @@
   .co-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(24px,4vw,40px); font-weight: 800; color: var(--ink); margin-bottom: 8px; }
   .co-hero p { font-size: 15px; color: var(--ink3); }
 
+  .co-facts { padding: 26px 0 6px; }
+  .co-facts-inner { max-width: 780px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .co-fact { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .co-fact .l { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); }
+  .co-fact .v { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: var(--ink); }
+  .co-fact .v.sm { font-size: 16px; line-height: 1.35; }
+  .co-fact .n { font-size: 12px; color: var(--ink3); }
+  .co-plat { max-width: 780px; margin: 14px auto 0; padding: 0 32px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .co-plat-l { font-size: 14px; color: var(--ink2); margin-right: 4px; }
+  .co-plat a, .co-sim a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rule2); background: var(--card); color: var(--ink); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+  .co-plat a:hover, .co-sim a:hover { border-color: var(--amber); }
+  .co-after { max-width: 780px; margin: 30px auto 0; padding: 0 32px; }
+  .co-after h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 800; color: var(--ink); margin: 26px 0 12px; }
+  .co-sim { display: flex; flex-wrap: wrap; gap: 8px; }
+  .co-sim a span { color: var(--ink3); font-weight: 500; margin-left: 4px; }
+  @media (max-width: 560px) { .co-facts-inner, .co-plat, .co-after { padding: 0 16px; } }
   .co-jobs { padding: 40px 0 80px; }
   /* Job rows: shared styles live in base.html. Rows here are spaced by .co-jobs-inner's gap. */
   .jrow { margin-bottom: 0; }
@@ -42,9 +64,26 @@
       {% else %}<span class="co-logo-mono">{{ company_name|slice:":1" }}</span>{% endif %}
     </div>
     <h1>{{ company_name }} Careers</h1>
-    <p>{{ job_count }} active marketing technology role{{ job_count|pluralize }}</p>
+    <p>{{ job_count }} active marketing technology role{{ job_count|pluralize }}{% if new_30d %} · {{ new_30d }} posted in the last 30 days{% endif %}</p>
   </div>
 </section>
+
+{% if jobs %}
+<section class="co-facts">
+  <div class="co-facts-inner">
+    <div class="co-fact"><span class="l">Open roles</span><span class="v">{{ job_count }}</span></div>
+    {% if where %}<div class="co-fact"><span class="l">Where</span><span class="v sm">{{ where|join:", " }}</span></div>{% endif %}
+    <div class="co-fact"><span class="l">Remote</span><span class="v">{{ remote_count }} of {{ job_count }}</span></div>
+    {% if pay %}<div class="co-fact"><span class="l">Disclosed pay (USD)</span><span class="v sm">${{ pay.avg_low|intcomma }}–${{ pay.avg_high|intcomma }}</span><span class="n">from {{ pay.count }} posting{{ pay.count|pluralize }}</span></div>{% endif %}
+  </div>
+  {% if platforms %}
+  <div class="co-plat">
+    <span class="co-plat-l">Platforms {{ company_name }} is hiring for:</span>
+    {% for t in platforms %}<a href="{% url 'tool_detail' t.slug %}">{{ t.name }}</a>{% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
 
 <div class="co-jobs">
   <div class="co-jobs-inner">
@@ -57,5 +96,16 @@
       </div>
     {% endfor %}
   </div>
+  {% if jobs %}
+  <div class="co-after">
+    {% if alert_tool %}{% include "jobs/partials/tool_alert.html" with alert_tool=alert_tool.slug alert_label=alert_tool.name alert_id="co-alert-form" %}{% endif %}
+    {% if similar_companies %}
+    <h2>Also hiring for {% for t in platforms|slice:":2" %}{{ t.name }}{% if not forloop.last %} and {% endif %}{% endfor %}</h2>
+    <div class="co-sim">
+      {% for c in similar_companies %}<a href="{% url 'company_detail' c.slug %}">{{ c.company }} <span>{{ c.n }} role{{ c.n|pluralize }}</span></a>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

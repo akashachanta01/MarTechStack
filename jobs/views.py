@@ -2367,7 +2367,43 @@ def company_detail(request, company_slug):
         'company_logo': canonical_job.company_logo,
         'jobs': jobs,
         'job_count': len(jobs),
+        **_company_facts(canonical_job.company, names, jobs),
     })
+
+
+def _company_facts(company, names, jobs):
+    """Real hiring facts for a company page, all computed from its live jobs:
+    platforms, where, remote share, new this month, disclosed pay (USD) and
+    companies hiring for the same platforms. Company pages had impressions at
+    positions 4-24 but 0 clicks (Search Console, Oct 2026): a bare job list."""
+    from collections import Counter
+    from jobs.geo import country_name
+    tool_counts = Counter(t for j in jobs for t in j.tools.all())
+    platforms = [t for t, _ in tool_counts.most_common(8)]
+    countries = Counter(j.country for j in jobs if j.country)
+    where = [country_name(c) or c for c, _ in countries.most_common(4)]
+    month_ago = timezone.now() - timedelta(days=30)
+    pay = _salary_stats(jobs)
+    similar = []
+    if platforms:
+        top_ids = [t.id for t in platforms[:4]]
+        similar = list(
+            Job.objects.filter(is_active=True, screening_status='approved', tools__id__in=top_ids)
+            .exclude(company__in=names).values('company')
+            .annotate(n=Count('id', distinct=True)).order_by('-n')[:6]
+        )
+        for c in similar:
+            c['slug'] = slugify(c['company'])
+    return {
+        'platforms': platforms,
+        'where': where,
+        'remote_count': sum(1 for j in jobs if j.work_arrangement == 'remote'),
+        'new_30d': sum(1 for j in jobs if (j.went_live_at or j.created_at) >= month_ago),
+        'pay': pay if pay and pay['count'] >= 2 else None,
+        'similar_companies': similar,
+        'alert_tool': platforms[0] if platforms else None,
+        'title_month': timezone.now().strftime('%B %Y'),
+    }
 
 def directory(request):
     # "MarTech Jobs by Tool" hub — only tools that have live roles (no thin

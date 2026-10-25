@@ -3343,3 +3343,38 @@ class PlatformSalaryPageTests(TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "noindex")
         self.assertEqual(self.client.get("/not-a-thing-salary/").status_code, 404)
+
+
+class CompanyHiringPageTests(TestCase):
+    """Founder asked (Oct 25): company pages had Google impressions but 0 clicks. They now show
+    real hiring facts (count in the title, platforms, where, remote, USD pay) + similar companies."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Category, Tool, Job
+        cat = Category.objects.create(name="MAP", slug="map")
+        self.mk = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        def job(co, title, country="US", arr="onsite", sal=""):
+            j = Job.objects.create(title=title, company=co, location="Austin, TX", country=country, work_arrangement=arr,
+                                   apply_url=f"https://x.com/{co}/{title}", salary_range=sal,
+                                   screening_status="approved", is_active=True)
+            j.tools.add(self.mk)
+        job("Acme", "Marketo Admin", sal="$100,000 - $120,000")
+        job("Acme", "Marketo Ops Lead", arr="remote", sal="$120,000 - $140,000")
+        job("Beta Corp", "Marketo Developer")
+
+    def test_company_page_facts_and_similar(self):
+        import re
+        r = self.client.get("/companies/acme/")
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+        self.assertIn("Acme MarTech Jobs: 2 Open Roles", title)
+        self.assertIn("Platforms Acme is hiring for", html)
+        self.assertIn("1 of 2", html)                  # remote share
+        self.assertIn("$110,000–$130,000", html)        # real USD pay
+        self.assertIn('href="/companies/beta-corp/"', html)
+        self.assertIn('"@type":"ItemList"', html)
+        self.assertIn('id="co-alert-form"', html)
+
+    def test_unknown_company_still_404(self):
+        self.assertEqual(self.client.get("/companies/nobody-here/").status_code, 404)
