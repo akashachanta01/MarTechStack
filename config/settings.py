@@ -242,6 +242,7 @@ LOGIN_REDIRECT_URL = '/accounts/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'
+ACCOUNT_FORMS = {'signup': 'accounts.forms.BotCheckSignupForm'}
 
 # ==============================================
 # GOOGLE OAUTH (django-allauth socialaccount)

@@ -2921,3 +2921,57 @@ class DesignPolishTests(TestCase):
             with self.subTest(url=url):
                 html = self.client.get(url).content.decode()
                 self.assertLess(html.index("tools-tw.css"), html.index("tools-brand.css"))
+
+
+class SignupBotCheckTests(TestCase):
+    """Audit Oct 25: ~44 of 121 accounts were bots. The sign-up form refuses honeypot fills,
+    instant submits, junk names and floods, without any visible step for real people."""
+    def setUp(self):
+        cache.clear()
+
+    def _data(self, **extra):
+        import time
+        from django.core import signing
+        from accounts.forms import TS_SALT
+        d = {"first_name": "Priya", "last_name": "Sharma", "email": "priya@example.org",
+             "password1": "Str0ng-pass-123", "password2": "Str0ng-pass-123", "website": "",
+             "ts": signing.dumps(int(time.time()) - 10, salt=TS_SALT)}
+        d.update(extra)
+        return d
+
+    def _signup(self, **extra):
+        from django.contrib.auth import get_user_model
+        self.client.logout()
+        r = self.client.post("/accounts/signup/", self._data(**extra))
+        return r, get_user_model().objects.filter(email=self._data(**extra)["email"]).exists()
+
+    def test_real_person_signs_up(self):
+        r, made = self._signup()
+        self.assertTrue(made)
+        self.assertEqual(r.status_code, 302)
+
+    def test_page_carries_token_and_hidden_trap(self):
+        r = self.client.get("/accounts/signup/")
+        self.assertContains(r, 'name="ts" value="')
+        self.assertContains(r, 'name="website"')
+
+    def test_bots_are_refused(self):
+        import time
+        from django.core import signing
+        from accounts.forms import TS_SALT
+        cases = {
+            "honeypot": {"website": "http://spam.example", "email": "a1@example.org"},
+            "no_token": {"ts": "", "email": "a2@example.org"},
+            "too_fast": {"ts": signing.dumps(int(time.time()), salt=TS_SALT), "email": "a3@example.org"},
+            "digits": {"first_name": "Wademe vyjaver y7", "email": "a4@example.org"},
+            "bot_case": {"first_name": "LoganwhorbRW", "last_name": "LoganwhorbRW", "email": "a5@example.org"},
+            "link": {"last_name": "martechjobs.io AB", "email": "a6@example.org"},
+        }
+        for label, extra in cases.items():
+            r, made = self._signup(**extra)
+            self.assertFalse(made, label)
+            self.assertContains(r, "couldn&#x27;t create your account", msg_prefix=label)
+
+    def test_flood_from_one_address_is_capped(self):
+        made = [self._signup(email=f"p{i}@example.org")[1] for i in range(5)]
+        self.assertEqual(made, [True, True, True, False, False])

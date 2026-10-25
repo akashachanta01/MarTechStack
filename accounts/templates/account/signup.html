@@ -46,6 +46,8 @@
       {% if redirect_field_value %}
       <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
       {% endif %}
+      <input type="hidden" name="ts" value="{{ form.ts.value|default:'' }}">
+      <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="auth-field">
