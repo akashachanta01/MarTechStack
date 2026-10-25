@@ -90,7 +90,7 @@
     <div class="jbt-loc-group">
       <div class="jbt-sec-head">Browse by location</div>
       <div class="jbt-hubs">
-        <a href="{% url 'seo_loc_only' 'remote' %}" class="jbt-hub-primary">🌐 Remote Jobs</a>
+        <a href="{% url 'seo_loc_only' 'remote' %}" class="jbt-hub-primary">✈ Remote Jobs</a>
         {% for loc in top_cities %}
         <a href="{% url 'seo_loc_only' loc|slugify %}" class="jbt-hub">{{ loc }}</a>
         {% endfor %}

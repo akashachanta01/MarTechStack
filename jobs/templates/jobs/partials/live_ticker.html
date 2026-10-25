@@ -1,0 +1,64 @@
+{% if ticker_jobs|length >= 4 %}
+{% comment %}Home page "LIVE" strip: the newest live jobs that list a salary, scrolling slowly.
+   Data: jobs.views.home_ticker_jobs (cached 10 min). The second copy of the list that
+   makes the loop seamless is added by JS and hidden from screen readers and Tab, so
+   the page HTML (what Google reads) links each job once.{% endcomment %}
+<style>
+  .lt { background: var(--card); border-bottom: 1px solid var(--rule); }
+  .lt-inner { max-width: var(--maxw); margin: 0 auto; padding: 10px 32px; display: flex; align-items: center; gap: 14px; }
+  .lt-badge { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 999px; background: var(--green-light); border: 1px solid rgba(31,111,67,.18); color: var(--green); font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .lt-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px rgba(43,182,115,.18); animation: lt-pulse 2s infinite; }
+  @keyframes lt-pulse { 50% { box-shadow: 0 0 0 6px rgba(43,182,115,.04); } }
+  .lt-view { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+  .lt-track { display: flex; gap: 10px; width: max-content; list-style: none; margin: 0; padding: 2px 0; }
+  .lt-track.go { animation: lt-scroll var(--lt-dur, 60s) linear infinite; }
+  .lt:hover .lt-track, .lt:focus-within .lt-track { animation-play-state: paused; }
+  @keyframes lt-scroll { to { transform: translateX(-50%); } }
+  .lt-pill { display: inline-flex; align-items: center; gap: 9px; height: 38px; padding: 0 14px 0 5px; border: 1px solid var(--rule); border-radius: 999px; background: var(--card); white-space: nowrap; font-size: 13.5px; color: var(--ink); transition: border-color .15s, box-shadow .15s; }
+  .lt-pill:hover { border-color: var(--rule2); box-shadow: var(--shadow-sm); }
+  .lt-logo { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: var(--tint-navy); color: var(--navy); font-family: 'Playfair Display', serif; font-weight: 800; font-size: 13px; border: 1px solid var(--rule); }
+  .lt-logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .lt-title { font-weight: 700; }
+  .lt-co { color: var(--ink2); }
+  .lt-sal { font-weight: 700; color: var(--green); }
+  @media (max-width: 560px) { .lt-inner { padding: 8px 20px; gap: 10px; } .lt-co { display: none; } }
+  /* Reduced motion: no scrolling; the row can be swiped/scrolled by hand instead. */
+  @media (prefers-reduced-motion: reduce) { .lt-track.go { animation: none; } .lt-view { overflow-x: auto; } }
+</style>
+<div class="lt" aria-label="Newest live jobs with a salary">
+  <div class="lt-inner">
+    <span class="lt-badge"><i aria-hidden="true"></i>Live</span>
+    <div class="lt-view">
+      <ul class="lt-track" id="lt-track">
+        {% for j in ticker_jobs %}
+        <li><a class="lt-pill" href="{% url 'job_detail' j.id j.slug %}" data-lt-job="{{ j.id }}">
+          <span class="lt-logo">{% if j.logo %}<img src="{{ j.logo }}" alt="" loading="lazy" width="28" height="28">{% else %}{{ j.company|slice:":1" }}{% endif %}</span>
+          <span class="lt-title">{{ j.title }}</span><span class="lt-co">{{ j.company }}</span><span class="lt-sal">{{ j.salary }}</span>
+        </a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var track = document.getElementById('lt-track');
+  if (!track) return;
+  // Seamless loop: append a hidden copy, then scroll by half the (now doubled) width.
+  var items = Array.prototype.slice.call(track.children);
+  items.forEach(function (li) {
+    var c = li.cloneNode(true);
+    c.setAttribute('aria-hidden', 'true');
+    c.querySelectorAll('a').forEach(function (a) { a.setAttribute('tabindex', '-1'); });
+    track.appendChild(c);
+  });
+  // Constant reading speed (~40px a second) however many jobs there are.
+  track.style.setProperty('--lt-dur', Math.max(30, Math.round(track.scrollWidth / 2 / 40)) + 's');
+  track.classList.add('go');
+  track.addEventListener('click', function (e) {
+    var a = e.target.closest('a[data-lt-job]');
+    if (a && window.mtjTrack) window.mtjTrack('live_strip_click', { job_id: +a.getAttribute('data-lt-job') });
+  });
+})();
+</script>
+{% endif %}

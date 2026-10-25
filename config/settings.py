@@ -128,6 +128,7 @@ TEMPLATES = [
                 'jobs.context_processors.seo_indexing',
                 'accounts.context_processors.saved_job_ids',
                 'accounts.context_processors.feature_flags',
+                'accounts.context_processors.profile_nudge',
             ],
         },
     },
