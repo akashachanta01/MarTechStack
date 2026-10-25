@@ -64,6 +64,13 @@
   .jd-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
   .jd-apply-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .jd-posted { font-size: 12px; color: var(--ink3); }
+  /* Phones: Apply full width; Save and Check side by side under it; posted date last. */
+  @media (max-width: 680px) {
+    .jd-apply-row { gap: 10px; }
+    .jd-apply-row > .btn { flex: 1 1 0; justify-content: center; padding-left: 12px; padding-right: 12px; }
+    .jd-apply-row > .js-apply { flex-basis: 100%; }
+    .jd-posted { flex-basis: 100%; }
+  }
 
   .jd-body { display: grid; grid-template-columns: 1fr 300px; gap: 40px; padding-bottom: 80px; }
   @media(max-width: 768px){ .jd-body { grid-template-columns: 1fr; } .jd-header { flex-direction: column; } }
@@ -115,6 +122,23 @@
 .jd-nudge a { font-size:14px; font-weight:700; color:var(--amber); }
 .jd-nudge-x { position:absolute; top:6px; right:8px; border:0; background:none; font-size:22px; line-height:1; color:var(--ink3); cursor:pointer; padding:4px 8px; }
 @media (max-width:640px) { .jd-nudge { right:16px; bottom:16px; } }
+/* Phones: Apply bar pinned to the bottom once both Apply buttons are off screen.
+   While it shows (body.jd-sticky-on) the signup bar, apply nudge and toasts sit above it. */
+.jd-sticky { display:none; }
+@media (max-width:680px) {
+  .jd-sticky { position:fixed; left:0; right:0; bottom:0; z-index:80; display:flex; align-items:center; gap:12px; padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background:var(--card); border-top:1px solid var(--rule); box-shadow:0 -6px 20px rgba(0,0,0,.08); transform:translateY(110%); }
+  .jd-sticky { visibility:hidden; transition:transform .2s cubic-bezier(.4,0,.2,1), visibility 0s .2s; }
+  .jd-sticky.on { transform:none; visibility:visible; transition:transform .2s cubic-bezier(.4,0,.2,1); }
+  .jd-sticky-info { flex:1; min-width:0; line-height:1.3; }
+  .jd-sticky-title { display:block; font-size:13.5px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .jd-sticky-sub { display:block; font-size:12.5px; color:var(--ink3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .jd-sticky-sub b { color:var(--green); font-weight:700; }
+  .jd-sticky .btn { flex-shrink:0; padding:12px 18px; }
+  body.jd-has-sticky { padding-bottom:72px; }
+  body.jd-sticky-on #signup-bar { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
+  body.jd-sticky-on .jd-nudge { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
+  body.jd-sticky-on #toast-container { bottom:calc(90px + env(safe-area-inset-bottom, 0px)); }
+}
 </style>
 
 <div class="jd-wrap">
@@ -174,7 +198,7 @@
       </div>
       {% if key_skills.shown and not has_saved_resume %}
       <a class="jd-skillcheck js-check-resume" data-placement="skills_card" href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow">
-        <span class="jd-skillcheck-lbl">This role asks for</span>
+        <span class="jd-skillcheck-lbl">Skills this role asks for</span>
         <span class="jd-skillcheck-tags">{% for t in key_skills.shown %}<span class="jd-skillcheck-tag">{{ t }}</span>{% endfor %}{% if key_skills.more %}<span class="jd-skillcheck-more">+{{ key_skills.more }} more</span>{% endif %}</span>
         <span class="jd-skillcheck-cta">See which ones your resume is missing — free, 20 seconds →</span>
       </a>
@@ -188,8 +212,8 @@
     <div>
       <div class="jd-content">{% if job.description %}{{ job.description|fix_links|safe }}{% else %}<p>The full job description is available on the employer's site. Click <strong>Apply Now</strong> below to read the complete role details and requirements.</p>{% endif %}</div>
       <div class="jd-apply-cta">
-        <h3>Ready to make an impact?</h3>
-        <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>
+        <h3>Apply at {{ job.company }}</h3>
+        <p>You apply directly with {{ job.company }}: the button opens this role on their hiring page. Posted {{ job.created_at|timesince }} ago.</p>
         <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber btn-lg js-apply" data-placement="bottom">Apply Now →</a>
         {% if job.description %}
         <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="js-check-resume" data-placement="bottom" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
@@ -213,7 +237,7 @@
 
       {% if job.tools.exists %}
       <div class="jd-card">
-        <h4>Tech Stack Required</h4>
+        <h4>More jobs on these platforms</h4>
         <div class="jd-stack-chips">
           {% for tool in job.tools.all %}
           <a href="{% url 'tool_detail' tool.slug %}">{{ tool.name }}</a>
@@ -263,6 +287,10 @@
 </section>
 {% endif %}
 {% if show_course %}<div style="max-width:1100px;margin:0 auto;padding:0 32px">{% include "jobs/partials/course_box.html" with course_where="job_page" %}</div>{% endif %}
+<div id="jd-sticky" class="jd-sticky">
+  <span class="jd-sticky-info"><span class="jd-sticky-title">{{ job.title }}</span><span class="jd-sticky-sub">{{ job.company }}{% if job.salary_range %} · <b>{{ job.salary_range }}</b>{% endif %}</span></span>
+  <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber js-apply" data-placement="sticky" tabindex="-1">Apply →</a>
+</div>
 {% if job.description and key_skills.shown %}
 <div id="jd-nudge" class="jd-nudge" role="status" hidden>
   <button type="button" class="jd-nudge-x" aria-label="Dismiss">×</button>
@@ -286,6 +314,43 @@ document.querySelectorAll('.js-apply').forEach(function (a) {
     showApplyNudge();
   });
 });
+// Phones: show the bottom Apply bar only while neither Apply button is on screen
+// and the reader has scrolled past the top one.
+(function () {
+  var bar = document.getElementById('jd-sticky');
+  var top = document.querySelector('.js-apply[data-placement="top"]');
+  if (!bar || !top || !('IntersectionObserver' in window)) return;
+  var link = bar.querySelector('a');
+  var inView = new Set();
+  document.body.classList.add('jd-has-sticky');
+  function update() {
+    var on = inView.size === 0 && top.getBoundingClientRect().bottom < 0;
+    bar.classList.toggle('on', on);
+    document.body.classList.toggle('jd-sticky-on', on);
+    link.tabIndex = on ? 0 : -1;
+    placeApplyNudge();
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) inView.add(e.target); else inView.delete(e.target); });
+    update();
+  });
+  document.querySelectorAll('.js-apply[data-placement="top"], .js-apply[data-placement="bottom"]').forEach(function (b) { io.observe(b); });
+})();
+// The signup bar (bottom centre) and this card would overlap: stack the card above it.
+function placeApplyNudge() {
+  var n = document.getElementById('jd-nudge'), sb = document.getElementById('signup-bar');
+  if (!n || n.hidden) return;
+  n.style.bottom = '';
+  if (!sb || sb.hidden || !sb.classList.contains('sb-in')) return;
+  setTimeout(function () {  // after the bars finish moving
+    if (sb.hidden) { n.style.bottom = ''; return; }
+    n.style.bottom = (window.innerHeight - sb.getBoundingClientRect().top + 10) + 'px';
+  }, 400);
+}
+(function () {
+  var sb = document.getElementById('signup-bar');
+  if (sb && 'MutationObserver' in window) new MutationObserver(placeApplyNudge).observe(sb, { attributes: true, attributeFilter: ['class', 'hidden'] });
+})();
 // Never blocks applying: the job opens in a new tab, this card waits here.
 // Shown at most once a week per browser.
 function showApplyNudge() {
@@ -297,6 +362,7 @@ function showApplyNudge() {
     localStorage.setItem('mtj_nudge_at', String(Date.now()));
   } catch (e) {}
   n.hidden = false;
+  placeApplyNudge();
   window.mtjTrack && window.mtjTrack('apply_nudge_shown', MTJ_JOB);
   n.querySelector('.jd-nudge-x').addEventListener('click', function () {
     n.hidden = true;

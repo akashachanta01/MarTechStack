@@ -1,6 +1,15 @@
 {% extends "jobs/base.html" %}
 {% block meta_robots %}noindex, follow{% endblock %}
 {% block content %}
+{% comment %}Shared by every sign-in / account page. Page-specific rules live in each page's own <style>, which comes later and wins.{% endcomment %}
+<style>
+.auth-card { background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow); }
+.auth-label { display:block;font-size:13px;font-weight:700;color:var(--ink2);margin-bottom:6px; }
+.auth-input { width:100%;padding:12px 14px;border:1.5px solid var(--rule2);border-radius:8px;font-family:'Hanken Grotesk',sans-serif;font-size:15px;color:var(--ink);background:var(--paper);outline:none;transition:border .15s; }
+.auth-input:focus { border-color:var(--amber); }
+.google-btn { display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px;border:1.5px solid var(--rule2);border-radius:8px;background:#fff;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--ink);text-decoration:none;transition:all .15s; }
+.google-btn:hover { border-color:var(--ink3);box-shadow:var(--shadow-sm); }
+</style>
 <div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;">
   {% block auth_content %}{% endblock %}
 </div>
