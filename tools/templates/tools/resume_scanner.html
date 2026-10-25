@@ -29,23 +29,23 @@
   .rm-pillbadge { display: inline-flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 999px; background: #fff; border: 1px solid #f3e1d2; box-shadow: 0 4px 18px rgba(191,84,32,.08); font-size: 14px; color: var(--ink2); }
   .rm-pillbadge i { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 4px #dcfce7; }
   .rm-h1 { font-family: 'Hanken Grotesk', sans-serif; font-weight: 800; font-size: clamp(38px, 6vw, 72px); line-height: 1.04; letter-spacing: -0.035em; color: var(--ink); margin: 26px 0 0; max-width: 960px; }
-  .rm-hl { position: relative; display: inline-block; background: linear-gradient(90deg, #bf5420, #e8792f 60%, #d9480f); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 6px; }
+  .rm-hl { position: relative; display: inline-block; background: linear-gradient(90deg, var(--amber), #e8792f 60%, #d9480f); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 6px; }
   .rm-hl svg { position: absolute; left: 0; bottom: -4px; width: 100%; height: 12px; }
   .rm-sub { font-size: clamp(17px, 2vw, 21px); line-height: 1.55; color: var(--ink2); max-width: 760px; margin: 22px 0 0; }
   .rm-sub b { color: var(--ink); }
   .rm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 1080px; margin-top: 34px; padding: 18px 22px; box-sizing: border-box; background: rgba(255,255,255,.85); border: 1px solid #f1e6db; border-radius: 18px; box-shadow: 0 10px 30px rgba(28,25,23,.05); }
   .rm-stat { display: flex; align-items: center; gap: 12px; justify-content: center; font-size: 15px; color: var(--ink2); }
   .rm-stat b { font-size: 18px; color: var(--ink); }
-  .rm-ico { width: 38px; height: 38px; border-radius: 11px; background: #fdeee4; color: #bf5420; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rm-ico { width: 38px; height: 38px; border-radius: 11px; background: #fdeee4; color: var(--amber); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .rm-ico svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .rm-sec-t { font-family: 'Hanken Grotesk', sans-serif; font-weight: 800; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.025em; text-align: center; margin: 86px 0 10px; color: var(--ink); }
   .rm-sec-s { text-align: center; font-size: 17px; color: var(--ink2); margin: 0 auto 38px; max-width: 640px; }
   .rm-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; position: relative; }
   .rm-steps::before { content: ''; position: absolute; top: 44px; left: 17%; right: 17%; height: 2px; background: #f7cdb3; }
   .rm-step { text-align: center; position: relative; }
-  .rm-step-ico { position: relative; width: 88px; height: 88px; margin: 0 auto 20px; border-radius: 22px; background: #fff; border: 1px solid #f1e6db; box-shadow: 0 10px 26px rgba(191,84,32,.10); display: flex; align-items: center; justify-content: center; color: #bf5420; }
+  .rm-step-ico { position: relative; width: 88px; height: 88px; margin: 0 auto 20px; border-radius: 22px; background: #fff; border: 1px solid #f1e6db; box-shadow: 0 10px 26px rgba(191,84,32,.10); display: flex; align-items: center; justify-content: center; color: var(--amber); }
   .rm-step-ico svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .rm-step-n { position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; border-radius: 50%; background: #bf5420; color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(191,84,32,.35); }
+  .rm-step-n { position: absolute; top: -12px; right: -12px; width: 34px; height: 34px; border-radius: 50%; background: var(--amber); color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(191,84,32,.35); }
   .rm-step h3 { font-size: 21px; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.01em; }
   .rm-step p { font-size: 15.5px; line-height: 1.6; color: var(--ink2); margin: 0 auto; max-width: 330px; }
   .rm-feats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
@@ -79,7 +79,7 @@
   .rm-linkbtn { background: none; border: none; padding: 0; color: var(--amber, #9a3f12); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline; }
   .rm-or { font-size: 13px; color: var(--ink3); margin: 12px 0 0; text-align: center; }
   .rm-save { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink2); margin-top: 10px; }
-  .rm-btn { width: 100%; min-height: 56px; margin-top: 18px; background: linear-gradient(90deg, #bf5420, #e0692a); color: #fff; border: none; border-radius: 14px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(191,84,32,.28); display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .rm-btn { width: 100%; min-height: 56px; margin-top: 18px; background: linear-gradient(90deg, var(--amber), #e0692a); color: #fff; border: none; border-radius: 14px; font-size: 17px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(191,84,32,.28); display: flex; align-items: center; justify-content: center; gap: 10px; }
   .rm-btn:disabled { opacity: .6; cursor: wait; }
   .rm-note { font-size: 12.5px; color: var(--ink3); margin-top: 10px; text-align: center; }
   .rm-err { display: none; margin-top: 14px; padding: 14px 16px; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: 14px; }
@@ -110,7 +110,7 @@
   .rm-gap-h { font-size: 13px; color: var(--ink2); margin-top: 6px; }
   .rm-pro-tag { font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #fbbf8a; }
   .rm-chg { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 12px; margin-top: 10px; }
-  .rm-chg input { width: 20px; height: 20px; margin-top: 2px; accent-color: #bf5420; }
+  .rm-chg input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--amber); }
   .rm-chg .b { font-size: 13.5px; color: var(--ink3); text-decoration: line-through; }
   .rm-chg .a { font-size: 14.5px; color: var(--ink); font-weight: 600; margin-top: 6px; }
   .rm-chg .w { font-size: 12.5px; color: #92400e; margin-top: 6px; }
@@ -212,7 +212,7 @@
 
     <div id="rm-new" {% if saved_resume %}hidden{% endif %}>
       <label class="rm-drop" id="rm-drop" for="rm-file">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#bf5420" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
         <b id="rm-drop-t">Drop your resume here, or click to choose a file</b>
         <span>PDF or Word (.docx) · up to 5 MB</span>
         <input type="file" id="rm-file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">

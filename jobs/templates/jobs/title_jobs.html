@@ -91,7 +91,7 @@
     {% if tool %}<p style="margin-top:14px;font-size:14px;"><a href="{% url 'tool_detail' tool.slug %}" style="font-weight:700;color:var(--amber);">All {{ tool.name }} jobs →</a></p>{% endif %}
     {% if tool_siblings %}<div class="tj-cross-row" style="margin:14px 0 0">{% for r in tool_siblings %}<a href="{% url 'tool_role_jobs' tool.slug r.func %}">{{ r.name }} ({{ r.count }})</a>{% endfor %}</div>{% endif %}
     {% if curated %}<a href="{% url 'role_salary' title_slug %}" style="display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
-      💰 What does a {{ title_name }} earn? See the salary data →
+      <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> What does a {{ title_name }} earn? See the salary data →
     </a>{% endif %}
   </div>
 </section>
