@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from jobs.models import Job
-from jobs.emails import send_html_email, get_digest_recipients
+from jobs.emails import send_html_email, get_digest_recipients, send_founder_copy
 
 
 class Command(BaseCommand):
@@ -84,6 +84,9 @@ class Command(BaseCommand):
             if ok:
                 sent += 1
             time.sleep(0.3)
+
+        send_founder_copy(subject, "emails/digest.html",
+                          {"jobs": jobs, "count": count, "weekly": options["weekly"]}, sent, len(subscribers))
 
         # Mark these jobs so they're not re-sent tomorrow.
         if sent > 0:

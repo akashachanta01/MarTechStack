@@ -697,8 +697,10 @@ class Phase3WeeklyEmailTests(TestCase):
 
     def test_personal_email_only_to_opted_in_members_with_strong_new_matches(self):
         m = self._run("send_weekly_matches")
-        sent = {c.kwargs["to_email"][0]: c.kwargs for c in m.call_args_list}
+        copies = [c for c in m.call_args_list if c.kwargs["subject"].startswith("[MTJ copy]")]
+        sent = {c.kwargs["to_email"][0]: c.kwargs for c in m.call_args_list if c not in copies}
         self.assertEqual(set(sent), {"a@x.test"})
+        self.assertEqual(len(copies), 1)  # one founder copy per send, not one per member
         kw = sent["a@x.test"]
         self.assertIn("80%+", kw["subject"]); self.assertIn("Asha", kw["subject"])
         self.assertEqual([j["id"] for j in kw["context"]["jobs"]], [self.fit.id])
@@ -2735,3 +2737,51 @@ class ViewToggleTests(TestCase):
                 self.assertLessEqual(h.count("view="), 1, (url, h))
                 self.assertIn("l=Canada", h)
                 self.assertNotIn("page=", h)
+
+
+
+class FounderAlertTests(TestCase):
+    """Founder asked (Oct 25): an email to hello@ for every new account and subscriber with
+    details + totals, and one copy of each subscriber send (never one per recipient)."""
+    def test_new_account_alert_has_details_and_totals(self):
+        from django.contrib.auth import get_user_model
+        from django.core import mail
+        from accounts.emails import send_admin_new_user_alert
+        from jobs.models import Subscriber
+        Subscriber.objects.create(email="ann@x.test")
+        u = get_user_model().objects.create_user("ann", "ann@x.test", "pw", first_name="Ann", last_name="Lee")
+        send_admin_new_user_alert(u)
+        m = mail.outbox[-1]
+        self.assertEqual(m.to, ["hello@martechjobs.io"])
+        self.assertEqual(m.subject, "[MTJ] New account: ann@x.test")
+        for bit in ("Ann Lee", "Email + password", "Subscribed", "Total accounts:     1", "Total subscribers:  1"):
+            self.assertIn(bit, m.body)
+
+    def test_new_subscriber_alert_has_totals(self):
+        from django.core import mail
+        from jobs.emails import send_admin_new_subscriber_alert
+        from jobs.models import Subscriber
+        Subscriber.objects.create(email="bo@x.test")
+        send_admin_new_subscriber_alert("bo@x.test", "Mozilla/5.0", "1.2.3.4")
+        m = mail.outbox[-1]
+        self.assertEqual(m.subject, "[MTJ] New subscriber: bo@x.test")
+        self.assertIn("Has account:  No", m.body)
+        self.assertIn("Total subscribers:  1", m.body)
+
+    @override_settings(EMAIL_HOST_PASSWORD="x")
+    def test_digest_sends_exactly_one_founder_copy(self):
+        from unittest import mock
+        from django.core import mail
+        from django.core.management import call_command
+        from jobs.models import Job, Subscriber
+        for e in ("s1@x.test", "s2@x.test", "s3@x.test"):
+            Subscriber.objects.create(email=e)
+        Job.objects.create(title="Marketo Admin", company="Acme", location="Austin, TX",
+                           apply_url="https://acme.com/1", screening_status="approved", is_active=True)
+        with mock.patch("time.sleep"):
+            call_command("send_daily_digest", "--weekly", stdout=open("/dev/null", "w"))
+        copies = [m for m in mail.outbox if m.to == ["hello@martechjobs.io"]]
+        self.assertEqual(len(copies), 1)
+        self.assertIn("[MTJ copy] This week in MarTech", copies[0].subject)
+        self.assertIn("(sent to 3 people)", copies[0].subject)
+        self.assertIn("Copy of what MarTechJobs just sent", copies[0].alternatives[0][0])

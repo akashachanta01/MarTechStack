@@ -37,7 +37,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from accounts.models import UserResume
         from jobs.ats_match import extract_terms
-        from jobs.emails import get_digest_recipients, send_html_email
+        from jobs.emails import get_digest_recipients, send_html_email, send_founder_copy
         from jobs.models import Job
         from jobs.resume_match import job_requirements
 
@@ -53,6 +53,7 @@ class Command(BaseCommand):
 
         sent_to = already_sent_this_week()
         sent = 0
+        sample = None  # first email sent, copied to the founder
         for res in UserResume.objects.select_related("user").iterator():
             email = (res.user.email or "").lower()
             if not email or email not in allowed or email in sent_to:
@@ -83,15 +84,19 @@ class Command(BaseCommand):
             if options["dry_run"]:
                 self.stdout.write(f"  would email {email}: {n} match(es); top gap: {top_gap}")
                 continue
+            ctx = {"jobs": picks, "count": n, "first_name": first,
+                   "top_gap": top_gap[0] if top_gap else "", "top_gap_n": top_gap[1] if top_gap else 0}
             ok = send_html_email(
                 subject=subject, template_name="emails/weekly_matches.html",
-                context={"jobs": picks, "count": n, "first_name": first,
-                         "top_gap": top_gap[0] if top_gap else "", "top_gap_n": top_gap[1] if top_gap else 0},
-                to_email=[email], unsubscribe_email=email,
+                context=ctx, to_email=[email], unsubscribe_email=email,
             )
             if ok:
+                if sample is None:
+                    sample = (subject, ctx, email)
                 sent += 1
                 sent_to.add(email)
                 cache.set(_week_key(), list(sent_to), 9 * 86400)
             time.sleep(0.3)
+        if sample:
+            send_founder_copy(sample[0], "emails/weekly_matches.html", sample[1], sent, 0, sample_to=sample[2])
         self.stdout.write(self.style.SUCCESS(f"Weekly matches sent to {sent} member(s)."))

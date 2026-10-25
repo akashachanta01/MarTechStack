@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from jobs.models import Job, SavedSearch
-from jobs.emails import send_html_email
+from jobs.emails import send_html_email, send_founder_copy
 
 
 class Command(BaseCommand):
@@ -46,6 +46,7 @@ class Command(BaseCommand):
         searches = SavedSearch.objects.filter(is_active=True)
         total = searches.count()
         sent = 0
+        sample = None  # first alert sent, copied to the founder
 
         for s in searches.iterator():
             qs = new_jobs
@@ -72,14 +73,17 @@ class Command(BaseCommand):
                 self.stdout.write(f"  {s.email} [{label}] → {count} match(es)")
                 continue
 
+            subject = f"{count} new {label} role{'s' if count > 1 else ''}"
             ok = send_html_email(
-                subject=f"{count} new {label} role{'s' if count > 1 else ''}",
+                subject=subject,
                 template_name="emails/digest.html",
                 context={"jobs": matches, "count": count},
                 to_email=[s.email],
                 unsubscribe_email=s.email,
             )
             if ok:
+                if sample is None:
+                    sample = (subject, {"jobs": matches, "count": count}, s.email)
                 s.last_notified_at = timezone.now()
                 s.save(update_fields=["last_notified_at"])
                 sent += 1
@@ -88,4 +92,6 @@ class Command(BaseCommand):
         if options["dry_run"]:
             self.stdout.write(self.style.SUCCESS(f"Dry run complete — {total} active searches checked."))
         else:
+            if sample:
+                send_founder_copy(sample[0], "emails/digest.html", sample[1], sent, 0, sample_to=sample[2])
             self.stdout.write(self.style.SUCCESS(f"Saved-search alerts sent to {sent}/{total} searches."))
