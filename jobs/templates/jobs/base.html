@@ -383,6 +383,8 @@
     .ft-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
     .ft-col a { font-size: 13.5px; color: var(--ink2); transition: all .15s; text-decoration: none; display: inline-block; }
     .ft-col a:hover { color: var(--amber); transform: translateX(2px); }
+    /* Phones: taller tap targets (about 30px) with the same visible spacing (padding replaces most of the gap). */
+    @media (max-width: 680px) { .ft-col ul { gap: 2px; } .ft-col a { padding: 4px 0; } }
     .ft-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
       font-size: 12px; color: var(--ink3); }
     .ft-bottom .legal { display: flex; gap: 18px; flex-wrap: wrap; }
@@ -484,7 +486,11 @@
     .s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
     .s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
 
-    /* ---- Pagination: rules identical on every job list ---- */
+    /* ---- Pagination: one style on every job list (amber current page) ---- */
+    .pg-wrap { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 30px; }
+    .pg-btn { min-width: 40px; height: 40px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--rule); border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--ink2); background: #fff; text-decoration: none; transition: all .14s; }
+    .pg-btn:hover:not(.cur) { border-color: var(--amber); color: var(--amber); }
+    .pg-btn.cur { background: var(--amber); color: #fff; border-color: var(--amber); }
 
     /* ---- Job rows (every job list: home, all jobs, tool, category, landing, title, company) ----
        One shared copy. Pages keep only what genuinely differs (logo tint, spacing) in their
@@ -1118,7 +1124,8 @@
       #signup-bar .sb-close { flex-shrink: 0; background: none; border: none; color: rgba(255,255,255,.55);
         font-size: 18px; line-height: 1; cursor: pointer; padding: 4px 6px; }
       #signup-bar .sb-close:hover { color: #fff; }
-      @media (max-width: 560px) { #signup-bar { flex-wrap: wrap; padding: 12px 14px; } #signup-bar .sb-cta { flex: 1; text-align: center; } }
+      /* Phones: pin both edges (left:50% alone shrank the bar to half the screen width). */
+      @media (max-width: 560px) { #signup-bar { left: 12px; right: 12px; max-width: none; transform: translateY(120%); flex-wrap: wrap; padding: 12px 14px; } #signup-bar.sb-in { transform: none; } #signup-bar .sb-cta { flex: 1; text-align: center; } }
     </style>
     <div id="signup-bar" hidden role="complementary" aria-label="Create a free account">
       <p id="sb-text"><b>Job hunting in MarTech?</b> Save roles &amp; get alerts tuned to your stack — free forever.</p>

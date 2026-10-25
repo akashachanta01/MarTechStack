@@ -1086,7 +1086,7 @@ class ScannerVisibilityTests(TestCase):
     def test_job_page_lists_this_jobs_skills(self):
         r = self.client.get(self.url())
         self.assertContains(r, 'data-placement="skills_card"')
-        self.assertContains(r, "This role asks for")
+        self.assertContains(r, "Skills this role asks for")
         self.assertContains(r, "Marketo Engage")          # a platform from JD_HTML
         self.assertContains(r, "more</span>")             # 8 terms -> 3 shown + 5 more
 
@@ -3238,3 +3238,68 @@ class GoogleForJobsFreshnessTests(TestCase):
             call_command("index_jobs", stdout=open(os.devnull, "w"))
         self.assertTrue(any(f"/job/{stale.id}/" in u for u in sent))
         self.assertFalse(any(f"/job/{recent.id}/" in u for u in sent))
+
+
+class JobPagePolishTests(TestCase):
+    """Phone Apply bar, factual apply copy, clearer skills headings, shared
+    pagination and sign-in styles, bigger footer tap targets."""
+
+    def setUp(self):
+        cache.clear()
+        self.job = make_job(title="SFMC Developer", company="Hooli", salary_range="$120,000 - $150,000")
+        self.url = f"/job/{self.job.id}/{self.job.slug}/"
+
+    def test_sticky_apply_bar_links_to_job_and_is_tracked(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('id="jd-sticky"', html)
+        self.assertIn('class="btn btn-amber js-apply" data-placement="sticky"', html)
+        self.assertEqual(html.count('href="https://acme.test/apply"'), 3)  # top, bottom, sticky bar
+        self.assertIn("<b>$120,000 - $150,000</b>", html)
+        self.assertIn("body.jd-sticky-on #signup-bar", html)  # signup bar moves up, not hidden
+
+    def test_sticky_bar_without_salary(self):
+        job = make_job(title="Ops Lead", company="Initech", salary_range="")
+        html = self.client.get(f"/job/{job.id}/{job.slug}/").content.decode()
+        self.assertIn('<span class="jd-sticky-sub">Initech</span>', html)
+
+    def test_apply_copy_is_factual(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn("<h3>Apply at Hooli</h3>", html)
+        self.assertNotIn("Ready to make an impact", html)
+        self.assertNotIn("the best roles close fast", html)
+
+    def test_skills_headings_distinct(self):
+        cat = Category.objects.create(name="Email", slug="email")
+        tool = Tool.objects.create(name="Braze", slug="braze", category=cat)
+        self.job.tools.add(tool)
+        html = self.client.get(self.url).content.decode()
+        self.assertIn("More jobs on these platforms", html)
+        self.assertNotIn("Tech Stack Required", html)
+        self.assertIn('<a href="/jobs/braze/">Braze</a>', html)  # tool-page links kept for SEO
+
+    def test_pagination_shared_amber_on_every_list(self):
+        import glob, os
+        from django.conf import settings
+        base = open(os.path.join(settings.BASE_DIR, "jobs", "templates", "jobs", "base.html")).read()
+        self.assertIn(".pg-btn.cur { background: var(--amber);", base)
+        self.assertIn(".pg-btn:hover:not(.cur)", base)  # hovering the current page keeps white text
+        for f in glob.glob(os.path.join(settings.BASE_DIR, "jobs", "templates", "jobs", "*.html")):
+            if f.endswith("base.html"):
+                continue
+            with self.subTest(template=os.path.basename(f)):
+                self.assertNotRegex(open(f).read(), r"\n\s*\.pg-(btn|wrap)[^{]*\{")
+
+    def test_auth_styles_shared_once(self):
+        html = self.client.get("/accounts/login/").content.decode()
+        self.assertEqual(html.count(".auth-card {"), 1)
+        self.assertEqual(html.count(".google-btn:hover {"), 1)
+        html = self.client.get("/accounts/password/reset/").content.decode()
+        self.assertEqual(html.count(".auth-input:focus {"), 1)
+
+    def test_footer_tap_targets_on_phones(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn(".ft-col a { padding: 4px 0; }", html)
+
+    def test_signup_bar_full_width_on_phones(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn("#signup-bar { left: 12px; right: 12px;", html)
