@@ -1913,8 +1913,9 @@ def post_job(request):
                         job.tools.add(tool)
 
             cache.delete('popular_tech_stacks_v4'); cache.delete('available_countries_v4')
-            from .emails import send_admin_new_job_submission_alert
-            send_admin_new_job_submission_alert(job)
+            # Verify automatically; publish if every check passes; email either way.
+            from .submissions import process_submission_async
+            process_submission_async(job.pk)
             # Paid 'featured' posts aren't offered yet: without Stripe configured every post is free.
             if plan == 'featured' and settings.STRIPE_SECRET_KEY:
                 checkout_session = stripe.checkout.Session.create(
