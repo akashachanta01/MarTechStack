@@ -2816,3 +2816,51 @@ class MobileSalaryTests(TestCase):
         html = self.client.get("/jobs/").content.decode()
         self.assertIn(".jrow > .jrow-right {", html)
         self.assertIn("$120,000 - $150,000", html)
+
+
+class RecruiterContactTests(TestCase):
+    """Founder asked (Oct 25): capture the poster's name + work email on job submissions,
+    kept private, with an email-domain check in admin and the founder alert."""
+    def _post(self, **extra):
+        data = {"title": "Marketo Admin", "company": "Acme", "location": "Austin, TX", "work_arrangement": "onsite",
+                "function": "operations", "role_type": "full_time", "apply_url": "https://jobs.acme.com/123",
+                "description": "Own Marketo.", "plan": "free", "poster_name": "Priya Sharma",
+                "poster_email": "Priya@Acme.com", "poster_role": "in_house"}
+        data.update(extra)
+        return self.client.post("/post-job/", data)
+
+    def test_submission_saves_private_contact_and_alerts_founder(self):
+        from django.core import mail
+        from jobs.models import Job
+        r = self._post()
+        self.assertEqual(r.status_code, 302)
+        j = Job.objects.get(title="Marketo Admin")
+        self.assertEqual((j.poster_name, j.poster_email, j.poster_role), ("Priya Sharma", "priya@acme.com", "in_house"))
+        self.assertEqual(j.screening_status, "pending")
+        alert = [m for m in mail.outbox if m.subject.startswith("[MTJ] New job to review")]
+        self.assertEqual(len(alert), 1)
+        self.assertIn("Matches the apply link's company", alert[0].body)
+        self.assertEqual(alert[0].reply_to, ["priya@acme.com"])
+
+    def test_name_and_email_required(self):
+        from jobs.models import Job
+        r = self._post(poster_name="", poster_email="")
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(Job.objects.filter(title="Marketo Admin").exists())
+
+    def test_contact_never_shown_on_job_page(self):
+        from jobs.models import Job
+        self._post()
+        j = Job.objects.get(title="Marketo Admin")
+        Job.objects.filter(pk=j.pk).update(screening_status="approved", is_active=True)
+        r = self.client.get(f"/job/{j.id}/{j.slug}/")
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, "priya@acme.com")
+        self.assertNotContains(r, "Priya Sharma")
+
+    def test_email_check(self):
+        from jobs.models import poster_email_check as c
+        self.assertEqual(c("a@acme.com", "https://jobs.acme.com/1"), "match")
+        self.assertEqual(c("a@acme.com", "https://boards.greenhouse.io/acme/1"), "different")
+        self.assertEqual(c("a@gmail.com", "https://acme.com/1"), "personal")
+        self.assertEqual(c("", "https://acme.com/1"), "")

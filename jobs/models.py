@@ -138,6 +138,26 @@ def clean_html_description(text):
     return re.sub(r'\n\s*\n', '\n\n', clean_text).strip()
 
 
+
+PERSONAL_EMAIL_DOMAINS = {"gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "yahoo.co.uk", "hotmail.com",
+                          "outlook.com", "live.com", "icloud.com", "me.com", "aol.com", "proton.me", "protonmail.com",
+                          "gmx.com", "gmx.de", "mail.com", "yandex.com", "zoho.com", "rediffmail.com"}
+
+
+def poster_email_check(email, apply_url):
+    """Plain-English trust signal for a submitted job: does the poster's email
+    domain match the apply link's domain? ('match' / 'personal' / 'different' / '')."""
+    from urllib.parse import urlparse
+    dom = (email or "").rsplit("@", 1)[-1].lower().strip()
+    if not dom or "@" not in (email or ""):
+        return ""
+    if dom in PERSONAL_EMAIL_DOMAINS:
+        return "personal"
+    host = (urlparse(apply_url or "").hostname or "").lower()
+    root = lambda h: ".".join(h.split(".")[-2:])
+    return "match" if host and (host == dom or host.endswith("." + dom) or root(host) == root(dom)) else "different"
+
+
 _HREF_RE = re.compile(r'href="([^"]*)"')
 _BARE_DOMAIN_RE = re.compile(r'^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/|$)', re.I)
 
@@ -206,6 +226,17 @@ class Job(models.Model):
     salary_range = models.CharField(max_length=100, blank=True, null=True)
     work_arrangement = models.CharField(max_length=10, choices=WORK_ARRANGEMENT_CHOICES, default='onsite')
     tools = models.ManyToManyField(Tool, related_name="jobs", blank=True)
+    POSTER_ROLE_CHOICES = [
+        ('in_house', 'In-house recruiter / HR'),
+        ('hiring_manager', 'Hiring manager'),
+        ('agency', 'Agency recruiter'),
+        ('other', 'Other'),
+    ]
+    # Who submitted a user-posted job. Private: shown in admin and the founder
+    # alert only, never on the site.
+    poster_name = models.CharField(max_length=120, blank=True, default="")
+    poster_email = models.EmailField(max_length=254, blank=True, default="")
+    poster_role = models.CharField(max_length=20, choices=POSTER_ROLE_CHOICES, blank=True, default="")
     
     screening_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_active = models.BooleanField(default=False)

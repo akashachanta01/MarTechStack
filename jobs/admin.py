@@ -84,14 +84,30 @@ class BaseJobAdmin(admin.ModelAdmin):
     list_filter = ("screening_status", "work_arrangement", "created_at", ("tools", admin.EmptyFieldListFilter))
     fieldsets = (
         ("Key Info", {"fields": ("title", "company", "company_logo", "apply_url", "location")}),
+        ("Posted by (private)", {"fields": ("poster_name", "poster_email", "poster_role", "poster_check")}),
         ("Job Details", {"fields": ("description", "role_type", "work_arrangement", "salary_range", "tools")}),
         ("Screening & AI", {"fields": ("screening_status", "screening_score", "screening_reason", "tags"), "classes": ("collapse",)}),
         ("Monetization", {"fields": ("is_pinned", "is_featured", "plan_name"), "classes": ("collapse",)}),
         ("System Data", {"fields": ("slug", "created_at", "updated_at", "screened_at", "screening_details"), "classes": ("collapse",)}),
     )
-    readonly_fields = ("created_at", "updated_at", "screened_at", "screening_details")
+    readonly_fields = ("created_at", "updated_at", "screened_at", "screening_details", "poster_check")
     filter_horizontal = ("tools",)
     ordering = ("-created_at",)
+    @admin.display(description="Posted by")
+    def posted_by(self, obj):
+        if not obj.poster_email:
+            return "—"
+        return format_html("{}<br><small>{}</small>", obj.poster_name or "—", obj.poster_email)
+
+    @admin.display(description="Email check")
+    def poster_check(self, obj):
+        from .models import poster_email_check
+        verdict = poster_email_check(obj.poster_email, obj.apply_url)
+        return {"match": "✅ Email matches the apply link's company",
+                "personal": "⚠️ Personal email (Gmail etc.): check before approving",
+                "different": "⚠️ Email domain differs from the apply link",
+                }.get(verdict, "—")
+
     actions = [auto_tag_tools, delete_all_rejected, "send_digest", "mark_approved", "mark_rejected", "mark_pending", "activate_jobs", "deactivate_jobs"]
 
     def logo_preview(self, obj):
@@ -190,7 +206,8 @@ class ActiveJobAdmin(BaseJobAdmin):
 @admin.register(UserSubmission)
 class UserSubmissionAdmin(BaseJobAdmin):
     def get_queryset(self, request): return super().get_queryset(request).filter(tags__icontains="User Submission").prefetch_related('tools')
-    list_display = ("logo_preview", "job_card_header", "location", "score_display", "screening_status", "posted_date")
+    list_display = ("logo_preview", "job_card_header", "location", "posted_by", "poster_check", "screening_status", "posted_date")
+    search_fields = BaseJobAdmin.search_fields + ("poster_name", "poster_email")
 
 @admin.register(Subscriber)
 class SubscriberAdmin(admin.ModelAdmin):
