@@ -41,6 +41,7 @@ async def main():
             await pg.fill("#id_location", "Remote"); await pg.check("#id_work_arrangement_0")
             await pg.locator("#id_description").evaluate("(e) => { e.value = 'We need a Marketo and Salesforce expert to run campaigns, lead scoring and reporting. '.repeat(4); e.dispatchEvent(new Event('input')); }")
             await pg.fill("#id_apply_url", "https://example.com/apply")
+            await pg.fill("#id_poster_name", "E2E Recruiter"); await pg.fill("#id_poster_email", "recruiter@example.com")
             await pg.locator("#id_title").evaluate("e => e.form.requestSubmit()"); await pg.wait_for_load_state()
             n = django(f"from jobs.models import Job; print(Job.objects.filter(title='Marketing Ops Manager {label}').count())")
             errtxt = await pg.locator(".errorlist").all_inner_texts()
