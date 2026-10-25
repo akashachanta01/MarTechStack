@@ -104,9 +104,9 @@
 
   .td-activefilters { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .td-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--amber-light); border: 1px solid #f0c6a8; color: var(--amber); font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
-  .td-chip a { display: inline-flex; color: var(--amber); }
+  .td-chip a { display: inline-flex; color: var(--amber); padding: 8px; margin: -8px; }
   .td-chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.5; }
-  .td-clear { font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); text-decoration: none; }
+  .td-clear { padding: 9px 4px; margin: -9px -4px; font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); text-decoration: none; }
   .td-clear:hover { color: var(--amber); }
 
   .td-rows.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -208,7 +208,7 @@
             <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="s-remote-panel" role="menu">
-            <h4>Where can you work from?</h4>
+            <p class="s-remote-title">Where can you work from?</p>
             <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
             <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}" role="menuitem">
               <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>

@@ -42,3 +42,10 @@ def fix_links(html):
     """Repair scheme-less links in stored job descriptions (see fix_description_links)."""
     from jobs.models import fix_description_links
     return fix_description_links(html or "")
+
+
+@register.filter(is_safe=True)
+def tidy_description(html):
+    """One heading style, no spacer gaps or #LI- tags, plain text made readable."""
+    from jobs.description_tidy import tidy_description as tidy
+    return tidy(html or "")

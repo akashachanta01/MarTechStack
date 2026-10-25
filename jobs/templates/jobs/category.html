@@ -150,7 +150,7 @@
             <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="s-remote-panel" role="menu">
-            <h4>Where can you work from?</h4>
+            <p class="s-remote-title">Where can you work from?</p>
             <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
             <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}" role="menuitem">
               <span class="s-remote-opt-ico"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
