@@ -110,7 +110,7 @@
             </td>
             <td><span class="sg-range">${{ stat.avg_min|intcomma }} – ${{ stat.avg_max|intcomma }}</span></td>
             <td><span class="sg-count">{{ stat.count }} jobs</span></td>
-            <td style="text-align:right;"><a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-action">View Jobs →</a></td>
+            <td style="text-align:right;">{% if stat.has_page %}<a href="{% url 'role_salary' stat.tool.slug %}" class="sg-action">Salary details →</a>{% else %}<a href="{% url 'tool_detail' stat.tool.slug %}" class="sg-action">View Jobs →</a>{% endif %}</td>
           </tr>
           {% empty %}
           <tr>

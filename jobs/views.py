@@ -1304,7 +1304,7 @@ def market_stats(request):
 
 
 def salary_guide(request):
-    data = cache.get('salary_guide_data_v2')
+    data = cache.get('salary_guide_data_v3')
     if not data:
         # Eligible tools (those with at least one live job).
         tools = Tool.objects.annotate(
@@ -1323,6 +1323,9 @@ def salary_guide(request):
             .prefetch_related('tools')
         )
         for job in jobs:
+            # Dollar figures only: euro/rupee salaries were being averaged in as dollars.
+            if job.get_schema_currency() != 'USD':
+                continue
             s_min, s_max = job.get_salary_min_max()
             if not (s_min and s_max):
                 continue
@@ -1344,8 +1347,11 @@ def salary_guide(request):
             for tid, b in agg.items() if b[2] > 0
         ]
         salary_stats.sort(key=lambda x: x['avg_max'], reverse=True)
+        indexable = set(platform_salary_slugs())
+        for st in salary_stats:
+            st['has_page'] = st['tool'].slug in indexable
         data = salary_stats
-        cache.set('salary_guide_data_v2', data, 3600)
+        cache.set('salary_guide_data_v3', data, 3600)
 
     # Real aggregates computed from the data — no fabricated numbers.
     stack_count = len(data)
@@ -1366,6 +1372,8 @@ def _salary_stats(jobs):
     when no job in the set disclosed pay (we never fabricate a number)."""
     lows, highs, mids = [], [], []
     for j in jobs:
+        if j.get_schema_currency() != 'USD':  # never average euros/rupees in as dollars
+            continue
         lo, hi = j.get_salary_min_max()
         if lo and hi:
             lows.append(lo); highs.append(hi); mids.append((lo + hi) // 2)
@@ -1392,7 +1400,7 @@ def role_salary(request, role_slug):
     Computed entirely from disclosed pay in the live/recent job corpus."""
     cfg = TITLE_JOBS.get(role_slug)
     if not cfg:
-        raise Http404("Unknown role")
+        return platform_salary(request, role_slug)
 
     jobs = title_jobs_qs(role_slug).prefetch_related("tools")
 
@@ -1408,7 +1416,7 @@ def role_salary(request, role_slug):
         .order_by('-c').distinct()[:8]
     )
     examples = [j for j in jobs.order_by('-is_pinned', '-created_at')
-                if j.get_salary_min_max()[0]][:6]
+                if j.get_schema_currency() == 'USD' and j.get_salary_min_max()[0]][:6]
 
     return render(request, 'jobs/salary_role.html', {
         'role_slug': role_slug,
@@ -1422,6 +1430,72 @@ def role_salary(request, role_slug):
         'total_open': jobs.count(),
         # Thin data => keep it out of the index until it's substantive.
         'page_noindex': not role_salary_indexable(stats),
+    })
+
+
+PLATFORM_SALARY_MIN = 5  # disclosed dollar salaries needed before a platform salary page is indexed
+PLATFORM_SALARY_DAYS = 180
+
+
+def _platform_salary_pool(tool):
+    """Approved jobs for a platform from the last 6 months (closed ones too: pay
+    data stays real after a role fills, and live-only pools were too thin)."""
+    return (Job.objects.filter(tools=tool, screening_status='approved',
+                               created_at__gte=timezone.now() - timedelta(days=PLATFORM_SALARY_DAYS))
+            .exclude(salary_range__isnull=True).exclude(salary_range='').prefetch_related('tools'))
+
+
+def platform_salary_slugs():
+    """Platform slugs with enough real dollar salaries for an indexable page (sitemap,
+    guide and tool-page links). One pass over salaried jobs, cached 6h: this runs
+    inside page requests, so it must never loop per platform."""
+    out = cache.get('platform_salary_slugs_v1')
+    if out is None:
+        counts = {}
+        jobs = (Job.objects.filter(screening_status='approved',
+                                   created_at__gte=timezone.now() - timedelta(days=PLATFORM_SALARY_DAYS))
+                .exclude(salary_range__isnull=True).exclude(salary_range='').prefetch_related('tools'))
+        for j in jobs:
+            if j.get_schema_currency() != 'USD' or not all(j.get_salary_min_max()):
+                continue
+            for t in j.tools.all():
+                counts[t.slug] = counts.get(t.slug, 0) + 1
+        names = dict(Tool.objects.filter(slug__in=counts).values_list('slug', 'name'))
+        out = sorted(sl for sl, n in counts.items()
+                     if n >= PLATFORM_SALARY_MIN and sl not in TITLE_JOBS
+                     and names.get(sl, '').lower() in _CANONICAL_TOOL_NAMES)
+        cache.set('platform_salary_slugs_v1', out, 6 * 3600)
+    return out
+
+
+def platform_salary(request, slug):
+    """Per-platform salary page, e.g. /marketo-salary/. Real disclosed pay only
+    (Search Console: 'marketo certified expert salary', 'martech salary' searches)."""
+    tool = Tool.objects.filter(slug=slug).first()
+    if not tool or tool.name.lower() not in _CANONICAL_TOOL_NAMES:
+        raise Http404("Unknown role or platform")
+    pool = _platform_salary_pool(tool)
+    stats = _salary_stats(pool)
+    live = Job.objects.filter(tools=tool, is_active=True, screening_status='approved')
+    pool_ids = list(pool.values_list('id', flat=True))
+    top_tools = (Tool.objects.filter(jobs__id__in=pool_ids).exclude(id=tool.id)
+                 .annotate(c=Count('jobs', filter=Q(jobs__id__in=pool_ids))).order_by('-c').distinct()[:8])
+    examples = [j for j in pool.filter(is_active=True).order_by('-is_pinned', '-created_at')
+                if j.get_schema_currency() == 'USD' and j.get_salary_min_max()[0]][:6]
+    name = tool.name + (f" ({TOOL_SHORT_NAMES[slug]})" if TOOL_SHORT_NAMES.get(slug) else "")
+    return render(request, 'jobs/salary_role.html', {
+        'role_slug': slug,
+        'role_name': name,
+        'role_intro': "",
+        'is_platform': True,
+        'tool': tool,
+        'stats': stats,
+        'remote_stats': _salary_stats(pool.filter(work_arrangement='remote')),
+        'onsite_stats': _salary_stats(pool.exclude(work_arrangement='remote')),
+        'top_tools': top_tools,
+        'examples': examples,
+        'total_open': live.count(),
+        'page_noindex': not (stats and stats['count'] >= PLATFORM_SALARY_MIN),
     })
 
 
@@ -1585,6 +1659,7 @@ def tool_detail(request, slug):
         'show_course': tool.slug in ADOBE_COURSE_TOOLS,
         'has_interview_guide': has_interview_guide,
         'has_cert_guide': has_cert_guide,
+        'has_salary_page': tool.slug in platform_salary_slugs(),
         'tool': tool,
         'jobs': jobs_page,
         'total_count': total_count,

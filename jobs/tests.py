@@ -3303,3 +3303,43 @@ class JobPagePolishTests(TestCase):
     def test_signup_bar_full_width_on_phones(self):
         html = self.client.get(self.url).content.decode()
         self.assertIn("#signup-bar { left: 12px; right: 12px;", html)
+
+
+class PlatformSalaryPageTests(TestCase):
+    """Founder asked (Oct 25): salary pages per platform (e.g. /marketo-salary/) from real
+    disclosed pay. Dollar salaries only: euro/rupee figures must never be averaged in as dollars."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Category, Tool, Job
+        cat = Category.objects.create(name="MAP", slug="map")
+        self.marketo = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        def mk(i, sal, country="US", active=True):
+            j = Job.objects.create(title=f"Marketo Admin {i}", company=f"Co{i}", location="Austin, TX", country=country,
+                                   apply_url=f"https://x.com/{i}", salary_range=sal, screening_status="approved", is_active=active)
+            j.tools.add(self.marketo)
+        for i, sal in enumerate(["$100,000 - $120,000", "$110k - $130k", "$90,000 - $110,000",
+                                 "$120,000 - $140,000", "$100,000 - $140,000"]):
+            mk(i, sal)
+        mk(9, "€300,000 – €400,000", country="DE")  # must be ignored
+
+    def test_platform_salary_page_real_usd_stats(self):
+        r = self.client.get("/marketo-salary/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Marketo roles typically pay")
+        self.assertContains(r, "5 disclosed Marketo posting")
+        self.assertNotContains(r, "300,000")
+        self.assertNotContains(r, 'content="noindex')
+        self.assertContains(r, 'href="/jobs/marketo/"')
+
+    def test_listed_in_sitemap_and_linked_from_tool_page(self):
+        from jobs.views import platform_salary_slugs
+        self.assertIn("marketo", platform_salary_slugs())
+        self.assertContains(self.client.get("/jobs/marketo/"), 'href="/marketo-salary/"')
+
+    def test_thin_or_unknown_platform(self):
+        from jobs.models import Tool
+        Tool.objects.create(name="Braze", slug="braze", category=self.marketo.category)
+        r = self.client.get("/braze-salary/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "noindex")
+        self.assertEqual(self.client.get("/not-a-thing-salary/").status_code, 404)

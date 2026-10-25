@@ -201,7 +201,9 @@ class RoleSalarySitemap(Sitemap):
     def items(self):
         # Only salary pages that are indexable (same rule as the page itself).
         from jobs.views import TITLE_JOBS, title_jobs_qs, role_salary_indexable, _salary_stats
-        return [s for s in TITLE_JOBS if role_salary_indexable(_salary_stats(title_jobs_qs(s)))]
+        from jobs.views import platform_salary_slugs
+        roles = [s for s in TITLE_JOBS if role_salary_indexable(_salary_stats(title_jobs_qs(s)))]
+        return roles + platform_salary_slugs()
 
     def location(self, slug):
         return f"/{slug}-salary/"
