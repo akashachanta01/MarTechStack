@@ -207,6 +207,32 @@ def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
         logger.warning("Admin new-subscriber alert failed: %s", e)
 
 
+def send_admin_new_job_submission_alert(job):
+    """Tell the founder a recruiter submitted a job (it waits in review). Non-fatal."""
+    try:
+        from .models import poster_email_check
+        check = {"match": "Matches the apply link's company (good sign)",
+                 "personal": "Personal email (Gmail etc.): check before approving",
+                 "different": "Different from the apply link's domain: check before approving",
+                 }.get(poster_email_check(job.poster_email, job.apply_url), "—")
+        body = (
+            "New job submitted on MarTechJobs (waiting for your review)\n\n"
+            f"Job:      {job.title} at {job.company}\n"
+            f"Location: {job.location}\n"
+            f"Apply:    {job.apply_url}\n\n"
+            f"Posted by: {job.poster_name or '—'}\n"
+            f"Email:     {job.poster_email or '—'}\n"
+            f"Role:      {job.get_poster_role_display() or '—'}\n"
+            f"Email check: {check}\n\n"
+            f"Review it: {DOMAIN}/admin/jobs/usersubmission/{job.pk}/change/\n"
+        )
+        EmailMultiAlternatives(f"[MTJ] New job to review: {job.title} at {job.company}", body,
+                               settings.DEFAULT_FROM_EMAIL, [_founder_email()],
+                               reply_to=[job.poster_email] if job.poster_email else None).send(fail_silently=True)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning("Admin job-submission alert failed: %s", e)
+
+
 def send_founder_copy(subject, template_name, context, sent, total, sample_to=""):
     """One copy of a subscriber send to the founder, after the send finishes, so
     they see exactly what went out without one email per recipient. Personalised

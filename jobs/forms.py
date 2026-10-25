@@ -73,7 +73,8 @@ class JobPostForm(HoneypotMixin, forms.ModelForm):
         model = Job
         fields = [
             'title', 'company', 'company_logo', 'location', 'work_arrangement', 'function',
-            'role_type', 'salary_range', 'apply_url', 'description', 'tools'
+            'role_type', 'salary_range', 'apply_url', 'description', 'tools',
+            'poster_name', 'poster_email', 'poster_role',
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500 font-bold', 'placeholder': 'e.g. Senior Marketing Operations Manager'}),
@@ -88,7 +89,23 @@ class JobPostForm(HoneypotMixin, forms.ModelForm):
                 'placeholder': 'Describe the role, responsibilities, and what makes your team great...'
             }),
             'company_logo': forms.URLInput(attrs={'class': 'w-full rounded-xl border-slate-300 focus:ring-indigo-500', 'placeholder': 'Link to logo image URL'}),
+            'poster_name': forms.TextInput(attrs={'placeholder': 'e.g. Priya Sharma', 'autocomplete': 'name'}),
+            'poster_email': forms.EmailInput(attrs={'placeholder': 'you@company.com', 'autocomplete': 'email'}),
+            'poster_role': forms.Select(attrs={'class': 'bg-white'}),
         }
+        labels = {'poster_name': 'Your name', 'poster_email': 'Work email', 'poster_role': 'You are'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Who posted the job: required so every submission can be verified and
+        # followed up; kept private (admin + founder alert only).
+        self.fields['poster_name'].required = True
+        self.fields['poster_email'].required = True
+        self.fields['poster_role'].required = False
+        self.fields['poster_role'].choices = [('', 'Select (optional)')] + list(Job.POSTER_ROLE_CHOICES)
+
+    def clean_poster_email(self):
+        return (self.cleaned_data.get('poster_email') or '').strip().lower()
 
 
 class ContactForm(HoneypotMixin, forms.Form):

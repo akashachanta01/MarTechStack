@@ -170,6 +170,28 @@
             <p class="form-hint">The URL where candidates will apply (your ATS link)</p>
           </div>
 
+          <div class="pj-section" style="padding-top:20px;border-top:1px solid var(--rule);margin-top:8px;">
+            <h2>About you</h2>
+            <p class="form-hint" style="margin-bottom:14px;">Private: never shown on the site. We use it to verify the listing and contact you about it.</p>
+            <div class="pj-row">
+              <div class="form-group">
+                <label class="form-label" for="{{ form.poster_name.id_for_label }}">Your name <span class="req">*</span></label>
+                {{ form.poster_name }}
+                {% if form.poster_name.errors %}<p class="form-err">{{ form.poster_name.errors.0 }}</p>{% endif %}
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="{{ form.poster_email.id_for_label }}">Work email <span class="req">*</span></label>
+                {{ form.poster_email }}
+                {% if form.poster_email.errors %}<p class="form-err">{{ form.poster_email.errors.0 }}</p>{% endif %}
+                <p class="form-hint">A company email gets your listing approved fastest.</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="{{ form.poster_role.id_for_label }}">You are</label>
+              {{ form.poster_role }}
+            </div>
+          </div>
+
           <div style="padding-top:20px;border-top:1px solid var(--rule);margin-top:8px;">
             <button type="submit" class="btn btn-amber btn-block btn-lg">Publish Job Now →</button>
             <p style="text-align:center;font-family:'Courier Prime',monospace;font-size:11px;color:var(--ink3);margin-top:12px;">By publishing, you agree to our Terms of Service. All listings are reviewed before going live.</p>
