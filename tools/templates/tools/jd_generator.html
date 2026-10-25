@@ -2,6 +2,7 @@
 
 {% block title %}{{ seo_title|default:"Free MarTech Job Description Generator" }}{% endblock %}
 {% block meta_description %}{{ seo_description|default:"Generate professional Marketing Operations job descriptions in seconds. Free tool for hiring managers." }}{% endblock %}
+{% load static %}{% block extra_head %}<link rel="stylesheet" href="{% static 'css/tools-tw.css' %}"><link rel="stylesheet" href="{% static 'css/tools-brand.css' %}">{% endblock %}
 
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-12">
