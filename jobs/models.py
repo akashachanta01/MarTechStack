@@ -419,8 +419,17 @@ class Job(models.Model):
         # job GOES LIVE) so Google for Jobs doesn't keep showing "open" roles
         # that then 404. ISO 8601 *datetime* (not date-only): Google for Jobs
         # requires the full timestamp or it can reject the rich result.
-        anchor = self.went_live_at or self.created_at
-        return (anchor + timedelta(days=60)).strftime('%Y-%m-%dT%H:%M:%S+00:00')
+        # Rolling window from the last time the company's own board (or the
+        # dead-link API check) confirmed the job is still open. A fixed "live +
+        # 60 days" told Google 60 of 496 live jobs had already expired (Oct 2026
+        # audit), so Google for Jobs dropped roles that were still open. Live
+        # jobs are re-checked daily and closed when they vanish, so a short
+        # forward window is honest.
+        from django.utils import timezone as _tz
+        anchors = [d for d in (self.last_seen_at, self.went_live_at, self.created_at) if d]
+        until = max(anchors) + timedelta(days=30)
+        until = max(until, _tz.now() + timedelta(days=7))
+        return until.strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
     def save(self, *args, **kwargs):
         from jobs.ingest_quality import clean_title, display_company, tidy_location

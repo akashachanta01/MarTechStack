@@ -3194,3 +3194,47 @@ class LeakyLandingPageTests(TestCase):
         self.assertContains(r, "Live roles on similar platforms")
         self.assertContains(r, "Senior Marketo Operations Specialist")
         self.assertContains(r, "noindex")
+
+
+class GoogleForJobsFreshnessTests(TestCase):
+    """Oct 25 audit: validThrough = live + 60 days told Google 60 live jobs had expired.
+    It now rolls from the last confirmation; index_jobs re-announces live jobs every 21 days."""
+    def test_valid_through_follows_last_confirmation_and_is_never_past(self):
+        from datetime import timedelta, datetime
+        from django.utils import timezone
+        from jobs.models import Job
+        old = timezone.now() - timedelta(days=90)
+        j = Job.objects.create(title="Marketo Admin", company="Acme", location="Austin, TX",
+                               apply_url="https://acme.com/1", screening_status="approved", is_active=True)
+        Job.objects.filter(pk=j.pk).update(created_at=old, went_live_at=old, last_seen_at=timezone.now() - timedelta(days=1))
+        j.refresh_from_db()
+        vt = datetime.strptime(j.get_schema_valid_through(), "%Y-%m-%dT%H:%M:%S+00:00").replace(tzinfo=timezone.utc)
+        self.assertGreater(vt, timezone.now() + timedelta(days=28))
+        Job.objects.filter(pk=j.pk).update(last_seen_at=None)
+        j.refresh_from_db()
+        vt = datetime.strptime(j.get_schema_valid_through(), "%Y-%m-%dT%H:%M:%S+00:00").replace(tzinfo=timezone.utc)
+        self.assertGreater(vt, timezone.now() + timedelta(days=6))
+
+    def test_index_jobs_reannounces_stale_live_jobs(self):
+        import json, os
+        from datetime import timedelta
+        from unittest import mock
+        from django.core.management import call_command
+        from django.utils import timezone
+        from jobs.models import Job
+        stale = Job.objects.create(title="Old Live", company="Acme", location="Austin, TX", apply_url="https://acme.com/2",
+                                   screening_status="approved", is_active=True)
+        recent = Job.objects.create(title="Recently Sent", company="Acme", location="Austin, TX", apply_url="https://acme.com/3",
+                                    screening_status="approved", is_active=True)
+        Job.objects.filter(pk=stale.pk).update(went_live_at=timezone.now() - timedelta(days=80),
+                                               screening_details={"index_updated": (timezone.now() - timedelta(days=30)).isoformat()})
+        Job.objects.filter(pk=recent.pk).update(went_live_at=timezone.now() - timedelta(days=20),
+                                                screening_details={"index_updated": (timezone.now() - timedelta(days=3)).isoformat()})
+        sent = []
+        creds = mock.MagicMock(token="t")
+        with mock.patch.dict(os.environ, {"GOOGLE_JSON_KEY": json.dumps({"client_email": "x@y"})}), \
+             mock.patch("google.oauth2.service_account.Credentials.from_service_account_info", return_value=creds), \
+             mock.patch("requests.post", side_effect=lambda url, json, **k: sent.append(json["url"]) or mock.MagicMock(status_code=200)):
+            call_command("index_jobs", stdout=open(os.devnull, "w"))
+        self.assertTrue(any(f"/job/{stale.id}/" in u for u in sent))
+        self.assertFalse(any(f"/job/{recent.id}/" in u for u in sent))
