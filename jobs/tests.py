@@ -2883,3 +2883,41 @@ class SharedJobRowStylesTests(TestCase):
             with self.subTest(template=os.path.basename(path)):
                 self.assertIsNone(shared.search(open(path).read()))
         self.assertIsNotNone(shared.search(open(os.path.join(root, "base.html")).read()))
+
+
+@override_settings(**TEST_SETTINGS)
+class DesignPolishTests(TestCase):
+    """Readable colours, keyboard focus, touch menus, no nav emoji, branded tools pages."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_text_colours_meet_contrast(self):
+        html = self.client.get("/jobs/").content.decode()
+        self.assertIn("--ink3:    #706a62;", html)   # 4.8:1 on paper (was 3.6:1)
+        self.assertIn("--amber:   #b44f1e;", html)   # 4.65:1 as text on paper (was 4.2:1)
+
+    def test_keyboard_focus_outline(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn(":focus-visible { outline: 2px solid var(--navy)", html)
+
+    def test_touch_menus_and_apply_prompt(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn(".nav-mega-wrap.tap-open .nav-mega", html)
+        self.assertIn("matchMedia('(hover: none)')", html)
+        self.assertIn("@media (hover: none) { .jrow-apply { opacity: 1;", html)
+
+    def test_no_emoji_in_phone_menu(self):
+        html = self.client.get("/").content.decode()
+        menu = html[html.index('id="mobile-menu"'):html.index("</nav>", html.index('id="mobile-menu"'))]
+        for emoji in ("🔔", "📊"):
+            self.assertNotIn(emoji, menu)
+
+    def test_tools_pages_load_brand_remap(self):
+        # The JD generator had no stylesheet at all before (its page rendered unstyled).
+        for url in ["/tools/utm-link-builder/", "/tools/salary-calculator/", "/tools/consultant-rate-calculator/",
+                    "/tools/interview-questions-generator/", "/tools/email-subject-line-tester/",
+                    "/tools/job-description-generator/"]:
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertLess(html.index("tools-tw.css"), html.index("tools-brand.css"))
