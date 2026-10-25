@@ -47,6 +47,14 @@ async def main():
             errtxt = await pg.locator(".errorlist").all_inner_texts()
             ok(f"F4 {tag} post-a-job submission saved", n == "1", (n, pg.url, errtxt[:3]))
             # signup -> dashboard
+            # a script that submits instantly is refused (sign-up bot check)
+            await pg.goto(B + "/accounts/signup/")
+            bot = f"bot-{label}@example.com"
+            await pg.fill("input[name=email]", bot); await pg.fill("input[name=password1]", "Very-Strong-Pw-9182")
+            await pg.fill("input[name=password2]", "Very-Strong-Pw-9182")
+            await pg.locator("form button[type=submit]").first.click(); await pg.wait_for_load_state()
+            nb = django(f"from django.contrib.auth import get_user_model as g; print(g().objects.filter(email='{bot}').count())")
+            ok(f"F5b {tag} instant (bot-speed) sign-up refused", nb == "0" and "couldn" in (await pg.content()), nb)
             await pg.goto(B + "/accounts/signup/")
             em = f"newuser-{label}@example.com"
             await pg.fill("input[name=email]", em)
@@ -54,6 +62,7 @@ async def main():
                 if await pg.locator(sel).count(): await pg.fill(sel, "Very-Strong-Pw-9182")
             if await pg.locator("input[name=password2]").count(): await pg.fill("input[name=password2]", "Very-Strong-Pw-9182")
             if await pg.locator("input[name=username]").count(): await pg.fill("input[name=username]", f"nu{label}")
+            await pg.wait_for_timeout(3500)  # a person takes a few seconds to fill the form
             await pg.locator("form button[type=submit]").first.click(); await pg.wait_for_load_state()
             made = django(f"from django.contrib.auth import get_user_model as g; print(g().objects.filter(email='{em}').count())")
             ok(f"F5 {tag} sign-up creates account", made == "1", (made, pg.url))
