@@ -27,6 +27,7 @@
           <!-- Body -->
           <tr>
             <td style="padding:40px 36px 32px 36px; color:#2b2b2b; font-size:16px; line-height:1.6;">
+              {% if founder_copy_note %}<p style="margin:0 0 20px 0; padding:10px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; font-size:13px; color:#9a3412;">{{ founder_copy_note }}</p>{% endif %}
               {% block content %}{% endblock %}
             </td>
           </tr>

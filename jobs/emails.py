@@ -174,23 +174,51 @@ def send_welcome_email(to_email):
     if success:
         logger.info("Welcome email sent to %s", to_email)
 
+def _founder_email():
+    return getattr(settings, 'CONTACT_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io')
+
+
+def audience_totals():
+    """Live totals shown in every founder alert: accounts (staff excluded) and
+    active newsletter subscribers."""
+    from django.contrib.auth import get_user_model
+    return (get_user_model().objects.filter(is_staff=False).count(),
+            Subscriber.objects.filter(is_active=True).count())
+
+
 def send_admin_new_subscriber_alert(subscriber_email, user_agent, ip_address):
-    """
-    Send admin alert synchronously.
-    """
+    """Tell the founder a newsletter subscription was confirmed. Non-fatal."""
     try:
-        admin_email = getattr(settings, 'CONTACT_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'hello@martechjobs.io')
-        subject = f"🔔 New Subscriber: {subscriber_email}"
-        body = f"""
-New subscriber: {subscriber_email}
-IP: {ip_address}
-Time: {timezone.now()}
-Total: {Subscriber.objects.count()}
-        """
-        email = EmailMultiAlternatives(subject, body, settings.DEFAULT_FROM_EMAIL, [admin_email])
-        email.send(fail_silently=True)
-    except: 
-        pass
+        from django.contrib.auth import get_user_model
+        accounts, subscribers = audience_totals()
+        has_account = get_user_model().objects.filter(email__iexact=subscriber_email).exists()
+        body = (
+            "New newsletter subscriber on MarTechJobs\n\n"
+            f"Email:        {subscriber_email}\n"
+            f"Has account:  {'Yes' if has_account else 'No'}\n"
+            f"When:         {timezone.now():%d %b %Y, %H:%M} UTC\n"
+            f"Device:       {(user_agent or 'Unknown')[:120]}\n\n"
+            f"Total accounts:     {accounts}\n"
+            f"Total subscribers:  {subscribers}\n"
+        )
+        EmailMultiAlternatives(f"[MTJ] New subscriber: {subscriber_email}", body,
+                               settings.DEFAULT_FROM_EMAIL, [_founder_email()]).send(fail_silently=True)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning("Admin new-subscriber alert failed: %s", e)
+
+
+def send_founder_copy(subject, template_name, context, sent, total, sample_to=""):
+    """One copy of a subscriber send to the founder, after the send finishes, so
+    they see exactly what went out without one email per recipient. Personalised
+    sends (matches, saved searches) copy one recipient's email as the sample."""
+    if not sent:
+        return False
+    who = f"{sent} {'person' if sent == 1 else 'people'}" + (f" of {total}" if total and total != sent else "")
+    note = f"Copy of what MarTechJobs just sent to {who}."
+    if sample_to:
+        note += f" Each email is personalised; this is the one sent to {sample_to}."
+    return send_html_email(subject=f"[MTJ copy] {subject} (sent to {who})", template_name=template_name,
+                           context={**context, "founder_copy_note": note}, to_email=[_founder_email()])
 
 # Resend's hard limit is 50 BCC recipients per email (Oct 2026: batches of 90
 # were rejected, then the failed retries used up the daily quota).
