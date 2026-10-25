@@ -1507,7 +1507,7 @@ def tool_detail(request, slug):
     # they stop diluting site quality, even if they carry a few mis-tagged jobs.
     tool_is_canonical = tool.name.lower() in _CANONICAL_TOOL_NAMES
     has_interview_guide = InterviewGuide.objects.filter(slug=tool.slug, is_published=True).exists()
-    has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
+    has_cert_guide = CertificationGuide.objects.filter(slug__iexact=tool.slug, is_published=True).exists()
     return render(request, 'jobs/tool_detail.html', {
         'show_course': tool.slug in ADOBE_COURSE_TOOLS,
         'has_interview_guide': has_interview_guide,
@@ -1563,7 +1563,7 @@ def tool_interview(request, tool_slug):
         live_jobs.exclude(company='').values_list('company', flat=True).distinct()[:8]
     )
     recent_jobs = live_jobs.order_by('-is_pinned', '-created_at')[:6]
-    has_cert_guide = CertificationGuide.objects.filter(slug=tool.slug, is_published=True).exists()
+    has_cert_guide = CertificationGuide.objects.filter(slug__iexact=tool.slug, is_published=True).exists()
 
     # Flatten all Q/A across sections for the FAQPage JSON-LD, so the template
     # can emit a clean comma-separated list with no trailing/leading comma bugs
@@ -1594,7 +1594,7 @@ def tool_certification(request, tool_slug):
     if tool_slug != tool_slug.lower():
         return redirect('tool_certification', tool_slug=tool_slug.lower(), permanent=True)
 
-    guide = (CertificationGuide.objects.filter(slug=tool_slug, is_published=True)
+    guide = (CertificationGuide.objects.filter(slug__iexact=tool_slug, is_published=True)
              .select_related('tool').first())
     if not guide:
         raise Http404("No certification guide for this tool")

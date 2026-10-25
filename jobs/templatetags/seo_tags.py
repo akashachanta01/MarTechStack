@@ -35,3 +35,10 @@ def seo_desc(value, limit=158):
 
 def _visible_len(text):
     return len(re.sub(r"&[#\w]+;", "x", text))
+
+
+@register.filter(is_safe=True)
+def fix_links(html):
+    """Repair scheme-less links in stored job descriptions (see fix_description_links)."""
+    from jobs.models import fix_description_links
+    return fix_description_links(html or "")
