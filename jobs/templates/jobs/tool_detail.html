@@ -155,12 +155,15 @@
 
     {% if tool_role_links %}<div class="td-roles" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;justify-content:inherit">{% for r in tool_role_links %}<a href="{% url 'tool_role_jobs' tool.slug r.func %}" style="font-size:13px;font-weight:700;padding:7px 13px;border-radius:999px;border:1px solid var(--rule);background:#fff;color:var(--navy);text-decoration:none">{{ r.name }} jobs ({{ r.count }})</a>{% endfor %}</div>{% endif %}
 
-    {% if has_interview_guide or has_cert_guide %}
+    {% if has_interview_guide or has_cert_guide or has_salary_page %}
     <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:0 auto 22px;">
       {% if has_interview_guide %}
       <a href="{% url 'tool_interview' tool.slug %}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">
         <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Interviewing soon? Read the {{ tool.name }} interview guide →
       </a>
+      {% endif %}
+      {% if has_salary_page %}
+      <a href="{% url 'role_salary' tool.slug %}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;">What do {{ tool.name }} roles pay? See real salaries →</a>
       {% endif %}
       {% if has_cert_guide %}
       <a href="{% url 'tool_certification' tool.slug %}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid var(--rule2);font-size:13px;font-weight:700;color:var(--ink2);text-decoration:none;box-shadow:var(--shadow-sm);">

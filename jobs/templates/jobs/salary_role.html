@@ -25,8 +25,8 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"How much does a {{ role_name|escapejs }} make?","acceptedAnswer":{"@type":"Answer","text":"Based on {{ stats.count }} disclosed {{ role_name|escapejs }} postings on MarTechJobs, pay typically ranges from ${{ stats.avg_low|intcomma }} to ${{ stats.avg_high|intcomma }}, with a median around ${{ stats.median|intcomma }} per year."}},
-    {"@type":"Question","name":"What is the salary range for a {{ role_name|escapejs }}?","acceptedAnswer":{"@type":"Answer","text":"Reported {{ role_name|escapejs }} salaries span roughly ${{ stats.low|intcomma }} on the low end to ${{ stats.high|intcomma }} on the high end, with the middle 50% between ${{ stats.p25|intcomma }} and ${{ stats.p75|intcomma }}."}}
+    {"@type":"Question","name":"{% if is_platform %}How much do {{ role_name|escapejs }} jobs pay?{% else %}How much does a {{ role_name|escapejs }} make?{% endif %}","acceptedAnswer":{"@type":"Answer","text":"Based on {{ stats.count }} disclosed {{ role_name|escapejs }} postings on MarTechJobs, pay typically ranges from ${{ stats.avg_low|intcomma }} to ${{ stats.avg_high|intcomma }}, with a median around ${{ stats.median|intcomma }} per year."}},
+    {"@type":"Question","name":"{% if is_platform %}What is the salary range for {{ role_name|escapejs }} roles?{% else %}What is the salary range for a {{ role_name|escapejs }}?{% endif %}","acceptedAnswer":{"@type":"Answer","text":"Reported {{ role_name|escapejs }} salaries span roughly ${{ stats.low|intcomma }} on the low end to ${{ stats.high|intcomma }} on the high end, with the middle 50% between ${{ stats.p25|intcomma }} and ${{ stats.p75|intcomma }}."}}
   ]
 }
 </script>
@@ -37,7 +37,7 @@
 <style>
   .sr-wrap { max-width: 920px; margin: 0 auto; padding: 0 32px; }
   @media(max-width:560px){ .sr-wrap { padding: 0 20px; } }
-  .sr-hero { padding: 48px 0 8px; }
+  .sr-hero { padding-top: 48px; padding-bottom: 8px; }
   .sr-bc { font-size:12.5px; color:var(--ink3); margin-bottom:16px; }
   .sr-bc a:hover { color:var(--amber); text-decoration:underline; }
   .sr-hero h1 { font-family:'Playfair Display',serif; font-size:clamp(30px,5vw,46px); font-weight:800; line-height:1.1; color:var(--ink); margin-bottom:12px; }
@@ -87,7 +87,7 @@
   </nav>
   <h1>{{ role_name }} <em>Salary</em></h1>
   {% if stats %}
-  <p class="sr-headline">A {{ role_name }} typically earns <b>${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }}</b>, with a median around <b>${{ stats.median|intcomma }}</b> — based on {{ stats.count }} disclosed {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs.</p>
+  <p class="sr-headline">{% if is_platform %}{{ role_name }} roles typically pay{% else %}A {{ role_name }} typically earns{% endif %} <b>${{ stats.avg_low|intcomma }}–${{ stats.avg_high|intcomma }}</b>, with a median around <b>${{ stats.median|intcomma }}</b> — based on {{ stats.count }} disclosed {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs.</p>
   {% else %}
   <p class="sr-headline">We're still gathering disclosed-pay data for {{ role_name }} roles. In the meantime, here are the live openings and the stack these roles use.</p>
   {% endif %}
@@ -133,7 +133,7 @@
 
   {% if top_tools %}
   <div class="sr-section">
-    <h2>Skills that move {{ role_name }} pay</h2>
+    <h2>{% if is_platform %}Platforms {{ role_name }} roles also ask for{% else %}Skills that move {{ role_name }} pay{% endif %}</h2>
     <p class="sr-intro" style="font-size:14px;margin-bottom:14px;">The tools most often required across live {{ role_name }} roles — depth here typically lifts compensation:</p>
     <div class="sr-chips">
       {% for t in top_tools %}<a href="{% url 'tool_detail' t.slug %}">{{ t.name }}</a>{% endfor %}
@@ -164,14 +164,19 @@
   {% endif %}
 
   {% if stats %}
-  <p class="sr-note">Methodology: figures are computed from {{ stats.count }} {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs that disclosed pay, annualised where needed. This is real, observed data — not a model estimate — so it shifts as new roles are posted.</p>
+  <p class="sr-note">Methodology: figures are computed from {{ stats.count }} {{ role_name }} posting{{ stats.count|pluralize }} on MarTechJobs that disclosed pay in US dollars{% if is_platform %} over the last 6 months{% endif %}, annualised where needed. This is real, observed data — not a model estimate — so it shifts as new roles are posted.</p>
   {% endif %}
 
   <div class="sr-cta">
     <h2>See live {{ role_name }} jobs</h2>
     <p>{% if total_open %}{{ total_open }} {{ role_name }} role{{ total_open|pluralize }} are open on MarTechJobs right now.{% else %}New {{ role_name }} roles are added regularly.{% endif %} Apply directly — no recruiter noise.</p>
+    {% if is_platform %}
+    <a href="{% url 'tool_detail' role_slug %}" class="btn btn-amber btn-lg">Browse {{ role_name }} Jobs →</a>
+    <p style="margin-top:14px;font-size:15px;"><a href="/tools/resume-keyword-scanner/" style="font-weight:700;color:var(--amber);">Check your resume against a live {{ role_name }} job (free) →</a></p>
+    {% else %}
     <a href="{% url 'title_jobs' role_slug %}" class="btn btn-amber btn-lg">Browse {{ role_name }} Jobs →</a>
     <p style="margin-top:14px;font-size:15px;"><a href="{% url 'role_resume_keywords' role_slug %}" style="font-weight:700;color:var(--amber);">See which skills {{ role_name }} job posts ask for →</a></p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
