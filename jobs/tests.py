@@ -2637,3 +2637,79 @@ class TaxonomyTableTests(TestCase):
         r = self.client.get(f"/blog/{m26.SLUG}/")
         self.assertContains(r, "MarTech job title taxonomy")
         self.assertContains(r, 'href="/marketing-technology-analyst-jobs/"')
+
+
+class DescriptionLinkTests(TestCase):
+    """Audit Oct 25: 'wppmedia.com' links in employer descriptions 404'd as /job/<id>/<slug>/wppmedia.com."""
+    def test_bare_domains_made_absolute(self):
+        from jobs.models import fix_description_links as f
+        self.assertEqual(f('<a href="wppmedia.com">x</a>'), '<a href="https://wppmedia.com">x</a>')
+        self.assertEqual(f('<a href="www.acme.io/jobs">x</a>'), '<a href="https://www.acme.io/jobs">x</a>')
+        self.assertEqual(f('<a href="//acme.com">x</a>'), '<a href="https://acme.com">x</a>')
+        self.assertEqual(f('<a href="careers">x</a>'), '<a href="#">x</a>')
+        for ok in ('https://a.com/p', 'http://a.com', 'mailto:hr@a.com', '#top'):
+            self.assertEqual(f(f'<a href="{ok}">x</a>'), f'<a href="{ok}">x</a>')
+
+    def test_job_page_renders_fixed_link(self):
+        from jobs.models import Job
+        j = Job.objects.create(title="Marketing Ops Manager", company="WPP Media", location="Lisbon, Portugal",
+                               apply_url="https://example.com/a", screening_status="approved", is_active=True,
+                               description='<p>Visit <a href="wppmedia.com">wppmedia.com</a></p>')
+        Job.objects.filter(pk=j.pk).update(description='<p>Visit <a href="wppmedia.com">wppmedia.com</a></p>')
+        j.refresh_from_db()
+        r = self.client.get(f"/job/{j.id}/{j.slug}/")
+        self.assertContains(r, 'href="https://wppmedia.com"')
+        self.assertNotContains(r, 'href="wppmedia.com"')
+
+
+class CertGuideSlugTests(TestCase):
+    """Audit Oct 25: the 'Salesforce' guide (capital S) 404'd because the URL is always lowercased."""
+    def test_mixed_case_slug_guide_is_reachable_and_migration_lowercases(self):
+        import importlib
+        from django.apps import apps as real_apps
+        from jobs.models import Category, Tool, CertificationGuide
+        cat = Category.objects.create(name="CRM")
+        tool = Tool.objects.create(name="Salesforce", slug="salesforce", category=cat)
+        CertificationGuide.objects.create(tool=tool, slug="Salesforce", cert_name="Salesforce Administrator",
+                                          is_published=True)
+        self.assertEqual(self.client.get("/salesforce-certification/").status_code, 200)
+        importlib.import_module("jobs.migrations.0027_lowercase_cert_guide_slugs").forwards(real_apps, None)
+        self.assertEqual(CertificationGuide.objects.get(tool=tool).slug, "salesforce")
+        self.assertEqual(self.client.get("/salesforce-certification/").status_code, 200)
+
+
+class DeadLinkCheckTests(TestCase):
+    """Audit Oct 25: the dead-link janitor scraped Workday's JavaScript pages (always looked open)
+    and removed 0/100 a day. It now asks the ATS API first and stamps confirmed-open jobs."""
+    def _job(self, title, url, days_unseen):
+        from datetime import timedelta
+        from django.utils import timezone
+        from jobs.models import Job
+        j = Job.objects.create(title=title, company="Acme", location="Austin, TX", apply_url=url,
+                               screening_status="approved", is_active=True)
+        old = timezone.now() - timedelta(days=days_unseen)
+        Job.objects.filter(pk=j.pk).update(created_at=old, last_seen_at=old)
+        return j
+
+    def test_api_closed_removed_open_stamped_unknown_kept(self):
+        from unittest import mock
+        from django.core.management import call_command
+        from jobs.models import Job
+        from jobs.management.commands import check_dead_links as cdl
+        closed = self._job("Marketo Admin", "https://acme.wd5.myworkdayjobs.com/Ext/job/Austin/A_1", 20)
+        opened = self._job("HubSpot Ops", "https://acme.wd5.myworkdayjobs.com/Ext/job/Austin/B_2", 20)
+        unknown = self._job("CRM Lead", "https://careers.acme.com/jobs/123456789012345", 20)
+        fresh = self._job("Braze Dev", "https://acme.wd5.myworkdayjobs.com/Ext/job/Austin/C_3", 1)
+        status = {closed.apply_url: cdl.CLOSED, opened.apply_url: cdl.OPEN}
+        with mock.patch.object(cdl, "posting_status", side_effect=lambda u: status.get(u, "unknown")), \
+             mock.patch.object(cdl.Command, "_scrape_reason", return_value=None) as scrape:
+            call_command("check_dead_links", stdout=open("/dev/null", "w"))
+        for j in (closed, opened, unknown, fresh):
+            j.refresh_from_db()
+        self.assertFalse(closed.is_active)
+        self.assertEqual(closed.screening_reason, "Auto-Removed: Closed on company site")
+        self.assertTrue(opened.is_active)
+        self.assertGreater(opened.last_seen_at, unknown.last_seen_at)
+        self.assertTrue(unknown.is_active)
+        self.assertTrue(fresh.is_active)
+        self.assertEqual(scrape.call_count, 1)  # only the job with no readable API is scraped

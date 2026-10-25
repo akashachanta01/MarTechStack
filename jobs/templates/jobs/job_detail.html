@@ -1,5 +1,5 @@
 {% extends "jobs/base.html" %}
-{% load static %}
+{% load static seo_tags %}
 
 {% block title %}{{ job.title }} at {{ job.company }} | MarTechJobs{% endblock %}
 {% block meta_description %}{{ job.title }} at {{ job.company }} — {{ job.location }}. {{ job.get_role_type_display }}{% if job.salary_range %}, {{ job.salary_range }}{% endif %}. Apply today on MarTechJobs.{% endblock %}
@@ -186,7 +186,7 @@
 <div class="jd-wrap">
   <div class="jd-body">
     <div>
-      <div class="jd-content">{% if job.description %}{{ job.description|safe }}{% else %}<p>The full job description is available on the employer's site. Click <strong>Apply Now</strong> below to read the complete role details and requirements.</p>{% endif %}</div>
+      <div class="jd-content">{% if job.description %}{{ job.description|fix_links|safe }}{% else %}<p>The full job description is available on the employer's site. Click <strong>Apply Now</strong> below to read the complete role details and requirements.</p>{% endif %}</div>
       <div class="jd-apply-cta">
         <h3>Ready to make an impact?</h3>
         <p>This role is a great fit for marketing technologists with the right skillset. Don't wait — the best roles close fast.</p>

@@ -134,7 +134,33 @@ def clean_html_description(text):
     if not text: return ""
     text = html.unescape(text)
     clean_text = bleach.clean(text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+    clean_text = fix_description_links(clean_text)
     return re.sub(r'\n\s*\n', '\n\n', clean_text).strip()
+
+
+_HREF_RE = re.compile(r'href="([^"]*)"')
+_BARE_DOMAIN_RE = re.compile(r'^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(/|$)', re.I)
+
+
+def fix_description_links(text):
+    """Employer descriptions sometimes link 'wppmedia.com' with no scheme; browsers
+    and Googlebot resolve that against our job URL (/job/<id>/<slug>/wppmedia.com),
+    which 404s. Make bare domains absolute and drop other relative links."""
+    if not text or "href" not in text:
+        return text
+
+    def fix(m):
+        url = m.group(1).strip()
+        low = url.lower()
+        if low.startswith(("http://", "https://", "mailto:", "tel:")):
+            return m.group(0)
+        if low.startswith("//"):
+            return 'href="https:%s"' % url
+        if _BARE_DOMAIN_RE.match(url):
+            return 'href="https://%s"' % url
+        return 'href="#"' if not url.startswith("#") else m.group(0)
+
+    return _HREF_RE.sub(fix, text)
 
 # --- MODELS ---
 
