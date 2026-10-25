@@ -2864,3 +2864,22 @@ class RecruiterContactTests(TestCase):
         self.assertEqual(c("a@acme.com", "https://boards.greenhouse.io/acme/1"), "different")
         self.assertEqual(c("a@gmail.com", "https://acme.com/1"), "personal")
         self.assertEqual(c("", "https://acme.com/1"), "")
+
+
+class SharedJobRowStylesTests(TestCase):
+    """Job-row styles live once, in base.html. Seven pages used to carry their own
+    copies, which drifted (the phone salary bug had to be fixed in 7 places)."""
+
+    def test_job_row_styles_defined_only_in_base(self):
+        import glob
+        import os
+        import re
+        from django.conf import settings
+        root = os.path.join(settings.BASE_DIR, "jobs", "templates", "jobs")
+        shared = re.compile(r"^\s*\.jrow(-title|-meta|-badges|-salary|-main|:hover)\s*\{", re.M)
+        for path in glob.glob(os.path.join(root, "*.html")):
+            if path.endswith("base.html"):
+                continue
+            with self.subTest(template=os.path.basename(path)):
+                self.assertIsNone(shared.search(open(path).read()))
+        self.assertIsNotNone(shared.search(open(os.path.join(root, "base.html")).read()))
