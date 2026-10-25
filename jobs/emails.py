@@ -48,7 +48,7 @@ def get_digest_recipients():
     # UserProfile directly — no circular import with the accounts app).
     User = get_user_model()
     account_emails = (
-        User.objects.filter(userprofile__email_newsletter=True)
+        User.objects.filter(userprofile__email_newsletter=True, is_active=True)
         .exclude(email="")
         .values_list("email", flat=True)
     )
@@ -182,7 +182,7 @@ def audience_totals():
     """Live totals shown in every founder alert: accounts (staff excluded) and
     active newsletter subscribers."""
     from django.contrib.auth import get_user_model
-    return (get_user_model().objects.filter(is_staff=False).count(),
+    return (get_user_model().objects.filter(is_staff=False, is_active=True).count(),
             Subscriber.objects.filter(is_active=True).count())
 
 
