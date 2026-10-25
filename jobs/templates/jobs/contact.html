@@ -62,10 +62,10 @@
           <div class="form-group">
             <label class="form-label" for="id_subject">Topic <span class="opt">— optional</span></label>
             <div class="fb-chips" id="fb-chips">
-              <span class="fb-chip" data-topic="Bug / something broke">🐞 Found a bug</span>
-              <span class="fb-chip" data-topic="Feature idea">💡 Feature idea</span>
-              <span class="fb-chip" data-topic="Listing issue">📋 Listing issue</span>
-              <span class="fb-chip" data-topic="Just saying hi">👋 Just saying hi</span>
+              <span class="fb-chip" data-topic="Bug / something broke"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Found a bug</span>
+              <span class="fb-chip" data-topic="Feature idea"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Feature idea</span>
+              <span class="fb-chip" data-topic="Listing issue"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Listing issue</span>
+              <span class="fb-chip" data-topic="Just saying hi"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Just saying hi</span>
             </div>
             {{ form.subject }}
             {% if form.subject.errors %}<p class="form-err">{{ form.subject.errors.0 }}</p>{% endif %}

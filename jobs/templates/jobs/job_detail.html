@@ -312,10 +312,10 @@ function toggleSave(jobId) {
     headers: {'X-CSRFToken': '{{ csrf_token }}'},
   }).then(r => r.json()).then(d => {
     btn.dataset.saved = d.saved ? 'true' : 'false';
-    btn.style.borderColor = d.saved ? '#bf5420' : '#cdc8be';
+    btn.style.borderColor = d.saved ? 'var(--amber)' : '#cdc8be';
     btn.style.background = d.saved ? '#faeee5' : '#fff';
-    btn.style.color = d.saved ? '#bf5420' : '#666';
-    icon.setAttribute('fill', d.saved ? '#bf5420' : 'none');
+    btn.style.color = d.saved ? 'var(--amber)' : '#666';
+    icon.style.fill = d.saved ? 'var(--amber)' : 'none';  // a fill attribute can't use var()
     label.textContent = d.saved ? 'Saved' : 'Save Job';
     if (d.saved) window.mtjTrack && window.mtjTrack('job_saved', MTJ_JOB);
   }).catch(() => {});

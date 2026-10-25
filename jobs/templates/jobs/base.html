@@ -142,7 +142,7 @@
       --navy2:   #152540;
       --navy3:   #0e1c30;
       --amber:   #b44f1e;   /* was #bf5420 (4.2:1 as text on paper); now 4.65:1. Logo keeps #bf5420. */
-      --amber2:  #d96025;
+      --amber2:  #a2471b;   /* hover: was #d96025 (lighter, white text 3.7:1); now darker, 6.1:1 */
       --amber-accent: #f0a06a;
       --amber-light:  #faeee5;
 
@@ -150,6 +150,11 @@
       --green-light: #e7f3ec;
       --violet:      #3d2f9e;
       --violet-light:#ede9ff;
+      /* Tints and accents used as literals around the site, named so shared CSS can use them. */
+      --tint-navy:   #eef2f8;
+      --tint-ink:    #efece7;
+      --amber-border:#f0c6a8;
+      --live:        #2bb673;
 
       --radius:    10px;
       --radius-sm: 6px;
@@ -190,6 +195,9 @@
     .font-mono  { font-family: 'Courier Prime', ui-monospace, monospace; }
 
     ::selection { background: var(--amber); color: #fff; }
+
+    /* Inline line icons (<svg class="mi">): sized by the surrounding text, coloured by currentColor. */
+    .mi { width: 1.2em; height: 1.2em; display: inline-block; vertical-align: -0.22em; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     /* Keyboard focus: a visible outline when tabbing. Only shows for keyboard users. */
     :where(a, button, summary, [role="button"], [tabindex]):focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
@@ -440,6 +448,44 @@
     .sec-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; cursor: pointer; text-decoration: none; padding-top: 8px; transition: color .15s; }
     .sec-link:hover { color: var(--amber2); }
 
+    /* ---- Search card: rules identical on every job list (home, all jobs, tool, category). Page-specific ones stay in each page. ---- */
+    .search-row1 { display: flex; gap: 8px; }
+    .s-field { display: flex; align-items: center; gap: 10px; flex: 1; height: 52px; border: 1.5px solid var(--rule); border-radius: 11px; padding: 0 15px; transition: border-color .15s; min-width: 0; }
+    .s-field:focus-within { border-color: var(--navy); }
+    .s-field svg { color: var(--ink3); flex-shrink: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .s-field input { border: 0; outline: 0; font-size: 15px; width: 100%; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: none; }
+    .s-field input::placeholder { color: var(--ink3); }
+    .s-go { background: var(--amber); color: #fff; border: 0; font-weight: 700; font-size: 14px; padding: 0 28px; border-radius: 11px; cursor: pointer; height: 52px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; font-family: 'Hanken Grotesk', sans-serif; transition: background .15s, transform .15s; }
+    .s-go:hover { background: var(--amber2); transform: translateY(-1px); }
+    .search-row2 { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .s-select-wrap { position: relative; flex: 1; min-width: 150px; }
+    .s-select-wrap-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .s-select { width: 100%; appearance: none; -webkit-appearance: none; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 32px 0 36px; font-size: 13.5px; font-weight: 600; font-family: 'Hanken Grotesk', sans-serif; color: var(--ink); background: #fff; cursor: pointer; transition: border-color .15s; }
+    .s-select:focus { border-color: var(--navy); outline: 0; }
+    .s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
+    .s-remote-trigger.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
+    .s-remote.open .s-remote-trigger .chev { transform: rotate(180deg); }
+    .s-remote-panel h4 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .s-remote-panel .rp-desc { font-size: 13px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
+    .s-remote-opt { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1.5px solid var(--rule); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: all .15s; }
+    .s-remote-opt:hover { border-color: var(--rule2); background: var(--paper); }
+    .s-remote-opt.sel { border-color: var(--green); background: var(--green-light); }
+    .s-remote-opt-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--paper2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--ink2); }
+    .s-remote-opt-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .s-remote-opt.sel .s-remote-opt-ico { background: #fff; color: var(--green); }
+    .s-remote-opt-body { flex: 1; min-width: 0; }
+    .s-remote-opt-title { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+    .s-remote-opt-sub { font-size: 12px; color: var(--ink3); }
+    .s-remote-opt-check { color: var(--green); flex-shrink: 0; opacity: 0; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .s-remote-opt.sel .s-remote-opt-check { opacity: 1; }
+    .s-remote-reglabel { font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin: 14px 0 8px; }
+    .s-remote-region { display: flex; flex-wrap: wrap; gap: 6px; }
+    .s-remote-region a { font-size: 12.5px; font-weight: 600; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--rule); color: var(--ink2); text-decoration: none; transition: all .15s; }
+    .s-remote-region a:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+    .s-remote-region a.sel { background: var(--green); color: #fff; border-color: var(--green); }
+
+    /* ---- Pagination: rules identical on every job list ---- */
+
     /* ---- Job rows (every job list: home, all jobs, tool, category, landing, title, company) ----
        One shared copy. Pages keep only what genuinely differs (logo tint, spacing) in their
        own <style>, which comes later in the document and so wins. */
@@ -500,6 +546,43 @@
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5B8FN4C"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    {% if profile_nudge %}
+    <!-- Profile nudge: signed-in members with an incomplete profile (accounts.context_processors.profile_nudge).
+         Dismiss hides it for 7 days on this device. -->
+    <style>
+      .pn { background: var(--navy3); color: rgba(255,255,255,.9); font-size: 14px; }
+      .pn[hidden] { display: none !important; }
+      .pn-inner { max-width: var(--maxw); margin: 0 auto; padding: 10px 32px; display: flex; align-items: center; gap: 16px; }
+      .pn-text { flex: 1; min-width: 0; line-height: 1.45; }
+      .pn-text b { color: var(--amber-accent); }
+      .pn-cta { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; background: var(--amber); color: #fff; font-weight: 700; font-size: 13.5px; padding: 8px 15px; border-radius: 999px; white-space: nowrap; }
+      .pn-cta:hover { background: var(--amber2); }
+      .pn-x { flex-shrink: 0; background: none; border: 0; color: rgba(255,255,255,.65); font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 6px; }
+      .pn-x:hover { color: #fff; }
+      @media (max-width: 560px) { .pn-inner { padding: 10px 20px; flex-wrap: wrap; gap: 8px 12px; } .pn-text { flex-basis: calc(100% - 40px); } }
+    </style>
+    <div class="pn" id="profile-nudge" role="region" aria-label="Finish your profile">
+      <div class="pn-inner">
+        <p class="pn-text">Your profile is <b>{{ profile_nudge.pct }}% complete</b>. Next: {{ profile_nudge.next }}.</p>
+        <a class="pn-cta" href="{% url 'accounts_profile' %}" id="pn-cta">Complete profile <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
+        <button class="pn-x" id="pn-x" type="button" aria-label="Dismiss">&times;</button>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var el = document.getElementById('profile-nudge'), KEY = 'mtj_profile_nudge_snooze';
+      try { if (Date.now() < (+localStorage.getItem(KEY) || 0)) { el.hidden = true; return; } } catch (e) {}
+      var t = function (n) { window.mtjTrack && window.mtjTrack(n, { profile_pct: {{ profile_nudge.pct }} }); };
+      t('profile_nudge_shown');
+      document.getElementById('pn-cta').addEventListener('click', function () { t('profile_nudge_click'); });
+      document.getElementById('pn-x').addEventListener('click', function () {
+        el.hidden = true; t('profile_nudge_dismiss');
+        try { localStorage.setItem(KEY, String(Date.now() + 7 * 864e5)); } catch (e) {}
+      });
+    })();
+    </script>
+    {% endif %}
 
     <!-- ===== NAV ===== -->
     {% block navbar %}
@@ -1030,7 +1113,7 @@
       #signup-bar.sb-in { transform: translate(-50%, 0); }
       #signup-bar p { margin: 0; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.92); }
       #signup-bar p b { color: #fff; }
-      #signup-bar .sb-cta { flex-shrink: 0; background: #bf5420; color: #fff; font-weight: 700; font-size: 13.5px;
+      #signup-bar .sb-cta { flex-shrink: 0; background: var(--amber); color: #fff; font-weight: 700; font-size: 13.5px;
         padding: 9px 16px; border-radius: 9px; text-decoration: none; white-space: nowrap; }
       #signup-bar .sb-close { flex-shrink: 0; background: none; border: none; color: rgba(255,255,255,.55);
         font-size: 18px; line-height: 1; cursor: pointer; padding: 4px 6px; }

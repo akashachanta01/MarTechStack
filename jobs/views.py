@@ -366,6 +366,51 @@ def search_fallback(location_query, arrangement):
     return list(near.order_by("-created_at").prefetch_related("tools")[:12]), label
 
 
+# ---- Home page "LIVE" strip: the newest live jobs that list a salary ----
+_TICKER_CURRENCIES = (("CA$", "CA$"), ("C$", "CA$"), ("A$", "A$"), ("AU$", "A$"), ("NZ$", "NZ$"), ("S$", "S$"),
+                      ("£", "£"), ("€", "€"), ("₹", "₹"), ("$", "$"))
+
+
+def _ticker_salary(job):
+    """Compact '£44k - £49k' from the job's own salary text, or None.
+
+    Only uses numbers parsed from what the employer posted (never estimates).
+    Hourly rates and anything that doesn't parse cleanly are left out."""
+    txt = job.salary_range or ""
+    low = txt.lower()
+    if any(h in low for h in ("/hr", "/hour", "per hour", "hourly", "an hour")):
+        return None
+    lo, hi = job.get_salary_min_max()
+    if not lo:
+        return None
+    cur = next((label for sym, label in _TICKER_CURRENCIES if sym in txt), None)
+    if cur is None:
+        return None
+    if hi and hi != lo:
+        return f"{cur}{lo // 1000}k - {cur}{hi // 1000}k"
+    return f"{cur}{lo // 1000}k"
+
+
+def home_ticker_jobs(limit=16):
+    """Cached 10 min: the strip must never add a slow query to the home page."""
+    data = cache.get("home_ticker_v1")
+    if data is None:
+        data = []
+        qs = (Job.objects.filter(is_active=True, screening_status="approved")
+              .exclude(salary_range__isnull=True).exclude(salary_range="")
+              .order_by("-created_at")
+              .only("id", "slug", "title", "company", "company_logo", "salary_range")[:60])
+        for j in qs:
+            sal = _ticker_salary(j)
+            if sal:
+                data.append({"id": j.id, "slug": j.slug, "title": j.title, "company": j.company,
+                             "logo": j.company_logo or "", "salary": sal})
+            if len(data) >= limit:
+                break
+        cache.set("home_ticker_v1", data, 600)
+    return data
+
+
 def job_list(request):
     query = request.GET.get("q", "").strip()
     vendor_query = request.GET.get("vendor", "").strip()
@@ -484,6 +529,7 @@ def job_list(request):
         "limited": limited,
         "total_count": total_count,
         "featured_stacks": featured_stacks,
+        "ticker_jobs": home_ticker_jobs(),
     })
 
 # Curated "Browse by stack" cards: preferred slug -> short role line.

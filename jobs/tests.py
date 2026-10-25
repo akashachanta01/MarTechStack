@@ -3007,3 +3007,147 @@ class DeactivateAccountsTests(TestCase):
         self.client.post("/admin/auth/user/", {"action": "deactivate_accounts", "_selected_action": [self.fake.pk]})
         self.assertNotIn("elizabeth.p@example.org", get_digest_recipients())
         self.assertEqual(audience_totals()[0], before - 1)
+
+
+@override_settings(**TEST_SETTINGS)
+class LiveStripTests(TestCase):
+    """Home page 'LIVE' strip: newest live jobs with a real, parseable salary."""
+
+    def setUp(self):
+        cache.clear()
+
+    def _jobs(self, n, salary="$120,000 - $150,000", **kw):
+        return [make_job(title=f"Role {i}", company=f"Co{i}", salary_range=salary, **kw) for i in range(n)]
+
+    def test_strip_shows_salaried_jobs_compactly(self):
+        self._jobs(5)
+        make_job(title="UK role", company="Macmillan", salary_range="£44,000 - £49,000")
+        html = self.client.get("/").content.decode()
+        self.assertIn('class="lt-track"', html)
+        self.assertIn("$120k - $150k", html)
+        self.assertIn("£44k - £49k", html)
+
+    def test_hourly_unparseable_and_inactive_jobs_left_out(self):
+        self._jobs(4)
+        make_job(title="Hourly contractor", salary_range="$60 - $80 per hour")
+        make_job(title="Vague pay", salary_range="Competitive")
+        make_job(title="Closed role", salary_range="$200,000", is_active=False, screening_status="rejected")
+        html = self.client.get("/").content.decode()
+        strip = html[html.index('class="lt-track"'):html.index("</ul>", html.index('class="lt-track"'))]
+        for title in ("Hourly contractor", "Vague pay", "Closed role"):
+            self.assertNotIn(title, strip)
+
+    def test_hidden_with_fewer_than_four_jobs(self):
+        self._jobs(3)
+        self.assertNotIn('class="lt-track"', self.client.get("/").content.decode())
+
+    def test_each_job_linked_once_in_html(self):
+        self._jobs(4)
+        html = self.client.get("/").content.decode()
+        self.assertEqual(html.count('data-lt-job="'), 4)
+
+
+@override_settings(**TEST_SETTINGS)
+class ProfileNudgeTests(TestCase):
+    """Top banner for signed-in members whose profile is incomplete."""
+
+    def setUp(self):
+        cache.clear()
+        self.user = get_user_model().objects.create_user("pat", "pat@example.com", "pw12345!x")
+        self.client.force_login(self.user)
+
+    def test_shows_pct_matching_dashboard_and_next_step(self):
+        html = self.client.get("/jobs/").content.decode()
+        pct = self.user.userprofile.profile_complete_pct()
+        self.assertIn('id="profile-nudge"', html)
+        self.assertIn(f"{pct}% complete", html)
+        self.assertIn("add the platforms you work with", html)  # stack is the first missing step
+
+    def test_next_step_moves_on_as_fields_fill(self):
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        self.user.userprofile.preferred_stack.add(Tool.objects.create(name="Marketo", slug="marketo", category=cat))
+        html = self.client.get("/jobs/").content.decode()
+        self.assertIn("add where you want to work", html)
+
+    def test_hidden_when_complete_anonymous_or_on_account_pages(self):
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        p = self.user.userprofile
+        self.assertNotIn('id="profile-nudge"', self.client.get("/accounts/profile/").content.decode())
+        self.user.first_name = "Pat"; self.user.save()
+        p.preferred_location = "Remote"; p.bio = "MOps"; p.linkedin_url = "https://linkedin.com/in/pat"; p.save()
+        p.preferred_stack.add(Tool.objects.create(name="HubSpot", slug="hubspot", category=cat))
+        self.assertEqual(p.profile_complete_pct(), 100)
+        self.assertNotIn('id="profile-nudge"', self.client.get("/jobs/").content.decode())
+        self.client.logout()
+        self.assertNotIn('id="profile-nudge"', self.client.get("/jobs/").content.decode())
+
+
+@override_settings(**TEST_SETTINGS)
+class DesignPolish2Tests(TestCase):
+    """Icons render without a font, no emoji icons, shared search styles, readable email greys."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_no_icon_font_words_on_tools_pages(self):
+        for url in ["/tools/job-description-generator/", "/tools/utm-link-builder/", "/tools/sql-generator/",
+                    "/tools/roas-calculator/", "/tools/interview-questions-generator/", "/tools/qr-code-generator/"]:
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertNotIn("material-symbols", html)
+                self.assertIn('class="mi', html)
+
+    def test_no_emoji_icons_on_public_pages(self):
+        import re
+        emoji = re.compile("[\U0001F300-\U0001FAFF]")
+        for url in ["/tools/", "/blog/", "/contact/", "/companies/"]:
+            with self.subTest(url=url):
+                r = self.client.get(url)
+                if r.status_code == 200:
+                    self.assertIsNone(emoji.search(r.content.decode()))
+
+    def test_search_styles_shared_and_hover_kept(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn("/* ---- Search card: rules identical on every job list", html)
+        self.assertIn("--amber2:  #a2471b;", html)
+
+    def test_email_greys_readable(self):
+        import glob, os
+        from django.conf import settings
+        for f in glob.glob(os.path.join(settings.BASE_DIR, "jobs", "templates", "emails", "*.html")):
+            with self.subTest(template=os.path.basename(f)):
+                s = open(f).read()
+                for weak in ("#8a8178", "#9a9085", "#9a9183", "#7a7165"):
+                    self.assertNotIn(weak, s)
+
+
+class SiteCssIntegrityTests(TestCase):
+    """Catch two silent failures found in review: colour names used but never
+    defined (the browser just drops them) and multi-line {# #} comments, which
+    Django prints on the page as text."""
+
+    def test_every_css_variable_used_is_defined(self):
+        import glob, os, re
+        from django.conf import settings
+        root = settings.BASE_DIR
+        base = open(os.path.join(root, "jobs", "templates", "jobs", "base.html")).read()
+        defined = set(re.findall(r"--([a-z0-9-]+)\s*:", re.search(r":root\s*\{(.*?)\}", base, re.S).group(1)))
+        files = (glob.glob(os.path.join(root, "*", "templates", "**", "*.html"), recursive=True)
+                 + [os.path.join(root, "jobs", "static", "css", "tools-brand.css")])
+        for f in files:
+            if os.sep + "emails" + os.sep in f:
+                continue
+            s = open(f).read()
+            local = set(re.findall(r"--([a-z0-9-]+)\s*:", s))
+            for name, after in re.findall(r"var\(--([a-z0-9-]+)\s*([,)])", s):
+                if after == ")" and name not in defined | local and name != "lt-dur":
+                    self.fail(f"{os.path.relpath(f, root)} uses undefined --{name}")
+
+    @override_settings(**TEST_SETTINGS)
+    def test_no_template_comment_text_on_home(self):
+        cache.clear()
+        for i in range(4):
+            make_job(title=f"Role {i}", salary_range="$100,000 - $120,000")
+        html = self.client.get("/").content.decode()
+        self.assertNotIn("{#", html)
+        self.assertNotIn("#}", html)
