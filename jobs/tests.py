@@ -2975,3 +2975,35 @@ class SignupBotCheckTests(TestCase):
     def test_flood_from_one_address_is_capped(self):
         made = [self._signup(email=f"p{i}@example.org")[1] for i in range(5)]
         self.assertEqual(made, [True, True, True, False, False])
+
+
+class DeactivateAccountsTests(TestCase):
+    """Founder asked (Oct 25): one-click deactivate for fake accounts in admin. Deactivated
+    accounts stop counting and stop getting any email (newsletter rows switched off too)."""
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        U = get_user_model()
+        self.admin = U.objects.create_superuser("boss", "boss@x.test", "pw")
+        self.fake = U.objects.create_user("f1", "elizabeth.p@example.org", "pw", first_name="Kevin", last_name="Martin")
+        self.real = U.objects.create_user("r1", "priya.sharma@example.org", "pw", first_name="Priya", last_name="Sharma")
+        from jobs.models import Subscriber
+        Subscriber.objects.create(email="elizabeth.p@example.org")
+        self.client.force_login(self.admin)
+
+    def test_looks_fake_filter_and_deactivate_action(self):
+        r = self.client.get("/admin/auth/user/?suspicious=yes")
+        self.assertContains(r, "elizabeth.p@example.org")
+        self.assertNotContains(r, "priya.sharma@example.org")
+        r = self.client.post("/admin/auth/user/", {"action": "deactivate_accounts",
+                                                   "_selected_action": [self.fake.pk, self.admin.pk]}, follow=True)
+        self.assertContains(r, "Deactivated 1 account(s); 1 matching newsletter subscription(s) stopped")
+        self.fake.refresh_from_db(); self.admin.refresh_from_db()
+        self.assertFalse(self.fake.is_active)
+        self.assertTrue(self.admin.is_active)  # staff are never deactivated
+
+    def test_deactivated_accounts_get_no_email_and_dont_count(self):
+        from jobs.emails import get_digest_recipients, audience_totals
+        before = audience_totals()[0]
+        self.client.post("/admin/auth/user/", {"action": "deactivate_accounts", "_selected_action": [self.fake.pk]})
+        self.assertNotIn("elizabeth.p@example.org", get_digest_recipients())
+        self.assertEqual(audience_totals()[0], before - 1)

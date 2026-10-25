@@ -1945,7 +1945,7 @@ def founder_hq(request):
 
     # --- People: every account, enriched with engagement signals ---
     users = (
-        User.objects.filter(is_staff=False)
+        User.objects.filter(is_staff=False, is_active=True)
         .select_related('userprofile')
         .prefetch_related('socialaccount_set', 'userprofile__saved_jobs', 'userprofile__preferred_stack')
         .order_by('-date_joined')

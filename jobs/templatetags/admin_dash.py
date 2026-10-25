@@ -26,7 +26,7 @@ def admin_kpis():
     day = now - timedelta(days=1)
     User = get_user_model()
     live = Job.objects.filter(is_active=True, screening_status="approved")
-    people = User.objects.filter(is_staff=False)
+    people = User.objects.filter(is_staff=False, is_active=True)
 
     k = {
         "live_jobs": _safe(live.count),
