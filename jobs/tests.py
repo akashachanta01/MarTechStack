@@ -2836,10 +2836,11 @@ class RecruiterContactTests(TestCase):
         self.assertEqual(r.status_code, 302)
         j = Job.objects.get(title="Marketo Admin")
         self.assertEqual((j.poster_name, j.poster_email, j.poster_role), ("Priya Sharma", "priya@acme.com", "in_house"))
-        self.assertEqual(j.screening_status, "pending")
-        alert = [m for m in mail.outbox if m.subject.startswith("[MTJ] New job to review")]
+        self.assertEqual(j.screening_status, "pending")  # "Own Marketo." is too short to auto-publish
+        alert = [m for m in mail.outbox if m.subject.startswith("[MTJ] Job needs your review")]
         self.assertEqual(len(alert), 1)
-        self.assertIn("Matches the apply link's company", alert[0].body)
+        self.assertIn("work email matches the apply link's company", alert[0].body)
+        self.assertIn("Description: too short", alert[0].body)
         self.assertEqual(alert[0].reply_to, ["priya@acme.com"])
 
     def test_name_and_email_required(self):
@@ -3378,3 +3379,74 @@ class CompanyHiringPageTests(TestCase):
 
     def test_unknown_company_still_404(self):
         self.assertEqual(self.client.get("/companies/nobody-here/").status_code, 404)
+
+
+class AutoVerifiedSubmissionTests(TestCase):
+    """Founder asked (Oct 25): submitted jobs are verified and posted automatically when every
+    check passes, with an email either way, so no submission is ever missed."""
+    LONG = ("You will own our Marketo instance: lead scoring, nurture programs, lifecycle routing and "
+            "Salesforce sync. You will partner with demand gen and sales ops, build reporting on "
+            "pipeline influence, and keep data clean across the stack. 4+ years of Marketo required.")
+
+    def setUp(self):
+        cache.clear()
+
+    def _post(self, **extra):
+        data = {"title": "Marketo Operations Manager", "company": "Acme", "location": "Austin, TX",
+                "work_arrangement": "onsite", "function": "operations", "role_type": "full_time",
+                "apply_url": "https://jobs.acme.com/123", "description": self.LONG, "plan": "free",
+                "poster_name": "Priya Sharma", "poster_email": "priya@acme.com", "poster_role": "in_house"}
+        data.update(extra)
+        return self.client.post("/post-job/", data)
+
+    def _screen(self, status="approved", score=92.0):
+        from unittest import mock
+        return mock.patch("jobs.screener.MarTechScreener.screen",
+                          return_value={"status": status, "score": score, "reason": "test", "details": {}})
+
+    def test_verified_submission_goes_live_and_both_get_emailed(self):
+        from django.core import mail
+        from jobs.models import Job
+        with self._screen():
+            self._post()
+        j = Job.objects.get(title="Marketo Operations Manager")
+        self.assertTrue(j.is_active)
+        self.assertEqual(j.screening_status, "approved")
+        self.assertIsNotNone(j.went_live_at)
+        subjects = [m.subject for m in mail.outbox]
+        self.assertIn("[MTJ] Job posted automatically: Marketo Operations Manager at Acme", subjects)
+        live = [m for m in mail.outbox if m.subject.startswith("Your job is live")]
+        self.assertEqual(live[0].to, ["priya@acme.com"])
+        self.assertEqual(self.client.get(f"/job/{j.id}/{j.slug}/").status_code, 200)
+
+    def test_personal_email_on_unreadable_link_waits_for_review(self):
+        from django.core import mail
+        from jobs.models import Job
+        with self._screen():
+            self._post(poster_email="someone@gmail.com")
+        j = Job.objects.get(title="Marketo Operations Manager")
+        self.assertFalse(j.is_active)
+        self.assertEqual(j.screening_status, "pending")
+        alert = [m for m in mail.outbox if m.subject.startswith("[MTJ] Job needs your review")]
+        self.assertEqual(len(alert), 1)
+        self.assertIn("personal email", alert[0].body)
+        self.assertFalse([m for m in mail.outbox if m.subject.startswith("Your job is live")])
+
+    def test_ats_confirmed_open_passes_even_with_personal_email(self):
+        from unittest import mock
+        from jobs.models import Job
+        with self._screen(), mock.patch("jobs.management.commands.recheck_pending.posting_status", return_value="open"):
+            self._post(poster_email="recruiter@gmail.com", apply_url="https://boards.greenhouse.io/acme/jobs/123")
+        self.assertTrue(Job.objects.get(title="Marketo Operations Manager").is_active)
+
+    def test_not_martech_or_duplicate_waits(self):
+        from jobs.models import Job
+        with self._screen(status="rejected", score=0):
+            self._post()
+        self.assertFalse(Job.objects.get(title="Marketo Operations Manager").is_active)
+        Job.objects.all().delete()
+        Job.objects.create(title="Marketo Operations Manager", company="Acme", location="Austin, TX",
+                           apply_url="https://jobs.acme.com/1", screening_status="approved", is_active=True)
+        with self._screen():
+            self._post()
+        self.assertEqual(Job.objects.filter(title="Marketo Operations Manager", is_active=True).count(), 1)

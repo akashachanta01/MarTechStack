@@ -155,6 +155,7 @@ DATABASES = {
 import sys as _sys
 if len(_sys.argv) > 1 and _sys.argv[1] == 'test':
     MIGRATION_MODULES = {'jobs': None, 'accounts': None, 'tools': None}
+    SUBMISSION_CHECKS_INLINE = True  # run job-submission checks synchronously in tests
 
 # ==============================================
 # PASSWORDS

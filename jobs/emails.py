@@ -233,6 +233,45 @@ def send_admin_new_job_submission_alert(job):
         logger.warning("Admin job-submission alert failed: %s", e)
 
 
+def send_submission_result_emails(job, passed, checks):
+    """After the automatic checks: tell the founder what happened (posted, or needs
+    review and why), and tell the poster their job is live. Non-fatal."""
+    lines = "\n".join(("  ✓ " if ok else "  ✗ ") + line for ok, line in checks)
+    link = f"{DOMAIN}/job/{job.pk}/{job.slug}/"
+    admin_link = f"{DOMAIN}/admin/jobs/usersubmission/{job.pk}/change/"
+    who = f"{job.poster_name or '—'} <{job.poster_email or 'no email'}>"
+    try:
+        if passed:
+            subject = f"[MTJ] Job posted automatically: {job.title} at {job.company}"
+            body = (f"A submitted job passed every check and is now live.\n\n"
+                    f"Job:       {job.title} at {job.company} ({job.location})\n"
+                    f"Posted by: {who}\n\nChecks:\n{lines}\n\n"
+                    f"Live page: {link}\n"
+                    f"To take it down: {admin_link} (untick Is active, Save)\n")
+        else:
+            subject = f"[MTJ] Job needs your review: {job.title} at {job.company}"
+            body = (f"A submitted job did not pass every automatic check, so it is waiting for you.\n\n"
+                    f"Job:       {job.title} at {job.company} ({job.location})\n"
+                    f"Apply:     {job.apply_url}\n"
+                    f"Posted by: {who}\n\nChecks:\n{lines}\n\n"
+                    f"Approve or reject: {admin_link}\n")
+        EmailMultiAlternatives(subject, body, settings.DEFAULT_FROM_EMAIL, [_founder_email()],
+                               reply_to=[job.poster_email] if job.poster_email else None).send(fail_silently=True)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning("Founder submission email failed: %s", e)
+    if passed and job.poster_email:
+        try:
+            first = (job.poster_name or "").split(" ")[0] or "there"
+            body = (f"Hi {first},\n\n"
+                    f"Your {job.title} role at {job.company} is now live on MarTechJobs:\n{link}\n\n"
+                    f"It will stay up while the role is open on your careers site. If anything needs "
+                    f"changing, just reply to this email.\n\nThanks for posting,\nFounder, MartechJobs.io\n")
+            EmailMultiAlternatives(f"Your job is live: {job.title}", body, settings.DEFAULT_FROM_EMAIL,
+                                   [job.poster_email], reply_to=[_founder_email()]).send(fail_silently=True)
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Poster live email failed: %s", e)
+
+
 def send_founder_copy(subject, template_name, context, sent, total, sample_to=""):
     """One copy of a subscriber send to the founder, after the send finishes, so
     they see exactly what went out without one email per recipient. Personalised
