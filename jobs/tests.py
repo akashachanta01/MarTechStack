@@ -2617,3 +2617,23 @@ class DiscoveryOffTests(TestCase):
         steps = self._steps({"SERPER_API_KEY": "k", "DISCOVERY_ENABLED": "1"})
         self.assertTrue(steps)
         self.assertNotIn("--sources-only", steps[0])
+
+
+class TaxonomyTableTests(TestCase):
+    """Weekly search review Oct 19: job-titles guide gets a taxonomy table, after the classification box."""
+    def test_taxonomy_inserted_once_after_classification_box(self):
+        import importlib
+        from django.apps import apps as real_apps
+        from jobs.models import BlogPost
+        m25 = importlib.import_module("jobs.migrations.0025_job_titles_classification_answer")
+        m26 = importlib.import_module("jobs.migrations.0026_job_titles_taxonomy_table")
+        BlogPost.objects.create(title="T", slug=m26.SLUG, excerpt="x", content="<figure>i</figure><p>Body</p>")
+        m25.forwards(real_apps, None)
+        m26.forwards(real_apps, None)
+        m26.forwards(real_apps, None)
+        c = BlogPost.objects.get(slug=m26.SLUG).content
+        self.assertEqual(c.count(m26.MARKER), 1)
+        self.assertTrue(c.index(m25.MARKER) < c.index(m26.MARKER) < c.index("<p>Body"))
+        r = self.client.get(f"/blog/{m26.SLUG}/")
+        self.assertContains(r, "MarTech job title taxonomy")
+        self.assertContains(r, 'href="/marketing-technology-analyst-jobs/"')
