@@ -3450,3 +3450,47 @@ class AutoVerifiedSubmissionTests(TestCase):
         with self._screen():
             self._post()
         self.assertEqual(Job.objects.filter(title="Marketo Operations Manager", is_active=True).count(), 1)
+
+
+class SearchHeadlineTests(TestCase):
+    """Search Console Oct 2026: homepage headline names the live job count and
+    'marketing technology'; the HubSpot vs Salesforce article gets a clearer headline."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Job
+        for i in range(3):
+            Job.objects.create(title=f"Marketing Ops Manager {i}", company="Acme", location="Austin, TX",
+                               apply_url=f"https://acme.com/{i}", screening_status="approved", is_active=True)
+        Job.objects.create(title="Closed Role", company="Acme", location="Austin, TX",
+                           apply_url="https://acme.com/x", screening_status="rejected", is_active=False)
+
+    def _head(self, html):
+        import re
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1).strip()
+        desc = re.search(r'<meta name="description" content="(.*?)">', html, re.S).group(1)
+        return title, desc
+
+    def test_homepage_headline_uses_live_count(self):
+        title, desc = self._head(self.client.get("/").content.decode())
+        self.assertEqual(title, "MarTech Jobs: 3 Marketing Technology &amp; Marketing Ops Roles")
+        self.assertTrue(desc.startswith("3 live marketing technology jobs"))
+        self.assertLessEqual(len(desc.replace("&amp;", "&")), 158)
+        self.assertNotIn("hand-curated", desc)
+
+    def test_filtered_listing_keeps_generic_headline(self):
+        title, desc = self._head(self.client.get("/?q=ops").content.decode())
+        self.assertIn("Marketing Operations, Engineering", title)
+        self.assertTrue(desc.startswith("Verified MarTech jobs"))
+
+    def test_hubspot_vs_salesforce_meta_migration(self):
+        import importlib
+        from django.apps import apps
+        from jobs.models import BlogPost
+        mig = importlib.import_module("jobs.migrations.0029_hubspot_vs_salesforce_meta")
+        post = BlogPost.objects.create(title="HubSpot vs Salesforce", slug=mig.SLUG, content="<p>x</p>",
+                                       meta_title="old", meta_description="old")
+        mig.forwards(apps, None)
+        post.refresh_from_db()
+        self.assertEqual(post.meta_title, mig.TITLE)
+        self.assertLessEqual(len(mig.TITLE), 65)
+        self.assertLessEqual(len(mig.DESC), 158)
