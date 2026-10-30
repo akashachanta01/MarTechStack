@@ -1,4 +1,4 @@
-"""Bottom-bar A/B test: 'signup' vs 'scanner' variant, fixed per device.
+"""Bottom-bar A/B test: scanner prompt for everyone (A/B winner Oct 30).
 Needs the seeded server on :8765."""
 import asyncio, glob, re
 from playwright.async_api import async_playwright
@@ -20,8 +20,9 @@ async def main():
         pg0 = await (await b.new_context()).new_page(); await pg0.goto(B + "/jobs/")
         href = await pg0.locator("a[href^='/job/']").first.get_attribute("href")
         pg, vis, e = await bar(b, "signup", href); allerr += e
-        ok("N1 signup variant shows bar", vis)
-        ok("N2 signup variant links to sign-up", "/accounts/signup" in (await pg.locator("#sb-cta").get_attribute("href")))
+        h = await pg.locator("#sb-cta").get_attribute("href")
+        ok("N1 old 'signup' devices now get the scanner bar", vis and "/tools/resume-keyword-scanner/" in (h or ""), h)
+        ok("N2 nobody is sent to sign-up from the bar", "/accounts/signup" not in (h or ""))
         pg, vis, e = await bar(b, "scanner", href); allerr += e
         h = await pg.locator("#sb-cta").get_attribute("href")
         ok("N3 scanner variant on job page links to scanner with this job", vis and re.search(r"/tools/resume-keyword-scanner/\?job=\d+", h or ""), h)
@@ -38,10 +39,9 @@ async def main():
         await pg.locator("#signup-bar-close").click(); await pg.wait_for_timeout(500)
         await pg.reload(); await pg.wait_for_timeout(8600)
         ok("N9 dismiss snoozes the bar", not await pg.locator("#signup-bar").is_visible())
-        c = await b.new_context(); pg = await c.new_page(); await pg.goto(B + "/"); 
-        v1 = await pg.evaluate("localStorage.getItem('mtj_nudge_ab')"); await pg.goto(B + "/jobs/")
-        v2 = await pg.evaluate("localStorage.getItem('mtj_nudge_ab')")
-        ok("N10 fresh visitor gets a variant that sticks", v1 in ("signup", "scanner") and v1 == v2, (v1, v2))
+        c = await b.new_context(); pg = await c.new_page(); await pg.goto(B + "/"); await pg.wait_for_timeout(8600)
+        h = await pg.locator("#sb-cta").get_attribute("href")
+        ok("N10 fresh visitor gets the scanner bar", (h or "").endswith("/tools/resume-keyword-scanner/"), h)
         ok("Z no JS errors", not allerr, allerr[:3])
         print(f"\n{sum(R)}/{len(R)} passed"); await b.close()
 asyncio.run(main())
