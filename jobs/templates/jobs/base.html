@@ -236,7 +236,7 @@
     .pill {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 4px 10px; border-radius: 5px;
-      font-family: 'Courier Prime', monospace; font-size: 10px; font-weight: 700;
+      font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700;
       letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
     }
     .pill-loc    { background: #efece7; color: var(--ink2); }
@@ -429,6 +429,9 @@
     .breadcrumbs li { display: flex; align-items: center; gap: 6px; }
     .breadcrumbs li:not(:last-child)::after { content: "/"; color: var(--rule2); }
     .breadcrumbs a { color: var(--ink3); transition: color .15s; text-decoration: none; }
+    /* Bigger tap area for small inline links, no layout change: padding offset by an equal negative margin. */
+    nav[aria-label="Breadcrumb"] a { display: inline-block; padding: 7px 0; margin: -7px 0; }
+    .tap-pad { padding: 7px 3px; margin: -7px -3px; }
     .breadcrumbs a:hover { color: var(--amber); }
     .breadcrumbs li:last-child { color: var(--ink2); font-weight: 600; }
 
@@ -467,7 +470,7 @@
     .s-remote-trigger:hover { border-color: var(--rule2); color: var(--ink); }
     .s-remote-trigger.on { border-color: var(--green); background: var(--green-light); color: var(--green); }
     .s-remote.open .s-remote-trigger .chev { transform: rotate(180deg); }
-    .s-remote-panel h4 { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+    .s-remote-panel .s-remote-title { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
     .s-remote-panel .rp-desc { font-size: 13px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
     .s-remote-opt { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border: 1.5px solid var(--rule); border-radius: 12px; margin-bottom: 8px; text-decoration: none; color: inherit; transition: all .15s; }
     .s-remote-opt:hover { border-color: var(--rule2); background: var(--paper); }
@@ -958,7 +961,7 @@
           <div class="mtj-modal-ico">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           </div>
-          <h3 id="modal-heading" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-top:18px;line-height:1.15">Never miss<br>the right role.</h3>
+          <h2 id="modal-heading" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--navy);margin-top:18px;line-height:1.15">Never miss<br>the right role.</h2>
           <p style="color:var(--ink3);font-size:14px;margin-top:10px;line-height:1.5">Get the latest MarTech jobs delivered to your inbox. No spam, ever.</p>
         </div>
         <form id="modal-sub-form" style="display:flex;flex-direction:column;gap:12px">

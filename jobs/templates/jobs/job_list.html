@@ -404,7 +404,7 @@
             <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="s-remote-panel" role="menu">
-            <h4>Where can you work from?</h4>
+            <p class="s-remote-title">Where can you work from?</p>
             <p class="rp-desc">We'll only show roles you're actually eligible for.</p>
 
             <a class="s-remote-opt {% if current_arrangement != 'remote' %}sel{% endif %}" href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if selected_tool %}tool={{ selected_tool }}&{% endif %}#jl-listings" role="menuitem">

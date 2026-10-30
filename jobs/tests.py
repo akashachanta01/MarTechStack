@@ -3265,7 +3265,7 @@ class JobPagePolishTests(TestCase):
 
     def test_apply_copy_is_factual(self):
         html = self.client.get(self.url).content.decode()
-        self.assertIn("<h3>Apply at Hooli</h3>", html)
+        self.assertIn("<h2>Apply at Hooli</h2>", html)
         self.assertNotIn("Ready to make an impact", html)
         self.assertNotIn("the best roles close fast", html)
 
@@ -3450,6 +3450,107 @@ class AutoVerifiedSubmissionTests(TestCase):
         with self._screen():
             self._post()
         self.assertEqual(Job.objects.filter(title="Marketo Operations Manager", is_active=True).count(), 1)
+
+
+class DescriptionTidyTests(TestCase):
+    """jobs/description_tidy.py: one heading style, no spacer gaps or #LI- tags,
+    readable plain text, and never slow (patterns measured on live jobs, Oct 2026)."""
+
+    def tidy(self, s):
+        from jobs.description_tidy import tidy_description
+        return tidy_description(s)
+
+    def test_bold_paragraph_becomes_heading(self):
+        out = self.tidy("<p><strong>What you'll do</strong></p><ul><li>Run Marketo</li></ul>")
+        self.assertIn('<h2 class="jd-h">What you\'ll do</h2>', out)
+        out = self.tidy("<p><strong>Lo que estamos buscando:<br></strong></p>")
+        self.assertIn('<h2 class="jd-h">Lo que estamos buscando:</h2>', out)
+
+    def test_bold_sentence_stays_text(self):
+        s = "<p><strong>We are an equal opportunity employer.</strong></p>"
+        self.assertEqual(self.tidy(s), s)
+
+    def test_any_heading_level_normalised(self):
+        out = self.tidy("<h4><strong>Who We Are</strong></h4><h2>Your day</h2><h1>Big</h1>")
+        self.assertEqual(out.count('<h2 class="jd-h">'), 3)
+        self.assertNotIn("<h4", out)
+        self.assertNotIn("<h1", out)
+        self.assertIn('<h2 class="jd-h">Who We Are</h2>', out)
+
+    def test_bold_then_break_heading(self):
+        out = self.tidy("<p><b>Position Summary</b><br><span>The developer reports to</span></p>")
+        self.assertTrue(out.startswith('<h2 class="jd-h">Position Summary</h2><p>'))
+        out = self.tidy("<ul><li>Duties.<br><br><b>Required Qualifications</b><br>3-5 years</li></ul>")
+        self.assertIn('Duties.<strong class="jd-h jd-h-inline">Required Qualifications</strong>3-5 years', out)
+        # Bold words mid-sentence are left alone.
+        s = "<p>Hello <b>World</b><br>next</p>"
+        self.assertEqual(self.tidy(s), s)
+
+    def test_spacers_and_linkedin_tags_removed(self):
+        out = self.tidy("<p>Intro</p><p>&nbsp;</p><p><br></p><p> </p><p>#LI-EMEA</p><p>#LI-Remote #LI-DNI</p><p>End</p>")
+        self.assertEqual(out, "<p>Intro</p><p>End</p>")
+
+    def test_plain_text_gets_structure_and_is_escaped(self):
+        out = self.tidy("Intro line.\n\nWhat you will do\n- Own the stack\n- Ship <5 dashboards\n\nHow to apply\nEmail us.")
+        self.assertIn('<h2 class="jd-h">What you will do</h2>', out)
+        self.assertIn("<ul><li>Own the stack</li><li>Ship &lt;5 dashboards</li></ul>", out)
+        self.assertIn('<h2 class="jd-h">How to apply</h2>', out)
+        self.assertIn("<p>Email us.</p>", out)
+        self.assertNotIn("<5", out)
+
+    def test_never_slow_on_hostile_input(self):
+        import time
+        hostile = [
+            "<p>" + "<br>" * 20000,
+            "<h2>x " * 20000,
+            "<br><b>Label</b>" * 5000,
+            "<b>Label</b><br>" * 20000,
+            "<p><strong>" * 20000,
+            "<p>" + "&nbsp; " * 20000,
+            "\n".join("- item %d" % i for i in range(20000)),
+        ]
+        for s in hostile:
+            t = time.perf_counter()
+            self.tidy(s)
+            self.assertLess(time.perf_counter() - t, 0.5, s[:30])
+
+    def test_job_page_uses_tidy_but_schema_keeps_original(self):
+        cache.clear()
+        job = make_job(description="<p><strong>About the role</strong></p><p>Run Braze.</p><p>&nbsp;</p><p>#LI-EMEA</p>")
+        html = self.client.get(f"/job/{job.id}/{job.slug}/").content.decode()
+        body = html.split('class="jd-content">', 1)[1].split("</div>", 1)[0]
+        self.assertIn('<h2 class="jd-h">About the role</h2>', body)
+        self.assertNotIn("#LI-EMEA", body)
+        ld = html.split('"@type": "JobPosting"', 1)[1].split("</script>", 1)[0] if '"@type": "JobPosting"' in html else html.split('"@type":"JobPosting"', 1)[1].split("</script>", 1)[0]
+        self.assertIn("#LI\\u002DEMEA", ld)  # JSON-LD keeps the original text (escapejs encodes "-")
+
+
+class DesignPolish3Tests(TestCase):
+    """Readable tags, bigger tap areas, heading order without skipped levels."""
+
+    def setUp(self):
+        cache.clear()
+
+    def test_pill_text_11px(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn("font-family: 'Courier Prime', monospace; font-size: 11px; font-weight: 700;\n      letter-spacing: .07em;", html)
+
+    def test_tap_areas(self):
+        html = self.client.get("/").content.decode()
+        self.assertIn('nav[aria-label="Breadcrumb"] a { display: inline-block; padding: 7px 0; margin: -7px 0; }', html)
+        html = self.client.get("/accounts/signup/").content.decode()
+        self.assertEqual(html.count('class="tap-pad"'), 2)
+
+    def test_no_skipped_heading_levels(self):
+        import re
+        job = make_job()
+        for url in ["/", "/jobs/", "/tools/", "/accounts/signup/", f"/job/{job.id}/{job.slug}/"]:
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                levels = [int(n) for n in re.findall(r"<h([1-6])\b", html)]
+                self.assertEqual(levels[0], 1)
+                for a, b in zip(levels, levels[1:]):
+                    self.assertLessEqual(b - a, 1, f"h{a} -> h{b}")
 
 
 class SearchHeadlineTests(TestCase):
