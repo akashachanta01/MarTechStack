@@ -1098,7 +1098,7 @@ class ScannerVisibilityTests(TestCase):
 
     def test_nudge_ab_test_wired(self):
         r = self.client.get(self.url())
-        self.assertContains(r, "mtj_nudge_ab")
+        self.assertContains(r, "var variant = 'scanner'")
         self.assertContains(r, "nudge_shown")
         self.assertContains(r, "nudge_click")
         self.assertContains(r, "/tools/resume-keyword-scanner/")
