@@ -1,7 +1,7 @@
 {% extends "jobs/base.html" %}
 
-{% block title %}{{ title_name }} Jobs {% now "Y" %} | MarTechJobs{% endblock %}
-{% block meta_description %}Browse {{ title_name }} jobs. {{ intro }} Hand-screened MarTech roles, refreshed daily on MarTechJobs.{% endblock %}
+{% block title %}{% if total_count %}{{ total_count }} {{ title_name }} Job{{ total_count|pluralize }} ({{ title_month }}){% else %}{{ title_name }} Jobs {% now "Y" %}{% endif %} | MarTechJobs{% endblock %}
+{% block meta_description %}{% if total_count %}{{ total_count }} live {{ title_name }} job{{ total_count|pluralize }}{% if top_companies %} at {{ top_companies|join:", " }} and more{% endif %}. {% else %}Browse {{ title_name }} jobs. {% endif %}{{ intro }} Closed roles removed daily.{% endblock %}
 {% block og_title %}{{ title_name }} Jobs{% endblock %}
 {% block og_desc %}Browse {{ title_name }} jobs. {{ intro }} Hand-screened MarTech roles, refreshed daily on MarTechJobs.{% endblock %}
 {% block meta_keywords %}{{ title_name }} jobs, {{ title_name }} careers, {{ title_name }} hiring, remote {{ title_name }} jobs{% endblock %}

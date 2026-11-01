@@ -832,9 +832,19 @@ def title_jobs(request, title_slug):
         name = auto["name"]
         intro, skills = facts_intro(name, listed), top_platforms(listed)
         noindex = not auto["indexable"]
+    # Real hiring companies for the Google snippet (CTR: a count + names beats generic copy).
+    top_companies = []
+    for c in jobs.values_list("company", flat=True)[:60]:
+        c = (c or "").strip()
+        if c and c not in top_companies:
+            top_companies.append(c)
+        if len(top_companies) == 3:
+            break
     return render(request, "jobs/title_jobs.html", {
         "jobs": jobs_page,
         "total_count": total_count,
+        "top_companies": top_companies,
+        "title_month": timezone.now().strftime("%b %Y"),
         "title_name": name,
         "title_slug": title_slug,
         "intro": intro,
