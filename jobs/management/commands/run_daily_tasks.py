@@ -128,5 +128,6 @@ class Command(BaseCommand):
         self._run("\n[6/7] 📡 Pinging Google Indexing API...", 'index_jobs')
         self._run("      📡 Pinging IndexNow (Bing/ChatGPT search)...", 'ping_indexnow')
         self._run("      🔎 Syncing Google Search Console data...", 'gsc_sync')
+        self._run("      📊 Saving this month's hiring report numbers...", 'snapshot_hiring_report')
 
         self.stdout.write(self.style.SUCCESS("\n[7/7] ✨ AUTOPILOT COMPLETE. System is fresh."))

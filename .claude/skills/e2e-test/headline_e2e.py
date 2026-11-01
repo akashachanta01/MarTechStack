@@ -33,6 +33,21 @@ async def main():
                 n = int(t.split(" ")[0]); checked += 1
                 ok(f"count in headline matches listed jobs {path}", rows == min(n, 20), (n, rows))
         ok("at least one title page with jobs checked", checked >= 1, checked)
+        # Hiring Report page on desktop + phone
+        for label, kw in (("desktop", {"viewport": {"width": 1280, "height": 900}}),
+                          ("phone", {"viewport": {"width": 390, "height": 844}, "is_mobile": True})):
+            pg = await (await b.new_context(**kw)).new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+            r = await pg.goto(B + "/martech-job-market-statistics/")
+            t = await pg.title(); body = await pg.locator("body").inner_text()
+            w = await pg.evaluate("document.documentElement.scrollWidth")
+            n = int(t.split(":")[1].strip().split(" ")[0]) if ":" in t else -1
+            ok(f"[{label}] hiring report loads, title has month + live count", r.status == 200 and "Hiring Report" in t and n > 100, (r.status, t))
+            ok(f"[{label}] key findings + 5 tables + citation", "Key findings" in body and await pg.locator("table.ms-table").count() == 5 and "Source: MarTechJobs.io" in body, await pg.locator("table.ms-table").count())
+            ok(f"[{label}] no last-month column before a snapshot exists", "vs last month" not in body)
+            ok(f"[{label}] fits the screen", label == "desktop" or w <= 392, w)
+            link = await pg.locator("table.ms-table a[href^='/companies/']").first.get_attribute("href")
+            r2 = await pg.goto(B + link)
+            ok(f"[{label}] top-company link opens the company page", r2.status == 200, (link, r2.status))
         ok("no JS errors", not errs, errs[:3])
         print(f"\n{sum(R)}/{len(R)} passed"); await b.close()
 asyncio.run(main())

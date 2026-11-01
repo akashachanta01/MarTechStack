@@ -3806,3 +3806,63 @@ class TitlePageHeadlineTests(TestCase):
         title, desc = self._head(r.content.decode())
         self.assertIn("Salary Guide", title)
         self.assertIn("Salesforce, HubSpot, Marketo, Braze", desc)
+
+
+class HiringReportTests(TestCase):
+    """Monthly MarTech Hiring Report (/martech-job-market-statistics/): real counts,
+    seniority from titles, top companies, and month-over-month only with a saved snapshot."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Job, Tool, Category
+        cat = Category.objects.create(name="MarTech", slug="martech")
+        sf = Tool.objects.create(name="Salesforce", slug="salesforce", category=cat)
+        rows = [("Senior Marketing Ops Manager", "Acme", "remote"), ("Director, Marketing Technology", "Acme", "onsite"),
+                ("Marketing Operations Manager", "Globex", "hybrid"), ("Marketing Ops Specialist", "Initech", "remote")]
+        for i, (t, c, w) in enumerate(rows):
+            j = Job.objects.create(title=t, company=c, location="Austin, TX", work_arrangement=w,
+                                   apply_url=f"https://x.com/hr{i}", screening_status="approved", is_active=True)
+            if i < 3:
+                j.tools.add(sf)
+        Job.objects.create(title="Closed Director", company="Old", location="Austin, TX",
+                           apply_url="https://x.com/closed", screening_status="rejected", is_active=False)
+
+    def test_compute_report_counts_and_seniority(self):
+        from jobs.hiring_report import compute_report, seniority
+        d = compute_report()
+        self.assertEqual(d["total"], 4)
+        self.assertEqual(d["remote_pct"], 50)
+        self.assertEqual(d["top_companies"][0], ("Acme", 2))
+        levels = {lv: n for lv, n, _ in d["by_level"]}
+        self.assertEqual(levels["Director, Head of or VP"], 1)
+        self.assertEqual(levels["Senior, Lead or Principal"], 1)
+        self.assertEqual(levels["Manager"], 1)
+        self.assertEqual(seniority("Head of Lifecycle"), "Director, Head of or VP")
+        self.assertEqual(seniority("Sr. CRM Analyst"), "Senior, Lead or Principal")
+
+    def test_page_renders_report_without_fake_comparison(self):
+        r = self.client.get("/martech-job-market-statistics/")
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn("MarTech Hiring Report", html)
+        self.assertIn("Salesforce is named in 75% of live MarTech jobs (3 of 4)", html)
+        self.assertNotIn("Change vs last month", html)
+        self.assertNotIn("vs last month", html)
+        self.assertIn('href="/companies/acme/"', html)
+
+    def test_snapshot_command_and_month_over_month(self):
+        from datetime import timedelta
+        from django.core.management import call_command
+        from jobs.hiring_report import month_start
+        from jobs.models import HiringSnapshot
+        call_command("snapshot_hiring_report")
+        call_command("snapshot_hiring_report")  # idempotent: one row per month
+        self.assertEqual(HiringSnapshot.objects.count(), 1)
+        self.assertEqual(HiringSnapshot.objects.get().data["total"], 4)
+        prev = (month_start() - timedelta(days=1)).replace(day=1)
+        HiringSnapshot.objects.create(month=prev, data={"total": 2, "companies": 2, "remote_pct": 0, "salary_pct": 0,
+                                                        "by_tool": [["Salesforce", 1, 50]]})
+        cache.clear()
+        html = self.client.get("/martech-job-market-statistics/").content.decode()
+        self.assertIn("Change vs last month", html)
+        self.assertIn("+2 vs last month", html)
+        self.assertIn('<span class="ms-up">+2</span>', html)
