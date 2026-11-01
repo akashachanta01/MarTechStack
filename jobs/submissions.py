@@ -38,12 +38,22 @@ def check_submission(job):
         logger.warning("Submission screen failed for %s: %s", job.pk, e)
         res = {"status": "pending", "score": 0, "reason": "screening unavailable"}
     relevant = res.get("status") == "approved" and float(res.get("score") or 0) >= MIN_SCREEN_SCORE
-    checks.append((relevant, "MarTech role: yes" if relevant else f"MarTech role: not confirmed ({res.get('reason', '')[:120]})"))
 
     # 2. Is it really this employer's job? Either the company's careers system
     # confirms the posting is open, or the poster's work email matches the apply link.
     ats = posting_status(job.apply_url, timeout=6)
     email_check = poster_email_check(job.poster_email, job.apply_url)
+
+    # A recruiter writing from the employer's own domain is a strong signal; their
+    # marketing/CRM/data roles can go live even when the title has no MarTech keyword
+    # (Oct 2026: James Hardie's "Senior Director, Customer Engagement & Data" was held).
+    # Off-topic roles the screener hard-rejects still wait for review.
+    hard_reject = res.get("status") == "rejected" or "hard reject" in (res.get("reason") or "").lower()
+    if not relevant and email_check == "match" and not hard_reject:
+        relevant = True
+        checks.append((True, "MarTech role: accepted (posted by the employer's own recruiter)"))
+    else:
+        checks.append((relevant, "MarTech role: yes" if relevant else f"MarTech role: not confirmed ({res.get('reason', '')[:120]})"))
     if ats == CLOSED:
         checks.append((False, "Apply link: the company's careers site says this posting is closed"))
     elif ats == OPEN:

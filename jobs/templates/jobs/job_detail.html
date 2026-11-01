@@ -122,6 +122,12 @@
 .jd-nudge[hidden] { display:none !important; }
 .jd-nudge p { margin:0 0 8px; font-size:14px; line-height:1.45; color:var(--ink); }
 .jd-nudge a { font-size:14px; font-weight:700; color:var(--amber); }
+.jd-nudge-form { margin-top:10px; }
+.jd-nudge-form label { display:block; font-size:13px; line-height:1.45; color:var(--ink2); margin-bottom:6px; }
+.jd-nudge-row { display:flex; gap:6px; }
+.jd-nudge-row input { flex:1; min-width:0; font-size:16px; padding:8px 10px; border:1px solid var(--rule); border-radius:8px; }
+.jd-nudge-row button { border:0; border-radius:8px; background:var(--amber); color:#fff; font-weight:700; font-size:13px; padding:8px 12px; cursor:pointer; white-space:nowrap; }
+.jd-nudge-msg { margin:6px 0 0; font-size:12px; }
 .jd-nudge-x { position:absolute; top:6px; right:8px; border:0; background:none; font-size:22px; line-height:1; color:var(--ink3); cursor:pointer; padding:4px 8px; }
 @media (max-width:640px) { .jd-nudge { right:16px; bottom:16px; } }
 /* Phones: Apply bar pinned to the bottom once both Apply buttons are off screen.
@@ -293,11 +299,23 @@
   <span class="jd-sticky-info"><span class="jd-sticky-title">{{ job.title }}</span><span class="jd-sticky-sub">{{ job.company }}{% if job.salary_range %} · <b>{{ job.salary_range }}</b>{% endif %}</span></span>
   <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-amber js-apply" data-placement="sticky" tabindex="-1">Apply →</a>
 </div>
-{% if job.description and key_skills.shown %}
+{% if job.description and key_skills.shown or not user.is_authenticated %}
 <div id="jd-nudge" class="jd-nudge" role="status" hidden>
   <button type="button" class="jd-nudge-x" aria-label="Dismiss">×</button>
+  {% if job.description and key_skills.shown %}
   <p><b>While you apply:</b> see which of this job's skills your resume is missing.</p>
   <a class="js-check-resume" data-placement="apply_nudge" href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow">Check my resume against this job →</a>
+  {% endif %}
+  {% if not user.is_authenticated %}
+  {# Oct 2026 data: 75 people clicked Apply in 30 days, 4 left an email. Ask right after Apply. #}
+  <form id="jd-nudge-form" class="jd-nudge-form">
+    {% csrf_token %}
+    {% if first_tool %}<input type="hidden" name="tool" value="{{ first_tool.slug }}">{% endif %}
+    <label for="jd-nudge-email"><b>Get roles like this by email</b>{% if first_tool %} (new {{ first_tool.name }} jobs){% endif %}. Free, unsubscribe anytime.</label>
+    <span class="jd-nudge-row"><input id="jd-nudge-email" type="email" name="email" required placeholder="your@email.com"><button type="submit">Send me jobs</button></span>
+  </form>
+  <p id="jd-nudge-msg" class="jd-nudge-msg"></p>
+  {% endif %}
 </div>
 {% endif %}
 {% endblock %}
@@ -365,6 +383,7 @@ function showApplyNudge() {
   } catch (e) {}
   n.hidden = false;
   placeApplyNudge();
+  if (document.getElementById('jd-nudge-form') && !n.dataset.bound) { n.dataset.bound = '1'; handleSubscribe('jd-nudge-form', 'jd-nudge-msg'); }
   window.mtjTrack && window.mtjTrack('apply_nudge_shown', MTJ_JOB);
   n.querySelector('.jd-nudge-x').addEventListener('click', function () {
     n.hidden = true;
