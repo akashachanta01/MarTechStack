@@ -1114,7 +1114,8 @@ class ScannerVisibilityTests(TestCase):
         j = make_job(title="Office Manager", description="<p>Keep the office running smoothly every day.</p>")
         r = self.client.get(f"/job/{j.id}/{j.slug}/")
         self.assertNotContains(r, 'data-placement="skills_card"')
-        self.assertNotContains(r, 'id="jd-nudge"')
+        self.assertNotContains(r, 'data-placement="apply_nudge"')
+        self.assertContains(r, 'id="jd-nudge-form"')  # anonymous: after Apply, ask for an email instead
 
     def test_homepage_links_to_scanner(self):
         r = self.client.get("/")
@@ -3729,3 +3730,40 @@ class DuplicateSubmissionTests(TestCase):
         self.assertRedirects(r1, "/post-job/success/?plan=free", fetch_redirect_response=False)
         self.assertRedirects(r2, "/post-job/success/?plan=free", fetch_redirect_response=False)
         self.assertEqual(Job.objects.filter(apply_url="https://jobs.acme.com/123").count(), 1)
+
+
+class EmployerRecruiterSubmissionTests(TestCase):
+    """Nov 2026: a recruiter on the employer's own domain posting a marketing/data role goes live
+    even when the screener can't confirm a MarTech keyword; hard-rejected roles still wait."""
+    LONG = ("Lead customer engagement and data across our brands: CRM strategy, segmentation, lifecycle "
+            "programs, customer data and measurement. Partner with marketing, sales and IT to build the "
+            "roadmap and team. 10+ years of experience leading customer engagement or CRM functions.")
+
+    def setUp(self):
+        cache.clear()
+
+    def _post(self, status, reason, email="arelis@acme.com"):
+        from unittest import mock
+        data = {"title": "Senior Director, Customer Engagement & Data", "company": "Acme", "location": "Chicago, IL",
+                "work_arrangement": "onsite", "function": "operations", "role_type": "full_time",
+                "apply_url": "https://careers.acme.com/job/1", "description": self.LONG, "plan": "free",
+                "poster_name": "Arelis Correa", "poster_email": email, "poster_role": "in_house"}
+        with mock.patch("jobs.screener.MarTechScreener.screen",
+                        return_value={"status": status, "score": 40.0, "reason": reason, "details": {}}), \
+             mock.patch("jobs.management.commands.recheck_pending.posting_status", return_value="unknown"):
+            self.client.post("/post-job/", data)
+        from jobs.models import Job
+        return Job.objects.get(apply_url="https://careers.acme.com/job/1")
+
+    def test_employer_domain_recruiter_goes_live(self):
+        j = self._post("pending", "Stage 1: No MarTech term in TITLE")
+        self.assertTrue(j.is_active)
+        self.assertEqual(j.screening_status, "approved")
+
+    def test_hard_reject_still_waits(self):
+        j = self._post("rejected", "Hard Reject: Non-Technical Role")
+        self.assertFalse(j.is_active)
+
+    def test_personal_email_still_waits(self):
+        j = self._post("pending", "Stage 1: No MarTech term in TITLE", email="arelis@gmail.com")
+        self.assertFalse(j.is_active)
