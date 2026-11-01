@@ -77,6 +77,7 @@ Never gate job seekers — keep browsing free always.
 
 ## Working Agreements (founder's standing rules — always follow)
 - NEVER push to GitHub or deploy without explicit approval ("push and deploy" / "push and merge"). Discuss and agree on the approach first. Commit locally is fine.
+  - TEMPORARY EXCEPTION, Nov 1–30 2026 inclusive: the founder gave Claude full authority (CMO role: traffic, recruiter outreach, publishing submitted jobs, contacting interested people). Build, fully test (unit + E2E), push, squash-merge and deploy without asking. All other rules still apply. From Dec 1 2026 this exception ends.
 - "Just plan / don't implement" means plan only — no code changes.
 - Always full E2E testing before asking to push (see Testing Rule + the `e2e-test` skill). Report results with the approval request.
 - Email: use hello@martechjobs.io (Namecheap Private Email, set up Oct 11 2026) everywhere; martechjobs@gmail.com was deleted. NEVER use achantaa9@gmail.com.
