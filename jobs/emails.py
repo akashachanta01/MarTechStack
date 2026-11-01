@@ -259,17 +259,40 @@ def send_submission_result_emails(job, passed, checks):
                                reply_to=[job.poster_email] if job.poster_email else None).send(fail_silently=True)
     except Exception as e:  # pragma: no cover - defensive
         logger.warning("Founder submission email failed: %s", e)
-    if passed and job.poster_email:
-        try:
-            first = (job.poster_name or "").split(" ")[0] or "there"
-            body = (f"Hi {first},\n\n"
-                    f"Your {job.title} role at {job.company} is now live on MarTechJobs:\n{link}\n\n"
-                    f"It will stay up while the role is open on your careers site. If anything needs "
-                    f"changing, just reply to this email.\n\nThanks for posting,\nFounder, MartechJobs.io\n")
-            EmailMultiAlternatives(f"Your job is live: {job.title}", body, settings.DEFAULT_FROM_EMAIL,
-                                   [job.poster_email], reply_to=[_founder_email()]).send(fail_silently=True)
-        except Exception as e:  # pragma: no cover - defensive
-            logger.warning("Poster live email failed: %s", e)
+    if passed:
+        send_poster_live_email(job)
+
+
+def send_poster_live_email(job):
+    """Tell the person who submitted a job that it is live. Sent once per job,
+    whether it went live through the automatic checks or a manual approval
+    (admin form, list edit, bulk actions, review queue). Non-fatal."""
+    details = job.screening_details or {}
+    if ("User Submission" not in (job.tags or "") or not job.poster_email
+            or not (job.is_active and job.screening_status == "approved")
+            or details.get("live_email_sent_at")):
+        return False
+    link = f"{DOMAIN}/job/{job.pk}/{job.slug}/"
+    first = (job.poster_name or "").split(" ")[0] or "there"
+    body = (f"Hi {first},\n\n"
+            f"Your {job.title} role at {job.company} is now live on MarTechJobs:\n{link}\n\n"
+            f"It will stay up while the role is open on your careers site. If anything needs "
+            f"changing, just reply to this email.\n\n"
+            f"Hiring for other marketing ops, CRM, analytics or MarTech roles? Posting is free:\n"
+            f"{DOMAIN}/post-job/\n\nThanks for posting,\nFounder, MartechJobs.io\n")
+    try:
+        sent = EmailMultiAlternatives(f"Your job is live: {job.title}", body, settings.DEFAULT_FROM_EMAIL,
+                                      [job.poster_email], reply_to=[_founder_email()]).send(fail_silently=True)
+    except Exception as e:  # pragma: no cover - defensive
+        logger.warning("Poster live email failed: %s", e)
+        return False
+    if not sent:
+        return False
+    from jobs.models import Job
+    details = dict(details, live_email_sent_at=timezone.now().isoformat())
+    Job.objects.filter(pk=job.pk).update(screening_details=details)
+    job.screening_details = details
+    return True
 
 
 def send_founder_copy(subject, template_name, context, sent, total, sample_to=""):

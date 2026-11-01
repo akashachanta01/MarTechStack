@@ -3595,3 +3595,82 @@ class SearchHeadlineTests(TestCase):
         self.assertEqual(post.meta_title, mig.TITLE)
         self.assertLessEqual(len(mig.TITLE), 65)
         self.assertLessEqual(len(mig.DESC), 158)
+
+
+class ManualApprovalLiveEmailTests(TestCase):
+    """Founder asked (Nov 1): a submission approved by hand also tells the poster it is live,
+    exactly once, whichever admin path approved it."""
+    def setUp(self):
+        cache.clear()
+        from django.contrib.auth.models import User
+        self.admin = User.objects.create_superuser("boss", "boss@example.com", "pw")
+
+    def _job(self, **kw):
+        from jobs.models import Job
+        data = dict(title="Senior Director, Customer Engagement & Data", company="James Hardie",
+                    location="Chicago, IL", apply_url="https://careers.example.com/1",
+                    screening_status="pending", is_active=False, tags="User Submission",
+                    poster_name="Arelis Correa", poster_email="arelis@example.com")
+        data.update(kw)
+        return Job.objects.create(**data)
+
+    def _live_mails(self):
+        from django.core import mail
+        return [m for m in mail.outbox if m.subject.startswith("Your job is live")]
+
+    def test_approving_in_admin_form_emails_poster_once(self):
+        j = self._job()
+        j.screening_status = "approved"; j.save()
+        live = self._live_mails()
+        self.assertEqual(len(live), 1)
+        self.assertEqual(live[0].to, ["arelis@example.com"])
+        self.assertIn(f"/job/{j.pk}/{j.slug}/", live[0].body)
+        self.assertIn("/post-job/", live[0].body)
+        j.refresh_from_db()
+        self.assertIn("live_email_sent_at", j.screening_details)
+        j.title = "Senior Director, Customer Engagement and Data"; j.save()
+        j.is_active = False; j.save(); j.is_active = True; j.save()
+        self.assertEqual(len(self._live_mails()), 1)
+
+    def test_bulk_visible_action_emails_poster(self):
+        j = self._job()
+        from jobs.models import Job
+        Job.objects.filter(pk=j.pk).update(screening_status="approved")
+        self.client.force_login(self.admin)
+        self.client.post("/admin/jobs/usersubmission/", {"action": "activate_jobs", "_selected_action": [j.pk]})
+        j.refresh_from_db()
+        self.assertTrue(j.is_active)
+        self.assertEqual(len(self._live_mails()), 1)
+
+    def test_review_queue_approve_emails_poster(self):
+        j = self._job()
+        self.client.force_login(self.admin)
+        self.client.post(f"/staff/review/{j.pk}/approve/")
+        j.refresh_from_db()
+        self.assertTrue(j.is_active)
+        self.assertEqual(len(self._live_mails()), 1)
+
+    def test_no_email_for_scraped_jobs_or_missing_address(self):
+        a = self._job(tags="Greenhouse")
+        b = self._job(title="Marketo Admin", poster_email="")
+        for j in (a, b):
+            j.screening_status = "approved"; j.save()
+        self.assertEqual(self._live_mails(), [])
+
+    def test_auto_verified_submission_still_gets_exactly_one_email(self):
+        from unittest import mock
+        from jobs.models import Job
+        long = ("You will own our Marketo instance: lead scoring, nurture programs, lifecycle routing and "
+                "Salesforce sync. You will partner with demand gen and sales ops, build reporting on "
+                "pipeline influence, and keep data clean across the stack. 4+ years of Marketo required.")
+        data = {"title": "Marketo Operations Manager", "company": "Acme", "location": "Austin, TX",
+                "work_arrangement": "onsite", "function": "operations", "role_type": "full_time",
+                "apply_url": "https://jobs.acme.com/123", "description": long, "plan": "free",
+                "poster_name": "Priya Sharma", "poster_email": "priya@acme.com", "poster_role": "in_house"}
+        with mock.patch("jobs.screener.MarTechScreener.screen",
+                        return_value={"status": "approved", "score": 92.0, "reason": "t", "details": {}}):
+            self.client.post("/post-job/", data)
+        j = Job.objects.get(title="Marketo Operations Manager")
+        self.assertTrue(j.is_active)
+        j.save()
+        self.assertEqual(len(self._live_mails()), 1)

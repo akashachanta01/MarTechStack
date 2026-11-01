@@ -456,11 +456,16 @@ class Job(models.Model):
                 old_status = Job.objects.filter(pk=self.pk).values_list('screening_status', flat=True).first()
             if old_status != 'approved':
                 self.is_active = True
+        was_active = bool(self.pk) and Job.objects.filter(pk=self.pk, is_active=True).exists()
         # Stamp went_live_at the first time the job becomes active so the daily
         # digest can find it regardless of when it was originally ingested.
         if self.is_active and not self.went_live_at:
             self.went_live_at = timezone.now()
         super().save(*args, **kwargs)
+        # A hand-approved submission tells its poster it is live (once per job).
+        if self.is_active and not was_active and "User Submission" in (self.tags or ""):
+            from jobs.emails import send_poster_live_email
+            send_poster_live_email(self)
 
     class Meta:
         ordering = ['-is_pinned', '-created_at']
