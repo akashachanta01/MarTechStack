@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__PostHog__exec"
+      "mcp__PostHog__exec",
+      "mcp__Resend__send-email"
     ]
   }
 }
