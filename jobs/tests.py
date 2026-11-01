@@ -3866,3 +3866,30 @@ class HiringReportTests(TestCase):
         self.assertIn("Change vs last month", html)
         self.assertIn("+2 vs last month", html)
         self.assertIn('<span class="ms-up">+2</span>', html)
+
+
+class SurveysVsJobsPostTests(TestCase):
+    """Nov 2026 blog post pairing MarTech.org survey findings (briefly cited + linked)
+    with our live job counts. Created by data migration 0031; idempotent."""
+    def setUp(self):
+        cache.clear()
+
+    def test_migration_creates_post_once_and_page_renders(self):
+        import importlib
+        from django.apps import apps
+        from jobs.models import BlogPost
+        mig = importlib.import_module("jobs.migrations.0031_blog_surveys_vs_job_postings")
+        mig.forwards(apps, None)
+        mig.forwards(apps, None)  # idempotent
+        self.assertEqual(BlogPost.objects.filter(slug=mig.SLUG).count(), 1)
+        self.assertLessEqual(len(mig.META_TITLE), 65)
+        self.assertLessEqual(len(mig.META_DESC), 158)
+        r = self.client.get(f"/blog/{mig.SLUG}/")
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn("<title>MarTech Surveys vs. 477 Real Job Postings (Nov 2026)", html)
+        # credits + links the sources, and links into our own pages
+        self.assertIn("https://martech.org/is-the-era-of-rip-and-replace-over-for-martech-stacks/", html)
+        self.assertIn("https://martech.org/these-are-the-challenges-and-barriers-impacting-your-martech-stack/", html)
+        for path in ("/martech-job-market-statistics/", "/jobs/salesforce-marketing-cloud/", "/tools/resume-keyword-scanner/"):
+            self.assertIn(f'href="{path}"', html)
