@@ -37,9 +37,18 @@ class Command(BaseCommand):
                 site, daily = candidate, r.json().get("rows", [])
                 break
         if site is None:
+            try:
+                reason = (r.json().get("error") or {}).get("message", "")[:300]
+            except Exception:
+                reason = (r.text or "")[:300]
+            if "has not been used" in reason or "is disabled" in reason or "SERVICE_DISABLED" in (r.text or ""):
+                action = ("ACTION: Google Cloud Console → project of the service account → APIs & Services → "
+                          "Library → 'Google Search Console API' → Enable.")
+            else:
+                action = (f"ACTION: Search Console → Settings → Users and permissions → Add user → {email} "
+                          "(Full or Restricted).")
             self.stdout.write(self.style.ERROR(
-                f"❌ Search Console refused access ({r.status_code}). ACTION: Search Console → Settings → "
-                f"Users and permissions → Add user → {email} (Full or Restricted)."))
+                f"❌ Search Console refused access ({r.status_code}): {reason} {action}"))
             return
 
         r = self._query(token, site, {"startDate": str(end - timedelta(days=27)), "endDate": str(end),
