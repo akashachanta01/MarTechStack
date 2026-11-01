@@ -3767,3 +3767,42 @@ class EmployerRecruiterSubmissionTests(TestCase):
     def test_personal_email_still_waits(self):
         j = self._post("pending", "Stage 1: No MarTech term in TITLE", email="arelis@gmail.com")
         self.assertFalse(j.is_active)
+
+
+class TitlePageHeadlineTests(TestCase):
+    """Search Console Nov 2026: title pages (e.g. 'marketing technology analyst jobs',
+    pos ~8, 0 clicks) show the live count, month and real hiring companies."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Job
+        for i, co in enumerate(["Visa", "Dentsu", "Visa", "HP"]):
+            Job.objects.create(title=f"Marketing Technology Analyst {i}", company=co, location="Austin, TX",
+                               apply_url=f"https://x.com/mta{i}", screening_status="approved", is_active=True)
+
+    def _head(self, html):
+        import re
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1).strip()
+        desc = re.search(r'<meta name="description" content="(.*?)">', html, re.S).group(1)
+        return title, desc
+
+    def test_title_page_headline_has_count_and_companies(self):
+        from django.utils import timezone
+        title, desc = self._head(self.client.get("/marketing-technology-analyst-jobs/").content.decode())
+        self.assertIn("4 Marketing Technology Analyst Jobs (" + timezone.now().strftime("%b %Y") + ")", title)
+        self.assertTrue(desc.startswith("4 live Marketing Technology Analyst jobs at "), desc)
+        for co in ("Visa", "Dentsu", "HP"):
+            self.assertIn(co, desc)
+        self.assertEqual(desc.count("Visa"), 1)
+        self.assertLessEqual(len(desc), 158)
+
+    def test_empty_title_page_keeps_generic_headline(self):
+        title, _ = self._head(self.client.get("/salesforce-administrator-jobs/").content.decode())
+        self.assertIn("Salesforce Administrator Jobs", title)
+        self.assertNotIn("0 ", title)
+
+    def test_salary_guide_headline_renders(self):
+        r = self.client.get("/salary-guide/")
+        self.assertEqual(r.status_code, 200)
+        title, desc = self._head(r.content.decode())
+        self.assertIn("Salary Guide", title)
+        self.assertIn("Salesforce, HubSpot, Marketo, Braze", desc)
