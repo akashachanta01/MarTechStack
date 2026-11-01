@@ -3674,3 +3674,58 @@ class ManualApprovalLiveEmailTests(TestCase):
         self.assertTrue(j.is_active)
         j.save()
         self.assertEqual(len(self._live_mails()), 1)
+
+
+class JobFeedXmlTests(TestCase):
+    """/jobs.xml: standard job feed for job search sites (Talent.com, Jooble, Adzuna...)."""
+    def setUp(self):
+        cache.clear()
+        from jobs.models import Job
+        self.live = Job.objects.create(title="Marketo Operations Manager", company="Acme", location="Austin, TX",
+                                       apply_url="https://acme.com/1", screening_status="approved", is_active=True,
+                                       description="<p>Own Marketo ]]> and lead scoring.</p>", salary_range="$120k - $140k")
+        Job.objects.create(title="Closed Role", company="Acme", location="Austin, TX",
+                           apply_url="https://acme.com/2", screening_status="rejected", is_active=False)
+
+    def test_feed_lists_live_jobs_only_as_valid_xml(self):
+        import xml.etree.ElementTree as ET
+        r = self.client.get("/jobs.xml")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("application/xml", r["Content-Type"])
+        root = ET.fromstring(r.content)
+        jobs = root.findall("job")
+        self.assertEqual(len(jobs), 1)
+        j = jobs[0]
+        self.assertEqual(j.findtext("title"), "Marketo Operations Manager")
+        self.assertEqual(j.findtext("company"), "Acme")
+        self.assertEqual(j.findtext("city"), "Austin")
+        self.assertIn(f"/job/{self.live.pk}/{self.live.slug}/?utm_source=jobfeed", j.findtext("url"))
+        self.assertIn("Own Marketo", j.findtext("description"))
+        self.assertEqual(j.findtext("salary"), "$120k - $140k")
+
+
+class DuplicateSubmissionTests(TestCase):
+    """Oct 2026: James Hardie's role was submitted twice and both copies went live."""
+    LONG = ("You will own our Marketo instance: lead scoring, nurture programs, lifecycle routing and "
+            "Salesforce sync. You will partner with demand gen and sales ops, build reporting on "
+            "pipeline influence, and keep data clean across the stack. 4+ years of Marketo required.")
+
+    def setUp(self):
+        cache.clear()
+
+    def _post(self):
+        from unittest import mock
+        data = {"title": "Marketo Operations Manager", "company": "Acme", "location": "Austin, TX",
+                "work_arrangement": "onsite", "function": "operations", "role_type": "full_time",
+                "apply_url": "https://jobs.acme.com/123", "description": self.LONG, "plan": "free",
+                "poster_name": "Priya Sharma", "poster_email": "priya@acme.com", "poster_role": "in_house"}
+        with mock.patch("jobs.screener.MarTechScreener.screen",
+                        return_value={"status": "approved", "score": 92.0, "reason": "t", "details": {}}):
+            return self.client.post("/post-job/", data)
+
+    def test_second_identical_submission_is_not_created(self):
+        from jobs.models import Job
+        r1 = self._post(); r2 = self._post()
+        self.assertRedirects(r1, "/post-job/success/?plan=free", fetch_redirect_response=False)
+        self.assertRedirects(r2, "/post-job/success/?plan=free", fetch_redirect_response=False)
+        self.assertEqual(Job.objects.filter(apply_url="https://jobs.acme.com/123").count(), 1)
