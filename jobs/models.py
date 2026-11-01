@@ -673,6 +673,20 @@ class ActiveJob(Job):
     class Meta: proxy = True; verbose_name = "Active Job"
 
 
+class HiringSnapshot(models.Model):
+    """One row per month: the MarTech Hiring Report numbers (jobs.hiring_report.compute_report),
+    refreshed daily by snapshot_hiring_report so next month can show real changes."""
+    month = models.DateField(unique=True)  # first day of the month
+    data = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-month"]
+
+    def __str__(self):
+        return f"Hiring report {self.month:%B %Y}"
+
+
 class SearchConsoleDaily(models.Model):
     """Google Search Console totals per day (web search), synced by gsc_sync."""
     date = models.DateField(unique=True)
