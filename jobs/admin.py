@@ -76,6 +76,13 @@ class InterviewGuideAdmin(admin.ModelAdmin):
 
 # --- 4. JOB ADMINS ---
 
+def _email_live_submissions(qs):
+    """Bulk .update() actions skip Job.save(), so tell submitters their job is live here."""
+    from jobs.emails import send_poster_live_email
+    for job in qs.model.objects.filter(pk__in=qs.values("pk"), tags__icontains="User Submission"):
+        send_poster_live_email(job)
+
+
 class BaseJobAdmin(admin.ModelAdmin):
     list_per_page = 50
     save_on_top = True
@@ -156,6 +163,7 @@ class BaseJobAdmin(admin.ModelAdmin):
         # .update() bypasses Job.save(), so stamp went_live_at explicitly or
         # these jobs never qualify for the daily digest window.
         qs.filter(went_live_at__isnull=True).update(went_live_at=now())
+        _email_live_submissions(qs)
         send_digest_alert(jobs)
         self.message_user(request, f"✅ Sent DIGEST with {len(jobs)} jobs.", messages.SUCCESS)
 
@@ -180,6 +188,7 @@ class BaseJobAdmin(admin.ModelAdmin):
         # Stamp went_live_at for jobs going live for the first time (the bulk
         # .update bypasses Job.save), so they can enter the digest window.
         approved.filter(went_live_at__isnull=True).update(went_live_at=now())
+        _email_live_submissions(approved)
         skipped = qs.count() - approved.count()
         if skipped:
             self.message_user(request, f"⚠️ Skipped {skipped} non-approved job(s) — approve them first.", messages.WARNING)
