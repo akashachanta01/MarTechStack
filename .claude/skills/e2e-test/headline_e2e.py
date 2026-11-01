@@ -48,6 +48,23 @@ async def main():
             link = await pg.locator("table.ms-table a[href^='/companies/']").first.get_attribute("href")
             r2 = await pg.goto(B + link)
             ok(f"[{label}] top-company link opens the company page", r2.status == 200, (link, r2.status))
+        # Surveys vs job postings blog post (migration 0031) on desktop + phone.
+        # The E2E DB is built from models, so run the data migration's forwards() here.
+        import subprocess
+        out = subprocess.run(["python", "/home/user/MarTechStack/manage.py", "shell", "-c",
+                              "import importlib; from django.apps import apps; "
+                              "importlib.import_module('jobs.migrations.0031_blog_surveys_vs_job_postings').forwards(apps, None); "
+                              "from jobs.models import BlogPost; print(BlogPost.objects.filter(slug='martech-surveys-vs-job-postings-2026').count())"],
+                             capture_output=True, text=True, cwd="/home/user/MarTechStack")
+        ok("post created from migration", out.stdout.strip().endswith("1"), (out.stdout[-80:], out.stderr[-200:]))
+        for label, kw in (("desktop", {"viewport": {"width": 1280, "height": 900}}),
+                          ("phone", {"viewport": {"width": 390, "height": 844}, "is_mobile": True})):
+            pg = await (await b.new_context(**kw)).new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+            r = await pg.goto(B + "/blog/martech-surveys-vs-job-postings-2026/")
+            w = await pg.evaluate("document.documentElement.scrollWidth")
+            body = await pg.locator("body").inner_text()
+            ok(f"[{label}] surveys-vs-jobs post loads, fits, cites sources", r.status == 200 and (label == "desktop" or w <= 392)
+               and "About the sources" in body and await pg.locator("article table, .post-content table, table").count() >= 1, (r.status, w))
         ok("no JS errors", not errs, errs[:3])
         print(f"\n{sum(R)}/{len(R)} passed"); await b.close()
 asyncio.run(main())
