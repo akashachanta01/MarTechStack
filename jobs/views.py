@@ -1882,6 +1882,14 @@ def post_job(request):
             return HttpResponse("Too many submissions. Please try again later.", status=429)
         form = JobPostForm(request.POST)
         if form.is_valid():
+            # Same job submitted twice (Oct 2026: a recruiter re-posted after 90 minutes and
+            # both copies went live). Keep the first; the poster sees the normal success page.
+            apply_url = (form.cleaned_data.get('apply_url') or '').strip()
+            if apply_url and Job.objects.filter(
+                    tags__icontains="User Submission", apply_url__iexact=apply_url,
+                    created_at__gte=timezone.now() - timedelta(days=30)).exclude(
+                    screening_status='rejected').exists():
+                return redirect('/post-job/success/?plan=free')
             job = form.save(commit=False)
             if not job.location: job.location = "Remote"
             plan = form.cleaned_data.get('plan')

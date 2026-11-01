@@ -2,6 +2,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 from . import views
 from .feeds import LatestJobsFeed, BlogFeed
+from .job_feed import job_feed_xml
 
 urlpatterns = [
     path('', views.job_list, name='job_list'),
@@ -10,6 +11,7 @@ urlpatterns = [
     path('salary-guide/', views.salary_guide, name='salary_guide'),
     path('martech-job-market-statistics/', views.market_stats, name='market_stats'),
     path('feed/', LatestJobsFeed(), name='job_feed'),
+    path('jobs.xml', job_feed_xml, name='job_feed_xml'),
     
     # --- BLOG (DYNAMIC) ---
     path('blog/', views.blog_list, name='blog_list'),
