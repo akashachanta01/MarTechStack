@@ -31,4 +31,5 @@ if _os.environ.get("MTJ_FAKE_AI") == "1":
     _openai.OpenAI = _FakeOpenAI
 
 # E2E: never try real SMTP from the sandbox (egress is blocked -> requests hang).
-EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+EMAIL_BACKEND = "jobs.mail_backend.GuardedEmailBackend"
+EMAIL_DELIVERY_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

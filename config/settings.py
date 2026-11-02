@@ -190,7 +190,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # ==============================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Every outgoing email passes through a guard that drops addresses we must never email
+# (founder rule, Nov 2 2026). Real delivery is EMAIL_DELIVERY_BACKEND.
+EMAIL_BACKEND = 'jobs.mail_backend.GuardedEmailBackend'
+EMAIL_DELIVERY_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+NEVER_EMAIL = ['achantaa9@gmail.com']
 # SMTP server is env-driven so we can switch providers by changing Render env
 # vars only, no code deploy. Defaults point at RESEND (our provider) — NOT
 # Gmail — so if a service ever loses the EMAIL_HOST env var it falls back to
