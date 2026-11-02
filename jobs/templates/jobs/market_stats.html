@@ -131,6 +131,17 @@
   <h2>How many MarTech jobs publish salary ranges?</h2>
   <p><strong>{{ salary_pct }}%</strong> of live listings ({{ with_salary }} of {{ total }}) publish a salary range.{% if median_min %} Among those, the median advertised range is <strong>${{ median_min|intcomma }} – ${{ median_max|intcomma }}</strong> per year.{% endif %} For platform-by-platform pay, see the <a href="{% url 'salary_guide' %}">MarTech salary guide</a>.</p>
 
+  <div class="ms-cite" style="margin:28px 0 8px;border-style:solid">
+    <strong>Get the Hiring Report by email.</strong> Each month's report is linked in our weekly MarTech jobs email, along with that week's new roles. Free, unsubscribe anytime.
+    <form id="report-subscribe-form" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      {% csrf_token %}
+      <input type="email" name="email" required placeholder="you@company.com" aria-label="Email for the Hiring Report" style="flex:1 1 220px;min-width:0;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;font-size:16px">
+      <button type="submit" style="padding:10px 18px;border:0;border-radius:8px;background:var(--amber-accent,#bf5420);color:#fff;font-weight:700;cursor:pointer">Email me the report</button>
+    </form>
+    <div id="report-sub-msg" style="margin-top:8px;font-size:13px"></div>
+  </div>
+  <script>document.addEventListener('DOMContentLoaded',function(){ handleSubscribe('report-subscribe-form','report-sub-msg'); });</script>
+
   <h2>How is this data collected?</h2>
   <p>Listings are pulled daily from company hiring systems (Greenhouse, Lever, Ashby, Workday, SmartRecruiters and Workable), then screened so only genuine Marketing Operations, marketing automation, MarTech engineering and marketing analytics roles are counted. Closed and filled roles are removed daily. The report is saved each month, so next month's edition shows what changed.</p>
 

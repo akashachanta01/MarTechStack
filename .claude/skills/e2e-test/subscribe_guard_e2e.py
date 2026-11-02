@@ -20,6 +20,15 @@ async def main():
             await pg.locator("#footer-subscribe-form button").click(); await pg.wait_for_timeout(1500)
             n = django(f"from jobs.models import PendingSubscriber as P; print(P.objects.filter(email='{em}').count())")
             ok(f"[{label}] real footer sign-up saved (confirmation pending)", n == "1", n)
+            # Hiring Report page box
+            await pg.goto(B + "/martech-job-market-statistics/")
+            em2 = f"report-{label}@example.com"
+            await pg.locator("#report-subscribe-form input[type=email]").fill(em2)
+            await pg.locator("#report-subscribe-form button").click(); await pg.wait_for_timeout(1500)
+            msg = await pg.locator("#report-sub-msg").inner_text()
+            n2 = django(f"from jobs.models import PendingSubscriber as P; print(P.objects.filter(email='{em2}').count())")
+            w = await pg.evaluate("document.documentElement.scrollWidth")
+            ok(f"[{label}] report page 'email me the report' saves sign-up + confirms + fits", n2 == "1" and "inbox" in msg.lower() and (label == "desktop" or w <= 392), (n2, msg[:60], w))
         # bot-style direct POST: fetch the page for a CSRF cookie, then POST without the JS token
         cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
         html = op.open(B + "/delhi/jobs/").read().decode()
