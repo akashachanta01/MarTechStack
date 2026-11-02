@@ -4008,3 +4008,51 @@ class WeeklySearchFixesNov2Tests(TestCase):
     def test_empty_curated_page_has_no_live_facts(self):
         html = self.client.get("/salesforce-administrator-jobs/").content.decode()
         self.assertNotIn("Right now:", html)
+
+
+class NeverEmailGuardTests(TestCase):
+    """Founder rule (Nov 2 2026): the site must never email achantaa9@gmail.com, whatever
+    code path sends the message."""
+    def test_guard_strips_blocked_address_in_all_forms(self):
+        from django.core.mail import EmailMessage
+        from jobs.mail_backend import strip_blocked, is_blocked
+        for a in ("achantaa9@gmail.com", "AchantaA9@Gmail.com", "achanta.a9@gmail.com",
+                  "achantaa9+news@gmail.com", "Founder <achantaa9@gmail.com>", "achantaa9@googlemail.com"):
+            self.assertTrue(is_blocked(a), a)
+        self.assertFalse(is_blocked("hello@martechjobs.io"))
+        m = EmailMessage("s", "b", "from@x.io", to=["achantaa9@gmail.com", "ok@example.com"],
+                         bcc=["achanta.a9@gmail.com", "hello@martechjobs.io"])
+        self.assertTrue(strip_blocked(m))
+        self.assertEqual(m.to, ["ok@example.com"])
+        self.assertEqual(m.bcc, ["hello@martechjobs.io"])
+
+    def test_backend_drops_message_with_only_blocked_recipients(self):
+        from django.core import mail
+        from django.core.mail import EmailMessage
+        from django.test import override_settings
+        with override_settings(EMAIL_BACKEND="jobs.mail_backend.GuardedEmailBackend",
+                               EMAIL_DELIVERY_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mail.outbox = []
+            conn = mail.get_connection()
+            sent = conn.send_messages([EmailMessage("s", "b", "f@x.io", to=["achantaa9@gmail.com"]),
+                                       EmailMessage("s", "b", "f@x.io", to=["person@example.com", "achantaa9@gmail.com"])])
+            self.assertEqual(sent, 1)
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].to, ["person@example.com"])
+
+    def test_production_settings_use_the_guard(self):
+        import importlib
+        from config import settings as s
+        importlib.reload(s)
+        self.assertEqual(s.EMAIL_BACKEND, "jobs.mail_backend.GuardedEmailBackend")
+        self.assertIn("achantaa9@gmail.com", s.NEVER_EMAIL)
+
+    def test_migration_unsubscribes_the_address(self):
+        import importlib
+        from django.apps import apps
+        from jobs.models import Subscriber
+        Subscriber.objects.create(email="achantaa9@gmail.com", is_active=True)
+        Subscriber.objects.create(email="keep@example.com", is_active=True)
+        importlib.import_module("jobs.migrations.0033_never_email_founder_personal").forwards(apps, None)
+        self.assertFalse(Subscriber.objects.get(email="achantaa9@gmail.com").is_active)
+        self.assertTrue(Subscriber.objects.get(email="keep@example.com").is_active)
