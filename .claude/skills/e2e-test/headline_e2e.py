@@ -33,6 +33,22 @@ async def main():
                 n = int(t.split(" ")[0]); checked += 1
                 ok(f"count in headline matches listed jobs {path}", rows == min(n, 20), (n, rows))
         ok("at least one title page with jobs checked", checked >= 1, checked)
+        # live facts paragraph on curated title pages that have jobs (Nov 2 2026)
+        for label, kw in (("desktop", {"viewport": {"width": 1280, "height": 900}}),
+                          ("phone", {"viewport": {"width": 390, "height": 844}, "is_mobile": True})):
+            pg = await (await b.new_context(**kw)).new_page()
+            seen = 0
+            for path in PAGES:
+                await pg.goto(B + path)
+                rows = await pg.locator("a.jrow").count()
+                body = await pg.locator("body").inner_text()
+                w = await pg.evaluate("document.documentElement.scrollWidth")
+                if rows:
+                    seen += 1
+                    ok(f"[{label}] {path} shows live facts and fits", "Right now:" in body and "open " in body and (label == "desktop" or w <= 392), w)
+                else:
+                    ok(f"[{label}] {path} (no jobs) has no live-facts line", "Right now:" not in body)
+            ok(f"[{label}] checked live facts on >=1 page", seen >= 1, seen)
         # Hiring Report page on desktop + phone
         for label, kw in (("desktop", {"viewport": {"width": 1280, "height": 900}}),
                           ("phone", {"viewport": {"width": 390, "height": 844}, "is_mobile": True})):

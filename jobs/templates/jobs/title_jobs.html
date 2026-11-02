@@ -83,6 +83,7 @@
     <span class="tj-badge"><b>{{ total_count }}</b> open {{ title_name }} role{{ total_count|pluralize }} · Updated {% now "F j, Y" %}</span>
     <h1 class="tj-h1">{{ title_name }} <span class="em">Jobs</span></h1>
     <p class="tj-intro">{{ intro }}</p>
+    {% if live_facts %}<p class="tj-intro" style="font-size:15px">Right now: {{ live_facts }}{% if live_platforms %} The platforms these listings ask for most: {{ live_platforms }}.{% endif %}</p>{% endif %}
     {% if skills %}<p class="tj-skills"><b>{% if curated %}Common skills{% else %}Platforms these jobs ask for{% endif %}:</b> {{ skills }}</p>{% endif %}
     {% if tool %}<p style="margin-top:14px;font-size:14px;"><a href="{% url 'tool_detail' tool.slug %}" style="font-weight:700;color:var(--amber);">All {{ tool.name }} jobs →</a></p>{% endif %}
     {% if tool_siblings %}<div class="tj-cross-row" style="margin:14px 0 0">{% for r in tool_siblings %}<a href="{% url 'tool_role_jobs' tool.slug r.func %}">{{ r.name }} ({{ r.count }})</a>{% endfor %}</div>{% endif %}
