@@ -825,8 +825,16 @@ def title_jobs(request, title_slug):
     related += [{"slug": s, "name": r["name"]} for s, r in sorted(auto_roles().items(), key=lambda x: -len(x[1]["ids"]))
                 if r["indexable"] and s != title_slug][:9]
 
+    live_facts = live_platforms = ""
     if cfg:
         name, intro, skills, noindex = cfg["name"], cfg["intro"], cfg.get("skills", ""), total_count == 0
+        # Search Console Nov 2026: curated title pages (e.g. Marketing Automation Specialist,
+        # 627 impressions at position ~35) carried one generic sentence. Add facts drawn from
+        # the live listings so each page has unique, current content.
+        if total_count:
+            listed = list(jobs)
+            live_facts = facts_intro(name, listed)
+            live_platforms = top_platforms(listed)
     else:
         listed = list(jobs)
         name = auto["name"]
@@ -849,6 +857,8 @@ def title_jobs(request, title_slug):
         "title_slug": title_slug,
         "intro": intro,
         "skills": skills,
+        "live_facts": live_facts,
+        "live_platforms": live_platforms,
         "related_titles": related,
         "curated": bool(cfg),
         "page_noindex": noindex,

@@ -3975,3 +3975,36 @@ class ReportEmailSignupTests(TestCase):
         html = render_to_string("emails/digest.html", {"jobs": [], "count": 0, "weekly": True, "domain": "https://martechjobs.io"})
         self.assertIn("https://martechjobs.io/martech-job-market-statistics/", html)
         self.assertIn("MarTech Hiring Report", html)
+
+
+class WeeklySearchFixesNov2Tests(TestCase):
+    """Nov 2 2026 weekly Search Console fixes: comparison article headline; live facts on
+    curated job-title pages."""
+    def setUp(self):
+        cache.clear()
+
+    def test_comparison_article_meta_migration(self):
+        import importlib
+        from django.apps import apps
+        from jobs.models import BlogPost
+        mig = importlib.import_module("jobs.migrations.0032_platform_comparison_meta")
+        post = BlogPost.objects.create(title="x", slug=mig.SLUG, content="<p>x</p>", meta_title="old", meta_description="old")
+        mig.forwards(apps, None)
+        post.refresh_from_db()
+        self.assertEqual(post.meta_title, mig.TITLE)
+        self.assertLessEqual(len(mig.TITLE), 65)
+        self.assertLessEqual(len(mig.DESC), 158)
+
+    def test_curated_title_page_shows_live_facts(self):
+        from jobs.models import Job
+        for i, co in enumerate(["Acme", "Globex", "Acme"]):
+            Job.objects.create(title=f"Marketing Automation Specialist {i}", company=co, location="Remote",
+                               work_arrangement="remote" if i == 0 else "onsite",
+                               apply_url=f"https://x.com/mas{i}", screening_status="approved", is_active=True)
+        html = self.client.get("/marketing-automation-specialist-jobs/").content.decode()
+        self.assertIn("Right now: 3 open Marketing Automation Specialist roles at 2 companies, including Acme, Globex.", html)
+        self.assertIn("33% are remote.", html)
+
+    def test_empty_curated_page_has_no_live_facts(self):
+        html = self.client.get("/salesforce-administrator-jobs/").content.decode()
+        self.assertNotIn("Right now:", html)
