@@ -3957,3 +3957,21 @@ class SubscribeBotGuardTests(TestCase):
         m = re.search(r"fd\.set\('ts', '([^']+)'\)", html)
         self.assertIsNotNone(m)
         signing.loads(m.group(1), salt="subscribe-ts", max_age=60)
+
+
+class ReportEmailSignupTests(TestCase):
+    """Hiring Report page offers the report by email (honestly: via the weekly email,
+    which now links the report)."""
+    def setUp(self):
+        cache.clear()
+
+    def test_report_page_has_signup_form_wired_to_shared_script(self):
+        html = self.client.get("/martech-job-market-statistics/").content.decode()
+        self.assertIn('id="report-subscribe-form"', html)
+        self.assertIn("handleSubscribe('report-subscribe-form','report-sub-msg')", html)
+
+    def test_weekly_digest_links_the_report(self):
+        from django.template.loader import render_to_string
+        html = render_to_string("emails/digest.html", {"jobs": [], "count": 0, "weekly": True, "domain": "https://martechjobs.io"})
+        self.assertIn("https://martechjobs.io/martech-job-market-statistics/", html)
+        self.assertIn("MarTech Hiring Report", html)
