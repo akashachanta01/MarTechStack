@@ -2321,6 +2321,11 @@ class DataQualityOct7Tests(TestCase):
     def test_3m_name(self):
         from jobs.ingest_quality import display_company
         self.assertEqual(display_company("3m"), "3M")
+        # Nov 2026: truncated ATS tenant names seen in the Hiring Report's top companies
+        self.assertEqual(display_company("Wynd"), "Travel + Leisure Co.")
+        self.assertEqual(display_company("Rbi"), "Restaurant Brands International")
+        self.assertEqual(display_company("Usaa"), "USAA")
+        self.assertEqual(display_company("Newengeninc"), "NewEngen")
 
     def test_technical_marketing_engineer_removed_daily(self):
         from django.core.management import call_command
