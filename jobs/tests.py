@@ -1202,12 +1202,14 @@ class TrafficBatchTests(TestCase):
 
     def test_subscribe_js_sends_filters(self):
         r = self.client.get("/")
-        self.assertContains(r, "new URLSearchParams(new FormData(form))")
+        self.assertContains(r, "var fd = new FormData(form); fd.set('ts', '")
+        self.assertContains(r, "new URLSearchParams(fd)")
         self.assertContains(r, "job_alert_created")
 
     def test_alert_post_creates_targeted_alert_not_newsletter(self):
         from jobs.models import SavedSearch, PendingSubscriber
-        r = self.client.post("/subscribe/", {"email": "a@b.test", "tool": "marketo"})
+        from jobs.form_guard import form_ts
+        r = self.client.post("/subscribe/", {"email": "a@b.test", "tool": "marketo", "ts": form_ts()})
         self.assertEqual(r.json()["success"], True)
         self.assertTrue(SavedSearch.objects.filter(email="a@b.test", tool="marketo").exists())
         self.assertFalse(PendingSubscriber.objects.filter(email="a@b.test").exists())
@@ -3893,3 +3895,60 @@ class SurveysVsJobsPostTests(TestCase):
         self.assertIn("https://martech.org/these-are-the-challenges-and-barriers-impacting-your-martech-stack/", html)
         for path in ("/martech-job-market-statistics/", "/jobs/salesforce-marketing-cloud/", "/tools/resume-keyword-scanner/"):
             self.assertIn(f'href="{path}"', html)
+
+
+
+class SubscribeBotGuardTests(TestCase):
+    """Nov 2026 subscription bombing: direct POSTs to /subscribe/ from rotating IPs sent
+    strangers repeated confirmation emails. Guard: signed page timestamp, honeypot,
+    one confirmation per address per day, daily cap."""
+    def setUp(self):
+        cache.clear()
+
+    def _post(self, **data):
+        from unittest import mock
+        with mock.patch("jobs.views.send_confirmation_email") as sent:
+            r = self.client.post("/subscribe/", data, REMOTE_ADDR=f"9.9.9.{len(data)}")
+        return r, sent
+
+    def test_direct_post_without_token_saves_and_sends_nothing(self):
+        from jobs.models import PendingSubscriber
+        r, sent = self._post(email="victim@example.com")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["success"])          # looks normal to the bot
+        self.assertFalse(sent.called)
+        self.assertFalse(PendingSubscriber.objects.filter(email="victim@example.com").exists())
+
+    def test_forged_or_honeypot_submissions_blocked(self):
+        from jobs.form_guard import form_ts
+        r, sent = self._post(email="a@example.com", ts="forged")
+        self.assertFalse(sent.called)
+        r, sent = self._post(email="b@example.com", ts=form_ts(), website="http://spam")
+        self.assertFalse(sent.called)
+
+    def test_real_form_submission_sends_once_per_day(self):
+        from jobs.form_guard import form_ts
+        from jobs.models import PendingSubscriber
+        r, sent = self._post(email="person@example.com", ts=form_ts())
+        self.assertTrue(sent.called)
+        token = PendingSubscriber.objects.get(email="person@example.com").token
+        r, sent = self._post(email="person@example.com", ts=form_ts())
+        self.assertFalse(sent.called)                 # no second email within 24h
+        self.assertTrue(r.json()["success"])
+        self.assertEqual(PendingSubscriber.objects.get(email="person@example.com").token, token)  # first link still works
+
+    def test_daily_cap(self):
+        from unittest import mock
+        from jobs import form_guard
+        with mock.patch.object(form_guard, "DAILY_CONFIRMATION_CAP", 2):
+            self.assertTrue(form_guard.may_send_confirmation("1@example.com"))
+            self.assertTrue(form_guard.may_send_confirmation("2@example.com"))
+            self.assertFalse(form_guard.may_send_confirmation("3@example.com"))
+
+    def test_page_carries_signed_token_for_the_js(self):
+        import re
+        from django.core import signing
+        html = self.client.get("/").content.decode()
+        m = re.search(r"fd\.set\('ts', '([^']+)'\)", html)
+        self.assertIsNotNone(m)
+        signing.loads(m.group(1), salt="subscribe-ts", max_age=60)
