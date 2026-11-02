@@ -1914,6 +1914,18 @@ def subscribe(request):
             try: validate_email(email)
             except ValidationError: return JsonResponse({"success": False, "error": "Invalid email format."}, status=400)
 
+            # Bot guard (Nov 2026 subscription bombing): direct POSTs without the
+            # page's signed timestamp, or with the hidden trap field filled, get the
+            # normal-looking reply but nothing is saved or emailed.
+            from .form_guard import block_reason
+            reason = block_reason(request.POST)
+            if reason:
+                import logging
+                logging.getLogger(__name__).warning("subscribe blocked (%s)", reason)
+                from .server_analytics import capture
+                capture("subscribe_blocked", request, {"reason": reason})
+                return JsonResponse({"success": True, "message": "Almost there — check your inbox to confirm."})
+
             # If the form carried search context (the "Be first to new X roles"
             # bar), create a targeted SavedSearch alert. Otherwise it's a general
             # newsletter signup -> Subscriber.
@@ -1955,6 +1967,11 @@ def subscribe(request):
             # double opt-in flow, which reactivates it on confirmation.
             if Subscriber.objects.filter(email=email, is_active=True).exists():
                 return JsonResponse({"success": True, "message": "You're already subscribed!"})
+            from .form_guard import may_send_confirmation
+            if not may_send_confirmation(email):
+                # Already sent one to this address in the last 24h (or the daily cap
+                # is hit): don't email again, and keep the existing link valid.
+                return JsonResponse({"success": True, "message": "Almost there — check your inbox to confirm."})
             pending, _ = PendingSubscriber.objects.update_or_create(
                 email=email, defaults={'token': secrets.token_urlsafe(32)})
             send_confirmation_email(email, pending.token)

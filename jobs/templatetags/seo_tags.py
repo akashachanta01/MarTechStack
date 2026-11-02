@@ -49,3 +49,10 @@ def tidy_description(html):
     """One heading style, no spacer gaps or #LI- tags, plain text made readable."""
     from jobs.description_tidy import tidy_description as tidy
     return tidy(html or "")
+
+
+@register.simple_tag
+def subscribe_ts():
+    """Signed page timestamp the subscribe forms send (jobs.form_guard)."""
+    from jobs.form_guard import form_ts
+    return form_ts()

@@ -1080,7 +1080,7 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': form.querySelector('input[name=csrfmiddlewaretoken]').value },
           // Send every field: alert forms carry their filters (tool, q, l...) so the
           // server creates a targeted job alert instead of a newsletter signup.
-          body: new URLSearchParams(new FormData(form)).toString()
+          body: (function () { var fd = new FormData(form); fd.set('ts', '{% subscribe_ts %}'); return new URLSearchParams(fd).toString(); })()
         }).then(r => { if (r.status === 429) throw new Error('Too many requests'); return r.json(); })
           .then(d => {
             if (d.success) {
