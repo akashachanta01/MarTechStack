@@ -10,14 +10,20 @@ Idempotent: only touches the row while it is still pending."""
 from django.db import migrations
 from django.utils import timezone
 
-SLUG = "senior-digital-marketing-manager-at-kalsec-inc"
+# Prod's migration history is behind its real schema (the historical Job model has no
+# 'slug'), so only fields known to the historical model are used here.
+COMPANY = "Kalsec, Inc."
+TITLE = "Senior Digital Marketing Manager"
+FIELDS_USED = ("company", "title", "poster_email", "screening_status", "is_active", "went_live_at",
+               "screened_at", "screening_reason", "screening_details", "company_logo")
 POSTER = "kstrohm@kalsec.com"
 LOGO = "https://www.google.com/s2/favicons?domain=kalsec.com&sz=128"
 
 
 def forwards(apps, schema_editor):
     Job = apps.get_model("jobs", "Job")
-    job = Job.objects.filter(slug=SLUG, poster_email__iexact=POSTER, screening_status="pending").first()
+    job = Job.objects.filter(company=COMPANY, title=TITLE, poster_email__iexact=POSTER,
+                             screening_status="pending").first()
     if not job:
         return
     details = dict(job.screening_details or {})

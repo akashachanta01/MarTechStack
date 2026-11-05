@@ -4074,9 +4074,13 @@ class ApproveKalsecSubmissionTests(TestCase):
         return job
 
     def _run(self):
+        # Run with the HISTORICAL models, exactly as `migrate` does in production.
         import importlib
-        from django.apps import apps
-        importlib.import_module(self.MIG).forwards(apps, None)
+        from django.db.migrations.loader import MigrationLoader
+        with override_settings(MIGRATION_MODULES={}):
+            state = MigrationLoader(None, ignore_no_migrations=True).project_state(
+                ("jobs", "0033_never_email_founder_personal"))
+        importlib.import_module(self.MIG).forwards(state.apps, None)
 
     def test_pending_submission_goes_live_with_fixed_logo(self):
         job = self._make()
@@ -4091,6 +4095,19 @@ class ApproveKalsecSubmissionTests(TestCase):
         r = self.client.get(f"/job/{job.id}/{job.slug}/")
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Kalsec")
+
+    def test_only_uses_fields_known_to_historical_model(self):
+        # Prod applies migrations against the historical state, which lags the real
+        # schema (no 'slug' there). The Nov 5 deploy failed on exactly that.
+        import importlib
+        from django.db.migrations.loader import MigrationLoader
+        mod = importlib.import_module(self.MIG)
+        with override_settings(MIGRATION_MODULES={}):  # test settings switch migrations off
+            state = MigrationLoader(None, ignore_no_migrations=True).project_state(
+                ("jobs", "0033_never_email_founder_personal"))
+        hist = {f.name for f in state.apps.get_model("jobs", "Job")._meta.get_fields()}
+        missing = [f for f in mod.FIELDS_USED if f not in hist]
+        self.assertEqual(missing, [])
 
     def test_leaves_rejected_or_other_posters_alone(self):
         job = self._make(screening_status="rejected")
