@@ -4056,3 +4056,50 @@ class NeverEmailGuardTests(TestCase):
         importlib.import_module("jobs.migrations.0033_never_email_founder_personal").forwards(apps, None)
         self.assertFalse(Subscriber.objects.get(email="achantaa9@gmail.com").is_active)
         self.assertTrue(Subscriber.objects.get(email="keep@example.com").is_active)
+
+
+class ApproveKalsecSubmissionTests(TestCase):
+    """Nov 5 2026: a held employer submission (Kalsec) is approved by data migration 0034."""
+    MIG = "jobs.migrations.0034_approve_kalsec_submission"
+
+    def _make(self, **kw):
+        fields = dict(title="Senior Digital Marketing Manager", company="Kalsec, Inc.",
+                      location="Kalamazoo, MI, United States", apply_url="https://recruiting2.ultipro.com/x",
+                      description="Owns marketing automation, CRM alignment and analytics.",
+                      tags="User Submission: free", poster_email="kstrohm@kalsec.com",
+                      screening_status="pending", company_logo="https://www.google.com/s2/favicons?domain=perfumerflavorist.com&sz=128")
+        fields.update(kw)
+        job = Job.objects.create(**fields)
+        Job.objects.filter(pk=job.pk).update(slug="senior-digital-marketing-manager-at-kalsec-inc")
+        return job
+
+    def _run(self):
+        import importlib
+        from django.apps import apps
+        importlib.import_module(self.MIG).forwards(apps, None)
+
+    def test_pending_submission_goes_live_with_fixed_logo(self):
+        job = self._make()
+        self.assertFalse(Job.objects.get(pk=job.pk).is_active)
+        self._run()
+        job.refresh_from_db()
+        self.assertEqual(job.screening_status, "approved")
+        self.assertTrue(job.is_active)
+        self.assertIsNotNone(job.went_live_at)
+        self.assertIn("kalsec.com", job.company_logo)
+        self.assertEqual(job.screening_details["manual_review"]["decision"], "approved")
+        r = self.client.get(f"/job/{job.id}/{job.slug}/")
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Kalsec")
+
+    def test_leaves_rejected_or_other_posters_alone(self):
+        job = self._make(screening_status="rejected")
+        self._run()
+        job.refresh_from_db()
+        self.assertEqual(job.screening_status, "rejected")
+        self.assertFalse(job.is_active)
+        job.delete()
+        other = self._make(poster_email="someone@else.com")
+        self._run()
+        other.refresh_from_db()
+        self.assertEqual(other.screening_status, "pending")
