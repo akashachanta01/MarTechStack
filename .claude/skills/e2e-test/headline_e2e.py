@@ -81,6 +81,22 @@ async def main():
             body = await pg.locator("body").inner_text()
             ok(f"[{label}] surveys-vs-jobs post loads, fits, cites sources", r.status == 200 and (label == "desktop" or w <= 392)
                and "About the sources" in body and await pg.locator("article table, .post-content table, table").count() >= 1, (r.status, w))
+        # Nov 9 2026: Marketing Technologist page also lists MarTech lead / head-of roles.
+        import subprocess as _sp
+        _sp.run(["python", "/home/user/MarTechStack/manage.py", "shell", "-c",
+                 "from jobs.models import Job\n"
+                 "for t in ('Head of MarTech', 'MarTech Lead, EMEA'):\n"
+                 "    Job.objects.create(title=t, company='Acme', location='London, United Kingdom', apply_url='https://acme.example/j', "
+                 "description='Owns the marketing stack and integrations. ' * 20, screening_status='approved')"],
+                capture_output=True, text=True, cwd="/home/user/MarTechStack")
+        for label, kw in (("desktop", {"viewport": {"width": 1280, "height": 900}}),
+                          ("phone", {"viewport": {"width": 390, "height": 844}, "is_mobile": True})):
+            pg = await (await b.new_context(**kw)).new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+            r = await pg.goto(B + "/marketing-technologist-jobs/")
+            t = await pg.title(); body = await pg.locator("body").inner_text()
+            w = await pg.evaluate("document.documentElement.scrollWidth")
+            ok(f"[{label}] MarTech lead page lists lead roles, title <= 65", r.status == 200 and "Head of MarTech" in body
+               and "MarTech Lead & Technologist" in t and len(t) <= 65 and (label == "desktop" or w <= 392), (t, len(t), w))
         ok("no JS errors", not errs, errs[:3])
         print(f"\n{sum(R)}/{len(R)} passed"); await b.close()
 asyncio.run(main())

@@ -4120,3 +4120,29 @@ class ApproveKalsecSubmissionTests(TestCase):
         self._run()
         other.refresh_from_db()
         self.assertEqual(other.screening_status, "pending")
+
+
+class MartechLeadPageTests(TestCase):
+    """Nov 9 2026 search review: the Marketing Technologist page also lists MarTech lead,
+    head-of and director roles (people searched 'head of martech' / 'martech lead')."""
+    def _job(self, title):
+        return Job.objects.create(title=title, company="Acme", location="New York, NY",
+                                  apply_url="https://acme.example/jobs/1", description="Owns the marketing stack. " * 20,
+                                  screening_status="approved")
+
+    def test_lead_roles_listed_with_title_under_65_chars(self):
+        from jobs.views import title_jobs_qs
+        for t in ("Head of MarTech", "MarTech Lead, EMEA", "Director of Marketing Technology",
+                  "Marketing Technologist", "Senior MarTech Manager"):
+            self._job(t)
+        self._job("Sales Director")  # must not match
+        titles = set(title_jobs_qs("marketing-technologist").values_list("title", flat=True))
+        self.assertEqual(len(titles), 5)
+        self.assertNotIn("Sales Director", titles)
+        r = self.client.get("/marketing-technologist-jobs/")
+        self.assertEqual(r.status_code, 200)
+        import re
+        title = re.search(r"<title>(.*?)</title>", r.content.decode(), re.S).group(1).strip()
+        self.assertIn("MarTech Lead &amp; Technologist", title)
+        self.assertLessEqual(len(title.replace("&amp;", "&")), 65, title)
+        self.assertContains(r, "Head of MarTech")
