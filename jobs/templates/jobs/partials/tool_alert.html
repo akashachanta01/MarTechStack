@@ -1,8 +1,9 @@
 {# Targeted job alert for one tool. Needs: alert_tool (slug), alert_label (display name), alert_id. #}
+{% load seo_tags %}{% new_tool_jobs alert_tool 7 as alert_new %}
 <div class="tool-alert">
   <div class="tool-alert-text">
     <div class="tool-alert-title">Get new {{ alert_label }} jobs by email</div>
-    <div class="tool-alert-sub">Only {{ alert_label }} roles. Free, unsubscribe anytime.</div>
+    <div class="tool-alert-sub">{% if alert_new %}{{ alert_new }} new {{ alert_label }} role{{ alert_new|pluralize }} went live in the last 7 days. {% endif %}We email you only when new {{ alert_label }} roles go live. Free, unsubscribe anytime.</div>
   </div>
   <form id="{{ alert_id }}" class="tool-alert-form">
     {% csrf_token %}

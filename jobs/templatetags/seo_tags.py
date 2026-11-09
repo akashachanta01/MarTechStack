@@ -56,3 +56,20 @@ def subscribe_ts():
     """Signed page timestamp the subscribe forms send (jobs.form_guard)."""
     from jobs.form_guard import form_ts
     return form_ts()
+
+
+@register.simple_tag
+def new_tool_jobs(tool_slug, days=7):
+    """Live jobs for a platform that went live in the last `days` days (real count for the
+    job-alert box). Cached for an hour so job and platform pages stay cheap."""
+    from datetime import timedelta
+    from django.core.cache import cache
+    from django.utils import timezone
+    from jobs.models import Job
+    key = f"new_tool_jobs:{tool_slug}:{days}"
+    n = cache.get(key)
+    if n is None:
+        n = (Job.objects.filter(is_active=True, screening_status="approved", tools__slug=tool_slug,
+                                went_live_at__gte=timezone.now() - timedelta(days=days)).distinct().count())
+        cache.set(key, n, 3600)
+    return n

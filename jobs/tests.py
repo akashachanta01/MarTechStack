@@ -4146,3 +4146,41 @@ class MartechLeadPageTests(TestCase):
         self.assertIn("MarTech Lead &amp; Technologist", title)
         self.assertLessEqual(len(title.replace("&amp;", "&")), 65, title)
         self.assertContains(r, "Head of MarTech")
+
+
+class PlatformAlertBoxTests(TestCase):
+    """Nov 9 2026: the platform job-alert box sits in the job page sidebar (was under the
+    full description) and states the real number of new roles in the last 7 days."""
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        cat = Category.objects.create(name="Automation", slug="automation")
+        self.tool = Tool.objects.create(name="Marketo", slug="marketo", category=cat)
+        self.jobs = []
+        for i in range(3):
+            j = Job.objects.create(title=f"Marketo Specialist {i}", company="Acme", location="Remote",
+                                   apply_url=f"https://acme.example/{i}", description="Marketo builds. " * 30,
+                                   screening_status="approved")
+            j.tools.add(self.tool)
+            self.jobs.append(j)
+
+    def test_count_is_real_and_box_is_in_sidebar(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        Job.objects.filter(pk=self.jobs[2].pk).update(went_live_at=timezone.now() - timedelta(days=20))
+        j = self.jobs[0]
+        r = self.client.get(f"/job/{j.id}/{j.slug}/")
+        html = r.content.decode()
+        self.assertContains(r, "2 new Marketo roles went live in the last 7 days")
+        self.assertContains(r, "We email you only when new Marketo roles go live")
+        side = html.index('<aside class="jd-sidebar">')
+        self.assertGreater(html.index('id="jd-alert-form"'), side)
+        self.assertEqual(html.count('id="jd-alert-form"'), 1)
+
+    def test_no_count_sentence_when_nothing_new(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        Job.objects.update(went_live_at=timezone.now() - timedelta(days=30))
+        r = self.client.get("/jobs/marketo/")
+        self.assertContains(r, 'id="td-alert-form"')
+        self.assertNotContains(r, "went live in the last 7 days")
