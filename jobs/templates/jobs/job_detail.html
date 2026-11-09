@@ -123,6 +123,9 @@
 .jd-nudge p { margin:0 0 8px; font-size:14px; line-height:1.45; color:var(--ink); }
 .jd-nudge a { font-size:14px; font-weight:700; color:var(--amber); }
 .jd-nudge-form { margin-top:10px; }
+.jd-side-alert .tool-alert { margin:16px 0; flex-direction:column; align-items:stretch; }
+.jd-side-alert .tool-alert-form { flex:1 1 auto; flex-direction:column; }
+.jd-side-alert .tool-alert-text, .jd-side-alert .tool-alert-form { flex-basis:auto; }
 .jd-nudge-form label { display:block; font-size:13px; line-height:1.45; color:var(--ink2); margin-bottom:6px; }
 .jd-nudge-row { display:flex; gap:6px; }
 .jd-nudge-row input { flex:1; min-width:0; font-size:16px; padding:8px 10px; border:1px solid var(--rule); border-radius:8px; }
@@ -227,12 +230,15 @@
         <p style="margin-top:14px;font-size:14px;">Before you apply: <a href="{% url 'resume_scanner' %}?job={{ job.id }}" rel="nofollow" class="js-check-resume" data-placement="bottom" style="font-weight:700;">check your resume against this job's platforms &amp; skills →</a></p>
         {% endif %}
       </div>
-      {% with first_tool=job.tools.all|first %}{% if first_tool %}
-      {% include "jobs/partials/tool_alert.html" with alert_tool=first_tool.slug alert_label=first_tool.name alert_id="jd-alert-form" %}
-      {% endif %}{% endwith %}
     </div>
 
     <aside class="jd-sidebar">
+      {# Nov 9 2026: platform alert moved up from under the full description (1 sign-up in 14 days there). #}
+      {% with first_tool=job.tools.all|first %}{% if first_tool %}
+      <div class="jd-side-alert">
+      {% include "jobs/partials/tool_alert.html" with alert_tool=first_tool.slug alert_label=first_tool.name alert_id="jd-alert-form" %}
+      </div>
+      {% endif %}{% endwith %}
       <div class="jd-card">
         <h2>Job Details</h2>
         <div class="jd-card-row"><span class="jd-card-label">Company</span><span class="jd-card-val">{{ job.company }}</span></div>
