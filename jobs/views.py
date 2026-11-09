@@ -304,10 +304,17 @@ TITLE_JOBS = {
         "intro": "Email Marketing Managers own the email channel end to end — strategy, segmentation, automation, deliverability, and performance.",
         "skills": "Klaviyo, Iterable, HubSpot, deliverability, segmentation",
     },
+    # Search Console (Oct 12 - Nov 9 2026): the job-titles guide, not this page, was shown for
+    # "head of martech" (46 impressions, position 6.3), "martech lead" (45, 5.5) and
+    # "marketing technologist" (19); this page had 0 impressions in 90 days with 6 matching
+    # jobs. Name the lead/manager roles and match them (6 -> 16 live jobs, Nov 9).
     "marketing-technologist": {
-        "name": "Marketing Technologist",
-        "kw": ["marketing technologist", "martech engineer", "marketing technology manager", "martech manager"],
-        "intro": "Marketing Technologists architect and integrate the marketing stack — connecting platforms, data, and tooling so campaigns run reliably at scale.",
+        "name": "MarTech Lead & Technologist",
+        "kw": ["marketing technologist", "martech engineer", "marketing technology manager", "martech manager",
+               "martech lead", "head of martech", "head of marketing technology", "marketing technology lead",
+               "martech director", "marketing technology director", "director of marketing technology",
+               "martech architect", "marketing technology architect", "senior martech", "sr. martech", "sr martech"],
+        "intro": "Marketing Technologists and MarTech Leads own the marketing stack: choosing and connecting platforms, data and tooling, setting standards for the team, and making sure campaigns run reliably at scale.",
         "skills": "CDP, integrations, APIs, tag management, data",
     },
     "growth-marketing-manager": {
