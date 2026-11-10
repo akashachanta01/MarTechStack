@@ -19,8 +19,14 @@ def _canonical(addr):
 
 
 def is_blocked(addr):
+    canon = _canonical(addr)
     blocked = {_canonical(a) for a in getattr(settings, "NEVER_EMAIL", ())}
-    return _canonical(addr) in blocked
+    if canon in blocked:
+        return True
+    # Whole companies the founder said must never be emailed (Nov 10 2026: Vanguard).
+    domain = canon.rpartition("@")[2]
+    return any(domain == d or domain.endswith("." + d)
+               for d in (x.lower() for x in getattr(settings, "NEVER_EMAIL_DOMAINS", ())))
 
 
 def strip_blocked(message):

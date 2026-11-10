@@ -82,6 +82,8 @@ Never gate job seekers — keep browsing free always.
 - Always full E2E testing before asking to push (see Testing Rule + the `e2e-test` skill). Report results with the approval request.
 - Email: use hello@martechjobs.io (Namecheap Private Email, set up Oct 11 2026) everywhere; martechjobs@gmail.com was deleted. NEVER use achantaa9@gmail.com.
 - Any one-to-one email Claude sends for the founder via Resend: BCC hello@martechjobs.io (Resend can't write to privateemail's Sent folder), and replyTo both hello@martechjobs.io and replies@in.martechjobs.io (Resend receive-only inbox set up Nov 3 2026 so Claude can read replies via list-received-emails; subdomain MX only, root MX untouched). Founder sends bulk personal outreach themselves from privateemail; Claude prepares the copy-paste sheet. Mail Settings on Namecheap must stay on Custom MX (mx1/mx2.privateemail.com + send → amazonses).
+- NEVER email anyone at Vanguard (founder, Nov 10 2026: "never send to vanguard at all"): no recruiter, sponsor, Apollo, Resend or site email to any Vanguard address. The site's mail guard blocks vanguard.com/.co.uk/.com.au (`NEVER_EMAIL_DOMAINS`); exclude Vanguard from every Apollo search and sequence.
+- Outreach countries (founder, Nov 10 2026): India, UK, Australia and US only for now.
 - Bing Webmaster verification is parked — don't bring it up.
 - Founder is non-technical: explain in plain English, give click-by-click steps for any dashboard work.
 - Dashboards/reports: show human-readable names, never URL paths ("/job/...").
