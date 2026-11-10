@@ -4184,3 +4184,20 @@ class PlatformAlertBoxTests(TestCase):
         r = self.client.get("/jobs/marketo/")
         self.assertContains(r, 'id="td-alert-form"')
         self.assertNotContains(r, "went live in the last 7 days")
+
+
+class NeverEmailDomainTests(TestCase):
+    """Founder rule (Nov 10 2026): never email anyone at Vanguard."""
+    def test_vanguard_addresses_are_blocked_everywhere(self):
+        from django.core.mail import EmailMessage
+        from jobs.mail_backend import is_blocked, strip_blocked
+        for a in ("careers@vanguard.com", "Jane Doe <jane.doe@Vanguard.com>", "x@mail.vanguard.com",
+                  "hr@vanguard.co.uk", "talent@vanguard.com.au"):
+            self.assertTrue(is_blocked(a), a)
+        for a in ("hello@martechjobs.io", "someone@notvanguard.com", "a@vanguard.com.example.org"):
+            self.assertFalse(is_blocked(a), a)
+        m = EmailMessage("s", "b", "from@x.io", to=["careers@vanguard.com", "ok@example.com"], bcc=["x@vanguard.com"])
+        self.assertTrue(strip_blocked(m))
+        self.assertEqual(m.to, ["ok@example.com"]); self.assertEqual(m.bcc, [])
+        only = EmailMessage("s", "b", "from@x.io", to=["careers@vanguard.com"])
+        self.assertFalse(strip_blocked(only))
