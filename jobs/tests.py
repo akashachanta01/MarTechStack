@@ -1760,6 +1760,49 @@ class WorkdaySearchTests(TestCase):
             c.fetch_workday_api("https://asda.wd103.myworkdayjobs.com/asdajobs")
         self.assertEqual(len(searched), 1)
 
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_temporary_error_is_retried_once(self, _sleep):
+        """Nov 16 2026: a 503 on the first try must not skip the board for the day."""
+        c, searched, calls = self._cmd(), [], []
+        ok = self._post(15, searched)
+
+        def flaky(url, json=None, **kw):
+            calls.append(1)
+            return mock.Mock(status_code=503) if len(calls) == 1 else ok(url, json=json, **kw)
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=flaky), \
+             mock.patch("jobs.management.commands.fetch_jobs.requests.get", side_effect=self._get):
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(c.stats["Workday:error"], 0)
+        self.assertTrue(c._feed_complete)
+
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_failed_board_logs_its_http_status(self, _sleep):
+        c, calls = self._cmd(), []
+
+        def blocked(url, json=None, **kw):
+            calls.append(1)
+            return mock.Mock(status_code=403)
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=blocked), \
+             self.assertLogs("jobs.fetch", level="WARNING") as logs:
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+        self.assertEqual(len(calls), 1)          # 403 is not a temporary error: no retry
+        self.assertEqual(c.stats["Workday:error"], 1)
+        self.assertEqual(c.stats["Workday:http_403"], 1)
+        self.assertIn("HTTP 403", logs.output[0])
+
+    @mock.patch("jobs.management.commands.fetch_jobs.time.sleep")
+    def test_error_that_persists_gives_up_after_two_tries(self, _sleep):
+        c, calls = self._cmd(), []
+
+        def down(url, json=None, **kw):
+            calls.append(1)
+            return mock.Mock(status_code=503)
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", side_effect=down):
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(c.stats["Workday:http_503"], 1)
+
     def test_seeder_registers_workday_board_as_tenant_site(self):
         from django.core.management import call_command
         from jobs.models import CompanySource

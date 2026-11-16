@@ -870,12 +870,22 @@ class Command(BaseCommand):
         company = self._company_name("workday", f"{tenant}/{site}", fallback=tenant.capitalize())
         budget = {"new": 0}
 
+        last_status = {"code": None}
+
         def list_page(offset, search=""):
-            resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": search},
-                                 headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
-            if resp.status_code != 200:
+            # Workday answers some mornings with a temporary error (Nov 14 and 16 2026:
+            # 19-24 boards failed, then worked the next day). Retry once after a pause,
+            # and remember the status so a failure is diagnosable from the logs.
+            for attempt in (1, 2):
+                resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": search},
+                                     headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
+                last_status["code"] = resp.status_code
+                if resp.status_code == 200:
+                    return resp.json()
+                if attempt == 1 and resp.status_code in (429, 500, 502, 503, 504):
+                    time.sleep(3)
+                    continue
                 return None
-            return resp.json()
 
         def handle(item, from_search=False):
             ext_path = item.get('externalPath') or ""
@@ -944,6 +954,8 @@ class Command(BaseCommand):
                 payload = list_page(offset)
                 if payload is None:
                     self.stats["Workday:error"] += 1
+                    self.stats[f"Workday:http_{last_status['code']}"] += 1
+                    logger.warning("Workday board '%s' returned HTTP %s", board_url, last_status["code"])
                     return
                 postings = payload.get('jobPostings', [])
                 total = max(total, payload.get('total', 0) or 0)
