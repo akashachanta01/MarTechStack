@@ -543,11 +543,15 @@ class Command(BaseCommand):
             self._feed_ids, self._feed_complete = set(), False
             self._source_key = f"{s.ats_type}:{s.token or s.board_url}"[:250]
             before = self.total_added
+            errors_before = sum(v for k, v in self.stats.items() if k.endswith(":error"))
             try:
                 fn(s)
             except Exception as e:
                 self._feed_complete = False
+                self.stats["poll:error"] += 1
                 logger.warning("Direct poll failed for %s: %s", s, e)
+            # A board we could not read (rate limit, outage) is NOT an empty board.
+            poll_failed = sum(v for k, v in self.stats.items() if k.endswith(":error")) > errors_before
             if self._feed_complete and self._feed_ids:
                 raw = (s.token.split("/")[0] if s.ats_type == "workday" else s.token or "").capitalize()
                 legacy = {raw, display_company(raw), s.name}
@@ -563,7 +567,9 @@ class Command(BaseCommand):
             s.last_polled_at = timezone.now()
             s.last_seen_count = self._poll_seen
             s.last_added_count = added
-            if self._poll_seen == 0:
+            if poll_failed:
+                self.stats["source:poll_failed"] += 1
+            elif self._poll_seen == 0:
                 s.consecutive_empty += 1
                 if s.consecutive_empty >= self.EMPTY_POLLS_BEFORE_DISABLE:
                     s.enabled = False
@@ -847,6 +853,7 @@ class Command(BaseCommand):
     ]
     WORKDAY_SEARCH_PAGES = 2
     WORKDAY_MAX_NEW_PER_BOARD = 40   # detail fetch + AI screen budget per board per run
+    _throttle_wait_left = 300        # seconds this run may spend waiting out Workday HTTP 429s
     MAX_NEW_PER_RUN = 400            # same, across all Workday/SmartRecruiters boards
 
     def fetch_workday_api(self, board_url):
@@ -876,13 +883,25 @@ class Command(BaseCommand):
             # Workday answers some mornings with a temporary error (Nov 14 and 16 2026:
             # 19-24 boards failed, then worked the next day). Retry once after a pause,
             # and remember the status so a failure is diagnosable from the logs.
-            for attempt in (1, 2):
+            for attempt in (1, 2, 3):
                 resp = requests.post(api, json={"appliedFacets": {}, "limit": PAGE, "offset": offset, "searchText": search},
                                      headers={**self.get_headers(), "Content-Type": "application/json"}, timeout=8)
                 last_status["code"] = resp.status_code
                 if resp.status_code == 200:
                     return resp.json()
-                if attempt == 1 and resp.status_code in (429, 500, 502, 503, 504):
+                if attempt < 3 and resp.status_code == 429 and self._throttle_wait_left > 0:
+                    # Rate limited: wait as long as Workday asks (capped), within a
+                    # run-wide budget so a bad morning cannot stall the whole cron.
+                    try:
+                        wait = int(resp.headers.get("Retry-After") or 20)
+                    except (TypeError, ValueError):
+                        wait = 20
+                    wait = max(5, min(wait, 30, self._throttle_wait_left))
+                    self._throttle_wait_left -= wait
+                    self.stats["Workday:throttle_waits"] += 1
+                    time.sleep(wait)
+                    continue
+                if attempt == 1 and resp.status_code in (500, 502, 503, 504):
                     time.sleep(3)
                     continue
                 return None

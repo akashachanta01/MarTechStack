@@ -67,13 +67,12 @@ class Command(BaseCommand):
         mode = "WEEKLY (full SERP discovery)" if weekly else "DAILY (cheap registry poll)"
         self.stdout.write(f"🚀 STARTING AUTOPILOT SEQUENCE — mode: {mode}...")
 
-        # 1. CLEANUP (Clear the deck)
-        self._run("\n[1/7] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
-        self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
-        self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
-        self._run("      🔁 Re-listing pending jobs still open on company sites...", 'recheck_pending', '--confirm')
-
-        # 2. INGESTION (Get new jobs)
+        # 1. INGESTION (Get new jobs) — runs BEFORE the cleanup since Nov 17 2026.
+        # The cleanup asks each company site about ~300 individual jobs in a burst;
+        # doing that first got us rate-limited by Workday (HTTP 429) right before the
+        # board poll, so boards went unread, still-open jobs were hidden as "stale"
+        # and boards were auto-disabled. Polling first confirms most live jobs in a
+        # few calm requests per board, leaving the cleanup far fewer to ask about.
         # Register any newly curated boards (validated live; existing ones skipped).
         self._run("      🌏 Registering curated company boards...", 'seed_intl_sources', '--confirm')
         # Daily = --sources-only: polls the saved CompanySource registry (incl. all
@@ -94,6 +93,11 @@ class Command(BaseCommand):
             self._run("\n[2/7] 🔎 Weekly discovery: known boards + search for new ones...", 'fetch_jobs')
         else:
             self._run("\n[2/7] 🏹 Polling known boards (cheap, all countries)...", 'fetch_jobs', '--sources-only')
+        # 2. CLEANUP (after the poll: only jobs their board did not just confirm)
+        self._run("\n[1/7] 🧹 Checking for Dead Links & Expired Roles...", 'check_dead_links')
+        self._run("      ⏳ Expiring featured/pinned...", 'expire_featured')
+        self._run("      🗑️ Cleaning stale jobs...", 'clean_stale_jobs')
+        self._run("      🔁 Re-listing pending jobs still open on company sites...", 'recheck_pending', '--confirm')
         # Data quality on everything live (names, titles, locations, pay, duplicates).
         self._run("      🧽 Cleaning job data...", 'clean_job_data')
 
