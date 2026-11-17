@@ -98,7 +98,7 @@ class Command(BaseCommand):
                     .order_by("-screening_score", "-created_at")[:opts["limit"]])
         offtopic = [j for j in jobs if is_offtopic(j.title)]
         to_check = [j for j in jobs if not is_offtopic(j.title)]
-        with ThreadPoolExecutor(max_workers=8) as ex:
+        with ThreadPoolExecutor(max_workers=3) as ex:  # gentle: 8 at once got us HTTP 429 from Workday (Nov 2026)
             statuses = list(ex.map(lambda j: posting_status(j.apply_url), to_check))
         opened = [j for j, s in zip(to_check, statuses) if s == OPEN]
         closed = [j for j, s in zip(to_check, statuses) if s == CLOSED]

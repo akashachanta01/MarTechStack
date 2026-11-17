@@ -26,7 +26,7 @@ class Command(BaseCommand):
                            .order_by(F('last_seen_at').asc(nulls_first=True))[:200])
         total = len(active_jobs)
         dead_count = 0
-        with ThreadPoolExecutor(max_workers=8) as ex:
+        with ThreadPoolExecutor(max_workers=3) as ex:  # gentle: 8 at once got us HTTP 429 from Workday (Nov 2026)
             api_status = dict(zip([j.id for j in active_jobs], ex.map(lambda j: posting_status(j.apply_url), active_jobs)))
         confirmed = [j.id for j in active_jobs if api_status[j.id] == OPEN]
         Job.objects.filter(id__in=confirmed).update(last_seen_at=now)

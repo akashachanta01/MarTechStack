@@ -26,8 +26,9 @@ class Command(BaseCommand):
             Q(went_live_at__lt=cutoff_date)
             | Q(went_live_at__isnull=True, created_at__lt=cutoff_date)
         ).exclude(
-            # Still listed on the company's own board in the last 3 days = still open.
-            last_seen_at__gte=timezone.now() - timedelta(days=3)
+            # Still listed on the company's own board in the last 7 days = still open.
+            # (Was 3 days: a 3-day Workday outage in Nov 2026 hid 21 still-open jobs.)
+            last_seen_at__gte=timezone.now() - timedelta(days=7)
         )
         
         count = stale_jobs.count()
