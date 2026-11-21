@@ -277,3 +277,16 @@ class CourseAdmin(admin.ModelAdmin):
     list_display = ("title", "platform", "level", "format", "price_inr", "price_usd", "member_discount_pct", "is_active", "order")
     list_editable = ("member_discount_pct", "is_active", "order")
     prepopulated_fields = {"slug": ("title",)}
+
+
+from .models import AIUsage  # noqa: E402
+
+
+@admin.register(AIUsage)
+class AIUsageAdmin(admin.ModelAdmin):
+    """OpenAI spend by month; calls stop at settings.OPENAI_MONTHLY_BUDGET_USD."""
+    list_display = ("month", "est_cost_usd", "calls", "blocked_calls", "input_tokens", "output_tokens", "updated_at")
+    readonly_fields = list_display
+
+    def has_add_permission(self, request):
+        return False

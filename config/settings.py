@@ -192,6 +192,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Every outgoing email passes through a guard that drops addresses we must never email
 # (founder rule, Nov 2 2026). Real delivery is EMAIL_DELIVERY_BACKEND.
+# Founder, Nov 21 2026: "don't spend more than $5 on open AI". jobs/ai_budget.py stops
+# all OpenAI calls once this month's estimated spend reaches this (headroom under $5).
+OPENAI_MONTHLY_BUDGET_USD = os.environ.get("OPENAI_MONTHLY_BUDGET_USD", "4.50")
 EMAIL_BACKEND = 'jobs.mail_backend.GuardedEmailBackend'
 EMAIL_DELIVERY_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 NEVER_EMAIL = ['achantaa9@gmail.com']
