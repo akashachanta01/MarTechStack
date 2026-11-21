@@ -836,3 +836,23 @@ class CourseInterest(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.get_program_display()})"
+
+
+class AIUsage(models.Model):
+    """OpenAI spend per calendar month, estimated from the token counts each
+    call returns. jobs/ai_budget.py stops all OpenAI calls once the month's
+    estimate reaches settings.OPENAI_MONTHLY_BUDGET_USD (founder, Nov 21 2026:
+    "don't spend more than $5 on open AI")."""
+    month = models.CharField(max_length=7, unique=True)  # "2026-11"
+    calls = models.IntegerField(default=0)
+    blocked_calls = models.IntegerField(default=0)
+    input_tokens = models.BigIntegerField(default=0)
+    output_tokens = models.BigIntegerField(default=0)
+    est_cost_usd = models.DecimalField(max_digits=8, decimal_places=4, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "AI usage"
+
+    def __str__(self):
+        return f"{self.month}: ${self.est_cost_usd} over {self.calls} calls"

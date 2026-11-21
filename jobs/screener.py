@@ -288,6 +288,10 @@ class MarTechScreener:
 
         if not self.client:
             return {"status": "pending", "score": 50.0, "reason": "OPENAI_API_KEY missing.", "details": {"stage": "api_missing"}}
+        from jobs import ai_budget
+        if not ai_budget.allowed(self.model):
+            return {"status": "pending", "score": 50.0, "reason": "Monthly AI budget reached: held for review.",
+                    "details": {"stage": "ai_budget"}}
 
         try:
             return self.ask_ai(title, company, description, location)
@@ -390,6 +394,8 @@ class MarTechScreener:
             response_format={"type": "json_object"},
             temperature=0
         )
+        from jobs import ai_budget
+        ai_budget.record(self.model, completion)
 
         choices = completion.choices if completion and completion.choices else []
         if not choices:

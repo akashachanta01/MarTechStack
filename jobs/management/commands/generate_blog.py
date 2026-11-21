@@ -430,6 +430,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("   Missing OPENAI_API_KEY in environment variables."))
             return
 
+        from jobs import ai_budget
+        if not ai_budget.allowed("gpt-4o"):
+            self.stdout.write(self.style.WARNING("   Monthly AI budget reached. Skipping blog generation."))
+            return
         client = OpenAI(api_key=api_key, timeout=60, max_retries=2)
 
         # 2. Pick next unwritten topic from the prioritized queue
@@ -462,6 +466,7 @@ class Command(BaseCommand):
                 response_format={"type": "json_object"},
                 temperature=0.7
             )
+            ai_budget.record("gpt-4o", completion)
 
             data = json.loads(completion.choices[0].message.content)
 

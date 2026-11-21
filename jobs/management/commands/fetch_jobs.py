@@ -1021,8 +1021,13 @@ class Command(BaseCommand):
             text = " ".join(soup.get_text(separator=' ').split())[:60000]
             if len(text) < 250: return
             
+            from jobs import ai_budget
+            if not ai_budget.allowed("gpt-4o-mini"):
+                self.stats["ai:budget_skip"] += 1
+                return
             prompt = f"Extract title, company, location (format: City, State, Country), is_remote, description_html (clean HTML) as JSON from: {text[:4000]}"
             completion = self.client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}], response_format={"type": "json_object"})
+            ai_budget.record("gpt-4o-mini", completion)
             data = json.loads(completion.choices[0].message.content)
             clean_loc, arr = self._clean_location(data.get('location'), data.get('is_remote', False))
             self.screen_and_upsert({

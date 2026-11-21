@@ -66,6 +66,9 @@ def tailor(resume_text, jd_text, missing_terms):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise TailorError("Tailoring is temporarily unavailable. Please try again later.")
+    from jobs import ai_budget
+    if not ai_budget.allowed("gpt-4o-mini"):
+        raise TailorError("Tailoring is temporarily unavailable. Please try again later.")
     from openai import OpenAI
     prompt = (
         "You are an expert Marketing Operations resume editor. Tailor the RESUME to the JOB.\n"
@@ -87,6 +90,7 @@ def tailor(resume_text, jd_text, missing_terms):
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
         )
+        ai_budget.record("gpt-4o-mini", completion)
         data = json.loads(completion.choices[0].message.content)
     except Exception as e:
         logger.error("tailor AI call failed: %s", e)
