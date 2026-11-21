@@ -98,7 +98,7 @@ class WorkdayRateLimitTests(TestCase):
 
         def make(seen_days, n):
             j = Job.objects.create(title=f"Marketo Manager {n}", company="Acme", location="Remote",
-                                   apply_url=f"https://acme.wd3.myworkdayjobs.com/Careers/job/x_{n}",
+                                   apply_url=f"https://boards.greenhouse.io/acme/jobs/{n}",
                                    description="Marketo", screening_status="approved", is_active=True)
             Job.objects.filter(pk=j.pk).update(went_live_at=now - timedelta(days=90),
                                                created_at=now - timedelta(days=90),
@@ -153,3 +153,49 @@ class ReenableWorkdayBoardsMigrationTests(TestCase):
         self.assertEqual(asos.consecutive_empty, 5)
         self.assertTrue(adobe.enabled)
         self.assertEqual(adobe.consecutive_empty, 0)
+
+
+class WorkdayBlockGraceTests(TestCase):
+    """Nov 21 2026: Workday refuses our server, so its jobs get 14 days, others 7."""
+
+    def _make(self, url, seen_days, n):
+        from datetime import timedelta
+        from django.utils import timezone
+        now = timezone.now()
+        j = Job.objects.create(title=f"Marketo Manager {n}", company="Acme", location="Remote",
+                               apply_url=url, description="Marketo",
+                               screening_status="approved", is_active=True)
+        Job.objects.filter(pk=j.pk).update(went_live_at=now - timedelta(days=90),
+                                           created_at=now - timedelta(days=90),
+                                           last_seen_at=now - timedelta(days=seen_days))
+        return j
+
+    def test_workday_job_unseen_ten_days_stays_live_other_ats_does_not(self):
+        from django.core.management import call_command
+        wd = self._make("https://acme.wd3.myworkdayjobs.com/Careers/job/x_1", 10, 1)
+        wd_old = self._make("https://acme.wd3.myworkdayjobs.com/Careers/job/x_2", 15, 2)
+        gh = self._make("https://boards.greenhouse.io/acme/jobs/3", 10, 3)
+        call_command("clean_stale_jobs", stdout=mock.Mock())
+        for j in (wd, wd_old, gh):
+            j.refresh_from_db()
+        self.assertTrue(wd.is_active)
+        self.assertFalse(wd_old.is_active)
+        self.assertFalse(gh.is_active)
+
+    def test_first_429_logs_what_workday_said_once(self):
+        from collections import Counter
+        from jobs.management.commands.fetch_jobs import Command
+        c = Command()
+        c.processed_tokens, c.stats = set(), Counter()
+        c.get_headers = lambda: {}
+        c._company_name = lambda *a, **k: "Acme"
+        resp = mock.Mock(status_code=429, headers={"Retry-After": "3600", "Server": "cloudflare"}, text="blocked")
+        with mock.patch("jobs.management.commands.fetch_jobs.requests.post", return_value=resp), \
+             mock.patch("jobs.management.commands.fetch_jobs.time.sleep"), \
+             self.assertLogs("jobs.fetch", level="WARNING") as logs:
+            c.fetch_workday_api("https://acme.wd3.myworkdayjobs.com/Careers")
+            c.fetch_workday_api("https://beta.wd3.myworkdayjobs.com/Careers")
+        detail = [l for l in logs.output if "429 detail" in l]
+        self.assertEqual(len(detail), 1)
+        self.assertIn("retry-after=3600", detail[0])
+        self.assertIn("cloudflare", detail[0])

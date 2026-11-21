@@ -29,6 +29,11 @@ class Command(BaseCommand):
             # Still listed on the company's own board in the last 7 days = still open.
             # (Was 3 days: a 3-day Workday outage in Nov 2026 hid 21 still-open jobs.)
             last_seen_at__gte=timezone.now() - timedelta(days=7)
+        ).exclude(
+            # Workday has refused our requests since mid-Nov 2026, so its boards can't
+            # confirm their jobs: give Workday jobs 14 days before treating them as stale.
+            apply_url__icontains="myworkdayjobs.com",
+            last_seen_at__gte=timezone.now() - timedelta(days=14),
         )
         
         count = stale_jobs.count()
