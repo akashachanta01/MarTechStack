@@ -854,6 +854,7 @@ class Command(BaseCommand):
     WORKDAY_SEARCH_PAGES = 2
     WORKDAY_MAX_NEW_PER_BOARD = 40   # detail fetch + AI screen budget per board per run
     _throttle_wait_left = 300        # seconds this run may spend waiting out Workday HTTP 429s
+    _throttle_logged = False
     MAX_NEW_PER_RUN = 400            # same, across all Workday/SmartRecruiters boards
 
     def fetch_workday_api(self, board_url):
@@ -889,6 +890,17 @@ class Command(BaseCommand):
                 last_status["code"] = resp.status_code
                 if resp.status_code == 200:
                     return resp.json()
+                if resp.status_code == 429 and not self._throttle_logged:
+                    # Once per run: what Workday says when it refuses, so we can tell a
+                    # pace limit (Retry-After) from a block on our server's address.
+                    self._throttle_logged = True
+                    try:
+                        h = dict(getattr(resp, "headers", {}) or {})
+                        body = str(getattr(resp, "text", "") or "")[:200]
+                    except Exception:
+                        h, body = {}, ""
+                    logger.warning("Workday 429 detail: retry-after=%s server=%s body=%r",
+                                   h.get("Retry-After"), h.get("Server"), body)
                 if attempt < 3 and resp.status_code == 429 and self._throttle_wait_left > 0:
                     # Rate limited: wait as long as Workday asks (capped), within a
                     # run-wide budget so a bad morning cannot stall the whole cron.
